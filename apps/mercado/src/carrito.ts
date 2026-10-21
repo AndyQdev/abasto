@@ -62,8 +62,16 @@ const NOMBRES: Record<Presentacion, [string, string]> = {
   FARDO: ['fardo', 'fardos'],
 };
 
+/** «docena» o «docenas» */
+export function nombreDe(presentacion: Presentacion, cantidad = 1) {
+  const [uno, varios] = NOMBRES[presentacion];
+  return cantidad === 1 ? uno : varios;
+}
+
+/** «1 docena», «3 cajas» */
+export const cantidadDe = (presentacion: Presentacion, cantidad: number) => `${cantidad} ${nombreDe(presentacion, cantidad)}`;
+
 /** «2 cajas · 96 u.» */
 export function cantidadConUnidad(item: Pick<ItemDeCarrito, 'cantidad' | 'presentacion' | 'unidadesPorPresentacion'>) {
-  const [uno, varios] = NOMBRES[item.presentacion];
-  return `${item.cantidad} ${item.cantidad === 1 ? uno : varios} · ${item.cantidad * item.unidadesPorPresentacion} u.`;
+  return `${cantidadDe(item.presentacion, item.cantidad)} · ${item.cantidad * item.unidadesPorPresentacion} u.`;
 }
