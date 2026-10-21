@@ -1,0 +1,108 @@
+# Subgrafo de Pedidos. Es un contrato: cambiarlo es un PR aparte que aprueba la otra persona.
+# El supergrafo lo compone `pnpm supergrafo` junto con Catálogo y Cobros.
+
+extend schema @link(url: "https://specs.apollo.dev/federation/v2.7", import: ["@key", "@shareable"])
+
+type Query {
+  "Lo que compró la empresa de la sesión (Mercado)."
+  misCompras(estado: EstadoPedido): [Pedido!]!
+  "Lo que le compraron a la empresa de la sesión (Panel Mayorista)."
+  misVentas(estado: EstadoPedido): [Pedido!]!
+  "Un pedido. Null si no existe o si la empresa de la sesión no es ni la tienda ni el mayorista."
+  pedido(id: ID!): Pedido
+}
+
+type Mutation {
+  """
+  Paso 1 de la saga de compra. La clave la genera la app una sola vez:
+  repetir la mutación con la misma clave devuelve el mismo pedido.
+  """
+  crearPedido(entrada: CrearPedidoEntrada!): Pedido!
+  "Paso 4 de la saga: el mayorista acepta."
+  confirmarPedido(id: ID!): Pedido!
+  "El mayorista rechaza: se devuelve el cobro y se libera el stock."
+  rechazarPedido(id: ID!, motivo: String!): Pedido!
+}
+
+input CrearPedidoEntrada {
+  clave: ID!
+  mayoristaId: ID!
+  metodoPago: MetodoPago!
+  lineas: [LineaEntrada!]!
+}
+
+"El precio no viaja desde la app: lo fija Catálogo al reservar."
+input LineaEntrada {
+  productoId: ID!
+  presentacion: Presentacion!
+  cantidad: Int!
+}
+
+type Pedido @key(fields: "id") {
+  id: ID!
+  "Código para las personas, por ejemplo A-1042"
+  codigo: String!
+  clave: ID!
+  tienda: Tienda!
+  mayorista: Mayorista!
+  lineas: [LineaDePedido!]!
+  estado: EstadoPedido!
+  metodoPago: MetodoPago!
+  "Cero hasta que Catálogo reserva y fija los precios"
+  total: Dinero!
+  creadoEn: String!
+  motivoRechazo: String
+}
+
+type LineaDePedido {
+  producto: Producto!
+  presentacion: Presentacion!
+  cantidad: Int!
+  unidades: Int!
+  precioUnitario: Dinero
+  subtotal: Dinero!
+}
+
+enum EstadoPedido {
+  PENDIENTE
+  POR_CONFIRMAR
+  CONFIRMADO
+  EN_PREPARACION
+  DESPACHADO
+  ENTREGADO
+  RECHAZADO
+  CANCELADO
+}
+
+enum MetodoPago {
+  QR
+  CREDITO
+}
+
+enum Presentacion {
+  UNIDAD
+  CUARTA
+  DOCENA
+  CAJA
+  FARDO
+}
+
+"Monto en bolivianos. Mismo tipo en los tres subgrafos."
+type Dinero @shareable {
+  centavos: Int!
+  moneda: String!
+  texto: String!
+}
+
+"Tienda, Mayorista y Producto son de Catálogo; aquí solo se referencian."
+type Tienda @key(fields: "id", resolvable: false) {
+  id: ID!
+}
+
+type Mayorista @key(fields: "id", resolvable: false) {
+  id: ID!
+}
+
+type Producto @key(fields: "id", resolvable: false) {
+  id: ID!
+}

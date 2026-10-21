@@ -1,0 +1,171 @@
+{
+  "name": "Pedido por WhatsApp → Conecta",
+  "nodes": [
+    {
+      "id": "f1a0c001-0000-4000-8000-000000000001",
+      "name": "Mensaje de WhatsApp",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "pedido-whatsapp",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "pedido-whatsapp",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "f1a0c001-0000-4000-8000-000000000002",
+      "name": "Interpretar mensaje",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// Mensaje de ejemplo (cada línea del texto es un producto):\n// { \"mensajeId\": \"wamid.123\", \"telefono\": \"+59170000000\", \"mayoristaId\": \"lp\", \"texto\": \"2 cajas HP-0400, 1 docena HJ-0110\" }\n// En F3 el mensaje llega de Kapso y la tienda se busca por su teléfono.\nconst crypto = require('crypto');\nconst PRESENTACIONES = { unidad: 'UNIDAD', cuarta: 'CUARTA', docena: 'DOCENA', caja: 'CAJA', fardo: 'FARDO' };\nconst m = $input.first().json.body;\n\nconst lineas = String(m.texto ?? '')\n  .split(/\\n|,/)\n  .map((l) => /^\\s*(\\d+)\\s+([a-záéíóú]+?)(?:e?s)?\\s+([A-Z]{2}-\\d{4})\\s*$/i.exec(l))\n  .filter(Boolean)\n  .map(([, cantidad, palabra, productoId]) => ({\n    productoId: productoId.toUpperCase(),\n    presentacion: PRESENTACIONES[palabra.toLowerCase()] ?? 'UNIDAD',\n    cantidad: Number(cantidad),\n  }));\n\n// La misma clave para el mismo mensaje: si WhatsApp lo reintenta, Conecta no duplica el pedido\nconst h = crypto.createHash('sha1').update(String(m.mensajeId)).digest('hex');\nconst clave = [h.slice(0, 8), h.slice(8, 12), '5' + h.slice(13, 16), '8' + h.slice(17, 20), h.slice(20, 32)].join('-');\n\nreturn [{ json: { clave, telefono: m.telefono, pedido: { mayoristaId: m.mayoristaId ?? 'lp', metodoPago: 'CREDITO', lineas } } }];"
+      }
+    },
+    {
+      "id": "f1a0c001-0000-4000-8000-000000000003",
+      "name": "Token de la tienda",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        0
+      ],
+      "notes": "Ejemplo con la tienda de prueba. En F3 se cambia por una cuenta de servicio y la tienda sale del teléfono.",
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.KEYCLOAK_TOKEN_URL }}",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "grant_type",
+              "value": "password"
+            },
+            {
+              "name": "client_id",
+              "value": "abasto-pruebas"
+            },
+            {
+              "name": "username",
+              "value": "donarosa@abasto.bo"
+            },
+            {
+              "name": "password",
+              "value": "abasto123"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "f1a0c001-0000-4000-8000-000000000004",
+      "name": "Enviar a Conecta",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.CONECTA_URL }}/v1/pedidos",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.access_token }}"
+            },
+            {
+              "name": "Idempotency-Key",
+              "value": "={{ $('Interpretar mensaje').item.json.clave }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('Interpretar mensaje').item.json.pedido) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "f1a0c001-0000-4000-8000-000000000005",
+      "name": "Responder",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        960,
+        0
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Mensaje de WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Interpretar mensaje",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Interpretar mensaje": {
+      "main": [
+        [
+          {
+            "node": "Token de la tienda",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Token de la tienda": {
+      "main": [
+        [
+          {
+            "node": "Enviar a Conecta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar a Conecta": {
+      "main": [
+        [
+          {
+            "node": "Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/La_Paz"
+  },
+  "active": false,
+  "id": "abastoPedidoWa01"
+}

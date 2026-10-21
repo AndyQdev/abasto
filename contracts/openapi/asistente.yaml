@@ -1,0 +1,77 @@
+openapi: 3.1.0
+info:
+  title: Asistente · agentes, reportes generativos y MCP
+  version: 1.0.0
+  description: Lo usan el Panel (Inteligencia, en Vue) y el Superadmin. El MCP está en POST /mcp (Streamable HTTP).
+servers:
+  - url: http://localhost:8085
+security:
+  - keycloak: []
+paths:
+  /v1/reportes/preguntas:
+    post:
+      summary: Reporte generativo. La pregunta llega escrita o ya transcrita por Whisper en el navegador.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [texto], properties: { texto: { type: string, minLength: 3, maxLength: 500 } } }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pregunta: { type: string }
+                  sql: { type: string }
+                  explicacion: { type: string }
+                  grafico: { type: string, enum: [tabla, barras, linea] }
+                  columnas: { type: array, items: { type: string } }
+                  filas: { type: array, items: { type: object } }
+                  truncado: { type: boolean, description: true si había más de 1.000 filas }
+                  modelo: { type: string, example: simulado }
+        '400': { description: La consulta generada no pasó la guardia de SQL }
+  /v1/reportes/excel:
+    post:
+      summary: Devuelve el .xlsx de una tabla de reporte
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [columnas, filas]
+              properties:
+                titulo: { type: string }
+                columnas: { type: array, items: { type: string } }
+                filas: { type: array, maxItems: 1000, items: { type: object } }
+      responses:
+        '200':
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet: {}
+  /v1/agentes:
+    get:
+      summary: Los agentes con su misión, skills y qué requiere aprobación
+  /v1/agentes/propuestas:
+    get:
+      summary: Propuestas pendientes de la empresa de la sesión
+  /v1/agentes/{id}/ejecutar:
+    post:
+      summary: Corre la misión del agente ahora (hoy solo cobranza). Solo crea propuestas; no ejecuta nada.
+  /v1/agentes/propuestas/{id}/decision:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, required: [aprobar], properties: { aprobar: { type: boolean } } }
+  /v1/auditoria:
+    get:
+      summary: Últimas consultas sobre los datos de una empresa. Solo rol admin (Superadmin).
+      parameters:
+        - { name: orgId, in: query, required: true, schema: { type: string } }
+components:
+  securitySchemes:
+    keycloak:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

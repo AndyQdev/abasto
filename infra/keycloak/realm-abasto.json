@@ -1,0 +1,157 @@
+{
+  "realm": "abasto",
+  "enabled": true,
+  "displayName": "Abasto",
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "accessTokenLifespan": 900,
+  "ssoSessionIdleTimeout": 36000,
+  "ssoSessionMaxLifespan": 86400,
+  "internationalizationEnabled": true,
+  "supportedLocales": ["es"],
+  "defaultLocale": "es",
+  "roles": {
+    "realm": [
+      { "name": "tienda", "description": "Compra en Abasto Mercado" },
+      { "name": "mayorista", "description": "Vende desde el Panel Mayorista y Abasto Campo" },
+      { "name": "admin", "description": "Equipo de Abasto: entra al Superadmin" }
+    ]
+  },
+  "components": {
+    "org.keycloak.userprofile.UserProfileProvider": [
+      {
+        "providerId": "declarative-user-profile",
+        "subComponents": {},
+        "config": {
+          "kc.user.profile.config": [
+            "{\"attributes\":[{\"name\":\"username\",\"displayName\":\"${username}\",\"validations\":{\"length\":{\"min\":3,\"max\":255},\"username-prohibited-characters\":{},\"up-username-not-idn-homograph\":{}},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"email\",\"displayName\":\"${email}\",\"validations\":{\"email\":{},\"length\":{\"max\":255}},\"required\":{\"roles\":[\"user\"]},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"firstName\",\"displayName\":\"${firstName}\",\"validations\":{\"length\":{\"max\":255},\"person-name-prohibited-characters\":{}},\"required\":{\"roles\":[\"user\"]},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"lastName\",\"displayName\":\"${lastName}\",\"validations\":{\"length\":{\"max\":255},\"person-name-prohibited-characters\":{}},\"required\":{\"roles\":[\"user\"]},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"org_id\",\"displayName\":\"Organización\",\"permissions\":{\"view\":[\"admin\"],\"edit\":[\"admin\"]},\"multivalued\":false},{\"name\":\"org_nombre\",\"displayName\":\"Nombre de la organización\",\"permissions\":{\"view\":[\"admin\"],\"edit\":[\"admin\"]},\"multivalued\":false}],\"groups\":[{\"name\":\"user-metadata\",\"displayHeader\":\"User metadata\",\"displayDescription\":\"Attributes, which refer to user metadata\"}]}"
+          ]
+        }
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "abasto-panel",
+      "name": "Panel Mayorista",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "rootUrl": "http://localhost:5170",
+      "redirectUris": ["http://localhost:5170/*"],
+      "webOrigins": ["http://localhost:5170", "http://localhost:5171", "http://localhost:5172"],
+      "attributes": { "pkce.code.challenge.method": "S256", "post.logout.redirect.uris": "http://localhost:5170/*" },
+      "protocolMappers": [
+        { "name": "org_id", "protocol": "openid-connect", "protocolMapper": "oidc-usermodel-attribute-mapper", "config": { "user.attribute": "org_id", "claim.name": "org_id", "jsonType.label": "String", "id.token.claim": "true", "access.token.claim": "true", "userinfo.token.claim": "true", "introspection.token.claim": "true" } },
+        { "name": "org_nombre", "protocol": "openid-connect", "protocolMapper": "oidc-usermodel-attribute-mapper", "config": { "user.attribute": "org_nombre", "claim.name": "org_nombre", "jsonType.label": "String", "id.token.claim": "true", "access.token.claim": "true", "userinfo.token.claim": "true", "introspection.token.claim": "true" } },
+        { "name": "audiencia-api", "protocol": "openid-connect", "protocolMapper": "oidc-audience-mapper", "config": { "included.custom.audience": "abasto-api", "access.token.claim": "true", "id.token.claim": "false", "introspection.token.claim": "true" } }
+      ]
+    },
+    {
+      "clientId": "abasto-mercado",
+      "name": "Abasto Mercado",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "rootUrl": "http://localhost:5173",
+      "redirectUris": ["http://localhost:5173/*"],
+      "webOrigins": ["http://localhost:5173"],
+      "attributes": { "pkce.code.challenge.method": "S256", "post.logout.redirect.uris": "http://localhost:5173/*" },
+      "protocolMappers": [
+        { "name": "org_id", "protocol": "openid-connect", "protocolMapper": "oidc-usermodel-attribute-mapper", "config": { "user.attribute": "org_id", "claim.name": "org_id", "jsonType.label": "String", "id.token.claim": "true", "access.token.claim": "true", "userinfo.token.claim": "true", "introspection.token.claim": "true" } },
+        { "name": "org_nombre", "protocol": "openid-connect", "protocolMapper": "oidc-usermodel-attribute-mapper", "config": { "user.attribute": "org_nombre", "claim.name": "org_nombre", "jsonType.label": "String", "id.token.claim": "true", "access.token.claim": "true", "userinfo.token.claim": "true", "introspection.token.claim": "true" } },
+        { "name": "audiencia-api", "protocol": "openid-connect", "protocolMapper": "oidc-audience-mapper", "config": { "included.custom.audience": "abasto-api", "access.token.claim": "true", "id.token.claim": "false", "introspection.token.claim": "true" } }
+      ]
+    },
+    {
+      "clientId": "abasto-superadmin",
+      "name": "Superadmin",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "rootUrl": "http://localhost:5174",
+      "redirectUris": ["http://localhost:5174/*"],
+      "webOrigins": ["http://localhost:5174"],
+      "attributes": { "pkce.code.challenge.method": "S256", "post.logout.redirect.uris": "http://localhost:5174/*" },
+      "protocolMappers": [
+        { "name": "org_id", "protocol": "openid-connect", "protocolMapper": "oidc-usermodel-attribute-mapper", "config": { "user.attribute": "org_id", "claim.name": "org_id", "jsonType.label": "String", "id.token.claim": "true", "access.token.claim": "true", "userinfo.token.claim": "true", "introspection.token.claim": "true" } },
+        { "name": "audiencia-api", "protocol": "openid-connect", "protocolMapper": "oidc-audience-mapper", "config": { "included.custom.audience": "abasto-api", "access.token.claim": "true", "id.token.claim": "false", "introspection.token.claim": "true" } }
+      ]
+    },
+    {
+      "clientId": "abasto-campo",
+      "name": "Abasto Campo",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": ["abasto-campo://*", "exp://*"],
+      "webOrigins": ["+"],
+      "attributes": { "pkce.code.challenge.method": "S256" },
+      "protocolMappers": [
+        { "name": "org_id", "protocol": "openid-connect", "protocolMapper": "oidc-usermodel-attribute-mapper", "config": { "user.attribute": "org_id", "claim.name": "org_id", "jsonType.label": "String", "id.token.claim": "true", "access.token.claim": "true", "userinfo.token.claim": "true", "introspection.token.claim": "true" } },
+        { "name": "audiencia-api", "protocol": "openid-connect", "protocolMapper": "oidc-audience-mapper", "config": { "included.custom.audience": "abasto-api", "access.token.claim": "true", "id.token.claim": "false", "introspection.token.claim": "true" } }
+      ]
+    },
+    {
+      "clientId": "abasto-pruebas",
+      "name": "Pruebas automáticas (solo desarrollo)",
+      "description": "Permite pedir tokens con usuario y contraseña desde las pruebas. No existe en producción.",
+      "publicClient": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "protocolMappers": [
+        { "name": "org_id", "protocol": "openid-connect", "protocolMapper": "oidc-usermodel-attribute-mapper", "config": { "user.attribute": "org_id", "claim.name": "org_id", "jsonType.label": "String", "id.token.claim": "true", "access.token.claim": "true", "userinfo.token.claim": "true", "introspection.token.claim": "true" } },
+        { "name": "audiencia-api", "protocol": "openid-connect", "protocolMapper": "oidc-audience-mapper", "config": { "included.custom.audience": "abasto-api", "access.token.claim": "true", "id.token.claim": "false", "introspection.token.claim": "true" } }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "admin@abasto.bo",
+      "email": "admin@abasto.bo",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Juan",
+      "lastName": "Pérez",
+      "attributes": { "org_id": ["abasto"], "org_nombre": ["Abasto"] },
+      "credentials": [{ "type": "password", "value": "abasto123", "temporary": false }],
+      "realmRoles": ["admin"]
+    },
+    {
+      "username": "lospozos@abasto.bo",
+      "email": "lospozos@abasto.bo",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Distribuidora",
+      "lastName": "Los Pozos",
+      "attributes": { "org_id": ["lp"], "org_nombre": ["Distribuidora Los Pozos"] },
+      "credentials": [{ "type": "password", "value": "abasto123", "temporary": false }],
+      "realmRoles": ["mayorista", "tienda"]
+    },
+    {
+      "username": "laramada@abasto.bo",
+      "email": "laramada@abasto.bo",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Importadora",
+      "lastName": "La Ramada",
+      "attributes": { "org_id": ["lr"], "org_nombre": ["Importadora La Ramada"] },
+      "credentials": [{ "type": "password", "value": "abasto123", "temporary": false }],
+      "realmRoles": ["mayorista"]
+    },
+    {
+      "username": "donarosa@abasto.bo",
+      "email": "donarosa@abasto.bo",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Rosa",
+      "lastName": "Quispe",
+      "attributes": { "org_id": ["dr"], "org_nombre": ["Tienda Doña Rosa"] },
+      "credentials": [{ "type": "password", "value": "abasto123", "temporary": false }],
+      "realmRoles": ["tienda"]
+    }
+  ]
+}

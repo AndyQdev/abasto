@@ -1,0 +1,23 @@
+# Abasto Campo (apps/campo) queda fuera a propósito: React Native y Metro
+# funcionan mejor con su propio node_modules. Se instala con npm dentro de su carpeta.
+packages:
+  - apps/mercado
+  - apps/superadmin
+  - apps/panel-shell
+  - apps/panel-gestion
+  - apps/panel-inteligencia
+  - services/cobros
+  - services/conecta
+  - services/asistente
+  - packages/*
+  - e2e
+
+# Paquetes a los que pnpm deja correr scripts de instalación (pnpm bloquea el resto).
+allowBuilds:
+  '@apollo/protobufjs': false
+  '@parcel/watcher': true
+  '@prisma/engines': true
+  esbuild: true
+  lmdb: true
+  msgpackr-extract: true
+  prisma: true

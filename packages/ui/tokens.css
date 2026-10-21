@@ -1,0 +1,209 @@
+/* Tokens de Abasto, generados con el sistema UIX (infraestructura/uix).
+   Marca verde bosque hsl(158 64% 28%) = #1A7554. Acento ambar de las maquetas: #DC8F09. */
+
+:root {
+  /* MARCA — verde bosque: mercado, abasto, dinero */
+  --marca-h: 158;
+  --marca-s: 64%;
+  --marca-l: 28%;
+
+  /* SUPERFICIES */
+  --fondo: 216 16% 94%;
+  --superficie: 0 0% 100%;
+  --texto: 210 44% 11%;
+  --texto-2: 214 21% 35%;
+  --texto-3: 220 9% 46%;
+  --tinta: 160 35% 12%; /* verde casi negro, combina con la marca */
+  --tinta-texto: 0 0% 100%;
+
+  /* MARCA DERIVADA */
+  --primary: var(--marca-h) var(--marca-s) var(--marca-l);
+  --primary-texto: 0 0% 100%;
+  --primary-fuerte: var(--marca-h) var(--marca-s) 22%;
+  --primary-suave: 152 40% 93%;
+  --primary-suave-texto: var(--marca-h) var(--marca-s) 22%;
+
+  /* NEUTROS */
+  --tenue: 213 33% 95%;
+  --borde: 214 26% 88%;
+  --borde-fuerte: 214 22% 78%;
+  --cabecera-tabla: 214 27% 97%;
+  --anillo: var(--marca-h) var(--marca-s) var(--marca-l);
+
+  /* ESCALA SEMÁNTICA — en Abasto:
+     exito       pagado, confirmado, entregado, cliente aprobado, subido
+     advertencia por confirmar, solicitud pendiente, en cola sin señal
+     alto        crédito por vencer, stock bajo
+     error       rechazado, crédito vencido, falta un dato
+     neutro      borrador, anulado, en espera                          */
+  --exito: 152 62% 36%;
+  --exito-suave: 150 39% 91%;
+  --exito-suave-texto: 155 69% 26%;
+
+  --advertencia: 38 92% 45%;
+  --advertencia-suave: 41 84% 93%;
+  --advertencia-suave-texto: 40 94% 28%;
+
+  --alto: 22 90% 48%;
+  --alto-suave: 22 88% 93%;
+  --alto-suave-texto: 22 93% 31%;
+
+  --error: 0 74% 48%;
+  --error-suave: 0 75% 94%;
+  --error-suave-texto: 0 75% 42%;
+
+  --neutro: 220 9% 46%;
+  --neutro-suave: 213 33% 95%;
+  --neutro-suave-texto: 214 21% 35%;
+
+  /* SERIES DE GRÁFICOS — la 1 es la marca */
+  --grafico-1: var(--marca-h) var(--marca-s) var(--marca-l);
+  --grafico-2: 205 55% 72%;
+  --grafico-3: 152 62% 36%;
+  --grafico-4: 35 72% 52%;
+  --grafico-5: 261 54% 55%;
+  --grafico-6: 190 60% 40%;
+
+  /* FORMA — cuanto más grande el contenedor, más grande el radio */
+  --radio-xs: 0.5rem; /*  8px — chips de código           */
+  --radio-sm: 0.625rem; /* 10px — botones de icono chicos   */
+  --radio-icono: 0.8125rem; /* 13px — botones de icono          */
+  --radio: 0.875rem; /* 14px — botones, entradas, selects */
+  --radio-md: 1rem; /* 16px — botón primario, buscador  */
+  --radio-lg: 1.25rem; /* 20px — contenedores internos     */
+  --radio-pill: 1.375rem; /* 22px — burbujas                  */
+  --radio-xl: 1.625rem; /* 26px — TARJETAS                  */
+  --radio-modal: 1.875rem; /* 30px — modales                   */
+
+  /* PROFUNDIDAD — siempre dos capas */
+  --sombra-sutil: 0 1px 2px rgba(15, 27, 39, 0.05);
+  --sombra-menor: 0 1px 2px rgba(15, 27, 39, 0.05), 0 14px 28px -20px rgba(15, 27, 39, 0.25);
+  --sombra-carta: 0 1px 2px rgba(15, 27, 39, 0.05), 0 20px 40px -24px rgba(15, 27, 39, 0.3);
+  --sombra-oscura: 0 1px 2px rgba(15, 27, 39, 0.08), 0 22px 44px -24px rgba(15, 27, 39, 0.5);
+  --sombra-modal: 0 44px 100px -44px rgba(0, 0, 0, 0.7);
+  --sombra-marca: 0 14px 28px -16px hsl(var(--primary) / 0.8); /* solo el primario */
+
+  /* MEDIDAS */
+  --alto-control: 2.5rem; /* 40px */
+  --alto-control-grande: 3.25rem; /* 52px — Abasto Campo, de pie en el puesto */
+  --ancho-maximo: 1600px;
+
+  /* TIPOGRAFÍA — tres roles */
+  --fuente-titulo: "Space Grotesk", system-ui, sans-serif;
+  --fuente-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+  --fuente-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+.titulo-pantalla {
+  font-family: var(--fuente-titulo);
+  font-size: 2.125rem; /* 34px */
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+.titulo-carta {
+  font-family: var(--fuente-titulo);
+  font-size: 0.9375rem; /* 15px */
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.cifra {
+  font-family: var(--fuente-titulo);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+.titulo-seccion {
+  font-size: 0.625rem; /* 10px */
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: hsl(var(--texto-3));
+}
+
+body {
+  background: hsl(var(--fondo));
+  color: hsl(var(--texto));
+  font-family: var(--fuente-sans);
+  font-size: 0.8125rem; /* 13px */
+}
+
+.carta {
+  background: hsl(var(--superficie));
+  border: 1px solid hsl(var(--borde));
+  border-radius: var(--radio-xl);
+  box-shadow: var(--sombra-carta);
+  padding: 1.5rem;
+}
+.boton-primario {
+  height: var(--alto-control);
+  padding: 0 1rem;
+  border-radius: var(--radio-md);
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-texto));
+  box-shadow: var(--sombra-marca);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+.boton-secundario {
+  height: var(--alto-control);
+  padding: 0 1rem;
+  border-radius: var(--radio);
+  background: hsl(var(--superficie));
+  border: 1px solid hsl(var(--borde));
+  color: hsl(var(--texto-2));
+  box-shadow: var(--sombra-sutil);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+.entrada {
+  height: var(--alto-control);
+  padding: 0 0.875rem;
+  border-radius: var(--radio);
+  border: 1px solid hsl(var(--borde));
+  background: hsl(var(--superficie));
+  font-size: 0.8125rem;
+}
+.entrada:focus-visible {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 2px hsl(var(--anillo) / 0.2);
+  outline: none;
+}
+.buscador {
+  height: 2.75rem; /* 44px */
+  border-radius: var(--radio-md);
+  box-shadow: var(--sombra-menor);
+  padding-left: 2.5rem;
+}
+.chip {
+  border-radius: 9999px;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.71875rem;
+  font-weight: 600;
+}
+.chip[aria-pressed="true"] {
+  background: hsl(var(--tinta));
+  color: hsl(var(--tinta-texto));
+}
+.insignia {
+  border-radius: 9999px;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+.tabla thead {
+  background: hsl(var(--cabecera-tabla));
+}
+.tabla th {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: hsl(var(--texto-3));
+}
+.modal {
+  border-radius: var(--radio-modal);
+  box-shadow: var(--sombra-modal);
+  background: hsl(var(--superficie));
+}

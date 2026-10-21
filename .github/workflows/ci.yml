@@ -1,0 +1,176 @@
+# Cada stack corre solo si cambió su carpeta (o algo compartido). Un PR a main no se puede unir con algo en rojo.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cambios:
+    runs-on: ubuntu-latest
+    outputs:
+      node: ${{ steps.filtro.outputs.node }}
+      pedidos: ${{ steps.filtro.outputs.pedidos }}
+      catalogo: ${{ steps.filtro.outputs.catalogo }}
+      ml: ${{ steps.filtro.outputs.ml }}
+      campo: ${{ steps.filtro.outputs.campo }}
+      supergrafo: ${{ steps.filtro.outputs.supergrafo }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filtro
+        with:
+          filters: |
+            compartido: &compartido
+              - 'packages/**'
+              - 'contracts/**'
+              - 'pnpm-lock.yaml'
+              - '.github/workflows/**'
+            node:
+              - *compartido
+              - 'apps/mercado/**'
+              - 'apps/panel-*/**'
+              - 'apps/superadmin/**'
+              - 'services/cobros/**'
+              - 'services/conecta/**'
+              - 'services/asistente/**'
+            pedidos:
+              - 'services/pedidos/**'
+              - '.github/workflows/**'
+            catalogo:
+              - 'services/catalogo/**'
+              - '.github/workflows/**'
+            ml:
+              - 'ml/**'
+              - '.github/workflows/**'
+            campo:
+              - 'apps/campo/**'
+              - 'packages/outbox-offline/**'
+              - '.github/workflows/**'
+            supergrafo:
+              - 'infra/router/**'
+              - 'services/*/schema.graphql'
+              - 'services/catalogo/graphql/**'
+              - 'services/pedidos/src/main/resources/graphql/**'
+
+  # ---------------------------------------------------------------- TypeScript: apps, paquetes y servicios NestJS
+  node:
+    needs: cambios
+    if: needs.cambios.outputs.node == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm arquitectura
+      - run: pnpm build
+      - run: pnpm test
+
+  # ---------------------------------------------------------------- Pedidos: Spring Boot (Testcontainers usa el Docker del runner)
+  pedidos:
+    needs: cambios
+    if: needs.cambios.outputs.pedidos == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run: { working-directory: services/pedidos }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21 }
+      - uses: gradle/actions/setup-gradle@v4
+      - run: ./gradlew test
+
+  # ---------------------------------------------------------------- Catálogo: Laravel
+  catalogo:
+    needs: cambios
+    if: needs.cambios.outputs.catalogo == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run: { working-directory: services/catalogo }
+    services:
+      mongo:
+        image: mongo:8.0
+        ports: ['27020:27017']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with: { php-version: '8.4', extensions: mongodb, tools: composer }
+      - run: composer install --no-interaction --prefer-dist
+      - run: cp .env.example .env && php artisan key:generate
+      - run: composer test
+      - run: vendor/bin/deptrac analyse --no-progress
+      - run: vendor/bin/phpstan analyse --no-progress
+
+  # ---------------------------------------------------------------- ML: Python
+  ml:
+    needs: cambios
+    if: needs.cambios.outputs.ml == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run: { working-directory: ml }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync
+      - run: uv run ruff check
+      - run: uv run pytest
+
+  # ---------------------------------------------------------------- Campo: Expo (npm aparte, fuera del workspace)
+  campo:
+    needs: cambios
+    if: needs.cambios.outputs.campo == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run: { working-directory: apps/campo }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: apps/campo/package-lock.json }
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm test
+
+  # ---------------------------------------------------------------- Los subgrafos todavía componen un supergrafo
+  supergrafo:
+    needs: cambios
+    if: needs.cambios.outputs.supergrafo == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm supergrafo
+      - name: El supergrafo compuesto está al día en el repo
+        run: git diff --exit-code infra/router/supergraph.graphql
+
+  # ---------------------------------------------------------------- Punta a punta: solo en PR a main (tarda ~10 min)
+  e2e:
+    needs: [cambios, node]
+    if: github.event_name == 'pull_request' && github.base_ref == 'main' && !failure() && !cancelled()
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm todo
+      - run: pnpm --filter @abasto/e2e navegadores --with-deps
+      - run: pnpm e2e
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with: { name: playwright, path: e2e/playwright-report, retention-days: 7 }
+      - if: failure()
+        run: docker compose --profile servicios logs --tail 200

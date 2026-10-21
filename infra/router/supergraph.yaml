@@ -1,0 +1,16 @@
+# Composición del supergrafo: `pnpm supergrafo` genera supergraph.graphql, que es lo que carga el Router.
+# Las URL son las de Docker; si corres un servicio en tu máquina, cámbiala con PEDIDOS_URL, CATALOGO_URL o COBROS_URL en .env.
+federation_version: =2.11.2
+subgraphs:
+  pedidos:
+    routing_url: http://pedidos:8081/graphql
+    schema:
+      file: ../../services/pedidos/src/main/resources/graphql/schema.graphqls
+  catalogo:
+    routing_url: http://catalogo:8082/graphql
+    schema:
+      file: ../../services/catalogo/graphql/subgrafo.graphql
+  cobros:
+    routing_url: http://cobros:8083/graphql
+    schema:
+      file: ../../services/cobros/schema.graphql

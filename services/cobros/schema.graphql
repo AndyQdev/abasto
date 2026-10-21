@@ -1,0 +1,50 @@
+# Subgrafo de Cobros. Es un contrato: cambiarlo es un PR aparte que aprueba la otra persona.
+# El supergrafo lo compone `pnpm supergrafo` junto con Pedidos y Catálogo.
+
+extend schema @link(url: "https://specs.apollo.dev/federation/v2.7", import: ["@key", "@shareable"])
+
+type Query {
+  "Crédito que un mayorista le dio a una tienda. Null si no tiene."
+  lineaDeCredito(tiendaId: ID!, mayoristaId: ID!): LineaDeCredito
+}
+
+type Mutation {
+  "Paso 3 de la saga de compra. Lo usa el orquestador de Pedidos; repetirlo con el mismo pedido no descuenta dos veces."
+  autorizarCredito(entrada: AutorizarCreditoEntrada!): AutorizacionDeCredito!
+}
+
+input AutorizarCreditoEntrada {
+  tiendaId: ID!
+  mayoristaId: ID!
+  pedidoId: ID!
+  centavos: Int!
+}
+
+type LineaDeCredito @key(fields: "id") {
+  id: ID!
+  tienda: Tienda!
+  mayoristaId: ID!
+  limite: Dinero!
+  usado: Dinero!
+  disponible: Dinero!
+  plazoDias: Int!
+}
+
+type AutorizacionDeCredito {
+  lineaId: ID!
+  pedidoId: ID!
+  autorizado: Dinero!
+  disponible: Dinero!
+}
+
+"Monto en bolivianos. Mismo tipo en los tres subgrafos."
+type Dinero @shareable {
+  centavos: Int!
+  moneda: String!
+  texto: String!
+}
+
+"La tienda es de Catálogo; aquí solo se referencia."
+type Tienda @key(fields: "id", resolvable: false) {
+  id: ID!
+}

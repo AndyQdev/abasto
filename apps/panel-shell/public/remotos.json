@@ -1,0 +1,10 @@
+{
+  "gestion": {
+    "elemento": "abasto-gestion",
+    "scripts": ["http://localhost:5171/main.js"]
+  },
+  "inteligencia": {
+    "elemento": "abasto-inteligencia",
+    "scripts": ["http://localhost:5172/src/remoto.ts"]
+  }
+}

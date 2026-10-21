@@ -1,0 +1,94 @@
+.superadmin {
+  display: grid;
+  grid-template-columns: 232px 1fr;
+  min-height: 100vh;
+}
+.lateral {
+  background: hsl(var(--tinta));
+  color: hsl(var(--tinta-texto));
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.25rem 0.875rem;
+}
+.lateral .marca strong {
+  font-family: var(--fuente-titulo);
+  font-size: 1.25rem;
+  display: block;
+}
+.lateral small {
+  opacity: 0.7;
+  display: block;
+}
+.lateral nav {
+  display: grid;
+  gap: 0.25rem;
+}
+.lateral nav a {
+  color: inherit;
+  text-decoration: none;
+  padding: 0.55rem 0.75rem;
+  border-radius: var(--radio);
+  opacity: 0.82;
+}
+.lateral nav a.activo {
+  opacity: 1;
+  background: hsl(var(--primary) / 0.45);
+  font-weight: 600;
+}
+.lateral .pie {
+  margin-top: auto;
+  display: grid;
+  gap: 0.5rem;
+}
+main {
+  padding: 1.5rem 2rem;
+  min-width: 0;
+}
+.cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 1.25rem;
+}
+.contadores {
+  display: flex;
+  gap: 1.5rem;
+  color: hsl(var(--texto-2));
+}
+.contadores strong {
+  display: block;
+  font-family: var(--fuente-titulo);
+  font-size: 1.5rem;
+  color: hsl(var(--texto));
+}
+.filtros {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.relleno {
+  flex: 1;
+}
+.gris {
+  display: block;
+  color: hsl(var(--texto-3));
+  font-size: 0.75rem;
+}
+.sql {
+  max-width: 420px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.falla {
+  background: hsl(var(--error-suave));
+  color: hsl(var(--error-suave-texto));
+  padding: 0.75rem;
+  border-radius: var(--radio);
+}
+.solo-admin {
+  max-width: 480px;
+  margin: 4rem auto;
+}

@@ -1,0 +1,177 @@
+# Eventos y comandos entre servicios (RabbitMQ). Es un contrato: cambiarlo es un PR aparte que aprueba la otra persona.
+# Comandos → exchange abasto.comandos (le piden algo a un servicio). Eventos → abasto.eventos (cuentan algo que pasó).
+# La routing key es el tipo. Cada mensaje viaja en el mismo sobre y lleva un id único: el consumidor lo registra
+# en su tabla de mensajes procesados y, si llega dos veces, no lo aplica de nuevo.
+asyncapi: 3.0.0
+info:
+  title: Abasto · mensajería entre servicios
+  version: 1.0.0
+  description: Saga de compra orquestada desde Pedidos, proyector de reportes en Asistente y webhooks de Conecta.
+
+servers:
+  local:
+    host: localhost:5680
+    protocol: amqp
+
+channels:
+  comandos:
+    address: abasto.comandos
+    messages:
+      catalogoReservarStock: { $ref: '#/components/messages/catalogoReservarStock' }
+      catalogoLiberarStock: { $ref: '#/components/messages/catalogoLiberarStock' }
+      cobrosAutorizarCredito: { $ref: '#/components/messages/cobrosCobrar' }
+      cobrosGenerarQr: { $ref: '#/components/messages/cobrosCobrar' }
+      cobrosLiberarCredito: { $ref: '#/components/messages/cobrosDevolver' }
+      cobrosDevolverQr: { $ref: '#/components/messages/cobrosDevolver' }
+  eventos:
+    address: abasto.eventos
+    messages:
+      pedidoCreado: { $ref: '#/components/messages/pedido' }
+      pedidoPorConfirmar: { $ref: '#/components/messages/pedido' }
+      pedidoConfirmado: { $ref: '#/components/messages/pedidoConfirmado' }
+      pedidoRechazado: { $ref: '#/components/messages/pedidoRechazado' }
+      stockReservado: { $ref: '#/components/messages/stockReservado' }
+      stockRechazado: { $ref: '#/components/messages/stockRechazado' }
+      stockLiberado: { $ref: '#/components/messages/soloPedido' }
+      cobroCreditoAutorizado: { $ref: '#/components/messages/cobroHecho' }
+      cobroQrPagado: { $ref: '#/components/messages/cobroHecho' }
+      cobroRechazado: { $ref: '#/components/messages/stockRechazado' }
+      cobroCreditoLiberado: { $ref: '#/components/messages/soloPedido' }
+      cobroQrDevuelto: { $ref: '#/components/messages/soloPedido' }
+      cobroPagoRegistrado: { $ref: '#/components/messages/cobroHecho' }
+      productoStockCambiado: { $ref: '#/components/messages/productoStockCambiado' }
+
+operations:
+  pedidosPideReservar:
+    action: send
+    channel: { $ref: '#/channels/comandos' }
+    summary: Paso 2 de la saga. Lo consume Catálogo (cola catalogo.comandos).
+    messages: [{ $ref: '#/channels/comandos/messages/catalogoReservarStock' }]
+  pedidosEscuchaRespuestas:
+    action: receive
+    channel: { $ref: '#/channels/eventos' }
+    summary: Cola pedidos.respuestas (stock.* y cobro.*). Mueven la saga.
+  asistenteProyecta:
+    action: receive
+    channel: { $ref: '#/channels/eventos' }
+    summary: Cola asistente.proyector (todos los eventos) → base reportes.
+
+components:
+  schemas:
+    Sobre:
+      type: object
+      required: [id, tipo, version, ocurridoEn, orgId, datos]
+      properties:
+        id: { type: string, format: uuid, description: Único por mensaje; sirve para la idempotencia del consumidor }
+        tipo: { type: string, example: pedido.confirmado }
+        version: { type: integer, example: 1 }
+        ocurridoEn: { type: string, format: date-time }
+        correlationId: { type: string, description: El id del pedido de la saga }
+        orgId: { type: string, description: Empresa dueña del dato (el mayorista en los pedidos) }
+        datos: { type: object }
+    Linea:
+      type: object
+      required: [productoId, presentacion, cantidad]
+      properties:
+        productoId: { type: string }
+        presentacion: { type: string, enum: [UNIDAD, CUARTA, DOCENA, CAJA, FARDO] }
+        cantidad: { type: integer, minimum: 1 }
+    DatosPedido:
+      type: object
+      required: [pedidoId, codigo, tiendaId, mayoristaId, metodoPago, totalCentavos]
+      properties:
+        pedidoId: { type: string, format: uuid }
+        codigo: { type: string, example: A-1042 }
+        tiendaId: { type: string }
+        mayoristaId: { type: string }
+        metodoPago: { type: string, enum: [qr, credito] }
+        totalCentavos: { type: integer }
+
+  messages:
+    catalogoReservarStock:
+      name: catalogo.reservar_stock
+      summary: Reservar el stock de las líneas y devolver el precio por volumen de cada una.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/Sobre'
+          - properties:
+              datos:
+                type: object
+                required: [pedidoId, mayoristaId, tiendaId, lineas]
+                properties:
+                  pedidoId: { type: string }
+                  mayoristaId: { type: string }
+                  tiendaId: { type: string, description: Para aplicar la lista de precios de la red privada }
+                  lineas: { type: array, items: { $ref: '#/components/schemas/Linea' } }
+    catalogoLiberarStock:
+      name: catalogo.liberar_stock
+      summary: Compensación. Si la reserva ya se liberó, no hace nada.
+      payload: { $ref: '#/components/schemas/Sobre' }
+    cobrosCobrar:
+      name: cobros.autorizar_credito | cobros.generar_qr
+      summary: Paso 3 de la saga.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/Sobre'
+          - properties:
+              datos:
+                type: object
+                required: [pedidoId, tiendaId, mayoristaId, centavos]
+                properties:
+                  pedidoId: { type: string }
+                  tiendaId: { type: string }
+                  mayoristaId: { type: string }
+                  centavos: { type: integer }
+    cobrosDevolver:
+      name: cobros.liberar_credito | cobros.devolver_qr
+      summary: Compensación del cobro.
+      payload: { $ref: '#/components/schemas/Sobre' }
+    stockReservado:
+      name: stock.reservado
+      summary: Las líneas en el MISMO orden del comando, cada una con sus unidades y su precio unitario.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/Sobre'
+          - properties:
+              datos:
+                type: object
+                required: [pedidoId, lineas]
+                properties:
+                  pedidoId: { type: string }
+                  lineas:
+                    type: array
+                    items:
+                      type: object
+                      required: [unidades, precioUnitarioCentavos]
+                      properties:
+                        unidades: { type: integer, example: 96 }
+                        precioUnitarioCentavos: { type: integer, example: 1800 }
+    stockRechazado:
+      name: stock.rechazado | cobro.rechazado
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/Sobre'
+          - properties:
+              datos: { type: object, required: [pedidoId, motivo], properties: { pedidoId: { type: string }, motivo: { type: string } } }
+    soloPedido:
+      name: stock.liberado | cobro.credito_liberado | cobro.qr_devuelto
+      payload: { $ref: '#/components/schemas/Sobre' }
+    cobroHecho:
+      name: cobro.credito_autorizado | cobro.qr_pagado | cobro.pago_registrado
+      payload: { $ref: '#/components/schemas/Sobre' }
+    pedido:
+      name: pedido.creado | pedido.por_confirmar
+      payload:
+        allOf: [{ $ref: '#/components/schemas/Sobre' }, { properties: { datos: { $ref: '#/components/schemas/DatosPedido' } } }]
+    pedidoConfirmado:
+      name: pedido.confirmado
+      summary: Lo proyecta Asistente (ventas y cuentas por cobrar) y Conecta lo manda por webhook.
+      payload:
+        allOf: [{ $ref: '#/components/schemas/Sobre' }, { properties: { datos: { $ref: '#/components/schemas/DatosPedido' } } }]
+    pedidoRechazado:
+      name: pedido.rechazado
+      payload:
+        allOf: [{ $ref: '#/components/schemas/Sobre' }, { properties: { datos: { $ref: '#/components/schemas/DatosPedido' } } }]
+    productoStockCambiado:
+      name: producto.stock_cambiado
+      payload: { $ref: '#/components/schemas/Sobre' }

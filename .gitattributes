@@ -1,0 +1,25 @@
+# Finales de línea LF en todo el repo: los scripts de los contenedores fallan con CRLF
+* text=auto eol=lf
+
+# Windows necesita CRLF en sus scripts
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Binarios
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ico binary
+*.jar binary
+*.tflite binary
+*.keras binary
+*.h5 binary
+*.bin binary
+*.woff binary
+*.woff2 binary
+*.xlsx binary
+
+# Maquetas exportadas de Claude Design: se versionan pero no se comparan
+docs/uix-mockup/*.html linguist-generated=true -diff

@@ -1,0 +1,70 @@
+# Dependencias
+node_modules/
+vendor/
+.venv/
+.pnpm-store/
+
+# Builds
+dist/
+build/
+out/
+.angular/
+.turbo/
+.gradle/
+services/pedidos/bin/
+*.tsbuildinfo
+coverage/
+dev-dist/
+.deptrac.cache
+
+# Expo / React Native (el build de desarrollo se genera con prebuild)
+apps/campo/android/
+apps/campo/ios/
+apps/campo/.expo/
+apps/campo/web-build/
+
+# Clientes generados (se regeneran al instalar)
+services/*/src/infraestructura/persistencia/generado/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+ml/datos/fotos/
+ml/modelos/entrenados/
+
+# Pruebas
+playwright-report/
+test-results/
+e2e/.auth/
+
+# Entorno y secretos: nunca al repo
+.env
+.env.*
+!.env.example
+services/catalogo/.env
+*.pem
+*.key
+
+# Laravel
+services/catalogo/storage/*.key
+services/catalogo/storage/logs/*
+services/catalogo/storage/framework/cache/data/*
+services/catalogo/storage/framework/sessions/*
+services/catalogo/storage/framework/views/*
+services/catalogo/bootstrap/cache/*.php
+services/catalogo/.phpunit.result.cache
+
+# Sistema y editores
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# Claude Code: lo compartido va en .claude/settings.json y .claude/skills
+.claude/settings.local.json

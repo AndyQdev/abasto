@@ -1,0 +1,244 @@
+# Abasto en una sola máquina.
+#   pnpm infra       → bases, colas, Keycloak, Router y Jaeger (lo que todos necesitan)
+#   pnpm todo        → lo anterior + los cinco servicios construidos desde su Dockerfile
+#   pnpm n8n         → n8n aparte (pesa y no siempre hace falta)
+# Puertos del host: ver README.md. Contraseñas solo de desarrollo.
+
+name: abasto
+
+x-salud: &salud
+  interval: 5s
+  timeout: 5s
+  retries: 40
+
+x-host: &host
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+
+services:
+  # ---------------------------------------------------------------- bases
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: abasto
+      POSTGRES_PASSWORD: abasto
+      TZ: America/La_Paz
+    ports: ["${PUERTO_POSTGRES:-5440}:5432"]
+    volumes:
+      - postgres:/var/lib/postgresql/data
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U abasto"]
+      <<: *salud
+
+  mongo:
+    image: mongo:8.0
+    # Réplica de un nodo: sin réplica no hay transacciones (las reservas de stock las usan)
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    ports: ["${PUERTO_MONGO:-27020}:27017"]
+    volumes:
+      - mongo:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "try { rs.status().ok } catch (e) { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'mongo:27017' }] }).ok }"]
+      <<: *salud
+
+  dynamodb:
+    image: amazon/dynamodb-local:2.5.4
+    command: ["-jar", "DynamoDBLocal.jar", "-sharedDb", "-dbPath", "/home/dynamodblocal/data"]
+    working_dir: /home/dynamodblocal
+    user: root
+    ports: ["${PUERTO_DYNAMODB:-8800}:8000"]
+    volumes:
+      - dynamodb:/home/dynamodblocal/data
+
+  # ---------------------------------------------------------------- mensajería y sesión
+  rabbitmq:
+    image: rabbitmq:4.1-management
+    ports:
+      - "${PUERTO_RABBITMQ:-5680}:5672"
+      - "${PUERTO_RABBITMQ_UI:-15680}:15672"
+    volumes:
+      - ./infra/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - ./infra/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
+      - rabbitmq:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_port_connectivity"]
+      <<: *salud
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+      # El emisor de los tokens siempre es localhost:8180, se pidan desde el navegador o desde un contenedor
+      KC_HOSTNAME: http://localhost:${PUERTO_KEYCLOAK:-8180}
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      KC_HTTP_ENABLED: "true"
+      KC_HEALTH_ENABLED: "true"
+    ports: ["${PUERTO_KEYCLOAK:-8180}:8080"]
+    volumes:
+      - ./infra/keycloak:/opt/keycloak/data/import:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q 'UP' <&3"]
+      <<: *salud
+
+  # ---------------------------------------------------------------- puertas de entrada y trazas
+  router:
+    image: ghcr.io/apollographql/router:v2.7.0
+    command: ["--config", "/config/router.yaml", "--supergraph", "/config/supergraph.graphql", "--hot-reload"]
+    environment:
+      PEDIDOS_URL: ${PEDIDOS_URL:-http://pedidos:8081/graphql}
+      CATALOGO_URL: ${CATALOGO_URL:-http://catalogo:8082/graphql}
+      COBROS_URL: ${COBROS_URL:-http://cobros:8083/graphql}
+      APOLLO_TELEMETRY_DISABLED: "true"
+    ports: ["${PUERTO_ROUTER:-4000}:4000"]
+    volumes:
+      - ./infra/router:/config:ro
+    <<: *host
+
+  jaeger:
+    image: jaegertracing/jaeger:2.11.0
+    ports:
+      - "${PUERTO_JAEGER:-16686}:16686"
+      - "4317:4317"
+      - "4318:4318"
+
+  # ---------------------------------------------------------------- servicios (perfil "servicios")
+  # Cada uno se construye desde su Dockerfile: quien no trabaja en un servicio no necesita su lenguaje.
+
+  catalogo:
+    profiles: ["servicios"]
+    build: { context: ./services/catalogo, target: dev }
+    command:
+      - sh
+      - -c
+      - >-
+        [ -f .env ] || cp .env.example .env;
+        grep -q '^APP_KEY=base64' .env || php artisan key:generate --force;
+        composer install --no-interaction --quiet;
+        php -S 0.0.0.0:8082 -t public vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php
+    environment:
+      # php -S hereda estas variables (artisan serve no se las pasa a sus procesos)
+      MONGODB_URI: mongodb://mongo:27017/?replicaSet=rs0
+      KEYCLOAK_JWKS_URL: http://keycloak:8080/realms/abasto/protocol/openid-connect/certs
+      PHP_CLI_SERVER_WORKERS: "4"
+    ports: ["8082:8082"]
+    volumes:
+      - ./services/catalogo:/app
+      # vendor en un volumen de Docker: en una carpeta de Windows, PHP se vuelve muy lento
+      - catalogo_vendor:/app/vendor
+    depends_on:
+      mongo:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1:8082/salud') ? 0 : 1);"]
+      <<: *salud
+
+  pedidos:
+    profiles: ["servicios"]
+    build: ./services/pedidos
+    environment:
+      SPRING_PROFILES_ACTIVE: demo
+      DB_HOST: postgres
+      DB_PUERTO: "5432"
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PUERTO: "5672"
+      KEYCLOAK_JWKS_URL: http://keycloak:8080/realms/abasto/protocol/openid-connect/certs
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+    ports: ["8081:8081"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8081/salud"]
+      <<: *salud
+
+  cobros:
+    profiles: ["servicios"]
+    build: { context: ., dockerfile: services/cobros/Dockerfile }
+    environment:
+      DATABASE_URL: postgresql://cobros:cobros@postgres:5432/cobros
+      KEYCLOAK_JWKS_URL: http://keycloak:8080/realms/abasto/protocol/openid-connect/certs
+    ports: ["8083:8083"]
+    depends_on:
+      postgres: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8083/salud"]
+      <<: *salud
+
+  conecta:
+    profiles: ["servicios"]
+    build: { context: ., dockerfile: services/conecta/Dockerfile }
+    environment:
+      DYNAMODB_URL: http://dynamodb:8000
+      ROUTER_URL: http://router:4000/
+      KEYCLOAK_JWKS_URL: http://keycloak:8080/realms/abasto/protocol/openid-connect/certs
+      ORIGENES_PERMITIDOS: http://localhost:5173,http://localhost:5174
+    ports: ["8084:8084"]
+    depends_on: [dynamodb]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8084/salud"]
+      <<: *salud
+
+  asistente:
+    profiles: ["servicios"]
+    build: { context: ., dockerfile: services/asistente/Dockerfile }
+    environment:
+      REPORTES_HOST: postgres
+      REPORTES_PUERTO: "5432"
+      DYNAMODB_URL: http://dynamodb:8000
+      RABBITMQ_URL: amqp://abasto:abasto@rabbitmq:5672
+      KEYCLOAK_JWKS_URL: http://keycloak:8080/realms/abasto/protocol/openid-connect/certs
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      N8N_WEBHOOK_ACCIONES: ${N8N_WEBHOOK_ACCIONES:-}
+    ports: ["8085:8085"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8085/salud"]
+      <<: *salud
+
+  # ---------------------------------------------------------------- automatización
+  n8n:
+    image: n8nio/n8n:1.112.0
+    profiles: ["n8n"]
+    environment:
+      N8N_SECURE_COOKIE: "false"
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      N8N_PERSONALIZATION_ENABLED: "false"
+      GENERIC_TIMEZONE: America/La_Paz
+      TZ: America/La_Paz
+      CONECTA_URL: ${CONECTA_URL_N8N:-http://conecta:8084}
+      KEYCLOAK_TOKEN_URL: http://keycloak:8080/realms/abasto/protocol/openid-connect/token
+      # El flujo de ejemplo usa crypto para la clave de idempotencia y lee las URL de arriba
+      NODE_FUNCTION_ALLOW_BUILTIN: crypto
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
+    ports: ["${PUERTO_N8N:-5678}:5678"]
+    volumes:
+      - n8n:/home/node/.n8n
+      - ./infra/n8n/flujos:/flujos:ro
+    # Sin esto, --wait vuelve antes de que n8n termine sus migraciones y la importación choca con ellas
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:5678/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 20s
+    <<: *host
+
+volumes:
+  catalogo_vendor:
+  postgres:
+  mongo:
+  dynamodb:
+  rabbitmq:
+  n8n:

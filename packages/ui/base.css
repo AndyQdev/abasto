@@ -1,0 +1,89 @@
+/* Base común de las apps web de Abasto. Va después de tokens.css.
+   Las reglas del sistema UIX: radios grandes en tarjetas, sombras de dos capas,
+   todo estado escrito con palabra (nunca solo color), montos «Bs 1.728,00», códigos en monoespaciada. */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.45;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid hsl(var(--anillo));
+  outline-offset: 2px;
+}
+
+.mono,
+code {
+  font-family: var(--fuente-mono);
+  font-size: 0.92em;
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+}
+.tabla th,
+.tabla td {
+  text-align: left;
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid hsl(var(--borde));
+  vertical-align: middle;
+}
+.tabla td.num,
+.tabla th.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Insignias de estado: siempre con su palabra adentro */
+.insignia.exito { background: hsl(var(--exito-suave)); color: hsl(var(--exito-suave-texto)); }
+.insignia.advertencia { background: hsl(var(--advertencia-suave)); color: hsl(var(--advertencia-suave-texto)); }
+.insignia.alto { background: hsl(var(--alto-suave)); color: hsl(var(--alto-suave-texto)); }
+.insignia.error { background: hsl(var(--error-suave)); color: hsl(var(--error-suave-texto)); }
+.insignia.neutro { background: hsl(var(--neutro-suave)); color: hsl(var(--neutro-suave-texto)); }
+
+.unitario {
+  display: block;
+  font-size: 0.6875rem;
+  color: hsl(var(--texto-3));
+}
+
+.vacio {
+  padding: 2rem;
+  text-align: center;
+  color: hsl(var(--texto-3));
+}
+
+.aviso-sin-senal {
+  background: hsl(var(--advertencia-suave));
+  color: hsl(var(--advertencia-suave-texto));
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  font-size: 0.8125rem;
+}

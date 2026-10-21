@@ -1,0 +1,118 @@
+# Subgrafo de Catálogo (Laravel + Lighthouse). Es un contrato: cambiarlo es un PR aparte que aprueba la otra persona.
+# El supergrafo lo compone `pnpm supergrafo` junto con Pedidos y Cobros.
+# Red privada: el precio solo se resuelve si la tienda de la sesión es cliente aprobada del mayorista.
+
+extend schema @link(url: "https://specs.apollo.dev/federation/v2.7", import: ["@key", "@shareable"])
+
+type Query {
+  "Catálogo para la tienda de la sesión: productos de mayoristas verificados."
+  productos(busqueda: String, mayoristaId: ID): [Producto!]!
+    @field(resolver: "Catalogo\\Infraestructura\\GraphQL\\Resolutores@productos")
+  producto(id: ID!): Producto @field(resolver: "Catalogo\\Infraestructura\\GraphQL\\Resolutores@producto")
+  "Productos del mayorista de la sesión (Panel)."
+  misProductos(busqueda: String): [Producto!]!
+    @field(resolver: "Catalogo\\Infraestructura\\GraphQL\\Resolutores@misProductos")
+  mayoristas(busqueda: String): [Mayorista!]! @field(resolver: "Catalogo\\Infraestructura\\GraphQL\\Resolutores@mayoristas")
+  "Tiendas que pidieron ser clientes del mayorista de la sesión."
+  misSolicitudes: [RelacionComercial!]! @field(resolver: "Catalogo\\Infraestructura\\GraphQL\\Resolutores@misSolicitudes")
+}
+
+type Mutation {
+  pedirSerCliente(mayoristaId: ID!): RelacionComercial!
+    @field(resolver: "Catalogo\\Infraestructura\\GraphQL\\Resolutores@pedirSerCliente")
+  aprobarCliente(tiendaId: ID!, lista: ListaDePrecios!): RelacionComercial!
+    @field(resolver: "Catalogo\\Infraestructura\\GraphQL\\Resolutores@aprobarCliente")
+  rechazarCliente(tiendaId: ID!): RelacionComercial!
+    @field(resolver: "Catalogo\\Infraestructura\\GraphQL\\Resolutores@rechazarCliente")
+  "Lo usa Abasto Campo a través de Conecta. El producto entra como pendiente de revisión."
+  cargarProducto(entrada: CargarProductoEntrada!): Producto!
+    @field(resolver: "Catalogo\\Infraestructura\\GraphQL\\Resolutores@cargarProducto")
+}
+
+input CargarProductoEntrada {
+  "Clave de idempotencia de la bandeja de Campo"
+  clave: ID!
+  nombre: String!
+  rubro: String!
+  presentacion: Presentacion!
+  unidades: Int!
+  precioUnitarioCentavos: Int!
+}
+
+type Producto @key(fields: "id") {
+  id: ID!
+  codigo: String!
+  nombre: String!
+  rubro: String!
+  descripcion: String!
+  stock: Int!
+  estado: EstadoProducto!
+  mayorista: Mayorista!
+  "Precio por volumen. precioUnitario es null si quien consulta no puede ver precios."
+  escalas: [Escala!]!
+  precioVisible: Boolean!
+}
+
+type Escala {
+  presentacion: Presentacion!
+  "Unidades que trae la presentación"
+  cantidad: Int!
+  precioUnitario: Dinero
+}
+
+type Mayorista @key(fields: "id") {
+  id: ID!
+  nombre: String!
+  ciudad: String!
+  verificado: Boolean!
+  "Relación de la tienda de la sesión con este mayorista"
+  relacion: EstadoRelacion!
+}
+
+type Tienda @key(fields: "id") {
+  id: ID!
+  nombre: String!
+  ciudad: String!
+}
+
+type RelacionComercial {
+  tienda: Tienda!
+  mayorista: Mayorista!
+  estado: EstadoRelacion!
+  lista: ListaDePrecios
+}
+
+enum Presentacion {
+  UNIDAD
+  CUARTA
+  DOCENA
+  CAJA
+  FARDO
+}
+
+enum EstadoProducto {
+  ACTIVO
+  PAUSADO
+  SIN_STOCK
+  PENDIENTE_DE_REVISION
+}
+
+enum EstadoRelacion {
+  NINGUNA
+  SOLICITADA
+  APROBADA
+  RECHAZADA
+}
+
+enum ListaDePrecios {
+  NUEVOS
+  FRECUENTES
+  VIP
+}
+
+"Monto en bolivianos. Mismo tipo en los tres subgrafos."
+type Dinero @shareable {
+  centavos: Int!
+  moneda: String!
+  texto: String!
+}

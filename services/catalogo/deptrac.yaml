@@ -1,0 +1,41 @@
+# Reglas de Clean Architecture para Catálogo (`composer arquitectura`).
+# Dominio no depende de nadie; Aplicación solo del Dominio; Infraestructura y Laravel van por fuera.
+deptrac:
+  paths:
+    - ./src
+    - ./app
+  layers:
+    - name: Dominio
+      collectors:
+        - type: directory
+          value: src/Catalogo/Dominio/.*
+    - name: Aplicacion
+      collectors:
+        - type: directory
+          value: src/Catalogo/Aplicacion/.*
+    - name: Infraestructura
+      collectors:
+        - type: directory
+          value: src/Catalogo/Infraestructura/.*
+    - name: Laravel
+      collectors:
+        - type: directory
+          value: app/.*
+    - name: Frameworks
+      collectors:
+        - type: classNameRegex
+          value: '#^(Illuminate|Laravel|Nuwave|MongoDB|GraphQL|Firebase|Symfony)#'
+  ruleset:
+    Dominio: ~
+    Aplicacion:
+      - Dominio
+    Infraestructura:
+      - Dominio
+      - Aplicacion
+      - Frameworks
+    Laravel:
+      - Dominio
+      - Aplicacion
+      - Infraestructura
+      - Frameworks
+    Frameworks: ~

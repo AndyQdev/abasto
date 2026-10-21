@@ -1,0 +1,14 @@
+{
+  "name": "@abasto/e2e",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pruebas punta a punta de Abasto con Playwright. Necesitan `pnpm todo` (infra + servicios).",
+  "type": "module",
+  "scripts": {
+    "e2e": "playwright test",
+    "navegadores": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1"
+  }
+}

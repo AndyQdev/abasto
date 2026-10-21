@@ -1,0 +1,39 @@
+{
+  "users": [
+    { "name": "abasto", "password": "abasto", "tags": ["administrator"] }
+  ],
+  "vhosts": [{ "name": "/" }],
+  "permissions": [
+    { "user": "abasto", "vhost": "/", "configure": ".*", "write": ".*", "read": ".*" }
+  ],
+  "exchanges": [
+    { "name": "abasto.eventos", "vhost": "/", "type": "topic", "durable": true, "auto_delete": false, "internal": false, "arguments": {} },
+    { "name": "abasto.comandos", "vhost": "/", "type": "topic", "durable": true, "auto_delete": false, "internal": false, "arguments": {} },
+    { "name": "abasto.dlx", "vhost": "/", "type": "topic", "durable": true, "auto_delete": false, "internal": false, "arguments": {} }
+  ],
+  "queues": [
+    { "name": "catalogo.comandos", "vhost": "/", "durable": true, "auto_delete": false, "arguments": { "x-queue-type": "quorum", "x-dead-letter-exchange": "abasto.dlx", "x-dead-letter-routing-key": "catalogo.comandos", "x-delivery-limit": 5 } },
+    { "name": "cobros.comandos", "vhost": "/", "durable": true, "auto_delete": false, "arguments": { "x-queue-type": "quorum", "x-dead-letter-exchange": "abasto.dlx", "x-dead-letter-routing-key": "cobros.comandos", "x-delivery-limit": 5 } },
+    { "name": "pedidos.respuestas", "vhost": "/", "durable": true, "auto_delete": false, "arguments": { "x-queue-type": "quorum", "x-dead-letter-exchange": "abasto.dlx", "x-dead-letter-routing-key": "pedidos.respuestas", "x-delivery-limit": 5 } },
+    { "name": "conecta.eventos", "vhost": "/", "durable": true, "auto_delete": false, "arguments": { "x-queue-type": "quorum", "x-dead-letter-exchange": "abasto.dlx", "x-dead-letter-routing-key": "conecta.eventos", "x-delivery-limit": 5 } },
+    { "name": "asistente.proyector", "vhost": "/", "durable": true, "auto_delete": false, "arguments": { "x-queue-type": "quorum", "x-dead-letter-exchange": "abasto.dlx", "x-dead-letter-routing-key": "asistente.proyector", "x-delivery-limit": 5 } },
+    { "name": "catalogo.comandos.dlq", "vhost": "/", "durable": true, "auto_delete": false, "arguments": {} },
+    { "name": "cobros.comandos.dlq", "vhost": "/", "durable": true, "auto_delete": false, "arguments": {} },
+    { "name": "pedidos.respuestas.dlq", "vhost": "/", "durable": true, "auto_delete": false, "arguments": {} },
+    { "name": "conecta.eventos.dlq", "vhost": "/", "durable": true, "auto_delete": false, "arguments": {} },
+    { "name": "asistente.proyector.dlq", "vhost": "/", "durable": true, "auto_delete": false, "arguments": {} }
+  ],
+  "bindings": [
+    { "source": "abasto.comandos", "vhost": "/", "destination": "catalogo.comandos", "destination_type": "queue", "routing_key": "catalogo.#", "arguments": {} },
+    { "source": "abasto.comandos", "vhost": "/", "destination": "cobros.comandos", "destination_type": "queue", "routing_key": "cobros.#", "arguments": {} },
+    { "source": "abasto.eventos", "vhost": "/", "destination": "pedidos.respuestas", "destination_type": "queue", "routing_key": "stock.*", "arguments": {} },
+    { "source": "abasto.eventos", "vhost": "/", "destination": "pedidos.respuestas", "destination_type": "queue", "routing_key": "cobro.*", "arguments": {} },
+    { "source": "abasto.eventos", "vhost": "/", "destination": "conecta.eventos", "destination_type": "queue", "routing_key": "pedido.*", "arguments": {} },
+    { "source": "abasto.eventos", "vhost": "/", "destination": "asistente.proyector", "destination_type": "queue", "routing_key": "#", "arguments": {} },
+    { "source": "abasto.dlx", "vhost": "/", "destination": "catalogo.comandos.dlq", "destination_type": "queue", "routing_key": "catalogo.comandos", "arguments": {} },
+    { "source": "abasto.dlx", "vhost": "/", "destination": "cobros.comandos.dlq", "destination_type": "queue", "routing_key": "cobros.comandos", "arguments": {} },
+    { "source": "abasto.dlx", "vhost": "/", "destination": "pedidos.respuestas.dlq", "destination_type": "queue", "routing_key": "pedidos.respuestas", "arguments": {} },
+    { "source": "abasto.dlx", "vhost": "/", "destination": "conecta.eventos.dlq", "destination_type": "queue", "routing_key": "conecta.eventos", "arguments": {} },
+    { "source": "abasto.dlx", "vhost": "/", "destination": "asistente.proyector.dlq", "destination_type": "queue", "routing_key": "asistente.proyector", "arguments": {} }
+  ]
+}

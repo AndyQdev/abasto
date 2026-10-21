@@ -1,0 +1,14 @@
+**/node_modules
+**/dist
+**/.angular
+**/build
+**/.gradle
+**/vendor
+.git
+apps
+ml
+e2e
+docs
+services/pedidos
+services/catalogo
+**/generado

@@ -1,0 +1,118 @@
+openapi: 3.1.0
+info:
+  title: Conecta · la puerta de afuera de Abasto
+  version: 1.0.0
+  description: |
+    Sincronización de las bandejas offline (Mercado y Campo) y API para e-commerce y n8n.
+    Toda escritura lleva una clave de idempotencia: repetirla devuelve la misma respuesta y nunca registra dos veces.
+servers:
+  - url: http://localhost:8084
+security:
+  - keycloak: []
+paths:
+  /salud:
+    get:
+      security: []
+      responses:
+        '200': { description: El servicio responde }
+  /v1/sincronizacion/lotes:
+    post:
+      summary: Aplica en orden lo que juntó una bandeja offline
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [operaciones]
+              properties:
+                operaciones:
+                  type: array
+                  minItems: 1
+                  maxItems: 100
+                  items: { $ref: '#/components/schemas/Operacion' }
+      responses:
+        '200':
+          description: Un resultado por operación, en el mismo orden
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  resultados: { type: array, items: { $ref: '#/components/schemas/Resultado' } }
+        '400': { description: El lote no cumple el esquema }
+        '401': { description: Falta la sesión o venció }
+  /v1/pedidos:
+    post:
+      summary: Un pedido desde un e-commerce o n8n
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DatosPedido' }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Resultado' }
+        '400': { description: Falta la cabecera Idempotency-Key }
+components:
+  securitySchemes:
+    keycloak:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Operacion:
+      type: object
+      required: [clave, tipo, datos, creadaEn]
+      properties:
+        clave: { type: string, format: uuid, description: La genera el teléfono una sola vez; no cambia entre reintentos }
+        tipo: { type: string, enum: [pedido.crear, producto.cargar] }
+        datos:
+          oneOf:
+            - $ref: '#/components/schemas/DatosPedido'
+            - $ref: '#/components/schemas/DatosProducto'
+        creadaEn: { type: string, format: date-time }
+    DatosPedido:
+      type: object
+      required: [mayoristaId, metodoPago, lineas]
+      properties:
+        mayoristaId: { type: string }
+        metodoPago: { type: string, enum: [QR, CREDITO] }
+        lineas:
+          type: array
+          items:
+            type: object
+            required: [productoId, presentacion, cantidad]
+            properties:
+              productoId: { type: string }
+              presentacion: { type: string, enum: [UNIDAD, CUARTA, DOCENA, CAJA, FARDO] }
+              cantidad: { type: integer, minimum: 1 }
+    DatosProducto:
+      type: object
+      required: [nombre, rubro, presentacion, unidades, precioUnitarioCentavos]
+      properties:
+        nombre: { type: string }
+        rubro: { type: string }
+        presentacion: { type: string, enum: [UNIDAD, CUARTA, DOCENA, CAJA, FARDO] }
+        unidades: { type: integer }
+        precioUnitarioCentavos: { type: integer }
+    Resultado:
+      type: object
+      required: [clave, estado]
+      properties:
+        clave: { type: string }
+        estado:
+          type: string
+          enum: [aplicada, repetida, conflicto, rechazada]
+          description: |
+            aplicada: se aplicó ahora. repetida: ya se había aplicado y se devuelve la misma respuesta.
+            conflicto: la misma clave llegó con otro contenido. rechazada: falló; la clave se libera para reintentar.
+        respuesta: { description: Lo que devolvió el servicio la primera vez }
+        error: { type: string }

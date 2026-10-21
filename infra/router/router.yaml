@@ -1,0 +1,52 @@
+# Apollo Router: la puerta GraphQL de Mercado, Panel y Superadmin.
+supergraph:
+  listen: 0.0.0.0:4000
+  introspection: true
+
+sandbox:
+  enabled: true
+homepage:
+  enabled: false
+
+health_check:
+  listen: 0.0.0.0:8088
+  enabled: true
+
+# El token de Keycloak viaja a cada subgrafo: cada servicio valida y sabe quién pregunta
+headers:
+  all:
+    request:
+      - propagate:
+          named: authorization
+      - propagate:
+          named: idempotency-key
+
+cors:
+  allow_credentials: true
+  policies:
+    - origins:
+        - http://localhost:5170
+        - http://localhost:5171
+        - http://localhost:5172
+        - http://localhost:5173
+        - http://localhost:5174
+      allow_headers: [authorization, content-type, idempotency-key]
+
+# Si corres un servicio fuera de Docker, apunta a host.docker.internal desde .env
+override_subgraph_url:
+  pedidos: ${env.PEDIDOS_URL:-http://pedidos:8081/graphql}
+  catalogo: ${env.CATALOGO_URL:-http://catalogo:8082/graphql}
+  cobros: ${env.COBROS_URL:-http://cobros:8083/graphql}
+
+include_subgraph_errors:
+  all: true
+
+telemetry:
+  exporters:
+    tracing:
+      otlp:
+        enabled: true
+        endpoint: http://jaeger:4317
+        protocol: grpc
+      common:
+        service_name: router

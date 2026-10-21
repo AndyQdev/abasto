@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "git fetch -q origin 2>/dev/null; echo '## Estado del equipo en origin/main'; git show origin/main:docs/equipo/andres.md 2>/dev/null; git show origin/main:docs/equipo/jhoel.md 2>/dev/null; true"
+          }
+        ]
+      }
+    ]
+  }
+}

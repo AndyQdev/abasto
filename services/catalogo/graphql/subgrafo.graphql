@@ -1,0 +1,172 @@
+# GENERADO con: docker compose run --rm catalogo php artisan lighthouse:print-schema --federation
+# No se edita a mano: el contrato fuente es graphql/schema.graphql. Lo lee rover para componer el supergrafo.
+
+extend schema @link(url: "https://specs.apollo.dev/federation/v2.7", import: ["@key", "@shareable"])
+
+input CargarProductoEntrada {
+  "Clave de idempotencia de la bandeja de Campo"
+  clave: ID!
+  nombre: String!
+  rubro: String!
+  presentacion: Presentacion!
+  unidades: Int!
+  precioUnitarioCentavos: Int!
+}
+
+type Producto @key(fields: "id") {
+  id: ID!
+  codigo: String!
+  nombre: String!
+  rubro: String!
+  descripcion: String!
+  stock: Int!
+  estado: EstadoProducto!
+  mayorista: Mayorista!
+
+  "Precio por volumen. precioUnitario es null si quien consulta no puede ver precios."
+  escalas: [Escala!]!
+  precioVisible: Boolean!
+}
+
+type Escala {
+  presentacion: Presentacion!
+
+  "Unidades que trae la presentación"
+  cantidad: Int!
+  precioUnitario: Dinero
+}
+
+type Mayorista @key(fields: "id") {
+  id: ID!
+  nombre: String!
+  ciudad: String!
+  verificado: Boolean!
+
+  "Relación de la tienda de la sesión con este mayorista"
+  relacion: EstadoRelacion!
+}
+
+type Tienda @key(fields: "id") {
+  id: ID!
+  nombre: String!
+  ciudad: String!
+}
+
+type RelacionComercial {
+  tienda: Tienda!
+  mayorista: Mayorista!
+  estado: EstadoRelacion!
+  lista: ListaDePrecios
+}
+
+enum Presentacion {
+  UNIDAD
+  CUARTA
+  DOCENA
+  CAJA
+  FARDO
+}
+
+enum EstadoProducto {
+  ACTIVO
+  PAUSADO
+  SIN_STOCK
+  PENDIENTE_DE_REVISION
+}
+
+enum EstadoRelacion {
+  NINGUNA
+  SOLICITADA
+  APROBADA
+  RECHAZADA
+}
+
+enum ListaDePrecios {
+  NUEVOS
+  FRECUENTES
+  VIP
+}
+
+"Monto en bolivianos. Mismo tipo en los tres subgrafos."
+type Dinero @shareable {
+  centavos: Int!
+  moneda: String!
+  texto: String!
+}
+
+"Directions for ordering a list of records."
+enum SortOrder {
+  "Sort records in ascending order."
+  ASC
+
+  "Sort records in descending order."
+  DESC
+}
+
+"Aggregate functions when ordering by a relation without specifying a column."
+enum OrderByRelationAggregateFunction {
+  "Amount of items."
+  COUNT
+}
+
+"Aggregate functions when ordering by a relation that may specify a column."
+enum OrderByRelationWithColumnAggregateFunction {
+  "Average."
+  AVG
+
+  "Minimum."
+  MIN
+
+  "Maximum."
+  MAX
+
+  "Sum."
+  SUM
+
+  "Amount of items."
+  COUNT
+}
+
+"Allows ordering a list of records."
+input OrderByClause {
+  "The column that is used for ordering."
+  column: String!
+
+  "The direction that is used for ordering."
+  order: SortOrder!
+}
+
+"Specify if you want to include or exclude trashed results from a query."
+enum Trashed {
+  "Only return trashed results."
+  ONLY
+
+  "Return both trashed and non-trashed results."
+  WITH
+
+  "Only return non-trashed results."
+  WITHOUT
+}
+
+type Query {
+  "Catálogo para la tienda de la sesión: productos de mayoristas verificados."
+  productos(busqueda: String, mayoristaId: ID): [Producto!]!
+  producto(id: ID!): Producto
+
+  "Productos del mayorista de la sesión (Panel)."
+  misProductos(busqueda: String): [Producto!]!
+  mayoristas(busqueda: String): [Mayorista!]!
+
+  "Tiendas que pidieron ser clientes del mayorista de la sesión."
+  misSolicitudes: [RelacionComercial!]!
+}
+
+type Mutation {
+  pedirSerCliente(mayoristaId: ID!): RelacionComercial!
+  aprobarCliente(tiendaId: ID!, lista: ListaDePrecios!): RelacionComercial!
+  rechazarCliente(tiendaId: ID!): RelacionComercial!
+
+  "Lo usa Abasto Campo a través de Conecta. El producto entra como pendiente de revisión."
+  cargarProducto(entrada: CargarProductoEntrada!): Producto!
+}
+

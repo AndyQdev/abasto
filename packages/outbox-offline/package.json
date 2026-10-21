@@ -1,0 +1,21 @@
+{
+  "name": "@abasto/outbox-offline",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Bandeja offline con idempotencia: guarda en IndexedDB y sincroniza con Conecta al volver la señal.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "dexie": "^4.4.6"
+  },
+  "devDependencies": {
+    "fake-indexeddb": "^6.0.0",
+    "typescript": "~6.0.3",
+    "vitest": "^4.1.2"
+  }
+}

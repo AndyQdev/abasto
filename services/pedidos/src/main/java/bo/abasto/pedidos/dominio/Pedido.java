@@ -1,0 +1,102 @@
+package bo.abasto.pedidos.dominio;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+
+/**
+ * Agregado raíz: un pedido mayorista de una tienda a un mayorista.
+ * La clave es la que generó la bandeja offline o el e-commerce: con la misma clave nunca hay dos pedidos.
+ */
+public class Pedido {
+
+    private final UUID id;
+    private final String codigo;
+    private final UUID clave;
+    private final String tiendaId;
+    private final String mayoristaId;
+    private final MetodoPago metodoPago;
+    private final Instant creadoEn;
+    private List<LineaDePedido> lineas;
+    private EstadoPedido estado;
+    private String motivoRechazo;
+
+    public Pedido(UUID id, String codigo, UUID clave, String tiendaId, String mayoristaId, MetodoPago metodoPago,
+                  List<LineaDePedido> lineas, EstadoPedido estado, String motivoRechazo, Instant creadoEn) {
+        this.id = id;
+        this.codigo = codigo;
+        this.clave = clave;
+        this.tiendaId = tiendaId;
+        this.mayoristaId = mayoristaId;
+        this.metodoPago = metodoPago;
+        this.lineas = List.copyOf(lineas);
+        this.estado = estado;
+        this.motivoRechazo = motivoRechazo;
+        this.creadoEn = creadoEn;
+    }
+
+    public static Pedido nuevo(String codigo, UUID clave, String tiendaId, String mayoristaId, MetodoPago metodoPago,
+                               List<LineaDePedido> lineas, Instant ahora) {
+        if (lineas == null || lineas.isEmpty()) {
+            throw new ErrorDeDominio("PEDIDO_VACIO", "El pedido tiene que tener al menos un producto");
+        }
+        if (tiendaId.equals(mayoristaId)) {
+            throw new ErrorDeDominio("PEDIDO_A_SI_MISMO", "Una empresa no puede hacerse un pedido a sí misma");
+        }
+        return new Pedido(UUID.randomUUID(), codigo, clave, tiendaId, mayoristaId, metodoPago, lineas,
+                EstadoPedido.PENDIENTE, null, ahora);
+    }
+
+    /** Paso 2 de la saga: Catálogo reservó el stock y devolvió el precio por volumen de cada línea. */
+    public void fijarPrecios(List<LineaDePedido> conPrecio) {
+        if (conPrecio.size() != lineas.size()) {
+            throw new ErrorDeDominio("LINEAS_DISTINTAS", "La reserva no trae las mismas líneas del pedido");
+        }
+        this.lineas = List.copyOf(conPrecio);
+    }
+
+    public void quedarPorConfirmar() {
+        pasarA(EstadoPedido.POR_CONFIRMAR);
+    }
+
+    public void confirmar() {
+        pasarA(EstadoPedido.CONFIRMADO);
+    }
+
+    public void rechazar(String motivo) {
+        pasarA(EstadoPedido.RECHAZADO);
+        this.motivoRechazo = motivo;
+    }
+
+    public void cancelar(String motivo) {
+        pasarA(EstadoPedido.CANCELADO);
+        this.motivoRechazo = motivo;
+    }
+
+    public void pasarA(EstadoPedido siguiente) {
+        if (!estado.puedePasarA(siguiente)) {
+            throw new ErrorDeDominio("TRANSICION_INVALIDA",
+                    "El pedido " + codigo + " está " + estado + " y no puede pasar a " + siguiente);
+        }
+        this.estado = siguiente;
+    }
+
+    public Dinero total() {
+        return lineas.stream().map(LineaDePedido::subtotal).reduce(Dinero.CERO, Dinero::sumar);
+    }
+
+    public boolean esDe(String orgId) {
+        return tiendaId.equals(orgId) || mayoristaId.equals(orgId);
+    }
+
+    public UUID id() { return id; }
+    public String codigo() { return codigo; }
+    public UUID clave() { return clave; }
+    public String tiendaId() { return tiendaId; }
+    public String mayoristaId() { return mayoristaId; }
+    public MetodoPago metodoPago() { return metodoPago; }
+    public Instant creadoEn() { return creadoEn; }
+    public List<LineaDePedido> lineas() { return lineas; }
+    public EstadoPedido estado() { return estado; }
+    public String motivoRechazo() { return motivoRechazo; }
+}

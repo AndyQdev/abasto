@@ -1,0 +1,13 @@
+{
+  "name": "@abasto/sesion",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sesión única con Keycloak (OIDC + PKCE) para las apps web de Abasto.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "oidc-client-ts": "^3.5.0"
+  }
+}

@@ -1,0 +1,404 @@
+schema
+  @link(url: "https://specs.apollo.dev/link/v1.0")
+  @link(url: "https://specs.apollo.dev/join/v0.4", for: EXECUTION)
+{
+  query: Query
+  mutation: Mutation
+}
+
+directive @join__directive(graphs: [join__Graph!], name: String!, args: join__DirectiveArguments) repeatable on SCHEMA | OBJECT | INTERFACE | FIELD_DEFINITION
+
+directive @join__enumValue(graph: join__Graph!) repeatable on ENUM_VALUE
+
+directive @join__field(graph: join__Graph, requires: join__FieldSet, provides: join__FieldSet, type: String, external: Boolean, override: String, usedOverridden: Boolean, overrideLabel: String) repeatable on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+
+directive @join__graph(name: String!, url: String!) on ENUM_VALUE
+
+directive @join__implements(graph: join__Graph!, interface: String!) repeatable on OBJECT | INTERFACE
+
+directive @join__type(graph: join__Graph!, key: join__FieldSet, extension: Boolean! = false, resolvable: Boolean! = true, isInterfaceObject: Boolean! = false) repeatable on OBJECT | INTERFACE | UNION | ENUM | INPUT_OBJECT | SCALAR
+
+directive @join__unionMember(graph: join__Graph!, member: String!) repeatable on UNION
+
+directive @link(url: String, as: String, for: link__Purpose, import: [link__Import]) repeatable on SCHEMA
+
+type AutorizacionDeCredito
+  @join__type(graph: COBROS)
+{
+  lineaId: ID!
+  pedidoId: ID!
+  autorizado: Dinero!
+  disponible: Dinero!
+}
+
+input AutorizarCreditoEntrada
+  @join__type(graph: COBROS)
+{
+  tiendaId: ID!
+  mayoristaId: ID!
+  pedidoId: ID!
+  centavos: Int!
+}
+
+input CargarProductoEntrada
+  @join__type(graph: CATALOGO)
+{
+  """Clave de idempotencia de la bandeja de Campo"""
+  clave: ID!
+  nombre: String!
+  rubro: String!
+  presentacion: Presentacion!
+  unidades: Int!
+  precioUnitarioCentavos: Int!
+}
+
+input CrearPedidoEntrada
+  @join__type(graph: PEDIDOS)
+{
+  clave: ID!
+  mayoristaId: ID!
+  metodoPago: MetodoPago!
+  lineas: [LineaEntrada!]!
+}
+
+"""Monto en bolivianos. Mismo tipo en los tres subgrafos."""
+type Dinero
+  @join__type(graph: CATALOGO)
+  @join__type(graph: COBROS)
+  @join__type(graph: PEDIDOS)
+{
+  centavos: Int!
+  moneda: String!
+  texto: String!
+}
+
+type Escala
+  @join__type(graph: CATALOGO)
+{
+  presentacion: Presentacion!
+
+  """Unidades que trae la presentación"""
+  cantidad: Int!
+  precioUnitario: Dinero
+}
+
+enum EstadoPedido
+  @join__type(graph: PEDIDOS)
+{
+  PENDIENTE @join__enumValue(graph: PEDIDOS)
+  POR_CONFIRMAR @join__enumValue(graph: PEDIDOS)
+  CONFIRMADO @join__enumValue(graph: PEDIDOS)
+  EN_PREPARACION @join__enumValue(graph: PEDIDOS)
+  DESPACHADO @join__enumValue(graph: PEDIDOS)
+  ENTREGADO @join__enumValue(graph: PEDIDOS)
+  RECHAZADO @join__enumValue(graph: PEDIDOS)
+  CANCELADO @join__enumValue(graph: PEDIDOS)
+}
+
+enum EstadoProducto
+  @join__type(graph: CATALOGO)
+{
+  ACTIVO @join__enumValue(graph: CATALOGO)
+  PAUSADO @join__enumValue(graph: CATALOGO)
+  SIN_STOCK @join__enumValue(graph: CATALOGO)
+  PENDIENTE_DE_REVISION @join__enumValue(graph: CATALOGO)
+}
+
+enum EstadoRelacion
+  @join__type(graph: CATALOGO)
+{
+  NINGUNA @join__enumValue(graph: CATALOGO)
+  SOLICITADA @join__enumValue(graph: CATALOGO)
+  APROBADA @join__enumValue(graph: CATALOGO)
+  RECHAZADA @join__enumValue(graph: CATALOGO)
+}
+
+scalar join__DirectiveArguments
+
+scalar join__FieldSet
+
+enum join__Graph {
+  CATALOGO @join__graph(name: "catalogo", url: "http://catalogo:8082/graphql")
+  COBROS @join__graph(name: "cobros", url: "http://cobros:8083/graphql")
+  PEDIDOS @join__graph(name: "pedidos", url: "http://pedidos:8081/graphql")
+}
+
+type LineaDeCredito
+  @join__type(graph: COBROS, key: "id")
+{
+  id: ID!
+  tienda: Tienda!
+  mayoristaId: ID!
+  limite: Dinero!
+  usado: Dinero!
+  disponible: Dinero!
+  plazoDias: Int!
+}
+
+type LineaDePedido
+  @join__type(graph: PEDIDOS)
+{
+  producto: Producto!
+  presentacion: Presentacion!
+  cantidad: Int!
+  unidades: Int!
+  precioUnitario: Dinero
+  subtotal: Dinero!
+}
+
+"""El precio no viaja desde la app: lo fija Catálogo al reservar."""
+input LineaEntrada
+  @join__type(graph: PEDIDOS)
+{
+  productoId: ID!
+  presentacion: Presentacion!
+  cantidad: Int!
+}
+
+scalar link__Import
+
+enum link__Purpose {
+  """
+  `SECURITY` features provide metadata necessary to securely resolve fields.
+  """
+  SECURITY
+
+  """
+  `EXECUTION` features provide metadata necessary for operation execution.
+  """
+  EXECUTION
+}
+
+enum ListaDePrecios
+  @join__type(graph: CATALOGO)
+{
+  NUEVOS @join__enumValue(graph: CATALOGO)
+  FRECUENTES @join__enumValue(graph: CATALOGO)
+  VIP @join__enumValue(graph: CATALOGO)
+}
+
+type Mayorista
+  @join__type(graph: CATALOGO, key: "id")
+  @join__type(graph: PEDIDOS, key: "id", resolvable: false)
+{
+  id: ID!
+  nombre: String! @join__field(graph: CATALOGO)
+  ciudad: String! @join__field(graph: CATALOGO)
+  verificado: Boolean! @join__field(graph: CATALOGO)
+
+  """Relación de la tienda de la sesión con este mayorista"""
+  relacion: EstadoRelacion! @join__field(graph: CATALOGO)
+}
+
+enum MetodoPago
+  @join__type(graph: PEDIDOS)
+{
+  QR @join__enumValue(graph: PEDIDOS)
+  CREDITO @join__enumValue(graph: PEDIDOS)
+}
+
+type Mutation
+  @join__type(graph: CATALOGO)
+  @join__type(graph: COBROS)
+  @join__type(graph: PEDIDOS)
+{
+  pedirSerCliente(mayoristaId: ID!): RelacionComercial! @join__field(graph: CATALOGO)
+  aprobarCliente(tiendaId: ID!, lista: ListaDePrecios!): RelacionComercial! @join__field(graph: CATALOGO)
+  rechazarCliente(tiendaId: ID!): RelacionComercial! @join__field(graph: CATALOGO)
+
+  """
+  Lo usa Abasto Campo a través de Conecta. El producto entra como pendiente de revisión.
+  """
+  cargarProducto(entrada: CargarProductoEntrada!): Producto! @join__field(graph: CATALOGO)
+
+  """
+  Paso 3 de la saga de compra. Lo usa el orquestador de Pedidos; repetirlo con el mismo pedido no descuenta dos veces.
+  """
+  autorizarCredito(entrada: AutorizarCreditoEntrada!): AutorizacionDeCredito! @join__field(graph: COBROS)
+
+  """
+  Paso 1 de la saga de compra. La clave la genera la app una sola vez:
+  repetir la mutación con la misma clave devuelve el mismo pedido.
+  """
+  crearPedido(entrada: CrearPedidoEntrada!): Pedido! @join__field(graph: PEDIDOS)
+
+  """Paso 4 de la saga: el mayorista acepta."""
+  confirmarPedido(id: ID!): Pedido! @join__field(graph: PEDIDOS)
+
+  """El mayorista rechaza: se devuelve el cobro y se libera el stock."""
+  rechazarPedido(id: ID!, motivo: String!): Pedido! @join__field(graph: PEDIDOS)
+}
+
+"""Allows ordering a list of records."""
+input OrderByClause
+  @join__type(graph: CATALOGO)
+{
+  """The column that is used for ordering."""
+  column: String!
+
+  """The direction that is used for ordering."""
+  order: SortOrder!
+}
+
+"""
+Aggregate functions when ordering by a relation without specifying a column.
+"""
+enum OrderByRelationAggregateFunction
+  @join__type(graph: CATALOGO)
+{
+  """Amount of items."""
+  COUNT @join__enumValue(graph: CATALOGO)
+}
+
+"""
+Aggregate functions when ordering by a relation that may specify a column.
+"""
+enum OrderByRelationWithColumnAggregateFunction
+  @join__type(graph: CATALOGO)
+{
+  """Average."""
+  AVG @join__enumValue(graph: CATALOGO)
+
+  """Minimum."""
+  MIN @join__enumValue(graph: CATALOGO)
+
+  """Maximum."""
+  MAX @join__enumValue(graph: CATALOGO)
+
+  """Sum."""
+  SUM @join__enumValue(graph: CATALOGO)
+
+  """Amount of items."""
+  COUNT @join__enumValue(graph: CATALOGO)
+}
+
+type Pedido
+  @join__type(graph: PEDIDOS, key: "id")
+{
+  id: ID!
+
+  """Código para las personas, por ejemplo A-1042"""
+  codigo: String!
+  clave: ID!
+  tienda: Tienda!
+  mayorista: Mayorista!
+  lineas: [LineaDePedido!]!
+  estado: EstadoPedido!
+  metodoPago: MetodoPago!
+
+  """Cero hasta que Catálogo reserva y fija los precios"""
+  total: Dinero!
+  creadoEn: String!
+  motivoRechazo: String
+}
+
+enum Presentacion
+  @join__type(graph: CATALOGO)
+  @join__type(graph: PEDIDOS)
+{
+  UNIDAD @join__enumValue(graph: CATALOGO) @join__enumValue(graph: PEDIDOS)
+  CUARTA @join__enumValue(graph: CATALOGO) @join__enumValue(graph: PEDIDOS)
+  DOCENA @join__enumValue(graph: CATALOGO) @join__enumValue(graph: PEDIDOS)
+  CAJA @join__enumValue(graph: CATALOGO) @join__enumValue(graph: PEDIDOS)
+  FARDO @join__enumValue(graph: CATALOGO) @join__enumValue(graph: PEDIDOS)
+}
+
+type Producto
+  @join__type(graph: CATALOGO, key: "id")
+  @join__type(graph: PEDIDOS, key: "id", resolvable: false)
+{
+  id: ID!
+  codigo: String! @join__field(graph: CATALOGO)
+  nombre: String! @join__field(graph: CATALOGO)
+  rubro: String! @join__field(graph: CATALOGO)
+  descripcion: String! @join__field(graph: CATALOGO)
+  stock: Int! @join__field(graph: CATALOGO)
+  estado: EstadoProducto! @join__field(graph: CATALOGO)
+  mayorista: Mayorista! @join__field(graph: CATALOGO)
+
+  """
+  Precio por volumen. precioUnitario es null si quien consulta no puede ver precios.
+  """
+  escalas: [Escala!]! @join__field(graph: CATALOGO)
+  precioVisible: Boolean! @join__field(graph: CATALOGO)
+}
+
+type Query
+  @join__type(graph: CATALOGO)
+  @join__type(graph: COBROS)
+  @join__type(graph: PEDIDOS)
+{
+  """
+  Catálogo para la tienda de la sesión: productos de mayoristas verificados.
+  """
+  productos(busqueda: String, mayoristaId: ID): [Producto!]! @join__field(graph: CATALOGO)
+  producto(id: ID!): Producto @join__field(graph: CATALOGO)
+
+  """Productos del mayorista de la sesión (Panel)."""
+  misProductos(busqueda: String): [Producto!]! @join__field(graph: CATALOGO)
+  mayoristas(busqueda: String): [Mayorista!]! @join__field(graph: CATALOGO)
+
+  """Tiendas que pidieron ser clientes del mayorista de la sesión."""
+  misSolicitudes: [RelacionComercial!]! @join__field(graph: CATALOGO)
+
+  """Crédito que un mayorista le dio a una tienda. Null si no tiene."""
+  lineaDeCredito(tiendaId: ID!, mayoristaId: ID!): LineaDeCredito @join__field(graph: COBROS)
+
+  """Lo que compró la empresa de la sesión (Mercado)."""
+  misCompras(estado: EstadoPedido): [Pedido!]! @join__field(graph: PEDIDOS)
+
+  """Lo que le compraron a la empresa de la sesión (Panel Mayorista)."""
+  misVentas(estado: EstadoPedido): [Pedido!]! @join__field(graph: PEDIDOS)
+
+  """
+  Un pedido. Null si no existe o si la empresa de la sesión no es ni la tienda ni el mayorista.
+  """
+  pedido(id: ID!): Pedido @join__field(graph: PEDIDOS)
+}
+
+type RelacionComercial
+  @join__type(graph: CATALOGO)
+{
+  tienda: Tienda!
+  mayorista: Mayorista!
+  estado: EstadoRelacion!
+  lista: ListaDePrecios
+}
+
+"""Directions for ordering a list of records."""
+enum SortOrder
+  @join__type(graph: CATALOGO)
+{
+  """Sort records in ascending order."""
+  ASC @join__enumValue(graph: CATALOGO)
+
+  """Sort records in descending order."""
+  DESC @join__enumValue(graph: CATALOGO)
+}
+
+"""La tienda es de Catálogo; aquí solo se referencia."""
+type Tienda
+  @join__type(graph: CATALOGO, key: "id")
+  @join__type(graph: COBROS, key: "id", resolvable: false)
+  @join__type(graph: PEDIDOS, key: "id", resolvable: false)
+{
+  id: ID!
+  nombre: String! @join__field(graph: CATALOGO)
+  ciudad: String! @join__field(graph: CATALOGO)
+}
+
+"""
+Specify if you want to include or exclude trashed results from a query.
+"""
+enum Trashed
+  @join__type(graph: CATALOGO)
+{
+  """Only return trashed results."""
+  ONLY @join__enumValue(graph: CATALOGO)
+
+  """Return both trashed and non-trashed results."""
+  WITH @join__enumValue(graph: CATALOGO)
+
+  """Only return non-trashed results."""
+  WITHOUT @join__enumValue(graph: CATALOGO)
+}

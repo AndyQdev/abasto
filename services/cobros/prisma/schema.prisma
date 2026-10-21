@@ -1,0 +1,60 @@
+// Base `cobros` en PostgreSQL. La URL está en prisma.config.ts.
+// Los asientos de dinero nunca se borran: una devolución es un asiento inverso.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/infraestructura/persistencia/generado"
+  moduleFormat = "esm"
+  // Fijo: si no, en Docker (sin tsconfig todavía) genera imports con .ts que Node no puede cargar
+  importFileExtension    = "js"
+  generatedFileExtension = "ts"
+  runtime                = "nodejs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model LineaDeCredito {
+  id             String             @id @default(uuid())
+  tiendaId       String             @map("tienda_id")
+  mayoristaId    String             @map("mayorista_id")
+  limiteCentavos Int                @map("limite_centavos")
+  plazoDias      Int                @map("plazo_dias")
+  creadaEn       DateTime           @default(now()) @map("creada_en")
+  reservas       ReservaDeCredito[]
+
+  @@unique([tiendaId, mayoristaId])
+  @@map("lineas_de_credito")
+}
+
+model ReservaDeCredito {
+  lineaId  String         @map("linea_id")
+  pedidoId String         @map("pedido_id")
+  centavos Int
+  creadaEn DateTime       @default(now()) @map("creada_en")
+  linea    LineaDeCredito @relation(fields: [lineaId], references: [id])
+
+  @@id([lineaId, pedidoId])
+  @@map("reservas_de_credito")
+}
+
+/// Eventos por publicar en RabbitMQ. Se escriben en la misma transacción que el cambio.
+model Outbox {
+  id          String    @id @default(uuid())
+  tipo        String
+  datos       Json
+  creadoEn    DateTime  @default(now()) @map("creado_en")
+  publicadoEn DateTime? @map("publicado_en")
+
+  @@index([publicadoEn])
+  @@map("outbox")
+}
+
+/// Mensajes ya procesados: un mensaje repetido no se aplica dos veces.
+model MensajeProcesado {
+  id          String   @id
+  procesadoEn DateTime @default(now()) @map("procesado_en")
+
+  @@map("mensajes_procesados")
+}

@@ -1,0 +1,40 @@
+{
+  "name": "abasto",
+  "private": true,
+  "description": "Abasto: red mayorista B2B de Bolivia. Monorepo con servicios, apps, contratos e infraestructura.",
+  "packageManager": "pnpm@12.3.4",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "infra": "docker compose up -d --wait postgres mongo dynamodb rabbitmq keycloak jaeger router && node infra/dynamodb/crear-tablas.mjs",
+    "todo": "docker compose --profile servicios up -d --build --wait && node infra/dynamodb/crear-tablas.mjs",
+    "n8n": "docker compose --profile n8n up -d --wait n8n && docker compose exec n8n n8n import:workflow --separate --input=/flujos",
+    "parar": "docker compose --profile servicios --profile n8n stop",
+    "borrar-datos": "docker compose --profile servicios --profile n8n down -v",
+    "tablas": "node infra/dynamodb/crear-tablas.mjs",
+    "supergrafo": "rover supergraph compose --config infra/router/supergraph.yaml --output infra/router/supergraph.graphql --elv2-license accept",
+    "dev:panel": "pnpm --parallel --filter @abasto/panel-shell --filter @abasto/panel-gestion --filter @abasto/panel-inteligencia dev",
+    "dev:mercado": "pnpm --filter @abasto/mercado dev",
+    "dev:superadmin": "pnpm --filter @abasto/superadmin dev",
+    "dev:cobros": "pnpm --filter @abasto/cobros start:dev",
+    "dev:conecta": "pnpm --filter @abasto/conecta start:dev",
+    "dev:asistente": "pnpm --filter @abasto/asistente start:dev",
+    "dev:pedidos": "node scripts/gradle.mjs bootRun",
+    "dev:catalogo": "docker compose --profile servicios up -d --build catalogo",
+    "build": "pnpm -r --if-present run build",
+    "lint": "pnpm -r --if-present run lint",
+    "arquitectura": "pnpm -r --if-present run arquitectura",
+    "test": "pnpm -r --if-present run test",
+    "test:pedidos": "node scripts/gradle.mjs test",
+    "test:catalogo": "docker compose run --rm --no-deps catalogo composer test",
+    "test:ml": "cd ml && uv run pytest",
+    "test:todo": "pnpm test && pnpm test:pedidos && pnpm test:catalogo && pnpm test:ml",
+    "e2e": "pnpm --filter @abasto/e2e e2e",
+    "verificar": "node scripts/verificar-entorno.mjs"
+  },
+  "devDependencies": {
+    "@apollo/rover": "1.0.0",
+    "@aws-sdk/client-dynamodb": "^3.700.0"
+  }
+}
