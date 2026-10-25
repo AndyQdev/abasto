@@ -33,12 +33,6 @@
           }
         }
       ],
-      [
-        "react-native-vision-camera",
-        {
-          "cameraPermissionText": "Abasto Campo usa la cámara para reconocer el producto y leer el precio del cartel."
-        }
-      ],
       "react-native-fast-tflite"
     ],
     "scheme": "abasto-campo"
