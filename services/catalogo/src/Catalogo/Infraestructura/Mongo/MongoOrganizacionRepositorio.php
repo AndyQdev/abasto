@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Catalogo\Infraestructura\Mongo;
 
+use Catalogo\Dominio\EstadoVerificacion;
 use Catalogo\Dominio\Organizacion;
 use Catalogo\Dominio\Puertos\OrganizacionRepositorio;
 use MongoDB\BSON\Regex;
@@ -25,7 +26,7 @@ final readonly class MongoOrganizacionRepositorio implements OrganizacionReposit
 
     public function mayoristas(?string $busqueda = null): array
     {
-        $filtro = ['tipo' => 'mayorista', 'verificado' => true];
+        $filtro = ['tipo' => 'mayorista', 'verificacion' => EstadoVerificacion::VERIFICADO->value];
         if ($busqueda !== null && trim($busqueda) !== '') {
             $filtro['nombre'] = new Regex(preg_quote(trim($busqueda), '/'), 'i');
         }
@@ -37,12 +38,17 @@ final readonly class MongoOrganizacionRepositorio implements OrganizacionReposit
     /** @param array<string, mixed> $doc */
     private static function aDominio(array $doc): Organizacion
     {
+        // Compatibilidad: un documento viejo solo guarda el booleano `verificado`.
+        $verificacion = isset($doc['verificacion'])
+            ? EstadoVerificacion::from((string) $doc['verificacion'])
+            : ((bool) ($doc['verificado'] ?? false) ? EstadoVerificacion::VERIFICADO : EstadoVerificacion::PENDIENTE);
+
         return new Organizacion(
             id: (string) $doc['_id'],
             nombre: (string) $doc['nombre'],
             tipo: (string) $doc['tipo'],
             ciudad: (string) ($doc['ciudad'] ?? ''),
-            verificado: (bool) ($doc['verificado'] ?? false),
+            verificacion: $verificacion,
             nit: isset($doc['nit']) ? (string) $doc['nit'] : null,
         );
     }

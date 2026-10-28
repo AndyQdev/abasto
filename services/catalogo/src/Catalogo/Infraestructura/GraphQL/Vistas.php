@@ -6,6 +6,7 @@ namespace Catalogo\Infraestructura\GraphQL;
 
 use Catalogo\Aplicacion\VistaDeProducto;
 use Catalogo\Dominio\EscalaDePrecio;
+use Catalogo\Dominio\EstadoVerificacion;
 use Catalogo\Dominio\Organizacion;
 use Catalogo\Dominio\RelacionComercial;
 
@@ -62,7 +63,8 @@ final class Vistas
             'id' => $id,
             'nombre' => $o->nombre ?? $id,
             'ciudad' => $o->ciudad ?? '',
-            'verificado' => $o->verificado ?? false,
+            'verificado' => $o?->estaVerificada() ?? false,
+            'estadoVerificacion' => ($o?->verificacion ?? EstadoVerificacion::PENDIENTE)->value,
             'relacion' => $relacion,
         ];
     }

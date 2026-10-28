@@ -65,6 +65,8 @@ type Mayorista @key(fields: "id") {
   nombre: String!
   ciudad: String!
   verificado: Boolean!
+  "PENDIENTE, VERIFICADO o RECHAZADO"
+  estadoVerificacion: String!
   "Relación de la tienda de la sesión con este mayorista"
   relacion: EstadoRelacion!
 }

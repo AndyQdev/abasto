@@ -6,6 +6,7 @@ namespace Catalogo\Infraestructura\Mongo;
 
 use Catalogo\Dominio\EscalaDePrecio;
 use Catalogo\Dominio\EstadoProducto;
+use Catalogo\Dominio\EstadoVerificacion;
 use Catalogo\Dominio\Presentacion;
 use Catalogo\Dominio\Producto;
 use Catalogo\Dominio\Puertos\ProductoRepositorio;
@@ -40,7 +41,7 @@ final readonly class MongoProductoRepositorio implements ProductoRepositorio
     {
         $verificados = array_map(
             static fn ($o) => (string) $o['_id'],
-            $this->organizaciones->find(['tipo' => 'mayorista', 'verificado' => true], ['projection' => ['_id' => 1]])->toArray(),
+            $this->organizaciones->find(['tipo' => 'mayorista', 'verificacion' => EstadoVerificacion::VERIFICADO->value], ['projection' => ['_id' => 1]])->toArray(),
         );
         $mayoristas = $mayoristaId === null ? $verificados : array_values(array_intersect($verificados, [$mayoristaId]));
 
