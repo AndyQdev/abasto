@@ -64,7 +64,7 @@ final class Vistas
             'nombre' => $o->nombre ?? $id,
             'ciudad' => $o->ciudad ?? '',
             'verificado' => $o?->estaVerificada() ?? false,
-            'estadoVerificacion' => ($o?->verificacion ?? EstadoVerificacion::PENDIENTE)->value,
+            'estadoVerificacion' => ($o->verificacion ?? EstadoVerificacion::PENDIENTE)->value,
             'relacion' => $relacion,
         ];
     }
