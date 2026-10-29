@@ -17,7 +17,7 @@ const REGLAS: Array<{ claves: RegExp; consulta: ConsultaGenerada }> = [
     },
   },
   {
-    claves: /(deben|deuda|por cobrar|vencid)/,
+    claves: /(debe|deuda|por cobrar|vencid)/,
     consulta: {
       sql: `SELECT tienda_nombre, sum(saldo_centavos) AS saldo_centavos, min(vence) AS vence_primero
               FROM cuentas_por_cobrar

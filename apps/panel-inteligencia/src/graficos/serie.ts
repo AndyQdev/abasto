@@ -1,0 +1,36 @@
+/**
+ * Arma la serie que se dibuja a partir del resultado de una pregunta: una columna de etiquetas (texto o fecha)
+ * y una de valores (número). Si el resultado no tiene esa forma, no hay gráfico y se ve solo la tabla.
+ */
+export interface PuntoDeSerie {
+  etiqueta: unknown;
+  valor: number;
+}
+
+export interface Serie {
+  columnaEtiqueta: string;
+  columnaValor: string;
+  puntos: PuntoDeSerie[];
+}
+
+/** Más barras que esto no se leen; se muestran las mayores. */
+export const MAXIMO_DE_BARRAS = 12;
+
+const esNumero = (v: unknown) => typeof v === 'number' || (typeof v === 'string' && v.trim() !== '' && !Number.isNaN(Number(v)));
+
+export function armarSerie(columnas: string[], filas: Record<string, unknown>[], tipo: string): Serie | null {
+  if (tipo !== 'barras' && tipo !== 'linea') return null;
+  if (!filas.length) return null;
+
+  const numericas = columnas.filter((c) => filas.every((f) => f[c] === null || esNumero(f[c])));
+  // Montos primero: si la pregunta trae cantidad y total, lo que se quiere ver es el total
+  const columnaValor = numericas.find((c) => c.endsWith('_centavos')) ?? numericas[0];
+  const columnaEtiqueta = columnas.find((c) => !numericas.includes(c));
+  if (!columnaValor || !columnaEtiqueta) return null;
+
+  let puntos = filas.map((f) => ({ etiqueta: f[columnaEtiqueta], valor: Number(f[columnaValor] ?? 0) }));
+  if (tipo === 'barras' && puntos.length > MAXIMO_DE_BARRAS) {
+    puntos = [...puntos].sort((a, b) => b.valor - a.valor).slice(0, MAXIMO_DE_BARRAS);
+  }
+  return { columnaEtiqueta, columnaValor, puntos };
+}

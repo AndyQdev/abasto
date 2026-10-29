@@ -16,10 +16,15 @@ describe('ConsultorPostgres como mcp_lector', () => {
       ('lp', 'P-SEG-1', 'dr', 'Tienda Doña Rosa', 100, current_date, 'pendiente'),
       ('lr', 'P-SEG-2', 'lp', 'Distribuidora Los Pozos', 100, current_date, 'pendiente')
       ON CONFLICT DO NOTHING`);
+    await dueno.query(`INSERT INTO pedidos VALUES
+      ('lp', 'P-SEG-1', 'A-1', 'dr', 'Tienda Doña Rosa', 'qr', 100, 'CONFIRMADO', NULL, now(), now()),
+      ('lr', 'P-SEG-2', 'R-1', 'lp', 'Distribuidora Los Pozos', 'credito', 100, 'RECHAZADO', 'Sin stock', now(), now())
+      ON CONFLICT DO NOTHING`);
   });
 
   afterAll(async () => {
     await dueno.query("DELETE FROM cuentas_por_cobrar WHERE pedido_id LIKE 'P-SEG-%'");
+    await dueno.query("DELETE FROM pedidos WHERE pedido_id LIKE 'P-SEG-%'");
     await dueno.end();
     await lector.end();
   });
@@ -27,6 +32,24 @@ describe('ConsultorPostgres como mcp_lector', () => {
   it('solo ve las filas de su empresa', async () => {
     const r = await consultor.consultar("SELECT org_id FROM cuentas_por_cobrar WHERE pedido_id LIKE 'P-SEG-%'", lp);
     expect(r.filas.map((f) => f.org_id)).toEqual(['lp']);
+  });
+
+  it('tampoco ve los pedidos de otra empresa (tabla nueva del proyector)', async () => {
+    const r = await consultor.consultar("SELECT org_id, codigo FROM pedidos WHERE pedido_id LIKE 'P-SEG-%'", lp);
+    expect(r.filas).toEqual([{ org_id: 'lp', codigo: 'A-1' }]);
+  });
+
+  it('no puede leer el inbox del proyector aunque la guardia fallara', async () => {
+    await expect(consultor.consultar('SELECT * FROM eventos_proyectados', lp)).rejects.toThrow(/permission|permiso/i);
+  });
+
+  it('no puede cambiar la empresa de la sesión desde la consulta: la base le niega set_config', async () => {
+    await expect(
+      consultor.consultar(
+        "SELECT org_id FROM pedidos WHERE set_config('abasto.org_id', 'lr', true) IS NOT NULL AND pedido_id LIKE 'P-SEG-%'",
+        lp,
+      ),
+    ).rejects.toThrow(/permission denied for function set_config/);
   });
 
   it('corta en 1.000 filas', async () => {

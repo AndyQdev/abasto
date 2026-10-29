@@ -13,6 +13,16 @@ const FUNCIONES_PERMITIDAS = new Set([
   'lower', 'upper', 'trim', 'concat', 'length',
 ]);
 
+/**
+ * Tipos a los que se puede convertir un valor (::tipo o CAST). Los tipos del sistema como regclass u oid
+ * no leen datos, pero dejan averiguar qué tablas y funciones existen en la base: se rechazan.
+ */
+const TIPOS_PERMITIDOS = new Set([
+  'TEXT', 'VARCHAR', 'CHAR', 'CHARACTER VARYING',
+  'INT', 'INTEGER', 'SMALLINT', 'BIGINT', 'NUMERIC', 'DECIMAL', 'REAL', 'FLOAT', 'DOUBLE PRECISION',
+  'DATE', 'TIMESTAMP', 'TIMESTAMPTZ', 'INTERVAL', 'BOOLEAN', 'BOOL',
+]);
+
 export const LIMITE_DE_FILAS = 1000;
 
 export type ResultadoGuardia = { ok: true; sql: string } | { ok: false; motivo: string };
@@ -42,17 +52,43 @@ export function validarConsulta(sql: string): ResultadoGuardia {
   if (select.into && (select.into as { expr?: unknown }).expr) return rechazo('SELECT INTO no está permitido');
   if (select.locking_read) return rechazo('No se permiten bloqueos (FOR UPDATE)');
 
+  // Los nombres que la consulta define con WITH se pueden leer, pero solo sin esquema: «public.x» es la tabla real x
+  const definidasConWith = new Set(
+    ((select.with as Array<{ name?: { value?: string } }> | null) ?? []).map((w) => w.name?.value).filter(Boolean),
+  );
   for (const entrada of parser.tableList(limpia, DIALECTO)) {
-    const [operacion, , tabla] = entrada.split('::');
+    const [operacion, esquema, tabla] = entrada.split('::');
     if (operacion !== 'select') return rechazo('Solo se permiten consultas SELECT');
-    if (!TABLAS_PERMITIDAS.has(tabla)) return rechazo(`La tabla ${tabla} no está disponible para reportes`);
+    const esDelWith = esquema === 'null' && definidasConWith.has(tabla);
+    if (!esDelWith && !TABLAS_PERMITIDAS.has(tabla)) return rechazo(`La tabla ${tabla} no está disponible para reportes`);
   }
 
   for (const funcion of funcionesUsadas(select)) {
     if (!FUNCIONES_PERMITIDAS.has(funcion)) return rechazo(`La función ${funcion} no está permitida`);
   }
 
+  for (const tipo of tiposConvertidos(select)) {
+    if (!TIPOS_PERMITIDOS.has(tipo)) return rechazo(`La conversión a ${tipo.toLowerCase()} no está permitida`);
+  }
+
   return { ok: true, sql: limpia };
+}
+
+/** Junta los tipos de cada conversión (::tipo o CAST(... AS tipo)), en mayúsculas. */
+function tiposConvertidos(nodo: unknown, encontrados = new Set<string>()): Set<string> {
+  if (Array.isArray(nodo)) {
+    for (const hijo of nodo) tiposConvertidos(hijo, encontrados);
+    return encontrados;
+  }
+  if (!nodo || typeof nodo !== 'object') return encontrados;
+  const n = nodo as Record<string, unknown>;
+  if (n.type === 'cast') {
+    for (const destino of [n.target].flat() as Array<{ dataType?: string } | undefined>) {
+      if (destino?.dataType) encontrados.add(destino.dataType.toUpperCase());
+    }
+  }
+  for (const valor of Object.values(n)) tiposConvertidos(valor, encontrados);
+  return encontrados;
 }
 
 /** Recorre el árbol y junta el nombre de cada función que aparece, en minúsculas. */
