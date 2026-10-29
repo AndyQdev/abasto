@@ -2,6 +2,7 @@ package bo.abasto.pedidos.dominio;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -79,6 +80,33 @@ public class Pedido {
                     "El pedido " + codigo + " está " + estado + " y no puede pasar a " + siguiente);
         }
         this.estado = siguiente;
+    }
+
+    /**
+     * Después de confirmar, el mayorista mueve el pedido hasta la tienda:
+     * CONFIRMADO → EN_PREPARACION → DESPACHADO → ENTREGADO. Devuelve el estado nuevo.
+     */
+    public EstadoPedido avanzarEntrega() {
+        var siguiente = switch (estado) {
+            case CONFIRMADO -> EstadoPedido.EN_PREPARACION;
+            case EN_PREPARACION -> EstadoPedido.DESPACHADO;
+            case DESPACHADO -> EstadoPedido.ENTREGADO;
+            default -> throw new ErrorDeDominio("NO_SE_PUEDE_AVANZAR",
+                    "El pedido " + codigo + " está " + estado + ": solo se avanza un pedido confirmado que todavía no se entregó");
+        };
+        pasarA(siguiente);
+        return siguiente;
+    }
+
+    /** Lo que viaja en los eventos pedido.* (contracts/asyncapi.yaml, DatosPedido). */
+    public Map<String, Object> datosDelEvento() {
+        return Map.of(
+                "pedidoId", id.toString(),
+                "codigo", codigo,
+                "tiendaId", tiendaId,
+                "mayoristaId", mayoristaId,
+                "metodoPago", metodoPago.name().toLowerCase(),
+                "totalCentavos", total().centavos());
     }
 
     public Dinero total() {

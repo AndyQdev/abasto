@@ -17,12 +17,11 @@ Segundo parcial de Ingeniería de Software II (ICONIX) · Grupo #13 · Quispe Ca
 | `apps/panel-shell` | Panel Mayorista: el marco | React | 5170 |
 | `apps/panel-gestion` | Panel: productos, pedidos, clientes, cuentas | Angular (Web Component) | 5171 |
 | `apps/panel-inteligencia` | Panel: reportes y agentes | Vue (Web Component) | 5172 |
-| `apps/mercado` | La app de las tiendas | React PWA | 5173 |
 | `apps/superadmin` | Backoffice de Abasto | React | 5174 |
-| `apps/campo` | El mayorista en la calle, sin señal | Expo, solo Android | — |
+| `apps/app` | **La app de clientes**: compran al por mayor tiendas y personas | Expo (Android e iPhone) | 8090 (vista web) |
 | `infra/` | Postgres, Mongo, DynamoDB, RabbitMQ, Keycloak, Router, n8n | Docker Compose | |
 | `contracts/` | AsyncAPI, OpenAPI y el contrato de microfrontends | | |
-| `packages/` | `ui` (tokens), `sesion` (Keycloak), `outbox-offline` | | |
+| `packages/` | `ui` (tokens), `sesion` (Keycloak), `outbox-offline`, `comercio` (lógica de compra de la app) | | |
 | `e2e/` | Pruebas punta a punta | Playwright | |
 
 ## Arranque
@@ -34,7 +33,8 @@ pnpm verificar      # revisa la máquina y los puertos
 pnpm install
 pnpm todo           # infraestructura + los 5 servicios en Docker (la primera vez tarda: compila todo)
 pnpm dev:panel      # Panel en http://localhost:5170
-pnpm dev:mercado    # Mercado en http://localhost:5173
+pnpm semilla        # catálogo de demostración y Abasto como vendedor de la casa
+pnpm app            # la app de clientes (vista web en http://localhost:8090; Android: pnpm app:android)
 pnpm e2e            # las pruebas punta a punta, para ver que todo anda
 ```
 
@@ -46,9 +46,10 @@ Todos con la clave `abasto123`.
 
 | Usuario | Rol | Empresa |
 |---|---|---|
+| `ventas@abasto.bo` | mayorista y admin | **Abasto**, el vendedor de la casa: Panel y Superadmin |
 | `lospozos@abasto.bo` | mayorista y tienda | Distribuidora Los Pozos |
 | `laramada@abasto.bo` | mayorista | Importadora La Ramada |
-| `donarosa@abasto.bo` | tienda | Tienda Doña Rosa |
+| `donarosa@abasto.bo` | tienda | Tienda Doña Rosa (para probar la app de clientes) |
 | `admin@abasto.bo` | admin | Abasto (Superadmin) |
 
 ## Consolas

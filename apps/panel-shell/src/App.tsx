@@ -82,7 +82,6 @@ export function App({ sesion, usuario }: { sesion: Sesion; usuario: Usuario }) {
               {appsAbierto && (
                 <div className="menu carta" role="menu">
                   <p className="titulo-seccion">Ya iniciaste sesión: cambia de app sin volver a entrar</p>
-                  <a href={APPS.mercado} role="menuitem">Mercado · comprar</a>
                   {usuario.roles.includes('admin') && (
                     <a href={APPS.superadmin} role="menuitem">Superadmin</a>
                   )}
@@ -103,7 +102,7 @@ export function App({ sesion, usuario }: { sesion: Sesion; usuario: Usuario }) {
             <div className="carta">
               <strong>Tu cuenta no es de un mayorista.</strong>
               <p>
-                El Panel es para vender. Para comprar, entra a <a href={APPS.mercado}>Abasto Mercado</a> con esta misma
+                El Panel es para vender. Para comprar, usa la app Abasto en tu teléfono con esta misma
                 cuenta.
               </p>
             </div>

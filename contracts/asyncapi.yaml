@@ -30,6 +30,7 @@ channels:
       pedidoPorConfirmar: { $ref: '#/components/messages/pedido' }
       pedidoConfirmado: { $ref: '#/components/messages/pedidoConfirmado' }
       pedidoRechazado: { $ref: '#/components/messages/pedidoRechazado' }
+      pedidoEnEntrega: { $ref: '#/components/messages/pedidoEnEntrega' }
       stockReservado: { $ref: '#/components/messages/stockReservado' }
       stockRechazado: { $ref: '#/components/messages/stockRechazado' }
       stockLiberado: { $ref: '#/components/messages/soloPedido' }
@@ -84,7 +85,7 @@ components:
         codigo: { type: string, example: A-1042 }
         tiendaId: { type: string }
         mayoristaId: { type: string }
-        metodoPago: { type: string, enum: [qr, credito] }
+        metodoPago: { type: string, enum: [qr, credito, contra_entrega] }
         totalCentavos: { type: integer }
 
   messages:
@@ -170,6 +171,11 @@ components:
         allOf: [{ $ref: '#/components/schemas/Sobre' }, { properties: { datos: { $ref: '#/components/schemas/DatosPedido' } } }]
     pedidoRechazado:
       name: pedido.rechazado
+      payload:
+        allOf: [{ $ref: '#/components/schemas/Sobre' }, { properties: { datos: { $ref: '#/components/schemas/DatosPedido' } } }]
+    pedidoEnEntrega:
+      name: pedido.en_preparacion | pedido.despachado | pedido.entregado
+      summary: El mayorista avanzó la entrega (avanzarEntrega). Lo proyecta Asistente y Conecta lo manda por webhook.
       payload:
         allOf: [{ $ref: '#/components/schemas/Sobre' }, { properties: { datos: { $ref: '#/components/schemas/DatosPedido' } } }]
     productoStockCambiado:

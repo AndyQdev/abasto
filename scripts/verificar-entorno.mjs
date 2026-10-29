@@ -50,7 +50,7 @@ console.log('\nPuertos (ocupado = ya está corriendo algo; si no es Abasto, cám
 const puertos = {
   5440: 'Postgres', 27020: 'MongoDB', 8800: 'DynamoDB Local', 5680: 'RabbitMQ', 8180: 'Keycloak',
   4000: 'Router', 16686: 'Jaeger', 8081: 'Pedidos', 8082: 'Catálogo', 8083: 'Cobros', 8084: 'Conecta',
-  8085: 'Asistente', 5170: 'Panel Shell', 5171: 'Gestión', 5172: 'Inteligencia', 5173: 'Mercado', 5174: 'Superadmin',
+  8085: 'Asistente', 5170: 'Panel Shell', 5171: 'Gestión', 5172: 'Inteligencia', 8090: 'App (Expo)', 5174: 'Superadmin',
 };
 
 function ocupado(puerto) {

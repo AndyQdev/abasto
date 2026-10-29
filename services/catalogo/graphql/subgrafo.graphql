@@ -1,6 +1,3 @@
-# GENERADO con: docker compose run --rm catalogo php artisan lighthouse:print-schema --federation
-# No se edita a mano: el contrato fuente es graphql/schema.graphql. Lo lee rover para componer el supergrafo.
-
 extend schema @link(url: "https://specs.apollo.dev/federation/v2.7", import: ["@key", "@shareable"])
 
 input CargarProductoEntrada {
@@ -25,6 +22,18 @@ input CrearProductoEntrada {
   "Stock inicial; 0 deja el producto SIN_STOCK"
   stock: Int!
   escalas: [EscalaEntrada!]!
+
+  "STOCK si lo tiene en depósito; BAJO_PEDIDO si lo compra cuando entra el pedido (sin stock)"
+  abastecimiento: Abastecimiento
+
+  "Horas desde el pedido hasta la entrega"
+  entregaHoras: Int
+
+  "Lo que le cuesta cada unidad. Solo lo ve el mayorista"
+  costoUnitarioCentavos: Int
+
+  "Dónde lo compra (puesto, mercado o distribuidora). Solo lo ve el mayorista"
+  proveedor: String
 }
 
 "Edición de un producto por el mayorista: solo cambia lo que envía."
@@ -38,6 +47,18 @@ input EditarProductoEntrada {
 
   "Solo ACTIVO o PAUSADO: SIN_STOCK y PENDIENTE_DE_REVISION se derivan"
   estado: EstadoEditableProducto
+
+  "STOCK si lo tiene en depósito; BAJO_PEDIDO si lo compra cuando entra el pedido (sin stock)"
+  abastecimiento: Abastecimiento
+
+  "Horas desde el pedido hasta la entrega"
+  entregaHoras: Int
+
+  "Lo que le cuesta cada unidad. Solo lo ve el mayorista"
+  costoUnitarioCentavos: Int
+
+  "Dónde lo compra (puesto, mercado o distribuidora). Solo lo ve el mayorista"
+  proveedor: String
 }
 
 "Una escala de precio: cuántas unidades trae la presentación y cuánto valdrá cada una."
@@ -66,6 +87,22 @@ type Producto @key(fields: "id") {
   "Precio por volumen. precioUnitario es null si quien consulta no puede ver precios."
   escalas: [Escala!]!
   precioVisible: Boolean!
+  abastecimiento: Abastecimiento!
+
+  "Horas desde el pedido hasta la entrega. Null si el mayorista no lo cargó"
+  entregaHoras: Int
+
+  "Lo que le cuesta cada unidad al mayorista. Solo lo ve él; null para los demás"
+  costoUnitario: Dinero
+
+  "Dónde lo compra. Solo lo ve el mayorista"
+  proveedor: String
+}
+
+"STOCK: lo tiene en depósito y reservar descuenta stock. BAJO_PEDIDO: se compra cuando entra el pedido."
+enum Abastecimiento {
+  STOCK
+  BAJO_PEDIDO
 }
 
 type Escala {
@@ -87,6 +124,9 @@ type Mayorista @key(fields: "id") {
 
   "Relación de la tienda de la sesión con este mayorista"
   relacion: EstadoRelacion!
+
+  "Abasto mismo vendiendo: cualquier tienda registrada ve sus precios sin pedir ser cliente"
+  deLaCasa: Boolean!
 }
 
 type Tienda @key(fields: "id") {

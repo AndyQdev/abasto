@@ -18,10 +18,10 @@ dev-dist/
 .deptrac.cache
 
 # Expo / React Native (el build de desarrollo se genera con prebuild)
-apps/campo/android/
-apps/campo/ios/
-apps/campo/.expo/
-apps/campo/web-build/
+apps/app/android/
+apps/app/ios/
+apps/app/.expo/
+apps/app/web-build/
 
 # Clientes generados (se regeneran al instalar)
 services/*/src/infraestructura/persistencia/generado/

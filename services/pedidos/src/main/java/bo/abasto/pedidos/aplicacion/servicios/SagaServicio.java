@@ -43,7 +43,7 @@ public class SagaServicio implements AvanzarSaga {
 
         var motivo = String.valueOf(r.datos().getOrDefault("motivo", "Sin motivo"));
         switch (r.tipo()) {
-            case "stock.reservado" -> saga.alReservarStock(pedido, conPrecios(pedido, r.datos()));
+            case "stock.reservado" -> saga.alReservarStock(pedido, conPrecios(pedido, r.datos()), reloj.instant());
             case "stock.rechazado" -> saga.alFallarReserva(pedido, motivo);
             case "cobro.credito_autorizado", "cobro.qr_pagado" -> saga.alCobrar(pedido, reloj.instant());
             case "cobro.rechazado" -> saga.alFallarCobro(pedido, motivo);

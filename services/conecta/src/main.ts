@@ -5,7 +5,7 @@ const app = await NestFactory.create(AppModule);
 app.enableShutdownHooks();
 // Mercado y Campo llaman directo a Conecta para sincronizar
 app.enableCors({
-  origin: (process.env.ORIGENES_PERMITIDOS ?? 'http://localhost:5173').split(','),
+  origin: (process.env.ORIGENES_PERMITIDOS ?? 'http://localhost:8090').split(','),
   allowedHeaders: ['authorization', 'content-type', 'idempotency-key'],
 });
 const puerto = Number(process.env.PORT ?? 8084);

@@ -3,9 +3,10 @@ import { APPS, type Usuario } from '@abasto/sesion';
 import { MODULOS } from './modulos';
 import { Auditoria } from './pantallas/Auditoria';
 import { Sistema } from './pantallas/Sistema';
+import { Traccion } from './pantallas/Traccion';
 import { sesion } from './servicios';
 
-const rutaActual = () => window.location.pathname.replace(/^\//, '') || 'sistema';
+const rutaActual = () => window.location.pathname.replace(/^\//, '') || 'traccion';
 
 export function App({ usuario }: { usuario: Usuario }) {
   const [ruta, setRuta] = useState(rutaActual);
@@ -22,7 +23,7 @@ export function App({ usuario }: { usuario: Usuario }) {
       <div className="carta solo-admin">
         <strong>El Superadmin es solo para el equipo de Abasto.</strong>
         <p>
-          Tu cuenta entra a <a href={APPS.mercado}>Mercado</a>
+          Tu cuenta entra a la app Abasto en el teléfono
           {usuario.roles.includes('mayorista') && (
             <>
               {' '}y al <a href={APPS.panel}>Panel Mayorista</a>
@@ -66,6 +67,7 @@ export function App({ usuario }: { usuario: Usuario }) {
         </div>
       </aside>
       <main>
+        {modulo.ruta === 'traccion' && <Traccion />}
         {modulo.ruta === 'sistema' && <Sistema />}
         {modulo.ruta === 'auditoria' && <Auditoria />}
         {modulo.fase && (

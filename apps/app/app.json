@@ -1,0 +1,57 @@
+{
+  "expo": {
+    "name": "Abasto",
+    "slug": "abasto",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#1A7554",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "bo.abasto.app",
+      "permissions": [
+        "android.permission.CAMERA"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-sqlite",
+      "expo-web-browser",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 26
+          }
+        }
+      ],
+      "react-native-fast-tflite",
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Abasto usa tus fotos para buscar productos.",
+          "cameraPermission": "Abasto usa la cámara para buscar productos con una foto."
+        }
+      ]
+    ],
+    "scheme": "abasto",
+    "ios": {
+      "bundleIdentifier": "bo.abasto.app",
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Abasto usa la cámara para buscar productos con una foto.",
+        "NSPhotoLibraryUsageDescription": "Abasto usa tus fotos para buscar productos."
+      }
+    },
+    "extra": {}
+  }
+}

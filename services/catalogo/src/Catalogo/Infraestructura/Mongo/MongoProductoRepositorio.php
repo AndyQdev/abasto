@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Catalogo\Infraestructura\Mongo;
 
+use Catalogo\Dominio\Abastecimiento;
 use Catalogo\Dominio\EscalaDePrecio;
 use Catalogo\Dominio\EstadoProducto;
 use Catalogo\Dominio\EstadoVerificacion;
@@ -73,6 +74,10 @@ final readonly class MongoProductoRepositorio implements ProductoRepositorio
                     'unidades' => $e->unidades,
                     'precio_unitario_centavos' => $e->precioUnitarioCentavos,
                 ], $producto->escalas()),
+                'abastecimiento' => $producto->abastecimiento->value,
+                'entrega_horas' => $producto->entregaHoras,
+                'costo_unitario_centavos' => $producto->costoUnitarioCentavos,
+                'proveedor' => $producto->proveedor,
             ],
             '$setOnInsert' => ['stock' => $producto->stock],
         ], ['upsert' => true]);
@@ -154,6 +159,11 @@ final readonly class MongoProductoRepositorio implements ProductoRepositorio
             stock: (int) ($doc['stock'] ?? 0),
             estado: EstadoProducto::from((string) $doc['estado']),
             escalas: $escalas,
+            // Un documento viejo no tiene estos campos: es un producto con stock, sin costo cargado
+            abastecimiento: Abastecimiento::tryFrom((string) ($doc['abastecimiento'] ?? '')) ?? Abastecimiento::STOCK,
+            entregaHoras: isset($doc['entrega_horas']) ? (int) $doc['entrega_horas'] : null,
+            costoUnitarioCentavos: isset($doc['costo_unitario_centavos']) ? (int) $doc['costo_unitario_centavos'] : null,
+            proveedor: isset($doc['proveedor']) ? (string) $doc['proveedor'] : null,
         );
     }
 }

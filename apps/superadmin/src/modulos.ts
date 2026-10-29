@@ -7,6 +7,8 @@ export interface Modulo {
 }
 
 export const MODULOS: Modulo[] = [
+  // Primero: mientras Abasto vende por su cuenta, estos números son el argumento para sumar mayoristas
+  { ruta: 'traccion', titulo: 'Tracción' },
   { ruta: 'sistema', titulo: 'Sistema' },
   { ruta: 'auditoria', titulo: 'Auditoría' },
   {

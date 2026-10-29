@@ -14,6 +14,8 @@ final readonly class Organizacion
         public string $ciudad,
         public EstadoVerificacion $verificacion = EstadoVerificacion::PENDIENTE,
         public ?string $nit = null,
+        /** Abasto mismo vendiendo: cualquier tienda registrada ve sus precios sin pedir ser cliente */
+        public bool $deLaCasa = false,
     ) {
     }
 
@@ -49,6 +51,6 @@ final readonly class Organizacion
 
     private static function con(Organizacion $o, EstadoVerificacion $verificacion): self
     {
-        return new self($o->id, $o->nombre, $o->tipo, $o->ciudad, $verificacion, $o->nit);
+        return new self($o->id, $o->nombre, $o->tipo, $o->ciudad, $verificacion, $o->nit, $o->deLaCasa);
     }
 }

@@ -21,8 +21,37 @@ final class Producto
         public int $stock,
         public EstadoProducto $estado,
         private array $escalas,
+        public Abastecimiento $abastecimiento = Abastecimiento::STOCK,
+        /** Horas desde el pedido hasta la entrega, para mostrarle a la tienda cuándo llega */
+        public ?int $entregaHoras = null,
+        /** Lo que le cuesta al mayorista cada unidad. Solo lo ve él: sirve para su margen */
+        public ?int $costoUnitarioCentavos = null,
+        /** Dónde lo compra (puesto, mercado o distribuidora). Solo lo ve él */
+        public ?string $proveedor = null,
     ) {
         self::validarEscalas($escalas);
+        self::validarCosto($costoUnitarioCentavos);
+    }
+
+    public function bajoPedido(): bool
+    {
+        return $this->abastecimiento === Abastecimiento::BAJO_PEDIDO;
+    }
+
+    /** Fija cómo se abastece, cuánto le cuesta y dónde lo compra. Un producto bajo pedido nunca queda SIN_STOCK. */
+    public function cambiarAbastecimiento(Abastecimiento $abastecimiento, ?int $entregaHoras, ?int $costoUnitarioCentavos, ?string $proveedor): void
+    {
+        self::validarCosto($costoUnitarioCentavos);
+        if ($entregaHoras !== null && $entregaHoras < 1) {
+            throw new ErrorDeDominio('ENTREGA_INVALIDA', 'La entrega tiene que ser de al menos una hora');
+        }
+        $this->abastecimiento = $abastecimiento;
+        $this->entregaHoras = $entregaHoras;
+        $this->costoUnitarioCentavos = $costoUnitarioCentavos;
+        $this->proveedor = $proveedor === null || trim($proveedor) === '' ? null : trim($proveedor);
+        if ($this->bajoPedido() && $this->estado === EstadoProducto::SIN_STOCK) {
+            $this->estado = EstadoProducto::ACTIVO;
+        }
     }
 
     /** @return list<EscalaDePrecio> ordenadas de menor a mayor volumen */
@@ -60,10 +89,20 @@ final class Producto
             throw new ErrorDeDominio('STOCK_INVALIDO', 'El stock no puede quedar negativo');
         }
         $this->stock = $nuevoStock;
+        if ($this->bajoPedido()) {
+            return; // se compra cuando entra el pedido: el stock no decide si está a la venta
+        }
         if ($nuevoStock === 0 && $this->estado === EstadoProducto::ACTIVO) {
             $this->estado = EstadoProducto::SIN_STOCK;
         } elseif ($nuevoStock > 0 && $this->estado === EstadoProducto::SIN_STOCK) {
             $this->estado = EstadoProducto::ACTIVO;
+        }
+    }
+
+    private static function validarCosto(?int $costo): void
+    {
+        if ($costo !== null && $costo < 0) {
+            throw new ErrorDeDominio('COSTO_INVALIDO', 'El costo no puede ser negativo');
         }
     }
 
