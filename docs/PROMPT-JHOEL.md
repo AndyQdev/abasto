@@ -1,5 +1,7 @@
 # Prompt para el Claude de Jhoel
 
+> **29/10: cambió el flujo.** Lee primero el aviso de `docs/equipo/andres.md`. Ya no hay web de Mercado ni app Campo: hay una sola app de clientes (`apps/app`, Expo) y la gestión se hace en el Panel web.
+
 ## Antes (10 minutos, a mano)
 
 1. Instala Node 22+, Docker Desktop, git y uv. Para Campo: Android Studio (SDK y adb), JDK 17 y el teléfono con depuración USB.

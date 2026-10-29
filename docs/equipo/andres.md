@@ -1,9 +1,22 @@
 # Andrés · estado
 
+> **Jhoel, lee esto primero (cambió el flujo el 29/10).**
+>
+> 1. **Ya no hay web de compra.** Se borró `apps/mercado`. Los que compran (tiendas y personas) usan la **app de clientes** `apps/app`, hecha con Expo para Android e iPhone. Es lo que hace ganar plata, estilo Alibaba: buscar, buscar con una foto, carrito, pedir, pagar (QR, contra entrega o crédito) y seguir el pedido.
+> 2. **Campo dejó de ser una app aparte.** `apps/campo` se convirtió en `apps/app`. Tu diagnóstico de TFLite y ML Kit sigue ahí (`src/diagnostico.tsx`) y la app usa ML Kit para leer la etiqueta de la foto. La app la llevo yo; **los modelos (TFLite) siguen siendo tuyos.**
+> 3. **Quien vende gestiona todo en la web**: el Panel (tu Shell, Gestión e Inteligencia) y el Superadmin. Cargar productos con foto, que hacía Campo, pasa al Panel: es tarea tuya en Trello.
+> 4. **Abasto vende por su cuenta** mientras no hay afiliados: es el «vendedor de la casa» (`ventas@abasto.bo`, que es mayorista y admin), con productos bajo pedido que se compran en el mercado. Toqué Catálogo para eso (Organizacion.deLaCasa, Producto.abastecimiento, costo y proveedor, `catalogo:semilla-abasto`). **Revísalo, por favor.**
+> 5. La lógica de compra (catálogo, carrito y saga) está en `packages/comercio`. La app la toma por ruta.
+> 6. Keycloak: el cliente `abasto-app` reemplaza a `abasto-mercado` y `abasto-campo`. Como el realm vive en Postgres, **tienes que empezar de cero**: `pnpm borrar-datos`, después `pnpm todo` y `pnpm semilla`.
+> 7. Puertos: la app usa el **8090** (el 8081 es Pedidos). Ya no se usa el 5173.
+> 8. Trabaja sobre `andres/abasto-vende`: ya trae tus ramas mezcladas. Orden de merge a main: tus PR → `andres/repo-equipo` → `andres/mercado-catalogo` → `andres/abasto-vende`, con merge y no squash.
+>
+> Tus tareas nuevas en Trello: «Panel · cargar productos con foto», «App · buscar por foto con el modelo de productos (TFLite)», «App · fotos de los productos» y revisar Catálogo. Las tarjetas de Campo y de Mercado web quedaron cerradas.
+
 Actualizado: 29/10/2026 · rama andres/abasto-vende (integra mis ramas y las de Jhoel)
 
 ## Estoy en
-Modelo de lanzamiento «Abasto vende» (28/10): Abasto es el vendedor de la casa y compra bajo pedido.
+La app de clientes (`apps/app`, Expo). Falta correrla en el emulador y en los teléfonos.
 
 ## Terminé
 - Infra, Pedidos (saga, outbox, inbox, plazos), Conecta, n8n, CI y e2e.
