@@ -215,3 +215,31 @@ export function tinte(rubro: string) {
   if (r.includes('abarrote')) return 'tinte-ambar';
   return 'tinte-verde';
 }
+
+const PALABRAS_VACIAS = new Set(['de', 'del', 'la', 'el', 'los', 'las', 'con', 'sin', 'por', 'para', 'y', 'en', 'un', 'una', 'bs', 'ml', 'kg', 'gr']);
+
+/** Palabras útiles de lo que se leyó en una etiqueta o un cartel: sin tildes, sin números sueltos ni palabras vacías */
+export function palabrasClave(textoLeido: string): string[] {
+  const palabras = normalizar(textoLeido)
+    .split(/[^a-z0-9ñ]+/)
+    .filter((p) => p.length >= 3 && !PALABRAS_VACIAS.has(p) && !/^\d+$/.test(p));
+  return [...new Set(palabras)];
+}
+
+/**
+ * Buscar con una foto: el teléfono lee el texto de la etiqueta (ML Kit, sin internet) y aquí se ordena
+ * el catálogo por cuántas de esas palabras coinciden con cada producto. Lo que no coincide en nada no aparece.
+ */
+export function buscarPorTextoLeido(productos: Producto[], textoLeido: string, maximo = 10): Producto[] {
+  const claves = palabrasClave(textoLeido);
+  if (!claves.length) return [];
+  return comprables(productos)
+    .map((p) => {
+      const donde = normalizar(`${p.nombre} ${p.rubro}`);
+      return { p, puntos: claves.filter((c) => donde.includes(c)).length };
+    })
+    .filter((x) => x.puntos > 0)
+    .sort((a, b) => b.puntos - a.puntos || a.p.nombre.localeCompare(b.p.nombre, 'es'))
+    .slice(0, maximo)
+    .map((x) => x.p);
+}

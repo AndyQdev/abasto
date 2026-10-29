@@ -4,6 +4,24 @@
     "strict": true,
     "types": [
       "jest"
-    ]
-  }
+    ],
+    "paths": {
+      "@abasto/comercio": [
+        "../../packages/comercio/src/index.ts"
+      ],
+      "@abasto/bandeja": [
+        "../../packages/outbox-offline/src/bandeja.ts"
+      ]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "../../packages/comercio/src/**/*.ts",
+    "../../packages/outbox-offline/src/bandeja.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "../../packages/**/*.spec.ts"
+  ]
 }

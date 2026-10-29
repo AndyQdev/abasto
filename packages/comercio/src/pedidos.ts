@@ -74,9 +74,9 @@ export const enCurso = (p: Pick<Pedido, 'estado'>) => p.estado === 'PENDIENTE' |
 export const porPagar = (p: Pick<Pedido, 'estado' | 'metodoPago' | 'cobro'>) =>
   p.estado === 'PENDIENTE' && p.metodoPago === 'QR' && p.cobro?.estado === 'PENDIENTE';
 
-export type Filtro = 'todos' | 'en_curso' | 'entregados' | 'cancelados';
+export type FiltroDePedidos = 'todos' | 'en_curso' | 'entregados' | 'cancelados';
 
-export function filtrarPedidos<T extends Pick<Pedido, 'estado'>>(pedidos: T[], filtro: Filtro): T[] {
+export function filtrarPedidos<T extends Pick<Pedido, 'estado'>>(pedidos: T[], filtro: FiltroDePedidos): T[] {
   if (filtro === 'en_curso') return pedidos.filter((p) => !['ENTREGADO', 'RECHAZADO', 'CANCELADO'].includes(p.estado));
   if (filtro === 'entregados') return pedidos.filter((p) => p.estado === 'ENTREGADO');
   if (filtro === 'cancelados') return pedidos.filter((p) => p.estado === 'RECHAZADO' || p.estado === 'CANCELADO');

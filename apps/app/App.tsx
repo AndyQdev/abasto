@@ -1,124 +1,114 @@
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
-import * as Crypto from 'expo-crypto';
-import { useEffect, useMemo, useState } from 'react';
-import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { AlmacenSQLite } from './src/almacen-sqlite';
-import { BandejaCampo, enviarAConecta, type OperacionLocal, type ProductoCargado } from './src/bandeja';
-import { Diagnostico } from './src/diagnostico';
-import { enBolivianos } from './src/precio';
-import { canjearCodigo, URLS, useLogin } from './src/sesion';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Icono, Texto, type NombreDeIcono } from './src/componentes';
+import { ProveedorDeEstado, useEstado } from './src/estado';
+import type { Pestanas, Pila } from './src/navegacion';
+import { BuscarPorFoto } from './src/pantallas/BuscarPorFoto';
+import { Buscar } from './src/pantallas/Buscar';
+import { Carrito } from './src/pantallas/Carrito';
+import { Cuenta } from './src/pantallas/Cuenta';
+import { Entrar } from './src/pantallas/Entrar';
+import { Finalizar } from './src/pantallas/Finalizar';
+import { Inicio } from './src/pantallas/Inicio';
+import { Pedidos } from './src/pantallas/Pedidos';
+import { Producto } from './src/pantallas/Producto';
+import { Seguimiento } from './src/pantallas/Seguimiento';
+import { Vendedor } from './src/pantallas/Vendedor';
+import { ProveedorDeSesion, useSesion } from './src/sesion';
+import { COLOR } from './src/tema';
 
 /**
- * Abasto Campo: de pie en el puesto, con una mano y sin señal. Controles de 52 px, pocos y grandes.
- * Hoy: formulario + bandeja. En F4 entra la cámara: TFLite reconoce el producto y ML Kit lee el precio del cartel
- * (src/precio.ts ya interpreta el texto que devuelve el OCR).
+ * Abasto: la app de los que compran al por mayor (tiendas y personas). Android e iPhone.
+ * Compran aquí; Abasto gestiona los pedidos desde el Panel web.
  */
-const COLORES = { marca: '#1A7554', tinta: '#123027', fondo: '#EEF3F0', borde: '#D9E3DE', ambar: '#FCF1DA', ambarTexto: '#8F5B00' };
+const Tab = createBottomTabNavigator<Pestanas>();
+const Stack = createNativeStackNavigator<Pila>();
 
-export default function App() {
-  const [token, setToken] = useState<string | null>(null);
-  const { descubrimiento, peticion, respuesta, pedir } = useLogin();
-  const bandeja = useMemo(
-    () => new BandejaCampo(new AlmacenSQLite(), enviarAConecta(URLS.conecta, async () => token ?? ''), () => Crypto.randomUUID()),
-    [token],
-  );
-  const [porSubir, setPorSubir] = useState<OperacionLocal[]>([]);
-  const [aviso, setAviso] = useState('');
-  const [diagnostico, setDiagnostico] = useState(false);
-  const [form, setForm] = useState({ nombre: '', rubro: 'Higiene y cuidado personal', unidades: '48', precio: '' });
+const ICONOS: Record<keyof Pestanas, NombreDeIcono> = {
+  Inicio: 'home-outline',
+  Buscar: 'search-outline',
+  Carrito: 'cart-outline',
+  Pedidos: 'receipt-outline',
+  Cuenta: 'person-outline',
+};
 
-  useEffect(() => {
-    if (respuesta?.type === 'success' && descubrimiento && peticion?.codeVerifier) {
-      canjearCodigo(respuesta.params.code, peticion.codeVerifier, descubrimiento).then(setToken).catch(() => setAviso('No se pudo iniciar sesión'));
-    }
-  }, [respuesta, descubrimiento, peticion]);
+const TEMA = { ...DefaultTheme, colors: { ...DefaultTheme.colors, background: COLOR.fondo, primary: COLOR.verde, card: COLOR.superficie, border: COLOR.borde } };
 
-  const refrescar = () => bandeja.porSubir().then(setPorSubir);
-  useEffect(() => {
-    void refrescar();
-  }, [bandeja]);
-
-  async function guardar() {
-    const centavos = Math.round(Number(form.precio.replace(',', '.')) * 100);
-    if (!form.nombre || !centavos) return setAviso('Falta el nombre o el precio');
-    const producto: ProductoCargado = {
-      nombre: form.nombre,
-      rubro: form.rubro,
-      presentacion: 'CAJA',
-      unidades: Number(form.unidades) || 1,
-      precioUnitarioCentavos: centavos,
-    };
-    await bandeja.agregar(producto);
-    setForm({ ...form, nombre: '', precio: '' });
-    setAviso('Guardado en el teléfono');
-    await refrescar();
-  }
-
-  async function subir() {
-    const r = await bandeja.subir();
-    setAviso(r.subidos ? `Subidos ${r.subidos}` : 'Sin señal: se queda en la bandeja');
-    await refrescar();
-  }
-
-  if (diagnostico) return <Diagnostico alCerrar={() => setDiagnostico(false)} />;
-
-  if (!token) {
-    return (
-      <SafeAreaView style={estilos.pantalla}>
-        <Text style={estilos.titulo}>ABASTO CAMPO</Text>
-        <Text style={estilos.texto}>Entra con la misma cuenta del Panel Mayorista.</Text>
-        <Pressable style={estilos.boton} disabled={!peticion} onPress={() => void pedir()}>
-          <Text style={estilos.botonTexto}>Entrar</Text>
-        </Pressable>
-        {aviso ? <Text style={estilos.texto}>{aviso}</Text> : null}
-        <Pressable style={[estilos.boton, estilos.secundario]} onPress={() => setDiagnostico(true)}>
-          <Text style={[estilos.botonTexto, { color: COLORES.tinta }]}>Diagnóstico TFLite / ML Kit</Text>
-        </Pressable>
-      </SafeAreaView>
-    );
-  }
-
+function PestanasDeAbajo() {
+  const { carrito } = useEstado();
   return (
-    <SafeAreaView style={estilos.pantalla}>
-      <StatusBar style="dark" />
-      <ScrollView contentContainerStyle={{ gap: 12 }}>
-        <Text style={estilos.titulo}>CARGAR PRODUCTO</Text>
-        <TextInput style={estilos.entrada} placeholder="Nombre (ej. Shampoo 400 ml)" value={form.nombre} onChangeText={(nombre) => setForm({ ...form, nombre })} />
-        <TextInput style={estilos.entrada} placeholder="Unidades por caja" keyboardType="number-pad" value={form.unidades} onChangeText={(unidades) => setForm({ ...form, unidades })} />
-        <TextInput style={estilos.entrada} placeholder="Precio por unidad (Bs)" keyboardType="decimal-pad" value={form.precio} onChangeText={(precio) => setForm({ ...form, precio })} />
-        <Pressable style={estilos.boton} onPress={() => void guardar()}>
-          <Text style={estilos.botonTexto}>Guardar</Text>
-        </Pressable>
-
-        <View style={estilos.bandeja}>
-          <Text style={estilos.subtitulo}>{porSubir.length} por subir</Text>
-          {porSubir.map((o) => (
-            <Text key={o.clave} style={estilos.texto}>
-              {o.datos.nombre} · {o.datos.unidades} u. · {enBolivianos(o.datos.precioUnitarioCentavos)}
-            </Text>
-          ))}
-          <Pressable style={[estilos.boton, estilos.secundario]} onPress={() => void subir()}>
-            <Text style={[estilos.botonTexto, { color: COLORES.tinta }]}>Subir ahora</Text>
-          </Pressable>
-        </View>
-        {aviso ? <Text style={estilos.aviso}>{aviso}</Text> : null}
-        <Pressable style={[estilos.boton, estilos.secundario]} onPress={() => setDiagnostico(true)}>
-          <Text style={[estilos.botonTexto, { color: COLORES.tinta }]}>Diagnóstico TFLite / ML Kit</Text>
-        </Pressable>
-      </ScrollView>
-    </SafeAreaView>
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarActiveTintColor: COLOR.verde,
+        tabBarInactiveTintColor: COLOR.texto3,
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+        tabBarIcon: ({ color }) => <Icono nombre={ICONOS[route.name]} color={color} tamano={22} />,
+      })}
+    >
+      <Tab.Screen name="Inicio" component={Inicio} />
+      <Tab.Screen name="Buscar" component={Buscar} />
+      <Tab.Screen name="Carrito" component={Carrito} options={{ tabBarBadge: carrito.length || undefined, tabBarBadgeStyle: { backgroundColor: COLOR.ambar } }} />
+      <Tab.Screen name="Pedidos" component={Pedidos} />
+      <Tab.Screen name="Cuenta" component={Cuenta} />
+    </Tab.Navigator>
   );
 }
 
-const estilos = StyleSheet.create({
-  pantalla: { flex: 1, backgroundColor: COLORES.fondo, padding: 16, gap: 12 },
-  titulo: { fontSize: 28, fontWeight: '700', color: COLORES.tinta, letterSpacing: -1 },
-  subtitulo: { fontSize: 18, fontWeight: '700', color: COLORES.tinta },
-  texto: { fontSize: 15, color: '#334155' },
-  entrada: { height: 52, borderRadius: 14, borderWidth: 1, borderColor: COLORES.borde, backgroundColor: '#fff', paddingHorizontal: 14, fontSize: 16 },
-  boton: { height: 52, borderRadius: 16, backgroundColor: COLORES.marca, alignItems: 'center', justifyContent: 'center' },
-  secundario: { backgroundColor: '#fff', borderWidth: 1, borderColor: COLORES.borde },
-  botonTexto: { color: '#fff', fontSize: 17, fontWeight: '700' },
-  bandeja: { backgroundColor: '#fff', borderRadius: 26, padding: 16, gap: 8, borderWidth: 1, borderColor: COLORES.borde },
-  aviso: { backgroundColor: COLORES.ambar, color: COLORES.ambarTexto, padding: 12, borderRadius: 14, fontWeight: '600' },
+function Navegacion() {
+  const { usuario, cargando } = useSesion();
+  if (cargando) {
+    return (
+      <View style={e.centro}>
+        <ActivityIndicator color={COLOR.verde} size="large" />
+      </View>
+    );
+  }
+  if (!usuario) return <Entrar />;
+  return (
+    <ProveedorDeEstado>
+      <NavigationContainer theme={TEMA}>
+        <Stack.Navigator screenOptions={{ headerTintColor: COLOR.texto, headerTitleStyle: { fontWeight: '800' }, headerShadowVisible: false, headerStyle: { backgroundColor: COLOR.fondo } }}>
+          <Stack.Screen name="Pestanas" component={PestanasDeAbajo} options={{ headerShown: false }} />
+          <Stack.Screen name="Producto" component={Producto} options={{ headerShown: false }} />
+          <Stack.Screen name="Vendedor" component={Vendedor} options={{ headerShown: false }} />
+          <Stack.Screen name="Finalizar" component={Finalizar} options={{ title: 'Finalizar pedido' }} />
+          <Stack.Screen name="Seguimiento" component={Seguimiento} options={{ title: 'Pedido' }} />
+          <Stack.Screen name="BuscarPorFoto" component={BuscarPorFoto} options={{ title: 'Buscar con una foto' }} />
+        </Stack.Navigator>
+      </NavigationContainer>
+      <Aviso />
+    </ProveedorDeEstado>
+  );
+}
+
+/** «Agregaste 1 docena de …»: aparece abajo un par de segundos */
+function Aviso() {
+  const { aviso } = useEstado();
+  if (!aviso) return null;
+  return (
+    <View style={e.aviso} pointerEvents="none" accessibilityRole="alert">
+      <Texto style={{ color: '#fff', fontWeight: '600' }}>{aviso}</Texto>
+    </View>
+  );
+}
+
+export default function App() {
+  return (
+    <SafeAreaProvider>
+      <StatusBar style="dark" />
+      <ProveedorDeSesion>
+        <Navegacion />
+      </ProveedorDeSesion>
+    </SafeAreaProvider>
+  );
+}
+
+const e = StyleSheet.create({
+  centro: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: COLOR.fondo },
+  aviso: { position: 'absolute', left: 16, right: 16, bottom: 96, padding: 14, borderRadius: 16, backgroundColor: COLOR.tinta },
 });

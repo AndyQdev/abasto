@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buscarPorTextoLeido,
   comprables,
   disponible,
   escalaPorDefecto,
@@ -10,6 +11,7 @@ import {
   nombreCorto,
   opcionesDeCompra,
   ordenarMayoristas,
+  palabrasClave,
   precioDesde,
   rubros,
   textoDeStock,
@@ -161,5 +163,19 @@ describe('Abasto vende (vendedor de la casa, bajo pedido)', () => {
 
   it('Abasto aparece primero entre los mayoristas', () => {
     expect(ordenarMayoristas([laRamada, losPozos, abasto]).map((m) => m.id)).toEqual(['abasto', 'lp', 'lr']);
+  });
+});
+
+describe('buscar con una foto (texto leído de la etiqueta)', () => {
+  const todos = [shampoo, papel, producto({ id: 'AB-001', nombre: 'Arroz grano largo 1 kg', rubro: 'Abarrotes' })];
+
+  it('saca las palabras útiles del texto de la etiqueta', () => {
+    expect(palabrasClave('ARROZ Grano Largo\n1 KG · Bs 8,20')).toEqual(['arroz', 'grano', 'largo']);
+  });
+
+  it('ordena por cuántas palabras coinciden y descarta lo que no coincide', () => {
+    expect(buscarPorTextoLeido(todos, 'Papel HIGIÉNICO doble hoja 4 rollos').map((p) => p.id)).toEqual(['LP-0004']);
+    expect(buscarPorTextoLeido(todos, 'arroz').map((p) => p.id)).toEqual(['AB-001']);
+    expect(buscarPorTextoLeido(todos, '123 bs')).toEqual([]);
   });
 });

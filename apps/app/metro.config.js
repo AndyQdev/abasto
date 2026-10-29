@@ -1,6 +1,25 @@
+const path = require('node:path');
 const { getDefaultConfig } = require('expo/metro-config');
 
+/**
+ * La app vive fuera del workspace de pnpm (npm propio), pero usa la lógica compartida del monorepo:
+ * @abasto/comercio (catálogo, carrito y saga) y la bandeja offline de @abasto/outbox-offline.
+ */
+const raiz = path.resolve(__dirname, '../..');
+const COMPARTIDO = {
+  '@abasto/comercio': path.join(raiz, 'packages/comercio/src/index.ts'),
+  '@abasto/bandeja': path.join(raiz, 'packages/outbox-offline/src/bandeja.ts'),
+};
+
 const config = getDefaultConfig(__dirname);
+config.watchFolders = [path.join(raiz, 'packages/comercio'), path.join(raiz, 'packages/outbox-offline')];
+config.resolver.nodeModulesPaths = [path.join(__dirname, 'node_modules')];
+
+const resolverPorDefecto = config.resolver.resolveRequest;
+config.resolver.resolveRequest = (contexto, nombre, plataforma) => {
+  if (COMPARTIDO[nombre]) return { type: 'sourceFile', filePath: COMPARTIDO[nombre] };
+  return (resolverPorDefecto ?? contexto.resolveRequest)(contexto, nombre, plataforma);
+};
 
 if (!config.resolver.assetExts.includes('tflite')) {
   config.resolver.assetExts.push('tflite');

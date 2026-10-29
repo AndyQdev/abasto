@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Abasto Campo",
-    "slug": "abasto-campo",
+    "name": "Abasto",
+    "slug": "abasto",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -14,7 +14,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "bo.abasto.campo",
+      "package": "bo.abasto.app",
       "permissions": [
         "android.permission.CAMERA"
       ]
@@ -33,8 +33,25 @@
           }
         }
       ],
-      "react-native-fast-tflite"
+      "react-native-fast-tflite",
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Abasto usa tus fotos para buscar productos.",
+          "cameraPermission": "Abasto usa la cámara para buscar productos con una foto."
+        }
+      ]
     ],
-    "scheme": "abasto-campo"
+    "scheme": "abasto",
+    "ios": {
+      "bundleIdentifier": "bo.abasto.app",
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Abasto usa la cámara para buscar productos con una foto.",
+        "NSPhotoLibraryUsageDescription": "Abasto usa tus fotos para buscar productos."
+      }
+    },
+    "extra": {}
   }
 }
