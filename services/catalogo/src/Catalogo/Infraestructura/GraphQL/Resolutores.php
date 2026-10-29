@@ -4,11 +4,16 @@ declare(strict_types=1);
 
 namespace Catalogo\Infraestructura\GraphQL;
 
+use Catalogo\Aplicacion\AjustarStock;
 use Catalogo\Aplicacion\CargarProducto;
 use Catalogo\Aplicacion\ConsultarCatalogo;
+use Catalogo\Aplicacion\CrearProducto;
+use Catalogo\Aplicacion\EditarProducto;
 use Catalogo\Aplicacion\GestionarClientes;
 use Catalogo\Aplicacion\VistaDeProducto;
 use Catalogo\Dominio\ErrorDeDominio;
+use Catalogo\Dominio\EscalaDePrecio;
+use Catalogo\Dominio\EstadoProducto;
 use Catalogo\Dominio\ListaDePrecios;
 use Catalogo\Dominio\Organizacion;
 use Catalogo\Dominio\Presentacion;
@@ -27,6 +32,9 @@ final readonly class Resolutores
         private ConsultarCatalogo $catalogo,
         private GestionarClientes $clientes,
         private CargarProducto $cargar,
+        private CrearProducto $crear,
+        private EditarProducto $editar,
+        private AjustarStock $ajustar,
         private OrganizacionRepositorio $organizaciones,
         private RelacionRepositorio $relaciones,
     ) {
@@ -184,6 +192,95 @@ final readonly class Resolutores
 
             return Vistas::producto($vista);
         });
+    }
+
+    /**
+     * @param array<string, mixed> $args
+     *
+     * @return array<string, mixed>
+     */
+    public function crearProducto(mixed $_, array $args): array
+    {
+        $usuario = Usuario::actual()->exigirRol('mayorista');
+        $e = $args['entrada'];
+
+        return $this->conErrores(function () use ($usuario, $e) {
+            $producto = $this->crear->ejecutar(
+                $usuario->orgId,
+                (string) $e['codigo'],
+                (string) $e['nombre'],
+                (string) $e['rubro'],
+                (string) ($e['descripcion'] ?? ''),
+                (int) $e['stock'],
+                self::escalas($e['escalas']),
+            );
+
+            return $this->vistaDe($producto->id, $usuario->orgId);
+        });
+    }
+
+    /**
+     * @param array<string, mixed> $args
+     *
+     * @return array<string, mixed>
+     */
+    public function editarProducto(mixed $_, array $args): array
+    {
+        $usuario = Usuario::actual()->exigirRol('mayorista');
+        $e = $args['entrada'] ?? [];
+
+        return $this->conErrores(function () use ($usuario, $args, $e) {
+            $producto = $this->editar->ejecutar(
+                (string) $args['id'],
+                $usuario->orgId,
+                isset($e['nombre']) ? (string) $e['nombre'] : null,
+                isset($e['rubro']) ? (string) $e['rubro'] : null,
+                isset($e['descripcion']) ? (string) $e['descripcion'] : null,
+                isset($e['escalas']) ? self::escalas($e['escalas']) : null,
+                isset($e['estado']) ? EstadoProducto::from((string) $e['estado']) : null,
+            );
+
+            return $this->vistaDe($producto->id, $usuario->orgId);
+        });
+    }
+
+    /**
+     * @param array<string, mixed> $args
+     *
+     * @return array<string, mixed>
+     */
+    public function ajustarStock(mixed $_, array $args): array
+    {
+        $usuario = Usuario::actual()->exigirRol('mayorista');
+
+        return $this->conErrores(function () use ($usuario, $args) {
+            $producto = $this->ajustar->ejecutar((string) $args['id'], $usuario->orgId, (int) $args['stock']);
+
+            return $this->vistaDe($producto->id, $usuario->orgId);
+        });
+    }
+
+    /** @return array<string, mixed> */
+    private function vistaDe(string $productoId, string $orgId): array
+    {
+        $vista = $this->catalogo->uno($productoId, $orgId)
+            ?? throw new ErrorDeDominio('PRODUCTO_NO_GUARDADO', 'No se pudo leer el producto recién guardado');
+
+        return Vistas::producto($vista);
+    }
+
+    /**
+     * @param list<array<string, mixed>> $entradas
+     *
+     * @return list<EscalaDePrecio>
+     */
+    private static function escalas(array $entradas): array
+    {
+        return array_map(static fn (array $e) => new EscalaDePrecio(
+            Presentacion::from((string) $e['presentacion']),
+            (int) $e['unidades'],
+            (int) $e['precioUnitarioCentavos'],
+        ), $entradas);
     }
 
     /**

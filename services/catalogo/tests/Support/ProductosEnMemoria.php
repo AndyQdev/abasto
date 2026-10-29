@@ -17,6 +17,17 @@ final class ProductosEnMemoria implements ProductoRepositorio
         return $this->todos[$id] ?? null;
     }
 
+    public function porCodigo(string $mayoristaId, string $codigo): ?Producto
+    {
+        foreach ($this->todos as $producto) {
+            if ($producto->mayoristaId === $mayoristaId && $producto->codigo === $codigo) {
+                return $producto;
+            }
+        }
+
+        return null;
+    }
+
     public function deMayorista(string $mayoristaId, ?string $busqueda = null): array
     {
         return array_values($this->todos);

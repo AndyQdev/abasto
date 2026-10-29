@@ -31,6 +31,13 @@ final readonly class MongoProductoRepositorio implements ProductoRepositorio
         return $doc === null ? null : self::aDominio((array) $doc);
     }
 
+    public function porCodigo(string $mayoristaId, string $codigo): ?Producto
+    {
+        $doc = $this->coleccion->findOne(['mayorista_id' => $mayoristaId, 'codigo' => $codigo]);
+
+        return $doc === null ? null : self::aDominio((array) $doc);
+    }
+
     public function deMayorista(string $mayoristaId, ?string $busqueda = null): array
     {
         return $this->buscar(['mayorista_id' => $mayoristaId] + self::filtroDeTexto($busqueda));

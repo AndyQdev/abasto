@@ -11,6 +11,9 @@ interface ProductoRepositorio
 {
     public function porId(string $id): ?Producto;
 
+    /** El único producto del mayorista con ese código; null si no lo tiene. */
+    public function porCodigo(string $mayoristaId, string $codigo): ?Producto;
+
     /** @return list<Producto> */
     public function deMayorista(string $mayoristaId, ?string $busqueda = null): array;
 

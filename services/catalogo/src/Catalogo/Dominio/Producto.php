@@ -50,6 +50,24 @@ final class Producto
     }
 
     /**
+     * Corrige el stock a mano y deriva el estado: sin mercadería => SIN_STOCK,
+     * vuelve a haber => ACTIVO. PAUSADO y PENDIENTE_DE_REVISION los cambia el mayorista,
+     * no el stock.
+     */
+    public function ajustarStock(int $nuevoStock): void
+    {
+        if ($nuevoStock < 0) {
+            throw new ErrorDeDominio('STOCK_INVALIDO', 'El stock no puede quedar negativo');
+        }
+        $this->stock = $nuevoStock;
+        if ($nuevoStock === 0 && $this->estado === EstadoProducto::ACTIVO) {
+            $this->estado = EstadoProducto::SIN_STOCK;
+        } elseif ($nuevoStock > 0 && $this->estado === EstadoProducto::SIN_STOCK) {
+            $this->estado = EstadoProducto::ACTIVO;
+        }
+    }
+
+    /**
      * Reglas: al menos una escala, sin presentaciones repetidas, más volumen = más unidades
      * y el precio por unidad nunca sube al comprar más.
      *
