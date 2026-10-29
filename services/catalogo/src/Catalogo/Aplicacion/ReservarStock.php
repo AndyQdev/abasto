@@ -43,6 +43,9 @@ final readonly class ReservarStock
         $reserva = $this->reservar($pedidoId, $mayoristaId, $tiendaId, $lineas);
         $this->reservas->guardar($reserva);
         $this->responder($reserva, $mayoristaId);
+        if ($reserva->estado() === EstadoReserva::RESERVADA) {
+            (new AvisoDeStock($this->productos, $this->eventos))->avisar('reserva', $reserva, $mayoristaId);
+        }
 
         return $reserva;
     }

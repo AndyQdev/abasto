@@ -24,6 +24,21 @@ export const ESQUEMA_REPORTES = {
       estado: "text: 'pendiente', 'vencida' o 'pagada'",
     },
   },
+  pedidos: {
+    descripcion: 'Cada pedido que recibió el mayorista y en qué quedó',
+    columnas: {
+      pedido_id: 'text',
+      codigo: 'text, por ejemplo A-1042',
+      tienda_id: 'text',
+      tienda_nombre: 'text, por ejemplo Despensa Lupita',
+      metodo_pago: "text: 'qr' o 'credito'",
+      total_centavos: 'bigint: total del pedido en centavos',
+      estado: "text: 'PENDIENTE', 'POR_CONFIRMAR', 'CONFIRMADO' o 'RECHAZADO'",
+      motivo_rechazo: 'text: por qué se rechazó (null si no se rechazó)',
+      creado_en: 'timestamptz: cuándo lo hizo la tienda',
+      actualizado_en: 'timestamptz: último cambio de estado',
+    },
+  },
   stock_productos: {
     descripcion: 'Stock actual de cada producto del mayorista',
     columnas: {

@@ -2,6 +2,7 @@ import { Component, Input, ViewEncapsulation, inject } from '@angular/core';
 import { ESTILOS_BASE } from './estilos';
 import { GraphQL } from './graphql';
 import type { SesionDelShell } from './sesion';
+import { VistaClientes } from './vistas/clientes';
 import { VistaEnConstruccion } from './vistas/en-construccion';
 import { VistaPedidos } from './vistas/pedidos';
 import { VistaProductos } from './vistas/productos';
@@ -13,7 +14,7 @@ import { VistaProductos } from './vistas/productos';
 @Component({
   selector: 'abasto-gestion-raiz',
   encapsulation: ViewEncapsulation.ShadowDom,
-  imports: [VistaPedidos, VistaProductos, VistaEnConstruccion],
+  imports: [VistaPedidos, VistaProductos, VistaClientes, VistaEnConstruccion],
   styles: [ESTILOS_BASE, `.saludo { margin: 0.5rem 0 1.5rem; } .saludo p { color: hsl(var(--texto-2)); margin: 0.25rem 0 0; }`],
   template: `
     @switch (ruta) {
@@ -28,10 +29,7 @@ import { VistaProductos } from './vistas/productos';
       }
       @case ('pedidos') { <abasto-vista-pedidos /> }
       @case ('productos') { <abasto-vista-productos /> }
-      @case ('clientes') {
-        <abasto-vista-en-construccion titulo="Clientes" fase="F1"
-          detalle="Solicitudes para ser cliente, aprobarlas con una lista de precios (Nuevos, Frecuentes, VIP) y el límite de crédito de cada tienda." />
-      }
+      @case ('clientes') { <abasto-vista-clientes /> }
       @case ('cuentas') {
         <abasto-vista-en-construccion titulo="Cuentas por cobrar" fase="F2"
           detalle="Saldos, vencimientos y registrar pagos en efectivo o transferencia. Los datos son de Cobros (NestJS)." />

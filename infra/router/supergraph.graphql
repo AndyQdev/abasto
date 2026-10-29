@@ -61,6 +61,22 @@ input CrearPedidoEntrada
   lineas: [LineaEntrada!]!
 }
 
+"""Lo que envía el Panel cuando el mayorista crea un producto a mano."""
+input CrearProductoEntrada
+  @join__type(graph: CATALOGO)
+{
+  codigo: String!
+  nombre: String!
+  rubro: String!
+
+  """Detalle que ve la tienda; vacío si no lo escribe"""
+  descripcion: String
+
+  """Stock inicial; 0 deja el producto SIN_STOCK"""
+  stock: Int!
+  escalas: [EscalaEntrada!]!
+}
+
 """Monto en bolivianos. Mismo tipo en los tres subgrafos."""
 type Dinero
   @join__type(graph: CATALOGO)
@@ -72,6 +88,23 @@ type Dinero
   texto: String!
 }
 
+"""Edición de un producto por el mayorista: solo cambia lo que envía."""
+input EditarProductoEntrada
+  @join__type(graph: CATALOGO)
+{
+  nombre: String
+  rubro: String
+  descripcion: String
+
+  """
+  Deja todas las escalas por estas; las validaciones van por Producto::cambiarEscalas
+  """
+  escalas: [EscalaEntrada!]
+
+  """Solo ACTIVO o PAUSADO: SIN_STOCK y PENDIENTE_DE_REVISION se derivan"""
+  estado: EstadoEditableProducto
+}
+
 type Escala
   @join__type(graph: CATALOGO)
 {
@@ -80,6 +113,25 @@ type Escala
   """Unidades que trae la presentación"""
   cantidad: Int!
   precioUnitario: Dinero
+}
+
+"""
+Una escala de precio: cuántas unidades trae la presentación y cuánto valdrá cada una.
+"""
+input EscalaEntrada
+  @join__type(graph: CATALOGO)
+{
+  presentacion: Presentacion!
+  unidades: Int!
+  precioUnitarioCentavos: Int!
+}
+
+"""El estado que el mayorista fija editando; el resto lo decide el stock."""
+enum EstadoEditableProducto
+  @join__type(graph: CATALOGO)
+{
+  ACTIVO @join__enumValue(graph: CATALOGO)
+  PAUSADO @join__enumValue(graph: CATALOGO)
 }
 
 enum EstadoPedido
@@ -186,6 +238,9 @@ type Mayorista
   ciudad: String! @join__field(graph: CATALOGO)
   verificado: Boolean! @join__field(graph: CATALOGO)
 
+  """PENDIENTE, VERIFICADO o RECHAZADO"""
+  estadoVerificacion: String! @join__field(graph: CATALOGO)
+
   """Relación de la tienda de la sesión con este mayorista"""
   relacion: EstadoRelacion! @join__field(graph: CATALOGO)
 }
@@ -210,6 +265,21 @@ type Mutation
   Lo usa Abasto Campo a través de Conecta. El producto entra como pendiente de revisión.
   """
   cargarProducto(entrada: CargarProductoEntrada!): Producto! @join__field(graph: CATALOGO)
+
+  """
+  El mayorista crea un producto a mano en su Panel. Si empieza sin stock queda SIN_STOCK.
+  """
+  crearProducto(entrada: CrearProductoEntrada!): Producto! @join__field(graph: CATALOGO)
+
+  """
+  El mayorista edita un producto suyo: solo cambian los campos que envía.
+  """
+  editarProducto(id: ID!, entrada: EditarProductoEntrada!): Producto! @join__field(graph: CATALOGO)
+
+  """
+  El mayorista corrige el stock de un producto suyo; el estado se deriva del stock.
+  """
+  ajustarStock(id: ID!, stock: Int!): Producto! @join__field(graph: CATALOGO)
 
   """
   Paso 3 de la saga de compra. Lo usa el orquestador de Pedidos; repetirlo con el mismo pedido no descuenta dos veces.

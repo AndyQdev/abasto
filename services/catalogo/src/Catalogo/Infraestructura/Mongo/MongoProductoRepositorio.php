@@ -6,6 +6,7 @@ namespace Catalogo\Infraestructura\Mongo;
 
 use Catalogo\Dominio\EscalaDePrecio;
 use Catalogo\Dominio\EstadoProducto;
+use Catalogo\Dominio\EstadoVerificacion;
 use Catalogo\Dominio\Presentacion;
 use Catalogo\Dominio\Producto;
 use Catalogo\Dominio\Puertos\ProductoRepositorio;
@@ -31,6 +32,13 @@ final readonly class MongoProductoRepositorio implements ProductoRepositorio
         return $doc === null ? null : self::aDominio((array) $doc);
     }
 
+    public function porCodigo(string $mayoristaId, string $codigo): ?Producto
+    {
+        $doc = $this->coleccion->findOne(['mayorista_id' => $mayoristaId, 'codigo' => $codigo]);
+
+        return $doc === null ? null : self::aDominio((array) $doc);
+    }
+
     public function deMayorista(string $mayoristaId, ?string $busqueda = null): array
     {
         return $this->buscar(['mayorista_id' => $mayoristaId] + self::filtroDeTexto($busqueda));
@@ -40,7 +48,7 @@ final readonly class MongoProductoRepositorio implements ProductoRepositorio
     {
         $verificados = array_map(
             static fn ($o) => (string) $o['_id'],
-            $this->organizaciones->find(['tipo' => 'mayorista', 'verificado' => true], ['projection' => ['_id' => 1]])->toArray(),
+            $this->organizaciones->find(['tipo' => 'mayorista', 'verificacion' => EstadoVerificacion::VERIFICADO->value], ['projection' => ['_id' => 1]])->toArray(),
         );
         $mayoristas = $mayoristaId === null ? $verificados : array_values(array_intersect($verificados, [$mayoristaId]));
 
@@ -51,21 +59,31 @@ final readonly class MongoProductoRepositorio implements ProductoRepositorio
 
     public function guardar(Producto $producto): void
     {
-        $this->coleccion->replaceOne(['_id' => $producto->id], [
-            '_id' => $producto->id,
-            'mayorista_id' => $producto->mayoristaId,
-            'codigo' => $producto->codigo,
-            'nombre' => $producto->nombre,
-            'rubro' => $producto->rubro,
-            'descripcion' => $producto->descripcion,
-            'stock' => $producto->stock,
-            'estado' => $producto->estado->value,
-            'escalas' => array_map(static fn (EscalaDePrecio $e) => [
-                'presentacion' => $e->presentacion->value,
-                'unidades' => $e->unidades,
-                'precio_unitario_centavos' => $e->precioUnitarioCentavos,
-            ], $producto->escalas()),
+        // El stock va en $setOnInsert: solo se escribe al crear (ver el puerto)
+        $this->coleccion->updateOne(['_id' => $producto->id], [
+            '$set' => [
+                'mayorista_id' => $producto->mayoristaId,
+                'codigo' => $producto->codigo,
+                'nombre' => $producto->nombre,
+                'rubro' => $producto->rubro,
+                'descripcion' => $producto->descripcion,
+                'estado' => $producto->estado->value,
+                'escalas' => array_map(static fn (EscalaDePrecio $e) => [
+                    'presentacion' => $e->presentacion->value,
+                    'unidades' => $e->unidades,
+                    'precio_unitario_centavos' => $e->precioUnitarioCentavos,
+                ], $producto->escalas()),
+            ],
+            '$setOnInsert' => ['stock' => $producto->stock],
         ], ['upsert' => true]);
+    }
+
+    public function fijarStock(Producto $producto): void
+    {
+        $this->coleccion->updateOne(
+            ['_id' => $producto->id],
+            ['$set' => ['stock' => $producto->stock, 'estado' => $producto->estado->value]],
+        );
     }
 
     public function siguienteId(): string
