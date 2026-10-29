@@ -14,16 +14,17 @@ async function tokenDe(request: APIRequestContext, correo: string) {
 }
 
 test.describe('Mercado · red privada (cita 2)', () => {
-  test('una tienda sin relación nunca recibe precios por GraphQL', async ({ request }) => {
+  test('una tienda sin relación nunca recibe precios de un mayorista afiliado por GraphQL', async ({ request }) => {
     const token = await tokenDe(request, 'donarosa@abasto.bo');
     const r = await request.post(ROUTER, {
       headers: { authorization: `Bearer ${token}` },
-      data: { query: '{ productos { mayorista { id relacion } precioVisible escalas { precioUnitario { centavos } } } }' },
+      data: { query: '{ productos { mayorista { id relacion deLaCasa } precioVisible escalas { precioUnitario { centavos } } } }' },
     });
     const { productos } = (await r.json()).data as {
-      productos: { mayorista: { id: string; relacion: string }; precioVisible: boolean; escalas: { precioUnitario: unknown }[] }[];
+      productos: { mayorista: { id: string; relacion: string; deLaCasa: boolean }; precioVisible: boolean; escalas: { precioUnitario: unknown }[] }[];
     };
-    const sinRelacion = productos.filter((p) => p.mayorista.relacion !== 'APROBADA');
+    // Abasto (vendedor de la casa) le muestra precios a todas; la red privada es para los mayoristas afiliados
+    const sinRelacion = productos.filter((p) => p.mayorista.relacion !== 'APROBADA' && !p.mayorista.deLaCasa);
     // Corre antes de la aprobación de abajo: La Ramada todavía no aprobó a Doña Rosa
     expect(sinRelacion.length).toBeGreaterThan(0);
     for (const p of sinRelacion) {

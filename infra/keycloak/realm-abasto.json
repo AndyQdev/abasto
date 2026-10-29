@@ -121,6 +121,17 @@
       "realmRoles": ["admin"]
     },
     {
+      "username": "ventas@abasto.bo",
+      "email": "ventas@abasto.bo",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Abasto",
+      "lastName": "Ventas",
+      "attributes": { "org_id": ["abasto"], "org_nombre": ["Abasto"] },
+      "credentials": [{ "type": "password", "value": "abasto123", "temporary": false }],
+      "realmRoles": ["mayorista"]
+    },
+    {
       "username": "lospozos@abasto.bo",
       "email": "lospozos@abasto.bo",
       "emailVerified": true,

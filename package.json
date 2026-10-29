@@ -31,7 +31,8 @@
     "test:ml": "cd ml && uv run pytest",
     "test:todo": "pnpm test && pnpm test:pedidos && pnpm test:catalogo && pnpm test:ml",
     "e2e": "pnpm --filter @abasto/e2e e2e",
-    "verificar": "node scripts/verificar-entorno.mjs"
+    "verificar": "node scripts/verificar-entorno.mjs",
+    "semilla": "docker compose exec catalogo php artisan catalogo:semilla && docker compose exec catalogo php artisan catalogo:semilla-abasto"
   },
   "devDependencies": {
     "@apollo/rover": "1.0.0",

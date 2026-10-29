@@ -28,4 +28,7 @@ export default function preparar() {
     cwd: '..',
     stdio: 'inherit',
   });
+
+  // Abasto como vendedor de la casa, con su catálogo bajo pedido (modelo de lanzamiento)
+  execSync('docker compose exec -T catalogo php artisan catalogo:semilla-abasto', { cwd: '..', stdio: 'inherit' });
 }
