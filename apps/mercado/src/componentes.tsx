@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { escalaPorDefecto, iniciales, tinte, type Mayorista, type Producto } from './catalogo';
+import { disponible, escalaPorDefecto, iniciales, tinte, type Mayorista, type Producto } from './catalogo';
 import { Icono } from './Icono';
 
 /** Lo que cada pantalla puede pedirle a la app */
@@ -35,7 +35,7 @@ export function Iniciales({ nombre, clase = '' }: { nombre: string; clase?: stri
 /** Botón verde «+» que agrega la escala por defecto (una docena) */
 export function BotonAgregar({ producto, alAgregar }: { producto: Producto; alAgregar: (p: Producto) => void }) {
   const escala = escalaPorDefecto(producto);
-  if (!escala || producto.estado === 'SIN_STOCK') return null;
+  if (!escala || !disponible(producto)) return null;
   return (
     <button
       type="button"

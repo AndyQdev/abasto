@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { escalaPorDefecto, escalasConPrecio, itemDeCarrito, opcionesDeCompra, textoDeStock, type Producto as P } from '../catalogo';
+import { disponible, escalaPorDefecto, escalasConPrecio, itemDeCarrito, opcionesDeCompra, textoDeStock, type Producto as P } from '../catalogo';
 import { bs, cantidadDe, type ItemDeCarrito } from '../carrito';
 import { Foto, PedirSerCliente, type Navegar } from '../componentes';
 import { Icono } from '../Icono';
@@ -21,7 +21,7 @@ export function Producto({ producto: p, enLinea, ir, alVolver, alAgregar, alPedi
   const elegida = opciones.find((o) => o.presentacion === presentacion);
   const escala = escalasConPrecio(p).find((e) => e.presentacion === presentacion);
   const stock = textoDeStock(p);
-  const sinStock = p.estado === 'SIN_STOCK' || p.stock <= 0;
+  const sinStock = !disponible(p);
 
   return (
     <div className="detalle">

@@ -109,8 +109,8 @@ export function Buscar({ catalogo, enLinea, estado, alCambiar, ir }: Props) {
                 <strong>{m.nombre}</strong>
                 <span className="gris">{m.ciudad}</span>
                 <span className="insignias">
-                  {m.verificado && <span className="ins ins-verde">Verificado</span>}
-                  <InsigniaRelacion relacion={m.relacion} />
+                  {m.deLaCasa ? <span className="ins ins-verde">Precios para todas las tiendas</span> : m.verificado && <span className="ins ins-verde">Verificado</span>}
+                  {!m.deLaCasa && <InsigniaRelacion relacion={m.relacion} />}
                 </span>
               </span>
               <Icono nombre="seguir" />

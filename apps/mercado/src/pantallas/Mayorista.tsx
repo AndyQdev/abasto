@@ -16,6 +16,8 @@ interface Props {
 export function Mayorista({ mayorista: m, productos, enLinea, ir, alVolver, alPedirSerCliente }: Props) {
   const catalogo = filtrar(productos, { mayoristaId: m.id });
   const aprobado = m.relacion === 'APROBADA';
+  // Abasto le vende a todas las tiendas registradas: no hace falta pedir ser cliente
+  const puedeComprar = aprobado || m.deLaCasa;
 
   return (
     <div className="detalle">
@@ -43,8 +45,8 @@ export function Mayorista({ mayorista: m, productos, enLinea, ir, alVolver, alPe
           </span>
         </div>
 
-        {aprobado ? (
-          <span className="ins ins-verde">Eres cliente · ves los precios de tu lista</span>
+        {puedeComprar ? (
+          <span className="ins ins-verde">{m.deLaCasa && !aprobado ? 'Le vende a todas las tiendas · pide hoy y te lo llevamos' : 'Eres cliente · ves los precios de tu lista'}</span>
         ) : (
           <PedirSerCliente
             mayorista={m}

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   comprables,
+  disponible,
   escalaPorDefecto,
   filtrar,
   filtrarMayoristas,
@@ -19,8 +20,8 @@ import { cantidadDe } from './carrito';
 
 const dinero = (centavos: number) => ({ centavos, texto: `Bs ${(centavos / 100).toFixed(2).replace('.', ',')}` });
 
-const losPozos: Mayorista = { id: 'lp', nombre: 'Distribuidora Los Pozos', ciudad: 'Santa Cruz', verificado: true, relacion: 'APROBADA' };
-const laRamada: Mayorista = { id: 'lr', nombre: 'Importadora La Ramada', ciudad: 'Santa Cruz', verificado: true, relacion: 'NINGUNA' };
+const losPozos: Mayorista = { id: 'lp', nombre: 'Distribuidora Los Pozos', ciudad: 'Santa Cruz', verificado: true, relacion: 'APROBADA', deLaCasa: false };
+const laRamada: Mayorista = { id: 'lr', nombre: 'Importadora La Ramada', ciudad: 'Santa Cruz', verificado: true, relacion: 'NINGUNA', deLaCasa: false };
 
 function producto(parcial: Partial<Producto> & Pick<Producto, 'id' | 'nombre'>): Producto {
   return {
@@ -30,6 +31,8 @@ function producto(parcial: Partial<Producto> & Pick<Producto, 'id' | 'nombre'>):
     stock: 312,
     estado: 'ACTIVO',
     precioVisible: true,
+    abastecimiento: 'STOCK',
+    entregaHoras: null,
     mayorista: losPozos,
     escalas: [
       { presentacion: 'CAJA', cantidad: 48, precioUnitario: dinero(1800) },
@@ -129,15 +132,34 @@ describe('búsqueda sobre el catálogo guardado', () => {
 
 describe('mayoristas', () => {
   it('primero los que ya me venden; nunca se ordena por precio', () => {
-    const central: Mayorista = { id: 'mc', nombre: 'Mayorista Central', ciudad: 'Santa Cruz', verificado: true, relacion: 'SOLICITADA' };
+    const central: Mayorista = { id: 'mc', nombre: 'Mayorista Central', ciudad: 'Santa Cruz', verificado: true, relacion: 'SOLICITADA', deLaCasa: false };
     expect(ordenarMayoristas([laRamada, central, losPozos]).map((m) => m.id)).toEqual(['lp', 'mc', 'lr']);
   });
 });
 
 describe('stock', () => {
   it('lo dice con palabras', () => {
-    expect(textoDeStock({ stock: 0, estado: 'SIN_STOCK' }).texto).toBe('Sin stock');
-    expect(textoDeStock({ stock: 40, estado: 'ACTIVO' }).texto).toBe('Quedan 40 u.');
-    expect(textoDeStock({ stock: 312, estado: 'ACTIVO' }).texto).toBe('Hay stock');
+    expect(textoDeStock({ stock: 0, estado: 'SIN_STOCK', abastecimiento: 'STOCK', entregaHoras: null }).texto).toBe('Sin stock');
+    expect(textoDeStock({ stock: 40, estado: 'ACTIVO', abastecimiento: 'STOCK', entregaHoras: null }).texto).toBe('Quedan 40 u.');
+    expect(textoDeStock({ stock: 312, estado: 'ACTIVO', abastecimiento: 'STOCK', entregaHoras: null }).texto).toBe('Hay stock');
+  });
+});
+
+describe('Abasto vende (vendedor de la casa, bajo pedido)', () => {
+  const abasto: Mayorista = { id: 'abasto', nombre: 'Abasto', ciudad: 'Santa Cruz', verificado: true, relacion: 'NINGUNA', deLaCasa: true };
+  const arroz = producto({ id: 'AB-001', nombre: 'Arroz grano largo 1 kg', mayorista: abasto, stock: 0, abastecimiento: 'BAJO_PEDIDO', entregaHoras: 24 });
+
+  it('bajo pedido se puede comprar con stock 0 y dice cuándo llega', () => {
+    expect(disponible(arroz)).toBe(true);
+    expect(textoDeStock(arroz)).toEqual({ texto: 'Llega en 24 h', clase: 'ins-verde' });
+    expect(escalaPorDefecto(arroz)?.presentacion).toBe('DOCENA');
+  });
+
+  it('con stock 0 y sin ser bajo pedido, no se puede comprar', () => {
+    expect(disponible({ ...shampoo, stock: 0 })).toBe(false);
+  });
+
+  it('Abasto aparece primero entre los mayoristas', () => {
+    expect(ordenarMayoristas([laRamada, losPozos, abasto]).map((m) => m.id)).toEqual(['abasto', 'lp', 'lr']);
   });
 });

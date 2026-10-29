@@ -32,7 +32,7 @@ export function Inicio({ catalogo, ir }: Props) {
           <span />
         </div>
         <h2 className="tit">Precios de mayoreo para tu tienda</h2>
-        <p>Compra directo de los mayoristas que te aprobaron como cliente</p>
+        <p>Abarrotes, bebidas, limpieza y más al por mayor. Pide hoy y te lo llevamos a tu tienda.</p>
         <button type="button" onClick={() => ir.buscar()}>
           Ver el catálogo <Icono nombre="seguir" tamano={16} />
         </button>
@@ -81,8 +81,8 @@ export function Inicio({ catalogo, ir }: Props) {
                 {m.ciudad} · {cuantos(m.id)} productos
               </span>
               <span className="insignias">
-                {m.verificado && <span className="ins ins-verde">Verificado</span>}
-                <InsigniaRelacion relacion={m.relacion} />
+                {m.deLaCasa ? <span className="ins ins-verde">Precios para todas las tiendas</span> : m.verificado && <span className="ins ins-verde">Verificado</span>}
+                {!m.deLaCasa && <InsigniaRelacion relacion={m.relacion} />}
               </span>
             </button>
           ))}

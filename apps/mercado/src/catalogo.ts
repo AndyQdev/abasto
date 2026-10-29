@@ -14,6 +14,8 @@ export interface Mayorista {
   ciudad: string;
   verificado: boolean;
   relacion: EstadoRelacion;
+  /** Abasto mismo vendiendo: sus precios los ve cualquier tienda registrada */
+  deLaCasa: boolean;
 }
 
 export interface Escala {
@@ -31,16 +33,19 @@ export interface Producto {
   stock: number;
   estado: EstadoProducto;
   precioVisible: boolean;
+  /** BAJO_PEDIDO: se compra cuando entra el pedido; el stock no importa */
+  abastecimiento: 'STOCK' | 'BAJO_PEDIDO';
+  entregaHoras: number | null;
   mayorista: Mayorista;
   escalas: Escala[];
 }
 
-const CAMPOS_MAYORISTA = 'id nombre ciudad verificado relacion';
+const CAMPOS_MAYORISTA = 'id nombre ciudad verificado relacion deLaCasa';
 
 export const CONSULTA_CATALOGO = `
   query Catalogo {
     productos {
-      id codigo nombre rubro descripcion stock estado precioVisible
+      id codigo nombre rubro descripcion stock estado precioVisible abastecimiento entregaHoras
       mayorista { ${CAMPOS_MAYORISTA} }
       escalas { presentacion cantidad precioUnitario { centavos texto } }
     }
@@ -124,7 +129,14 @@ export function opcionesDeCompra(p: Producto): OpcionDeCompra[] {
   });
 }
 
-export function textoDeStock(p: Pick<Producto, 'stock' | 'estado'>) {
+/** Se puede comprar ya: bajo pedido siempre (se compra cuando entra el pedido); con stock, si queda */
+export function disponible(p: Pick<Producto, 'stock' | 'estado' | 'abastecimiento'>) {
+  if (p.estado !== 'ACTIVO') return false;
+  return p.abastecimiento === 'BAJO_PEDIDO' || p.stock > 0;
+}
+
+export function textoDeStock(p: Pick<Producto, 'stock' | 'estado' | 'abastecimiento' | 'entregaHoras'>) {
+  if (p.abastecimiento === 'BAJO_PEDIDO' && p.estado === 'ACTIVO') return { texto: `Llega en ${p.entregaHoras ?? 24} h`, clase: 'ins-verde' };
   if (p.estado === 'SIN_STOCK' || p.stock <= 0) return { texto: 'Sin stock', clase: 'ins-rojo' };
   if (p.stock < 100) return { texto: `Quedan ${p.stock} u.`, clase: 'ins-ambar' };
   return { texto: 'Hay stock', clase: 'ins-verde' };
@@ -171,7 +183,10 @@ export function rubros(productos: Producto[]) {
 /** Primero los mayoristas que ya me venden, después el resto; dentro de cada grupo, por nombre */
 export function ordenarMayoristas(mayoristas: Mayorista[]) {
   const peso: Record<EstadoRelacion, number> = { APROBADA: 0, SOLICITADA: 1, NINGUNA: 2, RECHAZADA: 3 };
-  return [...mayoristas].sort((a, b) => peso[a.relacion] - peso[b.relacion] || a.nombre.localeCompare(b.nombre, 'es'));
+  // Abasto (vendedor de la casa) siempre primero: es el que vende todo mientras no hay afiliados
+  return [...mayoristas].sort(
+    (a, b) => Number(b.deLaCasa) - Number(a.deLaCasa) || peso[a.relacion] - peso[b.relacion] || a.nombre.localeCompare(b.nombre, 'es'),
+  );
 }
 
 export function conRelacion<T extends { mayorista: Mayorista }>(lista: T[], mayoristaId: string, relacion: EstadoRelacion): T[] {
