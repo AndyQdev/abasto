@@ -25,7 +25,9 @@ import {
   ReportesController,
   SaludController,
 } from './interfaz/http/asistente.controllers.js';
+import { DirectorioCatalogo } from './infraestructura/catalogo/directorio.catalogo.js';
 import { ProyectorServicio } from './proyector/proyector.servicio.js';
+import { DIRECTORIO_DE_TIENDAS } from './proyector/puertos.js';
 import { ConsultarReportes } from './reportes/aplicacion/consultar-reportes.js';
 import { ResponderPregunta } from './reportes/aplicacion/responder-pregunta.js';
 import {
@@ -73,6 +75,7 @@ const elegirModelo = (): ModeloDeLenguaje =>
       useFactory: (p: RepositorioDePropuestas, e: EjecutorDeAcciones) => new DecidirPropuesta(p, e),
       inject: [REPOSITORIO_DE_PROPUESTAS, EJECUTOR_DE_ACCIONES],
     },
+    { provide: DIRECTORIO_DE_TIENDAS, useFactory: () => new DirectorioCatalogo() },
     ProyectorServicio,
     { provide: APP_GUARD, useClass: AutenticacionGuard },
   ],

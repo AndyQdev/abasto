@@ -200,6 +200,7 @@ services:
       DYNAMODB_URL: http://dynamodb:8000
       RABBITMQ_URL: amqp://abasto:abasto@rabbitmq:5672
       KEYCLOAK_JWKS_URL: http://keycloak:8080/realms/abasto/protocol/openid-connect/certs
+      CATALOGO_URL: http://catalogo:8082/graphql
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       N8N_WEBHOOK_ACCIONES: ${N8N_WEBHOOK_ACCIONES:-}
     ports: ["8085:8085"]

@@ -18,12 +18,39 @@ export interface Sentencia {
   parametros: unknown[];
 }
 
-export function proyectar(evento: Evento): Sentencia[] {
+/** Nombre de cada tienda por id; lo arma el servicio antes de proyectar (ver DirectorioDeTiendas). */
+export type NombresDeTiendas = Record<string, string>;
+
+/**
+ * Días que tiene la tienda para pagar un pedido a crédito. pedido.confirmado no trae la fecha de vencimiento
+ * (la línea de crédito vive en Cobros), así que se usa el plazo de la demo hasta que el contrato la incluya.
+ */
+export const PLAZO_CREDITO_DIAS = 15;
+
+const ESTADO_POR_EVENTO: Record<string, string> = {
+  'pedido.creado': 'PENDIENTE',
+  'pedido.por_confirmar': 'POR_CONFIRMAR',
+  'pedido.confirmado': 'CONFIRMADO',
+  'pedido.rechazado': 'RECHAZADO',
+};
+
+/** Ids de tienda cuyos nombres necesita la proyección de este evento. */
+export function tiendasQueNecesita(evento: Evento): string[] {
+  const tiendaId = evento.datos.tiendaId;
+  return evento.tipo in ESTADO_POR_EVENTO && typeof tiendaId === 'string' ? [tiendaId] : [];
+}
+
+export function proyectar(evento: Evento, tiendas: NombresDeTiendas = {}): Sentencia[] {
   const d = evento.datos;
   switch (evento.tipo) {
+    case 'pedido.creado':
+    case 'pedido.por_confirmar':
+    case 'pedido.rechazado':
+      return [estadoDelPedido(evento, tiendas)];
     case 'pedido.confirmado': {
-      const fecha = evento.ocurridoEn.slice(0, 10);
+      const fecha = fechaDe(evento);
       const sentencias: Sentencia[] = [
+        estadoDelPedido(evento, tiendas),
         {
           sql: `INSERT INTO ventas_diarias (org_id, fecha, pedidos, total_centavos) VALUES ($1, $2, 1, $3)
                 ON CONFLICT (org_id, fecha) DO UPDATE
@@ -36,7 +63,14 @@ export function proyectar(evento: Evento): Sentencia[] {
         sentencias.push({
           sql: `INSERT INTO cuentas_por_cobrar (org_id, pedido_id, tienda_id, tienda_nombre, saldo_centavos, vence)
                 VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (org_id, pedido_id) DO NOTHING`,
-          parametros: [evento.orgId, d.pedidoId, d.tiendaId, d.tiendaNombre, d.totalCentavos, d.vence],
+          parametros: [
+            evento.orgId,
+            d.codigo ?? d.pedidoId,
+            d.tiendaId,
+            nombreDeTienda(d.tiendaId, tiendas),
+            d.totalCentavos,
+            typeof d.vence === 'string' ? d.vence : sumarDias(fecha, PLAZO_CREDITO_DIAS),
+          ],
         });
       }
       return sentencias;
@@ -44,11 +78,12 @@ export function proyectar(evento: Evento): Sentencia[] {
     case 'cobro.pago_registrado':
       return [
         {
+          // La cuenta se guarda con el código (A-1042); el pago puede traer solo el id del pedido
           sql: `UPDATE cuentas_por_cobrar
-                   SET saldo_centavos = greatest(saldo_centavos - $3, 0),
-                       estado = CASE WHEN saldo_centavos - $3 <= 0 THEN 'pagada' ELSE estado END
-                 WHERE org_id = $1 AND pedido_id = $2`,
-          parametros: [evento.orgId, d.pedidoId, d.centavos],
+                   SET saldo_centavos = greatest(saldo_centavos - $4, 0),
+                       estado = CASE WHEN saldo_centavos - $4 <= 0 THEN 'pagada' ELSE estado END
+                 WHERE org_id = $1 AND pedido_id IN ($2, $3)`,
+          parametros: [evento.orgId, d.pedidoId, d.codigo ?? d.pedidoId, d.centavos],
         },
       ];
     case 'producto.stock_cambiado':
@@ -62,4 +97,52 @@ export function proyectar(evento: Evento): Sentencia[] {
     default:
       return []; // eventos que no cambian ningún reporte
   }
+}
+
+/**
+ * Una fila por pedido. pedido.creado solo inserta: si llega tarde, no pisa un estado posterior.
+ * Los demás eventos actualizan el estado (y el motivo, si es un rechazo).
+ */
+function estadoDelPedido(evento: Evento, tiendas: NombresDeTiendas): Sentencia {
+  const d = evento.datos;
+  const alCrear = evento.tipo === 'pedido.creado';
+  return {
+    sql: `INSERT INTO pedidos (org_id, pedido_id, codigo, tienda_id, tienda_nombre, metodo_pago, total_centavos,
+                               estado, motivo_rechazo, creado_en, actualizado_en)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $10)
+          ON CONFLICT (org_id, pedido_id) DO ${
+            alCrear
+              ? 'NOTHING'
+              : `UPDATE SET estado = EXCLUDED.estado, motivo_rechazo = EXCLUDED.motivo_rechazo,
+                            total_centavos = EXCLUDED.total_centavos, actualizado_en = EXCLUDED.actualizado_en`
+          }`,
+    parametros: [
+      evento.orgId,
+      d.pedidoId,
+      d.codigo ?? d.pedidoId,
+      d.tiendaId,
+      nombreDeTienda(d.tiendaId, tiendas),
+      d.metodoPago,
+      d.totalCentavos,
+      ESTADO_POR_EVENTO[evento.tipo],
+      evento.tipo === 'pedido.rechazado' ? (d.motivo ?? 'Sin motivo') : null,
+      evento.ocurridoEn,
+    ],
+  };
+}
+
+function nombreDeTienda(tiendaId: unknown, tiendas: NombresDeTiendas): string {
+  const id = String(tiendaId);
+  return tiendas[id] ?? id;
+}
+
+/** Día local del evento: '2026-10-20T08:50:00-04:00' → '2026-10-20'. */
+function fechaDe(evento: Evento): string {
+  return evento.ocurridoEn.slice(0, 10);
+}
+
+function sumarDias(fecha: string, dias: number): string {
+  const d = new Date(`${fecha}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + dias);
+  return d.toISOString().slice(0, 10);
 }

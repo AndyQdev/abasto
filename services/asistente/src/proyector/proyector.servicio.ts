@@ -2,7 +2,8 @@ import { Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nest
 import amqp from 'amqplib';
 import type pg from 'pg';
 import { POOL_DUENO } from '../infraestructura/postgres/conexiones.js';
-import { proyectar, type Evento } from './proyectar.js';
+import { proyectar, tiendasQueNecesita, type Evento } from './proyectar.js';
+import { DIRECTORIO_DE_TIENDAS, type DirectorioDeTiendas } from './puertos.js';
 
 const COLA = 'asistente.proyector';
 
@@ -17,7 +18,10 @@ export class ProyectorServicio implements OnModuleInit, OnModuleDestroy {
   private conexion?: Awaited<ReturnType<typeof amqp.connect>>;
   private apagando = false;
 
-  constructor(@Inject(POOL_DUENO) private readonly pool: pg.Pool) {}
+  constructor(
+    @Inject(POOL_DUENO) private readonly pool: pg.Pool,
+    @Inject(DIRECTORIO_DE_TIENDAS) private readonly directorio: DirectorioDeTiendas,
+  ) {}
 
   onModuleInit() {
     if (process.env.PROYECTOR === 'apagado') return;
@@ -31,6 +35,8 @@ export class ProyectorServicio implements OnModuleInit, OnModuleDestroy {
 
   /** Aplica un evento en una transacción. Devuelve false si ya se había proyectado. */
   async aplicar(evento: Evento): Promise<boolean> {
+    // Los nombres se piden antes de abrir la transacción: una llamada de red no debe tener filas bloqueadas
+    const tiendas = await this.directorio.nombres(tiendasQueNecesita(evento));
     const cliente = await this.pool.connect();
     try {
       await cliente.query('BEGIN');
@@ -42,7 +48,7 @@ export class ProyectorServicio implements OnModuleInit, OnModuleDestroy {
         await cliente.query('ROLLBACK');
         return false;
       }
-      for (const s of proyectar(evento)) await cliente.query(s.sql, s.parametros);
+      for (const s of proyectar(evento, tiendas)) await cliente.query(s.sql, s.parametros);
       await cliente.query('COMMIT');
       return true;
     } catch (e) {
