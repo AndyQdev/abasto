@@ -20,6 +20,10 @@ interface PedidoJpa extends JpaRepository<PedidoEntidad, UUID> {
 
     List<PedidoEntidad> findByMayoristaIdAndEstadoOrderByCreadoEnDesc(String mayoristaId, String estado);
 
+    List<PedidoEntidad> findByCreadoEnGreaterThanEqual(java.time.Instant desde);
+
+    List<PedidoEntidad> findByMayoristaIdAndCreadoEnGreaterThanEqual(String mayoristaId, java.time.Instant desde);
+
     @Query(value = "SELECT nextval('pedido_codigo_seq')", nativeQuery = true)
     long siguienteNumero();
 }

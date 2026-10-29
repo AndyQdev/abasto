@@ -6,6 +6,8 @@ Actualizado: 28/10/2026 · rama `jhoel/reportes-voz` (sale de `jhoel/catalogo-ge
 T18 y T19 terminados en `jhoel/reportes-voz`; esperan a que se mergeen los PR #1 y #2.
 
 ## Terminé
+- Entorno en verde (`pnpm verificar/install/todo/test/e2e`; 12 contenedores).
+- Campo (`jhoel/campo-tflite`): diagnóstico TFLite + ML Kit, 11/11 pruebas y `tsc` limpio. En el teléfono: `1×224×224×3 → 1×1001`, 57 ms; OCR «Shampoo 400 ml / Bs 18,50» → «Bs 18,50».
 - T18: preguntar por voz con Whisper dentro del navegador (IA local, el audio no sale del equipo) y gráfico de barras/línea en el reporte. Probado con audio real en español.
 - T19: la guardia SQL rechaza también conversiones a tipos del sistema (regclass, oid) y permite CTE (WITH) sin abrir tablas prohibidas; suite de seguridad contra Postgres 7/7 (aislamiento de `pedidos`, inbox ilegible, `set_config` negado); evaluador de 20 preguntas (`pnpm --filter @abasto/asistente evaluar`).
 - PR #1: Catálogo en la saga (reserva/libera stock, `stock.*` con precio por línea).
@@ -24,6 +26,8 @@ T18 y T19 terminados en `jhoel/reportes-voz`; esperan a que se mergeen los PR #1
 - Contrato: agregar `vence` a `pedido.confirmado` o `cobro.credito_autorizado` (el proyector usa 15 días mientras tanto).
 - Superadmin: puede mostrar `estadoVerificacion` (PENDIENTE/VERIFICADO/RECHAZADO) de cada mayorista.
 - Los pedidos de demo vencen a las 2 h: para el e2e, `pnpm borrar-datos` + `pnpm todo`; si Catálogo da 401, `docker compose exec catalogo php artisan cache:clear`.
+- Revisar `contracts/asyncapi.yaml`: detalle en `plan-jhoel.md` (punto 7).
+- e2e: `pnpm todo` no siembra Catálogo (falta `catalogo:semilla`).
 
 ## Sigue
 - T18/T19 (yo). OpenCode: pantalla de Productos en Gestión y diagramas ICONIX.

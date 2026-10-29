@@ -3,21 +3,20 @@
 ```mermaid
 flowchart LR
   subgraph Interfaces
-    M[Mercado<br/>React PWA]
+    A[App de clientes<br/>Expo · Android e iPhone]
     subgraph Panel[Panel Mayorista]
       S[Shell React] --> G[Gestión<br/>Angular]
       S --> I[Inteligencia<br/>Vue]
     end
     SA[Superadmin<br/>React]
-    C[Campo<br/>Expo Android]
   end
 
   KC[(Keycloak<br/>sesión única)]
   R{{Apollo Router<br/>GraphQL federado}}
 
-  M & G & SA --> R
+  A & G & SA --> R
   I -->|REST| AS
-  C -->|lotes offline| CO
+  A -->|pedidos sin señal| CO
   N8N[n8n<br/>WhatsApp, acciones] -->|REST| CO
 
   R --> P[Pedidos<br/>Spring · hexagonal]

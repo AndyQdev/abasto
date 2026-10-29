@@ -28,7 +28,12 @@ final readonly class MongoReservaRepositorio implements ReservaRepositorio
         $lineas = [];
         foreach ((array) ($doc['lineas'] ?? []) as $l) {
             $l = (array) $l;
-            $lineas[] = new LineaReservada((string) $l['producto_id'], (int) $l['unidades'], (int) $l['precio_unitario_centavos']);
+            $lineas[] = new LineaReservada(
+                (string) $l['producto_id'],
+                (int) $l['unidades'],
+                (int) $l['precio_unitario_centavos'],
+                (bool) ($l['descontado'] ?? true),
+            );
         }
 
         return ReservaDeStock::rehidratar(
@@ -49,6 +54,7 @@ final readonly class MongoReservaRepositorio implements ReservaRepositorio
                 'producto_id' => $l->productoId,
                 'unidades' => $l->unidades,
                 'precio_unitario_centavos' => $l->precioUnitarioCentavos,
+                'descontado' => $l->descontado,
             ], $reserva->lineas()),
         ], ['upsert' => true]);
     }

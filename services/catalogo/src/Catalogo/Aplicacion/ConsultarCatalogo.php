@@ -56,11 +56,14 @@ final readonly class ConsultarCatalogo
 
     private function vista(Producto $producto, string $orgId, ?RelacionComercial $relacion): VistaDeProducto
     {
+        $mayorista = $this->organizaciones->porId($producto->mayoristaId);
+
         return new VistaDeProducto(
             $producto,
-            $this->organizaciones->porId($producto->mayoristaId),
-            PoliticaDePrecios::escalasPara($producto, $orgId, $relacion),
+            $mayorista,
+            PoliticaDePrecios::escalasPara($producto, $orgId, $relacion, $mayorista->deLaCasa ?? false),
             $relacion?->estado() ?? EstadoRelacion::NINGUNA,
+            $producto->mayoristaId === $orgId,
         );
     }
 }

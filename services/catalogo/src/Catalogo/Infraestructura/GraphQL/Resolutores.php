@@ -11,6 +11,7 @@ use Catalogo\Aplicacion\CrearProducto;
 use Catalogo\Aplicacion\EditarProducto;
 use Catalogo\Aplicacion\GestionarClientes;
 use Catalogo\Aplicacion\VistaDeProducto;
+use Catalogo\Dominio\Abastecimiento;
 use Catalogo\Dominio\ErrorDeDominio;
 use Catalogo\Dominio\EscalaDePrecio;
 use Catalogo\Dominio\EstadoProducto;
@@ -213,6 +214,7 @@ final readonly class Resolutores
                 (string) ($e['descripcion'] ?? ''),
                 (int) $e['stock'],
                 self::escalas($e['escalas']),
+                ...self::abastecimiento($e),
             );
 
             return $this->vistaDe($producto->id, $usuario->orgId);
@@ -238,6 +240,7 @@ final readonly class Resolutores
                 isset($e['descripcion']) ? (string) $e['descripcion'] : null,
                 isset($e['escalas']) ? self::escalas($e['escalas']) : null,
                 isset($e['estado']) ? EstadoProducto::from((string) $e['estado']) : null,
+                ...self::abastecimiento($e),
             );
 
             return $this->vistaDe($producto->id, $usuario->orgId);
@@ -281,6 +284,23 @@ final readonly class Resolutores
             (int) $e['unidades'],
             (int) $e['precioUnitarioCentavos'],
         ), $entradas);
+    }
+
+    /**
+     * Los campos opcionales de abastecimiento, con el nombre de los parámetros de crear y editar.
+     *
+     * @param array<string, mixed> $e
+     *
+     * @return array{abastecimiento: ?Abastecimiento, entregaHoras: ?int, costoUnitarioCentavos: ?int, proveedor: ?string}
+     */
+    private static function abastecimiento(array $e): array
+    {
+        return [
+            'abastecimiento' => isset($e['abastecimiento']) ? Abastecimiento::from((string) $e['abastecimiento']) : null,
+            'entregaHoras' => isset($e['entregaHoras']) ? (int) $e['entregaHoras'] : null,
+            'costoUnitarioCentavos' => isset($e['costoUnitarioCentavos']) ? (int) $e['costoUnitarioCentavos'] : null,
+            'proveedor' => isset($e['proveedor']) ? (string) $e['proveedor'] : null,
+        ];
     }
 
     /**

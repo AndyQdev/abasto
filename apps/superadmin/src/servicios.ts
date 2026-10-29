@@ -16,6 +16,18 @@ export const SERVICIOS = [
   { id: 'asistente', nombre: 'Asistente', tecnologia: 'NestJS', url: 'http://localhost:8085/salud' },
 ] as const;
 
+/** Una consulta al Apollo Router con la sesión. Falla si GraphQL devuelve errores sin datos. */
+export async function graphql<T>(query: string, variables: Record<string, unknown> = {}): Promise<T> {
+  const r = await fetch(URLS.router, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', authorization: `Bearer ${await sesion.token()}` },
+    body: JSON.stringify({ query, variables }),
+  });
+  const cuerpo = (await r.json()) as { data?: T; errors?: { message: string }[] };
+  if (!cuerpo.data) throw new Error(cuerpo.errors?.[0]?.message ?? `El Router respondió ${r.status}`);
+  return cuerpo.data;
+}
+
 export async function conToken<T>(url: string): Promise<T> {
   const r = await fetch(url, { headers: { authorization: `Bearer ${await sesion.token()}` } });
   if (!r.ok) throw new Error(`${url} respondió ${r.status}`);

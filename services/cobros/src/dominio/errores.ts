@@ -32,3 +32,21 @@ export class LineaDeCreditoNoExiste extends ErrorDeDominio {
     );
   }
 }
+
+export class QrNoSePuedePagar extends ErrorDeDominio {
+  constructor(mensaje: string) {
+    super('QR_NO_SE_PUEDE_PAGAR', mensaje);
+  }
+}
+
+export class CobroNoExiste extends ErrorDeDominio {
+  constructor(pedidoId: string) {
+    super('COBRO_NO_EXISTE', `El pedido ${pedidoId} no tiene un cobro por QR`);
+  }
+}
+
+export class SinPermiso extends ErrorDeDominio {
+  constructor(mensaje: string) {
+    super('SIN_PERMISO', mensaje);
+  }
+}

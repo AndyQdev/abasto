@@ -6,11 +6,18 @@ extend schema @link(url: "https://specs.apollo.dev/federation/v2.7", import: ["@
 type Query {
   "Crédito que un mayorista le dio a una tienda. Null si no tiene."
   lineaDeCredito(tiendaId: ID!, mayoristaId: ID!): LineaDeCredito
+  "El cobro por QR de un pedido. Solo lo ven la tienda que compra y el mayorista que vende."
+  cobroDePedido(pedidoId: ID!): CobroQr
 }
 
 type Mutation {
   "Paso 3 de la saga de compra. Lo usa el orquestador de Pedidos; repetirlo con el mismo pedido no descuenta dos veces."
   autorizarCredito(entrada: AutorizarCreditoEntrada!): AutorizacionDeCredito!
+  """
+  Solo en desarrollo y en la demo (QR_DE_PRUEBA=si): simula que la tienda pagó el QR.
+  Con un banco real, el pago lo avisa el banco.
+  """
+  pagarQrDePrueba(pedidoId: ID!): CobroQr!
 }
 
 input AutorizarCreditoEntrada {
@@ -35,6 +42,31 @@ type AutorizacionDeCredito {
   pedidoId: ID!
   autorizado: Dinero!
   disponible: Dinero!
+}
+
+type CobroQr {
+  pedidoId: ID!
+  monto: Dinero!
+  estado: EstadoCobroQr!
+  "Lo que lleva el QR. En la demo es un texto simulado."
+  codigo: String!
+  venceEn: String!
+  pagadoEn: String
+}
+
+enum EstadoCobroQr {
+  PENDIENTE
+  PAGADO
+  VENCIDO
+  DEVUELTO
+  ANULADO
+}
+
+"El pedido es de Pedidos; Cobros le agrega su cobro (federación)."
+type Pedido @key(fields: "id") {
+  id: ID!
+  "Null si se paga a crédito o si todavía no se generó el QR."
+  cobro: CobroQr
 }
 
 "Monto en bolivianos. Mismo tipo en los tres subgrafos."

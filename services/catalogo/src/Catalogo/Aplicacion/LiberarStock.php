@@ -26,7 +26,10 @@ final readonly class LiberarStock
         $reserva = $this->reservas->de($pedidoId);
         if ($reserva !== null && $reserva->tieneStockPorDevolver()) {
             foreach ($reserva->lineas() as $linea) {
-                $this->productos->devolverStock($linea->productoId, $linea->unidades);
+                // Lo que se pidió bajo pedido no descontó stock: no hay nada que devolver
+                if ($linea->descontado) {
+                    $this->productos->devolverStock($linea->productoId, $linea->unidades);
+                }
             }
             $reserva->liberar();
             $this->reservas->guardar($reserva);

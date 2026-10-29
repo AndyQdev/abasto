@@ -17,6 +17,8 @@ public interface PedidoRepositorio {
 
     List<Pedido> deMayorista(String mayoristaId, EstadoPedido estado);
 
+    /** Todos los pedidos creados desde ese momento; con mayoristaId, solo los de ese vendedor. */
+    List<Pedido> desde(java.time.Instant desde, String mayoristaId);
     void guardar(Pedido pedido);
 
     /** Código legible y correlativo, por ejemplo A-1042. */

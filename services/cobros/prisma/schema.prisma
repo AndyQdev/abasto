@@ -58,3 +58,20 @@ model MensajeProcesado {
 
   @@map("mensajes_procesados")
 }
+
+/// El cobro por QR de un pedido (paso 3 de la saga). Uno por pedido.
+model CobroQr {
+  id          String    @id
+  pedidoId    String    @unique @map("pedido_id")
+  tiendaId    String    @map("tienda_id")
+  mayoristaId String    @map("mayorista_id")
+  centavos    Int
+  estado      String
+  codigo      String
+  creadoEn    DateTime  @map("creado_en")
+  venceEn     DateTime  @map("vence_en")
+  pagadoEn    DateTime? @map("pagado_en")
+
+  @@index([estado, venceEn])
+  @@map("cobros_qr")
+}

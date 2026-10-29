@@ -15,6 +15,13 @@ interface PedidoFila {
   lineas: { cantidad: number; unidades: number; presentacion: string; producto: { id: string; nombre?: string | null } }[];
 }
 
+/** El botón según dónde está el pedido. Abasto compra bajo pedido: confirmar → comprar y preparar → despachar → entregar. */
+export const SIGUIENTE_PASO: Record<string, string> = {
+  CONFIRMADO: 'Preparar',
+  EN_PREPARACION: 'Despachar',
+  DESPACHADO: 'Marcar entregado',
+};
+
 // Una sola consulta trae el pedido (Pedidos · Spring) y el nombre de la tienda y del producto (Catálogo · Laravel)
 const MIS_VENTAS = `
   query MisVentas($estado: EstadoPedido) {
@@ -75,14 +82,18 @@ const MIS_VENTAS = `
                     <div>{{ l.producto.nombre ?? l.producto.id }}<span class="gris">{{ cantidad(l) }}</span></div>
                   }
                 </td>
-                <td>{{ p.metodoPago === 'QR' ? 'QR' : 'Crédito' }}</td>
+                <td>{{ pago(p.metodoPago) }}</td>
                 <td class="num">{{ p.total.texto }}</td>
                 <td><span class="insignia" [class]="estado(p.estado).clase">{{ estado(p.estado).texto }}</span></td>
-                <td class="acciones">
+                <td>
+                  <div class="acciones">
                   @if (p.estado === 'POR_CONFIRMAR') {
                     <button class="boton-secundario" [disabled]="ocupado() === p.id" (click)="rechazar(p)">Rechazar</button>
                     <button class="boton-primario" [disabled]="ocupado() === p.id" (click)="confirmar(p)">Confirmar</button>
+                  } @else if (siguientePaso(p.estado); as paso) {
+                    <button class="boton-secundario" [disabled]="ocupado() === p.id" (click)="avanzar(p, paso)">{{ paso }}</button>
                   }
+                  </div>
                 </td>
               </tr>
             }
@@ -111,6 +122,9 @@ export class VistaPedidos implements OnInit {
   }
 
   estado = (e: string) => ESTADOS_DE_PEDIDO[e] ?? { texto: e, clase: 'neutro' };
+  pago = (m: string) => ({ QR: 'QR', CREDITO: 'Crédito', CONTRA_ENTREGA: 'Contra entrega' })[m] ?? m;
+  /** Lo que el mayorista hace después de confirmar, de a un paso hasta entregar */
+  siguientePaso = (e: string) => SIGUIENTE_PASO[e] ?? null;
   cantidad = (l: PedidoFila['lineas'][number]) => cantidadConUnidad(l.cantidad, l.presentacion, l.unidades);
 
   filtrar(estado: string) {
@@ -141,6 +155,11 @@ export class VistaPedidos implements OnInit {
     if (!motivo) return;
     await this.decidir(p, `mutation($id: ID!, $motivo: String!) { rechazarPedido(id: $id, motivo: $motivo) { id estado } }`,
       { id: p.id, motivo }, `Rechazaste ${p.codigo}: se devuelve el cobro y se libera el stock`);
+  }
+
+  async avanzar(p: PedidoFila, paso: string) {
+    await this.decidir(p, `mutation($id: ID!) { avanzarEntrega(id: $id) { id estado } }`, { id: p.id },
+      `${p.codigo}: ${paso.toLowerCase()} listo`);
   }
 
   private async decidir(p: PedidoFila, mutacion: string, variables: Record<string, unknown>, texto: string) {

@@ -1,0 +1,17 @@
+{
+  "name": "@abasto/comercio",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Lógica de compra sin pantallas: catálogo con red privada y vendedor de la casa, carrito por mayorista y seguimiento de la saga. La usa la app de clientes (Expo).",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.3",
+    "vitest": "^4.1.2"
+  }
+}

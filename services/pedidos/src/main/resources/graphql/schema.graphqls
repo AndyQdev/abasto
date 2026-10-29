@@ -10,6 +10,43 @@ type Query {
   misVentas(estado: EstadoPedido): [Pedido!]!
   "Un pedido. Null si no existe o si la empresa de la sesión no es ni la tienda ni el mayorista."
   pedido(id: ID!): Pedido
+  """
+  Lo que el mayorista de la sesión tiene que comprar para sus pedidos confirmados que todavía no preparó
+  (Abasto vende bajo pedido). Costo y proveedor de cada producto los pone Catálogo.
+  """
+  listaDeCompras: [LineaDeCompra!]!
+  """
+  Solo para el equipo de Abasto (rol admin): pedidos y ventas por semana, tiendas activas y las que repiten.
+  Con mayoristaId, solo los de ese vendedor (por ejemplo "abasto").
+  """
+  traccion(mayoristaId: ID, semanas: Int = 8): Traccion!
+}
+
+"Los números que muestran que vender en Abasto funciona. Solo cuentan los pedidos confirmados en adelante."
+type Traccion {
+  pedidos: Int!
+  ventas: Dinero!
+  ticketPromedio: Dinero!
+  "Tiendas que compraron en los últimos 30 días"
+  tiendasActivas: Int!
+  "Tiendas con dos pedidos o más en el período"
+  tiendasQueRepiten: Int!
+  semanas: [SemanaDeVentas!]!
+  "De la que más compra a la que menos"
+  tiendas: [TiendaCompradora!]!
+}
+
+type SemanaDeVentas {
+  "Lunes de la semana, aaaa-mm-dd"
+  desde: String!
+  pedidos: Int!
+  ventas: Dinero!
+}
+
+type TiendaCompradora {
+  tienda: Tienda!
+  pedidos: Int!
+  ventas: Dinero!
 }
 
 type Mutation {
@@ -22,6 +59,18 @@ type Mutation {
   confirmarPedido(id: ID!): Pedido!
   "El mayorista rechaza: se devuelve el cobro y se libera el stock."
   rechazarPedido(id: ID!, motivo: String!): Pedido!
+  "Después de confirmar, de a un paso: CONFIRMADO → EN_PREPARACION → DESPACHADO → ENTREGADO."
+  avanzarEntrega(id: ID!): Pedido!
+}
+
+"Un producto para comprar: la suma de lo que piden todos los pedidos confirmados."
+type LineaDeCompra {
+  producto: Producto!
+  unidades: Int!
+  "Lo que pagan las tiendas por esas unidades"
+  venta: Dinero!
+  "Códigos de los pedidos que lo piden, por ejemplo A-1042"
+  pedidos: [String!]!
 }
 
 input CrearPedidoEntrada {
@@ -77,6 +126,8 @@ enum EstadoPedido {
 enum MetodoPago {
   QR
   CREDITO
+  "Paga al recibir (efectivo o QR): la saga no cobra antes de que el mayorista confirme"
+  CONTRA_ENTREGA
 }
 
 enum Presentacion {

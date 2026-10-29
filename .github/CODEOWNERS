@@ -1,24 +1,23 @@
 # Gana la última línea que coincide: lo general va arriba y lo específico abajo.
-# Cambia @usuario-andres y @usuario-jhoel por los usuarios de GitHub de cada uno.
-*                           @usuario-andres @usuario-jhoel
-contracts/                  @usuario-andres @usuario-jhoel
-packages/                   @usuario-andres @usuario-jhoel
-infra/                      @usuario-andres
-.github/                    @usuario-andres
-services/pedidos/           @usuario-andres
-services/cobros/            @usuario-andres
-services/conecta/           @usuario-andres
-apps/mercado/               @usuario-andres
-apps/superadmin/            @usuario-andres
+# Falta el usuario de GitHub de Jhoel: reemplaza @usuario-jhoel cuando lo tengas.
+*                           @AndyQdev @usuario-jhoel
+contracts/                  @AndyQdev @usuario-jhoel
+packages/                   @AndyQdev @usuario-jhoel
+infra/                      @AndyQdev
+.github/                    @AndyQdev
+services/pedidos/           @AndyQdev
+services/cobros/            @AndyQdev
+services/conecta/           @AndyQdev
+apps/superadmin/            @AndyQdev
 services/catalogo/          @usuario-jhoel
 services/asistente/         @usuario-jhoel
 ml/                         @usuario-jhoel
 apps/panel-shell/           @usuario-jhoel
 apps/panel-gestion/         @usuario-jhoel
 apps/panel-inteligencia/    @usuario-jhoel
-apps/campo/                 @usuario-jhoel
+apps/app/                   @AndyQdev
 # Dentro de Gestión, Pedidos y Cuentas por cobrar son de Andrés
-apps/panel-gestion/src/app/vistas/pedidos*     @usuario-andres
-apps/panel-gestion/src/app/vistas/cuentas*     @usuario-andres
-docs/equipo/andres.md       @usuario-andres
+apps/panel-gestion/src/app/vistas/pedidos*     @AndyQdev
+apps/panel-gestion/src/app/vistas/cuentas*     @AndyQdev
+docs/equipo/andres.md       @AndyQdev
 docs/equipo/jhoel.md        @usuario-jhoel

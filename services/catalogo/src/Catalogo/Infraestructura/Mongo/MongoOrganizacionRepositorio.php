@@ -50,6 +50,7 @@ final readonly class MongoOrganizacionRepositorio implements OrganizacionReposit
             ciudad: (string) ($doc['ciudad'] ?? ''),
             verificacion: $verificacion,
             nit: isset($doc['nit']) ? (string) $doc['nit'] : null,
+            deLaCasa: (bool) ($doc['de_la_casa'] ?? false),
         );
     }
 }

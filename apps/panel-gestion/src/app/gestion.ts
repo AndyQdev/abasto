@@ -3,6 +3,7 @@ import { ESTILOS_BASE } from './estilos';
 import { GraphQL } from './graphql';
 import type { SesionDelShell } from './sesion';
 import { VistaClientes } from './vistas/clientes';
+import { VistaCompras } from './vistas/compras';
 import { VistaEnConstruccion } from './vistas/en-construccion';
 import { VistaPedidos } from './vistas/pedidos';
 import { VistaProductos } from './vistas/productos';
@@ -14,7 +15,7 @@ import { VistaProductos } from './vistas/productos';
 @Component({
   selector: 'abasto-gestion-raiz',
   encapsulation: ViewEncapsulation.ShadowDom,
-  imports: [VistaPedidos, VistaProductos, VistaClientes, VistaEnConstruccion],
+  imports: [VistaPedidos, VistaProductos, VistaClientes, VistaCompras, VistaEnConstruccion],
   styles: [ESTILOS_BASE, `.saludo { margin: 0.5rem 0 1.5rem; } .saludo p { color: hsl(var(--texto-2)); margin: 0.25rem 0 0; }`],
   template: `
     @switch (ruta) {
@@ -28,6 +29,7 @@ import { VistaProductos } from './vistas/productos';
         <abasto-vista-pedidos [soloPorConfirmar]="true" />
       }
       @case ('pedidos') { <abasto-vista-pedidos /> }
+      @case ('compras') { <abasto-vista-compras /> }
       @case ('productos') { <abasto-vista-productos /> }
       @case ('clientes') { <abasto-vista-clientes /> }
       @case ('cuentas') {

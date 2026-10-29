@@ -22,6 +22,16 @@ directive @join__unionMember(graph: join__Graph!, member: String!) repeatable on
 
 directive @link(url: String, as: String, for: link__Purpose, import: [link__Import]) repeatable on SCHEMA
 
+"""
+STOCK: lo tiene en depósito y reservar descuenta stock. BAJO_PEDIDO: se compra cuando entra el pedido.
+"""
+enum Abastecimiento
+  @join__type(graph: CATALOGO)
+{
+  STOCK @join__enumValue(graph: CATALOGO)
+  BAJO_PEDIDO @join__enumValue(graph: CATALOGO)
+}
+
 type AutorizacionDeCredito
   @join__type(graph: COBROS)
 {
@@ -52,6 +62,19 @@ input CargarProductoEntrada
   precioUnitarioCentavos: Int!
 }
 
+type CobroQr
+  @join__type(graph: COBROS)
+{
+  pedidoId: ID!
+  monto: Dinero!
+  estado: EstadoCobroQr!
+
+  """Lo que lleva el QR. En la demo es un texto simulado."""
+  codigo: String!
+  venceEn: String!
+  pagadoEn: String
+}
+
 input CrearPedidoEntrada
   @join__type(graph: PEDIDOS)
 {
@@ -75,6 +98,22 @@ input CrearProductoEntrada
   """Stock inicial; 0 deja el producto SIN_STOCK"""
   stock: Int!
   escalas: [EscalaEntrada!]!
+
+  """
+  STOCK si lo tiene en depósito; BAJO_PEDIDO si lo compra cuando entra el pedido (sin stock)
+  """
+  abastecimiento: Abastecimiento
+
+  """Horas desde el pedido hasta la entrega"""
+  entregaHoras: Int
+
+  """Lo que le cuesta cada unidad. Solo lo ve el mayorista"""
+  costoUnitarioCentavos: Int
+
+  """
+  Dónde lo compra (puesto, mercado o distribuidora). Solo lo ve el mayorista
+  """
+  proveedor: String
 }
 
 """Monto en bolivianos. Mismo tipo en los tres subgrafos."""
@@ -103,6 +142,22 @@ input EditarProductoEntrada
 
   """Solo ACTIVO o PAUSADO: SIN_STOCK y PENDIENTE_DE_REVISION se derivan"""
   estado: EstadoEditableProducto
+
+  """
+  STOCK si lo tiene en depósito; BAJO_PEDIDO si lo compra cuando entra el pedido (sin stock)
+  """
+  abastecimiento: Abastecimiento
+
+  """Horas desde el pedido hasta la entrega"""
+  entregaHoras: Int
+
+  """Lo que le cuesta cada unidad. Solo lo ve el mayorista"""
+  costoUnitarioCentavos: Int
+
+  """
+  Dónde lo compra (puesto, mercado o distribuidora). Solo lo ve el mayorista
+  """
+  proveedor: String
 }
 
 type Escala
@@ -124,6 +179,16 @@ input EscalaEntrada
   presentacion: Presentacion!
   unidades: Int!
   precioUnitarioCentavos: Int!
+}
+
+enum EstadoCobroQr
+  @join__type(graph: COBROS)
+{
+  PENDIENTE @join__enumValue(graph: COBROS)
+  PAGADO @join__enumValue(graph: COBROS)
+  VENCIDO @join__enumValue(graph: COBROS)
+  DEVUELTO @join__enumValue(graph: COBROS)
+  ANULADO @join__enumValue(graph: COBROS)
 }
 
 """El estado que el mayorista fija editando; el resto lo decide el stock."""
@@ -173,6 +238,22 @@ enum join__Graph {
   CATALOGO @join__graph(name: "catalogo", url: "http://catalogo:8082/graphql")
   COBROS @join__graph(name: "cobros", url: "http://cobros:8083/graphql")
   PEDIDOS @join__graph(name: "pedidos", url: "http://pedidos:8081/graphql")
+}
+
+"""
+Un producto para comprar: la suma de lo que piden todos los pedidos confirmados.
+"""
+type LineaDeCompra
+  @join__type(graph: PEDIDOS)
+{
+  producto: Producto!
+  unidades: Int!
+
+  """Lo que pagan las tiendas por esas unidades"""
+  venta: Dinero!
+
+  """Códigos de los pedidos que lo piden, por ejemplo A-1042"""
+  pedidos: [String!]!
 }
 
 type LineaDeCredito
@@ -243,6 +324,11 @@ type Mayorista
 
   """Relación de la tienda de la sesión con este mayorista"""
   relacion: EstadoRelacion! @join__field(graph: CATALOGO)
+
+  """
+  Abasto mismo vendiendo: cualquier tienda registrada ve sus precios sin pedir ser cliente
+  """
+  deLaCasa: Boolean! @join__field(graph: CATALOGO)
 }
 
 enum MetodoPago
@@ -250,6 +336,11 @@ enum MetodoPago
 {
   QR @join__enumValue(graph: PEDIDOS)
   CREDITO @join__enumValue(graph: PEDIDOS)
+
+  """
+  Paga al recibir (efectivo o QR): la saga no cobra antes de que el mayorista confirme
+  """
+  CONTRA_ENTREGA @join__enumValue(graph: PEDIDOS)
 }
 
 type Mutation
@@ -287,6 +378,12 @@ type Mutation
   autorizarCredito(entrada: AutorizarCreditoEntrada!): AutorizacionDeCredito! @join__field(graph: COBROS)
 
   """
+  Solo en desarrollo y en la demo (QR_DE_PRUEBA=si): simula que la tienda pagó el QR.
+  Con un banco real, el pago lo avisa el banco.
+  """
+  pagarQrDePrueba(pedidoId: ID!): CobroQr! @join__field(graph: COBROS)
+
+  """
   Paso 1 de la saga de compra. La clave la genera la app una sola vez:
   repetir la mutación con la misma clave devuelve el mismo pedido.
   """
@@ -297,6 +394,11 @@ type Mutation
 
   """El mayorista rechaza: se devuelve el cobro y se libera el stock."""
   rechazarPedido(id: ID!, motivo: String!): Pedido! @join__field(graph: PEDIDOS)
+
+  """
+  Después de confirmar, de a un paso: CONFIRMADO → EN_PREPARACION → DESPACHADO → ENTREGADO.
+  """
+  avanzarEntrega(id: ID!): Pedido! @join__field(graph: PEDIDOS)
 }
 
 """Allows ordering a list of records."""
@@ -342,24 +444,29 @@ enum OrderByRelationWithColumnAggregateFunction
   COUNT @join__enumValue(graph: CATALOGO)
 }
 
+"""El pedido es de Pedidos; Cobros le agrega su cobro (federación)."""
 type Pedido
+  @join__type(graph: COBROS, key: "id")
   @join__type(graph: PEDIDOS, key: "id")
 {
   id: ID!
 
+  """Null si se paga a crédito o si todavía no se generó el QR."""
+  cobro: CobroQr @join__field(graph: COBROS)
+
   """Código para las personas, por ejemplo A-1042"""
-  codigo: String!
-  clave: ID!
-  tienda: Tienda!
-  mayorista: Mayorista!
-  lineas: [LineaDePedido!]!
-  estado: EstadoPedido!
-  metodoPago: MetodoPago!
+  codigo: String! @join__field(graph: PEDIDOS)
+  clave: ID! @join__field(graph: PEDIDOS)
+  tienda: Tienda! @join__field(graph: PEDIDOS)
+  mayorista: Mayorista! @join__field(graph: PEDIDOS)
+  lineas: [LineaDePedido!]! @join__field(graph: PEDIDOS)
+  estado: EstadoPedido! @join__field(graph: PEDIDOS)
+  metodoPago: MetodoPago! @join__field(graph: PEDIDOS)
 
   """Cero hasta que Catálogo reserva y fija los precios"""
-  total: Dinero!
-  creadoEn: String!
-  motivoRechazo: String
+  total: Dinero! @join__field(graph: PEDIDOS)
+  creadoEn: String! @join__field(graph: PEDIDOS)
+  motivoRechazo: String @join__field(graph: PEDIDOS)
 }
 
 enum Presentacion
@@ -391,6 +498,20 @@ type Producto
   """
   escalas: [Escala!]! @join__field(graph: CATALOGO)
   precioVisible: Boolean! @join__field(graph: CATALOGO)
+  abastecimiento: Abastecimiento! @join__field(graph: CATALOGO)
+
+  """
+  Horas desde el pedido hasta la entrega. Null si el mayorista no lo cargó
+  """
+  entregaHoras: Int @join__field(graph: CATALOGO)
+
+  """
+  Lo que le cuesta cada unidad al mayorista. Solo lo ve él; null para los demás
+  """
+  costoUnitario: Dinero @join__field(graph: CATALOGO)
+
+  """Dónde lo compra. Solo lo ve el mayorista"""
+  proveedor: String @join__field(graph: CATALOGO)
 }
 
 type Query
@@ -414,6 +535,11 @@ type Query
   """Crédito que un mayorista le dio a una tienda. Null si no tiene."""
   lineaDeCredito(tiendaId: ID!, mayoristaId: ID!): LineaDeCredito @join__field(graph: COBROS)
 
+  """
+  El cobro por QR de un pedido. Solo lo ven la tienda que compra y el mayorista que vende.
+  """
+  cobroDePedido(pedidoId: ID!): CobroQr @join__field(graph: COBROS)
+
   """Lo que compró la empresa de la sesión (Mercado)."""
   misCompras(estado: EstadoPedido): [Pedido!]! @join__field(graph: PEDIDOS)
 
@@ -424,6 +550,18 @@ type Query
   Un pedido. Null si no existe o si la empresa de la sesión no es ni la tienda ni el mayorista.
   """
   pedido(id: ID!): Pedido @join__field(graph: PEDIDOS)
+
+  """
+  Lo que el mayorista de la sesión tiene que comprar para sus pedidos confirmados que todavía no preparó
+  (Abasto vende bajo pedido). Costo y proveedor de cada producto los pone Catálogo.
+  """
+  listaDeCompras: [LineaDeCompra!]! @join__field(graph: PEDIDOS)
+
+  """
+  Solo para el equipo de Abasto (rol admin): pedidos y ventas por semana, tiendas activas y las que repiten.
+  Con mayoristaId, solo los de ese vendedor (por ejemplo "abasto").
+  """
+  traccion(mayoristaId: ID, semanas: Int = 8): Traccion! @join__field(graph: PEDIDOS)
 }
 
 type RelacionComercial
@@ -433,6 +571,15 @@ type RelacionComercial
   mayorista: Mayorista!
   estado: EstadoRelacion!
   lista: ListaDePrecios
+}
+
+type SemanaDeVentas
+  @join__type(graph: PEDIDOS)
+{
+  """Lunes de la semana, aaaa-mm-dd"""
+  desde: String!
+  pedidos: Int!
+  ventas: Dinero!
 }
 
 """Directions for ordering a list of records."""
@@ -455,6 +602,35 @@ type Tienda
   id: ID!
   nombre: String! @join__field(graph: CATALOGO)
   ciudad: String! @join__field(graph: CATALOGO)
+}
+
+type TiendaCompradora
+  @join__type(graph: PEDIDOS)
+{
+  tienda: Tienda!
+  pedidos: Int!
+  ventas: Dinero!
+}
+
+"""
+Los números que muestran que vender en Abasto funciona. Solo cuentan los pedidos confirmados en adelante.
+"""
+type Traccion
+  @join__type(graph: PEDIDOS)
+{
+  pedidos: Int!
+  ventas: Dinero!
+  ticketPromedio: Dinero!
+
+  """Tiendas que compraron en los últimos 30 días"""
+  tiendasActivas: Int!
+
+  """Tiendas con dos pedidos o más en el período"""
+  tiendasQueRepiten: Int!
+  semanas: [SemanaDeVentas!]!
+
+  """De la que más compra a la que menos"""
+  tiendas: [TiendaCompradora!]!
 }
 
 """

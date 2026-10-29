@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Catalogo\Aplicacion;
 
+use Catalogo\Dominio\Abastecimiento;
 use Catalogo\Dominio\ErrorDeDominio;
 use Catalogo\Dominio\EscalaDePrecio;
 use Catalogo\Dominio\EstadoProducto;
@@ -31,6 +32,10 @@ final readonly class EditarProducto
         ?string $descripcion = null,
         ?array $escalas = null,
         ?EstadoProducto $estado = null,
+        ?Abastecimiento $abastecimiento = null,
+        ?int $entregaHoras = null,
+        ?int $costoUnitarioCentavos = null,
+        ?string $proveedor = null,
     ): Producto {
         $producto = $this->productos->porId($productoId)
             ?? throw new ErrorDeDominio('PRODUCTO_INEXISTENTE', 'El producto no existe o fue dado de baja');
@@ -53,9 +58,18 @@ final readonly class EditarProducto
         if ($escalas !== null) {
             $producto->cambiarEscalas($escalas);
         }
+        if ($abastecimiento !== null || $entregaHoras !== null || $costoUnitarioCentavos !== null || $proveedor !== null) {
+            $producto->cambiarAbastecimiento(
+                $abastecimiento ?? $producto->abastecimiento,
+                $entregaHoras ?? $producto->entregaHoras,
+                $costoUnitarioCentavos ?? $producto->costoUnitarioCentavos,
+                $proveedor ?? $producto->proveedor,
+            );
+        }
         if ($estado !== null) {
-            // Activar un producto sin mercadería lo deja visible pero sin stock, nunca "activo con 0"
-            $producto->estado = $estado === EstadoProducto::ACTIVO && $producto->stock === 0
+            // Activar un producto sin mercadería lo deja visible pero sin stock, nunca "activo con 0".
+            // Bajo pedido no tiene stock: activarlo lo deja a la venta.
+            $producto->estado = $estado === EstadoProducto::ACTIVO && $producto->stock === 0 && ! $producto->bajoPedido()
                 ? EstadoProducto::SIN_STOCK
                 : $estado;
         }

@@ -23,7 +23,7 @@ export interface Sesion {
 }
 
 export interface OpcionesDeSesion {
-  clientId: 'abasto-panel' | 'abasto-mercado' | 'abasto-superadmin';
+  clientId: 'abasto-panel' | 'abasto-superadmin';
   emisor?: string;
 }
 
@@ -101,7 +101,6 @@ export function crearSesion({ clientId, emisor = EMISOR }: OpcionesDeSesion): Se
 
 /** Direcciones de las apps, para pasar de una a otra con la misma sesión. */
 export const APPS = {
-  mercado: 'http://localhost:5173/',
   panel: 'http://localhost:5170/',
   superadmin: 'http://localhost:5174/',
 } as const;
