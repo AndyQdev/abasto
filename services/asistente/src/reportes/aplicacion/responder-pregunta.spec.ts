@@ -26,6 +26,13 @@ describe('ResponderPregunta', () => {
     expect(r.sql).toContain('cuentas_por_cobrar');
   });
 
+  it.each(['¿Cuánto me debe cada tienda?', '¿Qué tiendas me deben?'])('entiende la deuda en singular y en plural: %s', async (pregunta) => {
+    const { responder } = preparar();
+    const r = await responder.ejecutar(pregunta, solicitante);
+    expect(r.sql).toContain('sum(saldo_centavos)');
+    expect(r.grafico).toBe('barras');
+  });
+
   it('convierte la pregunta en SQL, la ejecuta y la audita', async () => {
     const { responder, registros } = preparar();
     const r = await responder.ejecutar('¿Qué tiendas me tienen que pagar mañana?', solicitante);
