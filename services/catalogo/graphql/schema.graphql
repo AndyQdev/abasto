@@ -27,6 +27,15 @@ type Mutation {
   "Lo usa Abasto Campo a través de Conecta. El producto entra como pendiente de revisión."
   cargarProducto(entrada: CargarProductoEntrada!): Producto!
     @field(resolver: "Catalogo\\Infraestructura\\GraphQL\\Resolutores@cargarProducto")
+  "El mayorista crea un producto a mano en su Panel. Si empieza sin stock queda SIN_STOCK."
+  crearProducto(entrada: CrearProductoEntrada!): Producto!
+    @field(resolver: "Catalogo\\Infraestructura\\GraphQL\\Resolutores@crearProducto")
+  "El mayorista edita un producto suyo: solo cambian los campos que envía."
+  editarProducto(id: ID!, entrada: EditarProductoEntrada!): Producto!
+    @field(resolver: "Catalogo\\Infraestructura\\GraphQL\\Resolutores@editarProducto")
+  "El mayorista corrige el stock de un producto suyo; el estado se deriva del stock."
+  ajustarStock(id: ID!, stock: Int!): Producto!
+    @field(resolver: "Catalogo\\Infraestructura\\GraphQL\\Resolutores@ajustarStock")
 }
 
 input CargarProductoEntrada {
@@ -37,6 +46,42 @@ input CargarProductoEntrada {
   presentacion: Presentacion!
   unidades: Int!
   precioUnitarioCentavos: Int!
+}
+
+"Lo que envía el Panel cuando el mayorista crea un producto a mano."
+input CrearProductoEntrada {
+  codigo: String!
+  nombre: String!
+  rubro: String!
+  "Detalle que ve la tienda; vacío si no lo escribe"
+  descripcion: String
+  "Stock inicial; 0 deja el producto SIN_STOCK"
+  stock: Int!
+  escalas: [EscalaEntrada!]!
+}
+
+"Edición de un producto por el mayorista: solo cambia lo que envía."
+input EditarProductoEntrada {
+  nombre: String
+  rubro: String
+  descripcion: String
+  "Deja todas las escalas por estas; las validaciones van por Producto::cambiarEscalas"
+  escalas: [EscalaEntrada!]
+  "Solo ACTIVO o PAUSADO: SIN_STOCK y PENDIENTE_DE_REVISION se derivan"
+  estado: EstadoEditableProducto
+}
+
+"Una escala de precio: cuántas unidades trae la presentación y cuánto valdrá cada una."
+input EscalaEntrada {
+  presentacion: Presentacion!
+  unidades: Int!
+  precioUnitarioCentavos: Int!
+}
+
+"El estado que el mayorista fija editando; el resto lo decide el stock."
+enum EstadoEditableProducto {
+  ACTIVO
+  PAUSADO
 }
 
 type Producto @key(fields: "id") {
@@ -65,6 +110,8 @@ type Mayorista @key(fields: "id") {
   nombre: String!
   ciudad: String!
   verificado: Boolean!
+  "PENDIENTE, VERIFICADO o RECHAZADO"
+  estadoVerificacion: String!
   "Relación de la tienda de la sesión con este mayorista"
   relacion: EstadoRelacion!
 }

@@ -19,8 +19,10 @@ deptrac:
           value: src/Catalogo/Infraestructura/.*
     - name: Laravel
       collectors:
-        - type: directory
-          value: app/.*
+        # Por espacio de nombres y no por carpeta: dentro del contenedor el código vive en /app y
+        # el patrón de carpeta app/.* atrapaba todos los archivos.
+        - type: classNameRegex
+          value: '#^App\\#'
     - name: Frameworks
       collectors:
         - type: classNameRegex

@@ -1,23 +1,26 @@
 # Jhoel · estado
 
-Actualizado: 28/10/2026 · rama `jhoel/reservar-stock`
+Actualizado: 28/10/2026 · rama `jhoel/catalogo-gestion` (PR #2, depende del PR #1)
 
 ## Estoy en
-Catálogo en la saga (tarjeta 8): reservar y liberar stock. Código listo y probado; falta commit, PR y confirmar el e2e con datos de demo frescos.
+T18/T19: pregunta por voz o texto → tabla, gráfico y Excel; suite de seguridad del MCP.
 
 ## Terminé
-- Catálogo consume `catalogo.reservar_stock` y `catalogo.liberar_stock` (cola `catalogo.comandos`) y publica `stock.reservado` (con `precioUnitarioCentavos` por línea, ya con la lista de la tienda), `stock.rechazado` y `stock.liberado`.
-- Reserva atómica por línea en Mongo (`stock >= cantidad` con `$inc`) y compensación si falla una línea; idempotente por pedido (colección `reservas`); mensajes con id determinista.
-- 31 pruebas Pest nuevas/unitarias, PHPStan y Deptrac en verde; probado contra RabbitMQ real.
+- PR #1: Catálogo en la saga (reserva/libera stock, `stock.*` con precio por línea).
+- PR #2:
+  - Proyector del Asistente: tabla `pedidos` (migración 002), nombres de tienda vía `_entities` de Catálogo, vencimiento del crédito, `producto.stock_cambiado` al reservar, liberar y ajustar.
+  - Catálogo: semilla de 40 productos; estado de verificación de organizaciones (`estadoVerificacion`); `crearProducto`, `editarProducto`, `ajustarStock` (editar ya no pisa el stock reservado).
+  - Gestión: vista Clientes (aprobar con lista NUEVOS/FRECUENTES/VIP o rechazar).
+  - Deptrac de Catálogo funciona dentro de Docker (capa Laravel por espacio de nombres).
 
 ## Cambié en contratos
-- Nada. Se respeta `contracts/asyncapi.yaml` tal cual.
+- Schema GraphQL de Catálogo: `Mayorista.estadoVerificacion`, mutaciones `crearProducto`/`editarProducto`/`ajustarStock` e inputs. Subgrafo y supergrafo regenerados.
 
 ## Necesito del otro
-- `docker-compose.yml` (servicio `catalogo`): arranca también `php artisan catalogo:escuchar` y recibe `RABBITMQ_HOST/PUERTO`. Dockerfile de Catálogo ahora instala `sockets` (lo pide php-amqplib).
-- Acordar `relacion.aprobada` y `catalogo.reingresar_stock` (devoluciones); todavía no están en el contrato.
-- Los datos de demo de Pedidos vencen con el tiempo: tras días parado, `pnpm borrar-datos` + `pnpm todo` para que el e2e vuelva a ver «Despensa Lupita» por confirmar.
+- Cobros: consumir `cobros.comandos`. Hoy los pedidos quedan en `COBRANDO`.
+- Contrato: agregar `vence` a `pedido.confirmado` o `cobro.credito_autorizado` (el proyector usa 15 días mientras tanto).
+- Superadmin: puede mostrar `estadoVerificacion` (PENDIENTE/VERIFICADO/RECHAZADO) de cada mayorista.
+- Los pedidos de demo vencen a las 2 h: para el e2e, `pnpm borrar-datos` + `pnpm todo`; si Catálogo da 401, `docker compose exec catalogo php artisan cache:clear`.
 
 ## Sigue
-- Semilla de 40 productos y verificación de organizaciones (OpenCode, ramas `jhoel/semilla-catalogo` y `jhoel/verificacion-catalogo`).
-- Gestión: Clientes y Productos.
+- T18/T19 (yo). OpenCode: pantalla de Productos en Gestión y diagramas ICONIX.
