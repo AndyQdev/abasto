@@ -9,4 +9,5 @@ Reportes en lenguaje natural, agentes, servidor MCP y el proyector CQRS. Base `r
 - `mcp/`: MCP Streamable HTTP en `/mcp`, con auditoría en DynamoDB.
 - Migraciones propias en `migraciones/`. `pnpm --filter @abasto/asistente semilla` las aplica y carga datos de demo con fechas relativas a hoy.
 
-Probar: `pnpm --filter @abasto/asistente test`; la suite de seguridad con `test:e2e`.
+Probar: `pnpm --filter @abasto/asistente test`; la suite de seguridad con `test:e2e` (contra Postgres real).
+Evaluar el Analista: `pnpm --filter @abasto/asistente evaluar` corre 20 preguntas de negocio y las compara con su respuesta correcta (meta: 18/20 con Claude; sin `ANTHROPIC_API_KEY` usa el simulado y solo prueba el evaluador).
