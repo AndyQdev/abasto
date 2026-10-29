@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AlmacenSQLite } from './src/almacen-sqlite';
 import { BandejaCampo, enviarAConecta, type OperacionLocal, type ProductoCargado } from './src/bandeja';
+import { Diagnostico } from './src/diagnostico';
 import { enBolivianos } from './src/precio';
 import { canjearCodigo, URLS, useLogin } from './src/sesion';
 
@@ -23,6 +24,7 @@ export default function App() {
   );
   const [porSubir, setPorSubir] = useState<OperacionLocal[]>([]);
   const [aviso, setAviso] = useState('');
+  const [diagnostico, setDiagnostico] = useState(false);
   const [form, setForm] = useState({ nombre: '', rubro: 'Higiene y cuidado personal', unidades: '48', precio: '' });
 
   useEffect(() => {
@@ -58,6 +60,8 @@ export default function App() {
     await refrescar();
   }
 
+  if (diagnostico) return <Diagnostico alCerrar={() => setDiagnostico(false)} />;
+
   if (!token) {
     return (
       <SafeAreaView style={estilos.pantalla}>
@@ -67,6 +71,9 @@ export default function App() {
           <Text style={estilos.botonTexto}>Entrar</Text>
         </Pressable>
         {aviso ? <Text style={estilos.texto}>{aviso}</Text> : null}
+        <Pressable style={[estilos.boton, estilos.secundario]} onPress={() => setDiagnostico(true)}>
+          <Text style={[estilos.botonTexto, { color: COLORES.tinta }]}>Diagnóstico TFLite / ML Kit</Text>
+        </Pressable>
       </SafeAreaView>
     );
   }
@@ -95,6 +102,9 @@ export default function App() {
           </Pressable>
         </View>
         {aviso ? <Text style={estilos.aviso}>{aviso}</Text> : null}
+        <Pressable style={[estilos.boton, estilos.secundario]} onPress={() => setDiagnostico(true)}>
+          <Text style={[estilos.botonTexto, { color: COLORES.tinta }]}>Diagnóstico TFLite / ML Kit</Text>
+        </Pressable>
       </ScrollView>
     </SafeAreaView>
   );
