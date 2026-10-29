@@ -3,7 +3,8 @@
  * cuando vuelve la red. Cada operación recibe su clave UNA vez, al crearse; los reintentos usan
  * la misma clave, por eso Conecta nunca registra dos veces lo mismo.
  */
-export type TipoDeOperacion = 'pedido.crear' | 'producto.cargar';
+/** graphql.mutacion: un cambio del Panel hecho sin señal; sale directo al Router, no por Conecta. */
+export type TipoDeOperacion = 'pedido.crear' | 'producto.cargar' | 'graphql.mutacion';
 export type EstadoLocal = 'pendiente' | 'aplicada' | 'rechazada' | 'conflicto';
 
 export interface OperacionLocal {

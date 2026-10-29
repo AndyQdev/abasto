@@ -6,6 +6,9 @@ import '@abasto/ui/base.css';
 import './panel.css';
 import { App } from './App';
 
+// El service worker (PWA) solo existe en el build; en pnpm dev:panel no se registra
+if (import.meta.env.PROD) void import('virtual:pwa-register').then(({ registerSW }) => registerSW({ immediate: true }));
+
 const sesion = crearSesion({ clientId: 'abasto-panel' });
 const raiz = createRoot(document.getElementById('raiz')!);
 

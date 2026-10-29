@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { APPS, type Sesion, type Usuario } from '@abasto/sesion';
 import { Microfrontend } from './Microfrontend';
 import { MODULOS, moduloDe } from './navegacion';
+import { useSinSenal } from './offline/useSinSenal';
 
 const rutaActual = () => window.location.pathname.replace(/^\//, '') || 'inicio';
 
@@ -37,6 +38,8 @@ export function App({ sesion, usuario }: { sesion: Sesion; usuario: Usuario }) {
     return () => clearTimeout(t);
   }, [aviso]);
 
+  const token = useCallback(() => sesion.token(), [sesion]);
+  const conexion = useSinSenal(token, setAviso);
   const esMayorista = usuario.roles.includes('mayorista');
 
   return (
@@ -94,6 +97,13 @@ export function App({ sesion, usuario }: { sesion: Sesion; usuario: Usuario }) {
             </button>
           </div>
         </header>
+
+        {(!conexion.enLinea || conexion.pendientes > 0 || conexion.desdeCache) && (
+          <div className={`sin-senal ${conexion.enLinea ? 'enviando' : ''}`} role="status">
+            {conexion.enLinea ? 'Volvió la señal' : 'Sin conexión: ves los últimos datos guardados'}
+            {conexion.pendientes > 0 && ` · ${conexion.pendientes} cambios esperando para enviarse`}
+          </div>
+        )}
 
         <main>
           {esMayorista ? (
