@@ -2,7 +2,7 @@
 
 > **Jhoel: desde el 29/10 trabajamos los dos directo en `main`. Se acabaron las ramas y los PR.**
 >
-> - Ya junté todo en main: tus ramas `proyector-entrega`, `foto-producto` y `panel-pwa`, más todo lo mío. No se perdió nada y las pruebas pasan. Las ramas viejas se borraron porque ya estaban todas dentro de main.
+> - Ya junté todo en main: tus ramas `proyector-entrega`, `foto-producto` y `panel-pwa`, más todo lo mío. No se perdió nada y las pruebas pasan. Las ramas viejas (`andres/*`, `jhoel/*`) ya no se usan: todo lo que tenían está en main.
 > - Tu Claude tiene que hacer esto: `git switch main && git pull --rebase origin main`. Si te queda trabajo sin subir en otra rama, haz commit allí, después `git switch main`, `git merge <tu-rama>` y push.
 > - Al empezar y antes de cada push: `git pull --rebase origin main`. Commits chicos y push seguido. Si choca, se juntan los dos cambios a mano y nunca se usa `--force`. Las reglas completas están en «Git en main» del `CLAUDE.md`, y `/empezar` y `/cerrar` ya las siguen.
 >
