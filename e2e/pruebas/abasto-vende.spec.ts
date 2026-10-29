@@ -91,4 +91,51 @@ test.describe('Abasto vende (vendedor de la casa)', () => {
     const { producto } = await abasto<{ producto: ProductoVisto }>(`query { producto(id: "AB-001") { ${CAMPOS} } }`);
     expect(producto.stock).toBe(0);
   });
+  test('contra entrega: lista de compras con proveedor y costo, y la entrega de a un paso', async ({ request }) => {
+    const tienda = await grafoDe(request, 'donarosa@abasto.bo');
+    const abasto = await grafoDe(request, 'ventas@abasto.bo');
+
+    const { crearPedido } = await tienda<{ crearPedido: { id: string; codigo: string } }>(
+      `mutation($e: CrearPedidoEntrada!) { crearPedido(entrada: $e) { id codigo } }`,
+      {
+        e: {
+          clave: randomUUID(),
+          mayoristaId: 'abasto',
+          metodoPago: 'CONTRA_ENTREGA',
+          lineas: [{ productoId: 'AB-036', presentacion: 'DOCENA', cantidad: 3 }],
+        },
+      },
+    );
+    const leer = async () =>
+      (
+        await tienda<{ pedido: { estado: string; cobro: unknown } }>(`query($id: ID!) { pedido(id: $id) { estado cobro { estado } } }`, {
+          id: crearPedido.id,
+        })
+      ).pedido;
+
+    // Sin cobro previo: pasa directo a esperar a Abasto
+    await expect.poll(async () => (await leer()).estado, { timeout: 20_000 }).toBe('POR_CONFIRMAR');
+    expect((await leer()).cobro).toBeNull();
+    await abasto(`mutation($id: ID!) { confirmarPedido(id: $id) { estado } }`, { id: crearPedido.id });
+
+    // La lista junta Pedidos (unidades y venta) con Catálogo (nombre, proveedor y costo) en una consulta
+    type Linea = { unidades: number; venta: { centavos: number }; pedidos: string[]; producto: { id: string; nombre: string; proveedor: string; costoUnitario: { centavos: number } } };
+    const lista = async () =>
+      (
+        await abasto<{ listaDeCompras: Linea[] }>(
+          `{ listaDeCompras { unidades venta { centavos } pedidos producto { id nombre proveedor costoUnitario { centavos } } } }`,
+        )
+      ).listaDeCompras.find((l) => l.pedidos.includes(crearPedido.codigo));
+    const pilas = await lista();
+    expect(pilas?.producto).toMatchObject({ id: 'AB-036', nombre: 'Pilas AA · par', proveedor: 'Mercado Mutualista', costoUnitario: { centavos: 540 } });
+    expect(pilas!.unidades).toBeGreaterThanOrEqual(36);
+
+    const avanzar = () => abasto<{ avanzarEntrega: { estado: string } }>(`mutation($id: ID!) { avanzarEntrega(id: $id) { estado } }`, { id: crearPedido.id });
+    expect((await avanzar()).avanzarEntrega.estado).toBe('EN_PREPARACION');
+    expect((await avanzar()).avanzarEntrega.estado).toBe('DESPACHADO');
+    // Ya salió: no figura más en lo que hay que comprar
+    expect(await lista()).toBeUndefined();
+    expect((await avanzar()).avanzarEntrega.estado).toBe('ENTREGADO');
+    await expect(avanzar()).rejects.toThrow(/solo se avanza un pedido confirmado/);
+  });
 });

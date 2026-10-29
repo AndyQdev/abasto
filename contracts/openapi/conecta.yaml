@@ -84,7 +84,7 @@ components:
       required: [mayoristaId, metodoPago, lineas]
       properties:
         mayoristaId: { type: string }
-        metodoPago: { type: string, enum: [QR, CREDITO] }
+        metodoPago: { type: string, enum: [QR, CREDITO, CONTRA_ENTREGA] }
         lineas:
           type: array
           items:

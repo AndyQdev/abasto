@@ -50,11 +50,18 @@ public class SagaDeCompra {
         return saga;
     }
 
-    /** Paso 2 hecho: hay stock y Catálogo fijó los precios. Ahora se cobra. */
-    public void alReservarStock(Pedido pedido, List<LineaDePedido> lineasConPrecio) {
+    /**
+     * Paso 2 hecho: hay stock y Catálogo fijó los precios. Ahora se cobra.
+     * Contra entrega no hay nada que cobrar antes: se pasa directo a esperar al mayorista.
+     */
+    public void alReservarStock(Pedido pedido, List<LineaDePedido> lineasConPrecio, Instant ahora) {
         if (paso != Paso.RESERVANDO_STOCK) return;
         pedido.fijarPrecios(lineasConPrecio);
         stockReservado = true;
+        if (pedido.metodoPago() == MetodoPago.CONTRA_ENTREGA) {
+            esperarAlMayorista(pedido, ahora);
+            return;
+        }
         paso = Paso.COBRANDO;
         var tipo = pedido.metodoPago() == MetodoPago.CREDITO ? "cobros.autorizar_credito" : "cobros.generar_qr";
         pendientes.add(Mensaje.comando(tipo, Map.of(
@@ -76,6 +83,10 @@ public class SagaDeCompra {
     public void alCobrar(Pedido pedido, Instant ahora) {
         if (paso != Paso.COBRANDO) return;
         cobrado = true;
+        esperarAlMayorista(pedido, ahora);
+    }
+
+    private void esperarAlMayorista(Pedido pedido, Instant ahora) {
         pedido.quedarPorConfirmar();
         venceConfirmacionEn = ahora.plus(PLAZO_DEL_MAYORISTA);
         paso = Paso.ESPERANDO_MAYORISTA;
@@ -141,13 +152,7 @@ public class SagaDeCompra {
     }
 
     private static Map<String, Object> datosDe(Pedido pedido) {
-        return Map.of(
-                "pedidoId", pedido.id().toString(),
-                "codigo", pedido.codigo(),
-                "tiendaId", pedido.tiendaId(),
-                "mayoristaId", pedido.mayoristaId(),
-                "metodoPago", pedido.metodoPago().name().toLowerCase(),
-                "totalCentavos", pedido.total().centavos());
+        return pedido.datosDelEvento();
     }
 
     private static Map<String, Object> conMotivo(Pedido pedido, String motivo) {
