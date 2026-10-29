@@ -39,7 +39,7 @@ Las tareas están en Trello (https://trello.com/b/ABo8gFFG/abasto). Cuando empie
    e. Catálogo: verificación de mayoristas (CU-01, servicio) y la semilla de la demo (3 mayoristas, 2 tiendas, 40 productos).
 
 Reglas:
-- Trabajo en ramas jhoel/<tema> y abro PR a main. Nunca push directo a main.
+- Desde el 29/10 los dos trabajamos directo en main, sin ramas ni PR. Hago git pull --rebase origin main al empezar y antes de cada push, commits chicos y push seguido. Si hay conflicto junto los dos cambios a mano, nunca uso --force y nunca borro trabajo de Andrés. Las reglas están en «Git en main» del CLAUDE.md.
 - Toda funcionalidad nueva lleva su prueba. Un bug se arregla escribiendo primero la prueba que lo reproduce.
 - No toco carpetas de Andrés (mira .github/CODEOWNERS). Si cambio algo en contracts/, lo escribo antes en docs/equipo/jhoel.md.
 - Las pantallas salen de las maquetas de docs/uix-mockup/ y usan los tokens de packages/ui.

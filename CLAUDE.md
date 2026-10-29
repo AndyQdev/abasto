@@ -2,7 +2,7 @@
 
 Red mayorista B2B de Bolivia. Segundo parcial de Ingeniería de Software II (ICONIX), Grupo #13, entrega el **3/11/2026**.
 Equipo: Andrés Quispe y Jhoel Rodas. Plan vigente: https://claude.ai/artifact/UM6WvqxzsHBXi3Xt4erUgC
-Tareas: Trello https://trello.com/b/ABo8gFFG/abasto · Código y PR: GitHub.
+Tareas: Trello https://trello.com/b/ABo8gFFG/abasto · Código: GitHub, los dos directo en `main`.
 
 ## Decisiones tomadas (no se reabren sin hablarlo entre los dos)
 
@@ -26,7 +26,7 @@ Tareas: Trello https://trello.com/b/ABo8gFFG/abasto · Código y PR: GitHub.
 | Módulos Pedidos, Compras y Cuentas por cobrar dentro de Gestión | Modelos de la app (TFLite) |
 | Lógica de compra compartida (`packages/comercio`) | |
 
-El detalle está en `.github/CODEOWNERS`. Si tu cambio toca una carpeta del otro, va en un PR aparte y lo aprueba esa persona.
+El detalle está en `.github/CODEOWNERS`. Si tu cambio toca una carpeta del otro, avísale en tu archivo de estado de `docs/equipo/` en el mismo commit y dile qué cambiaste.
 Antes de cambiar algo en `contracts/`, escríbelo en tu archivo de estado y haz push.
 
 ## Estado del equipo
@@ -52,7 +52,23 @@ Puertos, usuarios de prueba y arranque paso a paso: `README.md`. Arquitectura: `
 - Una migración que ya está en main no se edita: se escribe otra.
 - Si cambias un schema GraphQL, corre `pnpm supergrafo` y sube `infra/router/supergraph.graphql` (la CI lo revisa).
 - Nada de secretos en el repo: `.env` está ignorado y cada uno pone su propia `ANTHROPIC_API_KEY`.
-- Git: rama `<nombre>/<tema>` (por ejemplo `jhoel/reservar-stock`), Conventional Commits, PR a main. Nunca push directo a main.
+- Git: **los dos trabajamos directo en `main`** (decisión del 29/10: sin ramas ni PR). Conventional Commits. Ver «Git en main» abajo.
+
+## Git en main (los dos, sin ramas ni PR)
+
+1. Al empezar y antes de cada push: `git pull --rebase origin main`. Si tienes cambios sin commit, primero haz commit (o `git stash`, pull y `git stash pop`).
+2. Commits chicos y push seguido: al terminar cada pedazo que ande, no al final del día. Así el otro recibe tus cambios pronto y los choques son chicos.
+3. Antes del push corre las pruebas de lo que tocaste (`pnpm --filter <paquete> test`, `test:pedidos`, `test:catalogo`, etc.). No subas algo que deje main en rojo.
+4. **Nunca se pierde trabajo del otro:**
+   - Si el rebase choca, junta los dos cambios a mano. Nunca resuelvas con `--ours` o `--theirs` a ciegas ni borres lo que escribió el otro.
+   - Prohibido `git push --force`, `git reset --hard` sobre algo ya subido y `git checkout -- .` sin mirar qué se pierde.
+   - Si no entiendes qué hizo el otro en un conflicto, para y pregúntale.
+5. Choques típicos:
+   - `pnpm-lock.yaml`: toma el de main (`git checkout --theirs pnpm-lock.yaml` durante el rebase) y corre `pnpm install` para que sume tus dependencias.
+   - `infra/router/supergraph.graphql`: corre `pnpm supergrafo` después de juntar los schemas.
+   - Migraciones (Flyway, Asistente, Prisma): si los dos crearon el mismo número, renombra la tuya al siguiente.
+6. Si el push lo rechaza porque el otro subió algo, otra vez `git pull --rebase origin main`, las pruebas y push.
+7. Lo que vas a cambiar en `contracts/` o en una carpeta del otro, anótalo en tu `docs/equipo/<nombre>.md` en el mismo commit.
 
 ## Cosas que ya costaron tiempo
 

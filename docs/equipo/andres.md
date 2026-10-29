@@ -1,6 +1,12 @@
 # Andrés · estado
 
-> **Jhoel, lee esto primero (cambió el flujo el 29/10).**
+> **Jhoel: desde el 29/10 trabajamos los dos directo en `main`. Se acabaron las ramas y los PR.**
+>
+> - Ya junté todo en main: tus ramas `proyector-entrega`, `foto-producto` y `panel-pwa`, más todo lo mío. No se perdió nada y las pruebas pasan. Las ramas viejas se borraron porque ya estaban todas dentro de main.
+> - Tu Claude tiene que hacer esto: `git switch main && git pull --rebase origin main`. Si te queda trabajo sin subir en otra rama, haz commit allí, después `git switch main`, `git merge <tu-rama>` y push.
+> - Al empezar y antes de cada push: `git pull --rebase origin main`. Commits chicos y push seguido. Si choca, se juntan los dos cambios a mano y nunca se usa `--force`. Las reglas completas están en «Git en main» del `CLAUDE.md`, y `/empezar` y `/cerrar` ya las siguen.
+>
+> **Lee también lo que cambió el 29/10 en las apps:**
 >
 > 1. **Ya no hay web de compra.** Se borró `apps/mercado`. Los que compran (tiendas y personas) usan la **app de clientes** `apps/app`, hecha con Expo para Android e iPhone. Es lo que hace ganar plata, estilo Alibaba: buscar, buscar con una foto, carrito, pedir, pagar (QR, contra entrega o crédito) y seguir el pedido.
 > 2. **Campo dejó de ser una app aparte.** `apps/campo` se convirtió en `apps/app`. Tu diagnóstico de TFLite y ML Kit sigue ahí (`src/diagnostico.tsx`) y la app usa ML Kit para leer la etiqueta de la foto. La app la llevo yo; **los modelos (TFLite) siguen siendo tuyos.**
@@ -9,11 +15,11 @@
 > 5. La lógica de compra (catálogo, carrito y saga) está en `packages/comercio`. La app la toma por ruta.
 > 6. Keycloak: el cliente `abasto-app` reemplaza a `abasto-mercado` y `abasto-campo`. Como el realm vive en Postgres, **tienes que empezar de cero**: `pnpm borrar-datos`, después `pnpm todo` y `pnpm semilla`.
 > 7. Puertos: la app usa el **8090** (el 8081 es Pedidos). Ya no se usa el 5173.
-> 8. Trabaja sobre `andres/abasto-vende`: ya trae tus ramas mezcladas. Orden de merge a main: tus PR → `andres/repo-equipo` → `andres/mercado-catalogo` → `andres/abasto-vende`, con merge y no squash.
+> 8. Todo está en `main` (ver arriba).
 >
 > Tus tareas nuevas en Trello: «Panel · cargar productos con foto», «App · buscar por foto con el modelo de productos (TFLite)», «App · fotos de los productos» y revisar Catálogo. Las tarjetas de Campo y de Mercado web quedaron cerradas.
 
-Actualizado: 29/10/2026 · rama andres/abasto-vende (integra mis ramas y las de Jhoel)
+Actualizado: 29/10/2026 · en main (los dos trabajamos ahí)
 
 ## Estoy en
 La app de clientes (`apps/app`, Expo). Falta correrla en el emulador y en los teléfonos.

@@ -75,7 +75,7 @@ pnpm arquitectura   # dependency-cruiser: las capas no se cruzan
 pnpm e2e            # Playwright contra el sistema levantado con pnpm todo
 ```
 
-La CI (`.github/workflows/ci.yml`) corre cada stack solo si cambió su carpeta, y la punta a punta en cada PR a main.
+La CI (`.github/workflows/ci.yml`) corre cada stack solo si cambió su carpeta, y la punta a punta en cada push a main (los dos trabajamos directo en main).
 
 ## Para seguir
 
