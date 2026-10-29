@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { expect, test, type APIRequestContext } from '@playwright/test';
+import { entrarComo } from './sesion';
 
 const ROUTER = 'http://localhost:4000/';
 const TOKEN = 'http://localhost:8180/realms/abasto/protocol/openid-connect/token';
@@ -108,4 +109,30 @@ test.describe('Saga de compra entre Pedidos (Java), Catálogo (PHP) y Cobros (Ne
     const rechazado = await esperar(leer, (p) => p.estado === 'RECHAZADO', 'el rechazo');
     expect(rechazado.motivoRechazo).toMatch(/supera el crédito disponible/);
   });
+});
+
+test('Mercado: la tienda compra por QR desde la app y ve avanzar la saga', async ({ page }) => {
+  await page.goto('http://localhost:5173/');
+  await entrarComo(page, 'donarosa@abasto.bo');
+  await page.getByText('Productos destacados').waitFor();
+  await page.evaluate(() => localStorage.removeItem('abasto:carrito'));
+  await page.reload();
+
+  const nav = page.getByRole('navigation', { name: 'Secciones' });
+  await nav.getByRole('button', { name: 'Buscar' }).click();
+  await page.getByLabel('Buscar productos o mayoristas').fill('pasta dental');
+  await page.getByRole('button', { name: /Agregar una docena de Pasta dental/ }).first().click();
+  await nav.getByRole('button', { name: /Carrito/ }).click();
+  await page.getByRole('button', { name: 'Continuar pedido' }).click();
+  await page.getByRole('button', { name: 'Hacer el pedido' }).click();
+
+  // La bandeja lo manda a Conecta; la saga reserva y Cobros genera el QR
+  await page.getByRole('heading', { name: 'Mis pedidos' }).waitFor();
+  await page.getByText('Paga con QR para que el mayorista lo reciba').first().click({ timeout: 20_000 });
+  await page.getByRole('button', { name: /Pagar con QR · Bs/ }).click();
+  await expect(page.getByAltText('Código QR del pedido')).toBeVisible();
+  await page.getByRole('button', { name: 'Simular pago (demo)' }).click();
+
+  await expect(page.getByText('Esperando al mayorista').first()).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByText('El mayorista revisa tu pedido')).toBeVisible();
 });

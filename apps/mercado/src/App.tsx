@@ -6,16 +6,22 @@ import type { Navegar } from './componentes';
 import { Icono } from './Icono';
 import { Buscar, type EstadoBusqueda } from './pantallas/Buscar';
 import { Carrito } from './pantallas/Carrito';
+import { Confirmar } from './pantallas/Confirmar';
 import { Cuenta } from './pantallas/Cuenta';
 import { Inicio } from './pantallas/Inicio';
 import { Mayorista } from './pantallas/Mayorista';
 import { Pedidos } from './pantallas/Pedidos';
 import { Producto } from './pantallas/Producto';
+import { Seguimiento } from './pantallas/Seguimiento';
 import { bandeja, guardado } from './servicios';
 import { useCatalogo } from './useCatalogo';
 
 type Pestana = 'inicio' | 'buscar' | 'carrito' | 'pedidos' | 'cuenta';
-type Vista = { tipo: 'producto'; id: string } | { tipo: 'mayorista'; id: string };
+type Vista =
+  | { tipo: 'producto'; id: string }
+  | { tipo: 'mayorista'; id: string }
+  | { tipo: 'pedido'; id: string }
+  | { tipo: 'confirmar' };
 
 function useEnLinea() {
   const [enLinea, setEnLinea] = useState(navigator.onLine);
@@ -99,6 +105,7 @@ export function App({ usuario }: { usuario: Usuario }) {
     },
   };
 
+  const pedidoId = vista?.tipo === 'pedido' ? vista.id : null;
   const producto = vista?.tipo === 'producto' ? catalogo.productos.find((p) => p.id === vista.id) : undefined;
   const mayorista = vista?.tipo === 'mayorista' ? catalogo.mayoristas.find((m) => m.id === vista.id) : undefined;
   const nCarrito = carrito.length;
@@ -154,7 +161,20 @@ export function App({ usuario }: { usuario: Usuario }) {
             alPedirSerCliente={catalogo.pedirSerCliente}
           />
         )}
-        {vista && !producto && !mayorista && (
+        {vista?.tipo === 'confirmar' && (
+          <Confirmar
+            carrito={carrito}
+            enLinea={enLinea}
+            tiendaId={usuario.orgId}
+            alVolver={volver}
+            alTerminar={() => {
+              setCarrito([]);
+              irA('pedidos');
+            }}
+          />
+        )}
+        {pedidoId && <Seguimiento key={pedidoId} pedidoId={pedidoId} enLinea={enLinea} alVolver={volver} />}
+        {(vista?.tipo === 'producto' || vista?.tipo === 'mayorista') && !producto && !mayorista && (
           <section className="pantalla">
             <p className="vacio">{catalogo.cargando ? 'Cargando…' : 'No encontramos lo que buscabas. Puede que ya no esté publicado.'}</p>
             <button type="button" className="btn2" onClick={volver}>
@@ -168,9 +188,16 @@ export function App({ usuario }: { usuario: Usuario }) {
           <Buscar catalogo={catalogo} enLinea={enLinea} estado={busqueda} alCambiar={setBusqueda} ir={ir} />
         )}
         {!vista && pestana === 'carrito' && (
-          <Carrito carrito={carrito} enLinea={enLinea} alCambiar={setCarrito} alTerminar={() => irA('pedidos')} />
+          <Carrito
+            carrito={carrito}
+            enLinea={enLinea}
+            alCambiar={setCarrito}
+            alContinuar={() => abrir({ tipo: 'confirmar' })}
+            alBuscar={() => ir.buscar()}
+            alAbrirProducto={ir.producto}
+          />
         )}
-        {!vista && pestana === 'pedidos' && <Pedidos enLinea={enLinea} />}
+        {!vista && pestana === 'pedidos' && <Pedidos enLinea={enLinea} alAbrir={(id) => abrir({ tipo: 'pedido', id })} />}
         {!vista && pestana === 'cuenta' && <Cuenta usuario={usuario} />}
       </main>
 

@@ -35,6 +35,17 @@ export function quitar(carrito: ItemDeCarrito[], productoId: string, presentacio
   return carrito.filter((i) => !(i.productoId === productoId && i.presentacion === presentacion));
 }
 
+/** Suma o resta de a uno. Nunca baja de 1: para sacar el producto está «quitar». */
+export function cambiarCantidad(carrito: ItemDeCarrito[], productoId: string, presentacion: Presentacion, delta: number) {
+  return carrito.map((i) =>
+    i.productoId === productoId && i.presentacion === presentacion ? { ...i, cantidad: Math.max(1, i.cantidad + delta) } : i,
+  );
+}
+
+export const unidadesDe = (i: Pick<ItemDeCarrito, 'cantidad' | 'unidadesPorPresentacion'>) => i.cantidad * i.unidadesPorPresentacion;
+
+export const totalDe = (i: ItemDeCarrito) => (i.precioUnitarioCentavos ?? 0) * unidadesDe(i);
+
 export function porMayorista(carrito: ItemDeCarrito[]): PedidoDelCarrito[] {
   const grupos = new Map<string, PedidoDelCarrito>();
   for (const item of carrito) {
