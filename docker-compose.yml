@@ -32,7 +32,8 @@ services:
       <<: *salud
 
   mongo:
-    image: mongo:8.0
+    # La CI usa 9.0: mongo 8.0 no arranca con kernels 6.19+ (los runners de GitHub). Local sigue en 8.0 por los volúmenes.
+    image: mongo:${VERSION_MONGO:-8.0}
     # Réplica de un nodo: sin réplica no hay transacciones (las reservas de stock las usan)
     command: ["--replSet", "rs0", "--bind_ip_all"]
     ports: ["${PUERTO_MONGO:-27020}:27017"]
