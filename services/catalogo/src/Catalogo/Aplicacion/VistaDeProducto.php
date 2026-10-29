@@ -18,6 +18,8 @@ final readonly class VistaDeProducto
         public ?Organizacion $mayorista,
         public ?array $escalasVisibles,
         public EstadoRelacion $relacion,
+        /** Quien consulta es el dueño: ve el costo y el proveedor */
+        public bool $esDelDueno = false,
     ) {
     }
 }

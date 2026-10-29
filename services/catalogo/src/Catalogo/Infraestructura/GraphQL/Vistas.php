@@ -53,6 +53,11 @@ final class Vistas
                     'precioUnitario' => $visible === null ? null : self::dinero($visible->precioUnitarioCentavos),
                 ];
             }, $p->escalas()),
+            'abastecimiento' => $p->abastecimiento->value,
+            'entregaHoras' => $p->entregaHoras,
+            // El costo y el proveedor son del mayorista: nadie más los ve
+            'costoUnitario' => $vista->esDelDueno && $p->costoUnitarioCentavos !== null ? self::dinero($p->costoUnitarioCentavos) : null,
+            'proveedor' => $vista->esDelDueno ? $p->proveedor : null,
         ];
     }
 
@@ -66,6 +71,7 @@ final class Vistas
             'verificado' => $o?->estaVerificada() ?? false,
             'estadoVerificacion' => ($o->verificacion ?? EstadoVerificacion::PENDIENTE)->value,
             'relacion' => $relacion,
+            'deLaCasa' => $o->deLaCasa ?? false,
         ];
     }
 

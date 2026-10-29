@@ -9,6 +9,7 @@ use Catalogo\Dominio\EstadoReserva;
 use Catalogo\Dominio\LineaReservada;
 use Catalogo\Dominio\PoliticaDePrecios;
 use Catalogo\Dominio\Presentacion;
+use Catalogo\Dominio\Puertos\OrganizacionRepositorio;
 use Catalogo\Dominio\Puertos\ProductoRepositorio;
 use Catalogo\Dominio\Puertos\PublicadorDeEventos;
 use Catalogo\Dominio\Puertos\RelacionRepositorio;
@@ -28,6 +29,8 @@ final readonly class ReservarStock
         private RelacionRepositorio $relaciones,
         private ReservaRepositorio $reservas,
         private PublicadorDeEventos $eventos,
+        /** Para saber si el mayorista es Abasto (vendedor de la casa). Sin él, nadie es de la casa */
+        private ?OrganizacionRepositorio $organizaciones = null,
     ) {}
 
     /** @param list<array{productoId: string, presentacion: string, cantidad: int}> $lineas */
@@ -58,6 +61,7 @@ final readonly class ReservarStock
         }
 
         $relacion = $this->relaciones->de($tiendaId, $mayoristaId);
+        $deLaCasa = $this->organizaciones?->porId($mayoristaId)->deLaCasa ?? false;
         $plan = [];
         foreach ($lineas as $linea) {
             $producto = $this->productos->porId($linea['productoId']);
@@ -68,7 +72,7 @@ final readonly class ReservarStock
             if ($producto->estado !== EstadoProducto::ACTIVO) {
                 return ReservaDeStock::rechazada($pedidoId, "{$producto->nombre} no está a la venta");
             }
-            $escalas = PoliticaDePrecios::escalasPara($producto, $tiendaId, $relacion);
+            $escalas = PoliticaDePrecios::escalasPara($producto, $tiendaId, $relacion, $deLaCasa);
             if ($escalas === null) {
                 return ReservaDeStock::rechazada($pedidoId, 'La tienda no es cliente aprobado de este mayorista');
             }
@@ -81,14 +85,22 @@ final readonly class ReservarStock
             if ($escala === null) {
                 return ReservaDeStock::rechazada($pedidoId, "{$producto->nombre} no se vende por {$presentacion->value}");
             }
-            $plan[] = [$producto->id, $producto->nombre, $linea['cantidad'] * $escala->unidades, $escala->precioUnitarioCentavos];
+            $plan[] = [$producto->id, $producto->nombre, $linea['cantidad'] * $escala->unidades, $escala->precioUnitarioCentavos, $producto->bajoPedido()];
         }
 
         $apartadas = [];
-        foreach ($plan as [$productoId, $nombre, $unidades, $precio]) {
+        foreach ($plan as [$productoId, $nombre, $unidades, $precio, $bajoPedido]) {
+            if ($bajoPedido) {
+                // Se compra cuando entra el pedido: no hay stock que apartar
+                $apartadas[] = new LineaReservada($productoId, $unidades, $precio, false);
+
+                continue;
+            }
             if (! $this->productos->descontarStock($productoId, $unidades)) {
                 foreach ($apartadas as $previa) {
-                    $this->productos->devolverStock($previa->productoId, $previa->unidades);
+                    if ($previa->descontado) {
+                        $this->productos->devolverStock($previa->productoId, $previa->unidades);
+                    }
                 }
 
                 return ReservaDeStock::rechazada($pedidoId, "Stock insuficiente de {$nombre}");

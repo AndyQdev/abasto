@@ -22,6 +22,16 @@ directive @join__unionMember(graph: join__Graph!, member: String!) repeatable on
 
 directive @link(url: String, as: String, for: link__Purpose, import: [link__Import]) repeatable on SCHEMA
 
+"""
+STOCK: lo tiene en depósito y reservar descuenta stock. BAJO_PEDIDO: se compra cuando entra el pedido.
+"""
+enum Abastecimiento
+  @join__type(graph: CATALOGO)
+{
+  STOCK @join__enumValue(graph: CATALOGO)
+  BAJO_PEDIDO @join__enumValue(graph: CATALOGO)
+}
+
 type AutorizacionDeCredito
   @join__type(graph: COBROS)
 {
@@ -88,6 +98,22 @@ input CrearProductoEntrada
   """Stock inicial; 0 deja el producto SIN_STOCK"""
   stock: Int!
   escalas: [EscalaEntrada!]!
+
+  """
+  STOCK si lo tiene en depósito; BAJO_PEDIDO si lo compra cuando entra el pedido (sin stock)
+  """
+  abastecimiento: Abastecimiento
+
+  """Horas desde el pedido hasta la entrega"""
+  entregaHoras: Int
+
+  """Lo que le cuesta cada unidad. Solo lo ve el mayorista"""
+  costoUnitarioCentavos: Int
+
+  """
+  Dónde lo compra (puesto, mercado o distribuidora). Solo lo ve el mayorista
+  """
+  proveedor: String
 }
 
 """Monto en bolivianos. Mismo tipo en los tres subgrafos."""
@@ -116,6 +142,22 @@ input EditarProductoEntrada
 
   """Solo ACTIVO o PAUSADO: SIN_STOCK y PENDIENTE_DE_REVISION se derivan"""
   estado: EstadoEditableProducto
+
+  """
+  STOCK si lo tiene en depósito; BAJO_PEDIDO si lo compra cuando entra el pedido (sin stock)
+  """
+  abastecimiento: Abastecimiento
+
+  """Horas desde el pedido hasta la entrega"""
+  entregaHoras: Int
+
+  """Lo que le cuesta cada unidad. Solo lo ve el mayorista"""
+  costoUnitarioCentavos: Int
+
+  """
+  Dónde lo compra (puesto, mercado o distribuidora). Solo lo ve el mayorista
+  """
+  proveedor: String
 }
 
 type Escala
@@ -266,6 +308,11 @@ type Mayorista
 
   """Relación de la tienda de la sesión con este mayorista"""
   relacion: EstadoRelacion! @join__field(graph: CATALOGO)
+
+  """
+  Abasto mismo vendiendo: cualquier tienda registrada ve sus precios sin pedir ser cliente
+  """
+  deLaCasa: Boolean! @join__field(graph: CATALOGO)
 }
 
 enum MetodoPago
@@ -425,6 +472,20 @@ type Producto
   """
   escalas: [Escala!]! @join__field(graph: CATALOGO)
   precioVisible: Boolean! @join__field(graph: CATALOGO)
+  abastecimiento: Abastecimiento! @join__field(graph: CATALOGO)
+
+  """
+  Horas desde el pedido hasta la entrega. Null si el mayorista no lo cargó
+  """
+  entregaHoras: Int @join__field(graph: CATALOGO)
+
+  """
+  Lo que le cuesta cada unidad al mayorista. Solo lo ve él; null para los demás
+  """
+  costoUnitario: Dinero @join__field(graph: CATALOGO)
+
+  """Dónde lo compra. Solo lo ve el mayorista"""
+  proveedor: String @join__field(graph: CATALOGO)
 }
 
 type Query

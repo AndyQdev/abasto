@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Catalogo\Aplicacion;
 
+use Catalogo\Dominio\Abastecimiento;
 use Catalogo\Dominio\ErrorDeDominio;
 use Catalogo\Dominio\EscalaDePrecio;
 use Catalogo\Dominio\EstadoProducto;
@@ -29,6 +30,10 @@ final readonly class CrearProducto
         string $descripcion,
         int $stock,
         array $escalas,
+        ?Abastecimiento $abastecimiento = null,
+        ?int $entregaHoras = null,
+        ?int $costoUnitarioCentavos = null,
+        ?string $proveedor = null,
     ): Producto {
         $codigo = strtoupper(trim($codigo));
         if ($codigo === '') {
@@ -52,6 +57,8 @@ final readonly class CrearProducto
             estado: $stock > 0 ? EstadoProducto::ACTIVO : EstadoProducto::SIN_STOCK,
             escalas: $escalas,
         );
+        // Bajo pedido queda a la venta aunque empiece en 0 (cambiarAbastecimiento lo pasa a ACTIVO)
+        $producto->cambiarAbastecimiento($abastecimiento ?? Abastecimiento::STOCK, $entregaHoras, $costoUnitarioCentavos, $proveedor);
         $this->productos->guardar($producto);
 
         return $producto;

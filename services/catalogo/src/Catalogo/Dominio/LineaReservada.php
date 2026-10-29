@@ -11,6 +11,8 @@ final readonly class LineaReservada
         public string $productoId,
         public int $unidades,
         public int $precioUnitarioCentavos,
+        /** false si el producto es bajo pedido: no se descontó stock, así que al liberar no se devuelve */
+        public bool $descontado = true,
     ) {
     }
 }
