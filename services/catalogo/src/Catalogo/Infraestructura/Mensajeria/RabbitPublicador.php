@@ -17,9 +17,9 @@ final class RabbitPublicador implements PublicadorDeEventos
     /** @param Closure(): AMQPChannel $abrirCanal se llama la primera vez que hay algo que publicar */
     public function __construct(private readonly Closure $abrirCanal) {}
 
-    public function publicar(string $tipo, string $pedidoId, string $orgId, array $datos): void
+    public function publicar(string $tipo, string $pedidoId, string $orgId, array $datos, ?string $clave = null): void
     {
-        $sobre = SobreDeEvento::armar($tipo, $pedidoId, $orgId, $datos);
+        $sobre = SobreDeEvento::armar($tipo, $pedidoId, $orgId, $datos, $clave);
         $mensaje = new AMQPMessage(json_encode($sobre, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE), [
             'content_type' => 'application/json',
             'delivery_mode' => AMQPMessage::DELIVERY_MODE_PERSISTENT,

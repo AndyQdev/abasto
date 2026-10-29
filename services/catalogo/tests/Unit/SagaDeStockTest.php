@@ -51,10 +51,9 @@ it('reserva el stock y responde con las unidades y el precio de la lista de la t
 
     expect($this->productos->todos['shampoo']->stock)->toBe(312 - 96)
         ->and($this->productos->todos['jabon']->stock)->toBe(100 - 72)
-        ->and($this->eventos->enviados)->toHaveCount(1)
-        ->and($this->eventos->enviados[0]['tipo'])->toBe('stock.reservado')
-        ->and($this->eventos->enviados[0]['orgId'])->toBe('lp')
-        ->and($this->eventos->enviados[0]['datos']['lineas'])->toBe([
+        ->and($this->eventos->deTipo('stock.reservado'))->toHaveCount(1)
+        ->and($this->eventos->deTipo('stock.reservado')[0]['orgId'])->toBe('lp')
+        ->and($this->eventos->deTipo('stock.reservado')[0]['datos']['lineas'])->toBe([
             ['unidades' => 96, 'precioUnitarioCentavos' => 1710], // 1800 con lista VIP (95 %)
             ['unidades' => 72, 'precioUnitarioCentavos' => 285],
         ]);
@@ -98,8 +97,9 @@ it('el mismo comando dos veces no descuenta dos veces y repite la respuesta', fu
     $this->reservar->ejecutar('p6', 'lp', 'dr', [lineaDe('shampoo', 'CAJA', 1)]);
 
     expect($this->productos->todos['shampoo']->stock)->toBe(312 - 48)
-        ->and($this->eventos->enviados)->toHaveCount(2)
-        ->and($this->eventos->enviados[1])->toBe($this->eventos->enviados[0]);
+        ->and($this->eventos->deTipo('stock.reservado'))->toHaveCount(2)
+        ->and($this->eventos->deTipo('stock.reservado')[1])->toBe($this->eventos->deTipo('stock.reservado')[0])
+        ->and($this->eventos->deTipo('producto.stock_cambiado'))->toHaveCount(1);
 });
 
 it('liberar devuelve el stock apartado y responde stock.liberado', function () {
@@ -168,4 +168,35 @@ it('el id del mensaje es estable para un mismo tipo y pedido', function () {
     expect($a)->toBe(SobreDeEvento::idDeterminista('stock.reservado', 'p1'))
         ->and($a)->not->toBe(SobreDeEvento::idDeterminista('stock.liberado', 'p1'))
         ->and($a)->toMatch('/^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/');
+});
+
+it('al reservar avisa el stock que quedó en cada producto, con una clave por producto', function () {
+    $this->reservar->ejecutar('p11', 'lp', 'dr', [lineaDe('shampoo', 'CAJA', 1), lineaDe('jabon', 'CAJA', 1), lineaDe('shampoo', 'DOCENA', 1)]);
+
+    $avisos = $this->eventos->deTipo('producto.stock_cambiado');
+    expect(array_column(array_column($avisos, 'datos'), 'stock', 'productoId'))->toBe(['shampoo' => 312 - 48 - 12, 'jabon' => 100 - 72])
+        ->and(array_column($avisos, 'clave'))->toBe(['reserva:p11:shampoo', 'reserva:p11:jabon'])
+        ->and($avisos[0]['datos']['nombre'])->toBe('Shampoo 400 ml');
+});
+
+it('al liberar avisa el stock devuelto con otra clave que la reserva', function () {
+    $this->reservar->ejecutar('p12', 'lp', 'dr', [lineaDe('shampoo', 'CAJA', 1)]);
+    $this->liberar->ejecutar('p12', 'lp');
+
+    $avisos = $this->eventos->deTipo('producto.stock_cambiado');
+    expect(array_column($avisos, 'clave'))->toBe(['reserva:p12:shampoo', 'liberacion:p12:shampoo'])
+        ->and($avisos[1]['datos']['stock'])->toBe(312);
+});
+
+it('un rechazo no avisa cambios de stock', function () {
+    $this->reservar->ejecutar('p13', 'lp', 'dr', [lineaDe('shampoo', 'CAJA', 99)]);
+
+    expect($this->eventos->deTipo('producto.stock_cambiado'))->toBe([]);
+});
+
+it('la clave cambia el id del mensaje sin cambiar el pedido', function () {
+    $sobre = SobreDeEvento::armar('producto.stock_cambiado', 'p1', 'lp', [], 'reserva:p1:shampoo');
+
+    expect($sobre['id'])->toBe(SobreDeEvento::idDeterminista('producto.stock_cambiado', 'reserva:p1:shampoo'))
+        ->and($sobre['correlationId'])->toBe('p1');
 });

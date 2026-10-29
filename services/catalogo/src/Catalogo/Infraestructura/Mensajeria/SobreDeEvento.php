@@ -7,17 +7,23 @@ namespace Catalogo\Infraestructura\Mensajeria;
 use DateTimeImmutable;
 use DateTimeInterface;
 
-/** El sobre común de contracts/asyncapi.yaml. El id sale del tipo y del pedido, no es aleatorio. */
+/** El sobre común de contracts/asyncapi.yaml. El id sale del tipo y de la clave (por defecto el pedido), no es aleatorio. */
 final class SobreDeEvento
 {
     /**
      * @param  array<string, mixed>  $datos
      * @return array<string, mixed>
      */
-    public static function armar(string $tipo, string $pedidoId, string $orgId, array $datos, ?DateTimeImmutable $ahora = null): array
-    {
+    public static function armar(
+        string $tipo,
+        string $pedidoId,
+        string $orgId,
+        array $datos,
+        ?string $clave = null,
+        ?DateTimeImmutable $ahora = null,
+    ): array {
         return [
-            'id' => self::idDeterminista($tipo, $pedidoId),
+            'id' => self::idDeterminista($tipo, $clave ?? $pedidoId),
             'tipo' => $tipo,
             'version' => 1,
             'ocurridoEn' => ($ahora ?? new DateTimeImmutable)->format(DateTimeInterface::ATOM),

@@ -30,6 +30,7 @@ final readonly class LiberarStock
             }
             $reserva->liberar();
             $this->reservas->guardar($reserva);
+            (new AvisoDeStock($this->productos, $this->eventos))->avisar('liberacion', $reserva, $mayoristaId);
         }
 
         $this->eventos->publicar('stock.liberado', $pedidoId, $mayoristaId, ['pedidoId' => $pedidoId]);
