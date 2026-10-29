@@ -7,13 +7,15 @@ use Catalogo\Dominio\ErrorDeDominio;
 use Catalogo\Dominio\EscalaDePrecio;
 use Catalogo\Dominio\EstadoProducto;
 use Catalogo\Dominio\Presentacion;
+use Tests\Support\EventosGrabados;
 use Tests\Support\ProductosEnMemoria;
 
 beforeEach(function () {
     $this->productos = new ProductosEnMemoria;
     $this->crear = new CrearProducto($this->productos);
     $this->editar = new EditarProducto($this->productos);
-    $this->ajustar = new AjustarStock($this->productos);
+    $this->eventos = new EventosGrabados;
+    $this->ajustar = new AjustarStock($this->productos, $this->eventos);
 });
 
 function escalaDe(string $presentacion, int $unidades, int $precioUnitarioCentavos): EscalaDePrecio
@@ -189,4 +191,16 @@ it('ajustar el stock lo guarda por la vía del stock, no con el guardado general
     $this->ajustar->ejecutar($producto->id, 'lp', 0);
 
     expect($this->productos->stockFijado)->toBe([$producto->id]);
+});
+
+it('ajustar el stock avisa el stock nuevo a los reportes, con un aviso distinto por corrección', function () {
+    $producto = $this->crear->ejecutar('lp', 'HP-0402', 'Shampoo 400 ml', 'Higiene', '', 10, escalasDeShampoo());
+    $this->ajustar->ejecutar($producto->id, 'lp', 7);
+    $this->ajustar->ejecutar($producto->id, 'lp', 7);
+
+    $avisos = $this->eventos->deTipo('producto.stock_cambiado');
+    expect($avisos)->toHaveCount(2)
+        ->and($avisos[0]['datos'])->toBe(['productoId' => $producto->id, 'nombre' => 'Shampoo 400 ml', 'stock' => 7])
+        ->and($avisos[0]['orgId'])->toBe('lp')
+        ->and($avisos[0]['clave'])->not->toBe($avisos[1]['clave']);
 });
