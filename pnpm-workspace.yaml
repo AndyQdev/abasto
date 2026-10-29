@@ -1,7 +1,7 @@
-# Abasto Campo (apps/campo) queda fuera a propósito: React Native y Metro
-# funcionan mejor con su propio node_modules. Se instala con npm dentro de su carpeta.
+# La app de clientes (apps/app, Expo) queda fuera a propósito: React Native y Metro
+# funcionan mejor con su propio node_modules. Se instala con npm dentro de su carpeta
+# y toma la lógica de packages/comercio por ruta (metro.config.js y tsconfig.json).
 packages:
-  - apps/mercado
   - apps/superadmin
   - apps/panel-shell
   - apps/panel-gestion

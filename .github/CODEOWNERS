@@ -8,7 +8,6 @@ infra/                      @AndyQdev
 services/pedidos/           @AndyQdev
 services/cobros/            @AndyQdev
 services/conecta/           @AndyQdev
-apps/mercado/               @AndyQdev
 apps/superadmin/            @AndyQdev
 services/catalogo/          @usuario-jhoel
 services/asistente/         @usuario-jhoel
@@ -16,7 +15,7 @@ ml/                         @usuario-jhoel
 apps/panel-shell/           @usuario-jhoel
 apps/panel-gestion/         @usuario-jhoel
 apps/panel-inteligencia/    @usuario-jhoel
-apps/campo/                 @usuario-jhoel
+apps/app/                   @AndyQdev
 # Dentro de Gestión, Pedidos y Cuentas por cobrar son de Andrés
 apps/panel-gestion/src/app/vistas/pedidos*     @AndyQdev
 apps/panel-gestion/src/app/vistas/cuentas*     @AndyQdev

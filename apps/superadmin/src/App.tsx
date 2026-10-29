@@ -23,7 +23,7 @@ export function App({ usuario }: { usuario: Usuario }) {
       <div className="carta solo-admin">
         <strong>El Superadmin es solo para el equipo de Abasto.</strong>
         <p>
-          Tu cuenta entra a <a href={APPS.mercado}>Mercado</a>
+          Tu cuenta entra a la app Abasto en el teléfono
           {usuario.roles.includes('mayorista') && (
             <>
               {' '}y al <a href={APPS.panel}>Panel Mayorista</a>

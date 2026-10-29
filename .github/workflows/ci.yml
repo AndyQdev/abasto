@@ -19,7 +19,7 @@ jobs:
       pedidos: ${{ steps.filtro.outputs.pedidos }}
       catalogo: ${{ steps.filtro.outputs.catalogo }}
       ml: ${{ steps.filtro.outputs.ml }}
-      campo: ${{ steps.filtro.outputs.campo }}
+      app: ${{ steps.filtro.outputs.app }}
       supergrafo: ${{ steps.filtro.outputs.supergrafo }}
     steps:
       - uses: actions/checkout@v4
@@ -34,7 +34,6 @@ jobs:
               - '.github/workflows/**'
             node:
               - *compartido
-              - 'apps/mercado/**'
               - 'apps/panel-*/**'
               - 'apps/superadmin/**'
               - 'services/cobros/**'
@@ -49,8 +48,9 @@ jobs:
             ml:
               - 'ml/**'
               - '.github/workflows/**'
-            campo:
-              - 'apps/campo/**'
+            app:
+              - 'apps/app/**'
+              - 'packages/comercio/**'
               - 'packages/outbox-offline/**'
               - '.github/workflows/**'
             supergrafo:
@@ -124,17 +124,17 @@ jobs:
       - run: uv run ruff check
       - run: uv run pytest
 
-  # ---------------------------------------------------------------- Campo: Expo (npm aparte, fuera del workspace)
-  campo:
+  # ---------------------------------------------------------------- App de clientes: Expo (npm aparte, fuera del workspace)
+  app:
     needs: cambios
-    if: needs.cambios.outputs.campo == 'true'
+    if: needs.cambios.outputs.app == 'true'
     runs-on: ubuntu-latest
     defaults:
-      run: { working-directory: apps/campo }
+      run: { working-directory: apps/app }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: 22, cache: npm, cache-dependency-path: apps/campo/package-lock.json }
+        with: { node-version: 22, cache: npm, cache-dependency-path: apps/app/package-lock.json }
       - run: npm ci
       - run: npx tsc --noEmit
       - run: npm test

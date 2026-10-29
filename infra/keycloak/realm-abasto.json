@@ -51,15 +51,14 @@
       ]
     },
     {
-      "clientId": "abasto-mercado",
-      "name": "Abasto Mercado",
+      "clientId": "abasto-app",
+      "name": "Abasto · app de clientes",
       "publicClient": true,
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": false,
-      "rootUrl": "http://localhost:5173",
-      "redirectUris": ["http://localhost:5173/*"],
-      "webOrigins": ["http://localhost:5173"],
-      "attributes": { "pkce.code.challenge.method": "S256", "post.logout.redirect.uris": "http://localhost:5173/*" },
+      "redirectUris": ["abasto://*", "exp://*", "http://localhost:8090/*"],
+      "webOrigins": ["+"],
+      "attributes": { "pkce.code.challenge.method": "S256", "post.logout.redirect.uris": "abasto://*##http://localhost:8090/*" },
       "protocolMappers": [
         { "name": "org_id", "protocol": "openid-connect", "protocolMapper": "oidc-usermodel-attribute-mapper", "config": { "user.attribute": "org_id", "claim.name": "org_id", "jsonType.label": "String", "id.token.claim": "true", "access.token.claim": "true", "userinfo.token.claim": "true", "introspection.token.claim": "true" } },
         { "name": "org_nombre", "protocol": "openid-connect", "protocolMapper": "oidc-usermodel-attribute-mapper", "config": { "user.attribute": "org_nombre", "claim.name": "org_nombre", "jsonType.label": "String", "id.token.claim": "true", "access.token.claim": "true", "userinfo.token.claim": "true", "introspection.token.claim": "true" } },
@@ -76,20 +75,6 @@
       "redirectUris": ["http://localhost:5174/*"],
       "webOrigins": ["http://localhost:5174"],
       "attributes": { "pkce.code.challenge.method": "S256", "post.logout.redirect.uris": "http://localhost:5174/*" },
-      "protocolMappers": [
-        { "name": "org_id", "protocol": "openid-connect", "protocolMapper": "oidc-usermodel-attribute-mapper", "config": { "user.attribute": "org_id", "claim.name": "org_id", "jsonType.label": "String", "id.token.claim": "true", "access.token.claim": "true", "userinfo.token.claim": "true", "introspection.token.claim": "true" } },
-        { "name": "audiencia-api", "protocol": "openid-connect", "protocolMapper": "oidc-audience-mapper", "config": { "included.custom.audience": "abasto-api", "access.token.claim": "true", "id.token.claim": "false", "introspection.token.claim": "true" } }
-      ]
-    },
-    {
-      "clientId": "abasto-campo",
-      "name": "Abasto Campo",
-      "publicClient": true,
-      "standardFlowEnabled": true,
-      "directAccessGrantsEnabled": false,
-      "redirectUris": ["abasto-campo://*", "exp://*"],
-      "webOrigins": ["+"],
-      "attributes": { "pkce.code.challenge.method": "S256" },
       "protocolMappers": [
         { "name": "org_id", "protocol": "openid-connect", "protocolMapper": "oidc-usermodel-attribute-mapper", "config": { "user.attribute": "org_id", "claim.name": "org_id", "jsonType.label": "String", "id.token.claim": "true", "access.token.claim": "true", "userinfo.token.claim": "true", "introspection.token.claim": "true" } },
         { "name": "audiencia-api", "protocol": "openid-connect", "protocolMapper": "oidc-audience-mapper", "config": { "included.custom.audience": "abasto-api", "access.token.claim": "true", "id.token.claim": "false", "introspection.token.claim": "true" } }
@@ -129,7 +114,7 @@
       "lastName": "Ventas",
       "attributes": { "org_id": ["abasto"], "org_nombre": ["Abasto"] },
       "credentials": [{ "type": "password", "value": "abasto123", "temporary": false }],
-      "realmRoles": ["mayorista"]
+      "realmRoles": ["mayorista", "admin"]
     },
     {
       "username": "lospozos@abasto.bo",

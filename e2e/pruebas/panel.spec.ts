@@ -33,12 +33,13 @@ test.describe('Panel Mayorista', () => {
   });
 });
 
-test('una sola cuenta: del Panel a Mercado sin volver a escribir la contraseña', async ({ page }) => {
+test('una sola cuenta: del Panel al Superadmin sin volver a escribir la contraseña', async ({ page }) => {
+  // ventas@abasto.bo es Abasto: vende en el Panel y administra en el Superadmin
   await page.goto('http://localhost:5170/inicio');
-  await entrarComo(page, 'lospozos@abasto.bo');
-  await expect(page.getByText('Hola, Distribuidora Los Pozos')).toBeVisible();
+  await entrarComo(page, 'ventas@abasto.bo');
+  await expect(page.getByText('Hola, Abasto')).toBeVisible();
 
-  await page.goto('http://localhost:5173/');
+  await page.goto('http://localhost:5174/traccion');
   await expect(page.locator('#password')).toHaveCount(0);
-  await expect(page.getByText('Distribuidora Los Pozos · Santa Cruz')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Tracción' })).toBeVisible();
 });

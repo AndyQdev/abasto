@@ -1,5 +1,5 @@
 {
-  "name": "@abasto/campo",
+  "name": "@abasto/app",
   "version": "0.1.0",
   "main": "index.ts",
   "dependencies": {
@@ -25,13 +25,14 @@
     "typescript": "~6.0.3"
   },
   "scripts": {
-    "start": "expo start --dev-client",
+    "start": "expo start --dev-client --port 8090",
     "android": "expo run:android",
     "test": "jest",
-    "tipos": "tsc --noEmit"
+    "tipos": "tsc --noEmit",
+    "web": "expo start --web --port 8090"
   },
   "private": true,
-  "description": "Abasto Campo: el mayorista carga productos con la cámara en su puesto, sin señal. Expo (React Native), solo Android.",
+  "description": "Abasto: la app de los clientes que compran al por mayor (tiendas y personas). Expo (React Native) para Android y iPhone, con búsqueda por foto, pedidos, pagos y seguimiento.",
   "jest": {
     "preset": "jest-expo",
     "testPathIgnorePatterns": [

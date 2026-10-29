@@ -3,7 +3,7 @@ import type { Almacen, OperacionLocal } from './bandeja';
 
 /** La bandeja en SQLite: sobrevive a cerrar la app y a reiniciar el teléfono. */
 export class AlmacenSQLite implements Almacen {
-  private readonly db = SQLite.openDatabaseSync('abasto-campo.db');
+  private readonly db = SQLite.openDatabaseSync('abasto.db');
 
   constructor() {
     this.db.execSync(`CREATE TABLE IF NOT EXISTS bandeja (
