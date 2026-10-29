@@ -19,7 +19,8 @@ export default defineConfig({
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: [
-    { command: 'pnpm --filter @abasto/panel-shell dev', url: 'http://localhost:5170', reuseExistingServer: true, cwd: '..' },
+    // El Shell va construido (PWA): solo el build tiene service worker. Si ya corre pnpm dev:panel, se usa ese
+    { command: 'pnpm --filter @abasto/panel-shell pwa', url: 'http://localhost:5170', reuseExistingServer: true, cwd: '..', timeout: 180_000 },
     { command: 'pnpm --filter @abasto/panel-gestion dev', url: 'http://localhost:5171', reuseExistingServer: true, cwd: '..', timeout: 180_000 },
     { command: 'pnpm --filter @abasto/panel-inteligencia dev', url: 'http://localhost:5172', reuseExistingServer: true, cwd: '..' },
     { command: 'pnpm --filter @abasto/superadmin dev', url: 'http://localhost:5174', reuseExistingServer: true, cwd: '..' },

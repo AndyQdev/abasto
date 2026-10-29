@@ -137,3 +137,17 @@ main {
     height: auto;
   }
 }
+
+/* Barra de conexión (PWA): sin señal el Panel sigue con lo guardado y encola los cambios */
+.sin-senal {
+  margin: 0 24px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: hsl(38 92% 92%);
+  color: hsl(28 80% 26%);
+  font-size: 14px;
+}
+.sin-senal.enviando {
+  background: hsl(158 40% 92%);
+  color: hsl(158 64% 22%);
+}

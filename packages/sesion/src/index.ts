@@ -66,6 +66,15 @@ export function crearSesion({ clientId, emisor = EMISOR }: OpcionesDeSesion): Se
   });
   let actual: Usuario | null = null;
 
+  /** El usuario guardado; si venció y hay señal, lo renueva con el refresh token antes de mandar a Keycloak. */
+  async function vigente() {
+    const u = await gestor.getUser();
+    if (u?.expired && navigator.onLine && u.refresh_token) {
+      return gestor.signinSilent().catch(() => u);
+    }
+    return u;
+  }
+
   return {
     async asegurar() {
       if (window.location.search.includes('code=') && window.location.search.includes('state=')) {
@@ -76,8 +85,9 @@ export function crearSesion({ clientId, emisor = EMISOR }: OpcionesDeSesion): Se
         actual = aUsuario(u);
         return actual;
       }
-      const u = await gestor.getUser();
-      if (u && !u.expired) {
+      const u = await vigente();
+      // Sin señal no se puede ir a Keycloak: el Panel (PWA) sigue con la última sesión y sus datos guardados
+      if (u && (!u.expired || !navigator.onLine)) {
         actual = aUsuario(u);
         return actual;
       }
@@ -85,7 +95,8 @@ export function crearSesion({ clientId, emisor = EMISOR }: OpcionesDeSesion): Se
       return new Promise<Usuario>(() => {});
     },
     async token() {
-      const u = await gestor.getUser();
+      const u = await vigente();
+      if (u && u.expired && !navigator.onLine) return u.access_token; // el service worker contesta con lo guardado
       if (!u || u.expired) {
         await gestor.signinRedirect();
         return new Promise<string>(() => {});
