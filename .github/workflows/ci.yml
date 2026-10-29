@@ -13,13 +13,16 @@ permissions:
   contents: read
   pull-requests: read
 
+# Runner fijo en ubuntu-24.04: ubuntu-latest ya es 26.04 (kernel 6.19) y mongo:8.0 no arranca ahí
+# (https://jira.mongodb.org/browse/SERVER-121912). Volver a ubuntu-latest cuando MongoDB publique la versión compatible.
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   cambios:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       node: ${{ steps.filtro.outputs.node }}
       pedidos: ${{ steps.filtro.outputs.pedidos }}
@@ -69,7 +72,7 @@ jobs:
   node:
     needs: cambios
     if: needs.cambios.outputs.node == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -85,7 +88,7 @@ jobs:
   pedidos:
     needs: cambios
     if: needs.cambios.outputs.pedidos == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run: { working-directory: services/pedidos }
     steps:
@@ -99,7 +102,7 @@ jobs:
   catalogo:
     needs: cambios
     if: needs.cambios.outputs.catalogo == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run: { working-directory: services/catalogo }
     services:
@@ -126,7 +129,7 @@ jobs:
   ml:
     needs: cambios
     if: needs.cambios.outputs.ml == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run: { working-directory: ml }
     steps:
@@ -140,7 +143,7 @@ jobs:
   campo:
     needs: cambios
     if: needs.cambios.outputs.campo == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run: { working-directory: apps/campo }
     steps:
@@ -155,7 +158,7 @@ jobs:
   supergrafo:
     needs: cambios
     if: needs.cambios.outputs.supergrafo == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -170,7 +173,7 @@ jobs:
   e2e:
     needs: [cambios, node]
     if: github.event_name == 'pull_request' && github.base_ref == 'main' && !failure() && !cancelled()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
