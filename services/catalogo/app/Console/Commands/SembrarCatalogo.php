@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use Catalogo\Dominio\EscalaDePrecio;
 use Catalogo\Dominio\EstadoProducto;
+use Catalogo\Dominio\EstadoVerificacion;
 use Catalogo\Dominio\ListaDePrecios;
 use Catalogo\Dominio\Presentacion;
 use Catalogo\Dominio\Producto;
@@ -31,16 +32,18 @@ final class SembrarCatalogo extends Command
         /** @var MongoConexion $conexion */
         $conexion = DB::connection('mongodb');
         $organizaciones = $conexion->getCollection('organizaciones');
+        // La semilla escribe `verificacion` y también el booleano `verificado` de siempre,
+        // para no romper lo que aún lo lee mientras tanto.
         $lista = [
-            ['_id' => 'lp', 'nombre' => 'Distribuidora Los Pozos', 'tipo' => 'mayorista', 'ciudad' => 'Santa Cruz', 'verificado' => true, 'nit' => '1023456027'],
-            ['_id' => 'lr', 'nombre' => 'Importadora La Ramada', 'tipo' => 'mayorista', 'ciudad' => 'Santa Cruz', 'verificado' => true, 'nit' => '2034567018'],
-            ['_id' => 'mc', 'nombre' => 'Mayorista Central', 'tipo' => 'mayorista', 'ciudad' => 'Santa Cruz', 'verificado' => false],
-            ['_id' => 'dr', 'nombre' => 'Tienda Doña Rosa', 'tipo' => 'tienda', 'ciudad' => 'Santa Cruz', 'verificado' => true],
-            ['_id' => 'ec', 'nombre' => 'Minimarket El Cruce', 'tipo' => 'tienda', 'ciudad' => 'Santa Cruz', 'verificado' => true],
-            ['_id' => 'am', 'nombre' => 'Almacén Mery', 'tipo' => 'tienda', 'ciudad' => 'Santa Cruz', 'verificado' => true],
-            ['_id' => 'dl', 'nombre' => 'Despensa Lupita', 'tipo' => 'tienda', 'ciudad' => 'Santa Cruz', 'verificado' => true],
-            ['_id' => 'es', 'nombre' => 'Tienda La Esquina', 'tipo' => 'tienda', 'ciudad' => 'Santa Cruz', 'verificado' => true],
-            ['_id' => 'sj', 'nombre' => 'Tienda San Juan', 'tipo' => 'tienda', 'ciudad' => 'Santa Cruz', 'verificado' => true],
+            ['_id' => 'lp', 'nombre' => 'Distribuidora Los Pozos', 'tipo' => 'mayorista', 'ciudad' => 'Santa Cruz', 'verificacion' => EstadoVerificacion::VERIFICADO->value, 'verificado' => true, 'nit' => '1023456027'],
+            ['_id' => 'lr', 'nombre' => 'Importadora La Ramada', 'tipo' => 'mayorista', 'ciudad' => 'Santa Cruz', 'verificacion' => EstadoVerificacion::VERIFICADO->value, 'verificado' => true, 'nit' => '2034567018'],
+            ['_id' => 'mc', 'nombre' => 'Mayorista Central', 'tipo' => 'mayorista', 'ciudad' => 'Santa Cruz', 'verificacion' => EstadoVerificacion::PENDIENTE->value, 'verificado' => false],
+            ['_id' => 'dr', 'nombre' => 'Tienda Doña Rosa', 'tipo' => 'tienda', 'ciudad' => 'Santa Cruz', 'verificacion' => EstadoVerificacion::VERIFICADO->value, 'verificado' => true],
+            ['_id' => 'ec', 'nombre' => 'Minimarket El Cruce', 'tipo' => 'tienda', 'ciudad' => 'Santa Cruz', 'verificacion' => EstadoVerificacion::VERIFICADO->value, 'verificado' => true],
+            ['_id' => 'am', 'nombre' => 'Almacén Mery', 'tipo' => 'tienda', 'ciudad' => 'Santa Cruz', 'verificacion' => EstadoVerificacion::VERIFICADO->value, 'verificado' => true],
+            ['_id' => 'dl', 'nombre' => 'Despensa Lupita', 'tipo' => 'tienda', 'ciudad' => 'Santa Cruz', 'verificacion' => EstadoVerificacion::VERIFICADO->value, 'verificado' => true],
+            ['_id' => 'es', 'nombre' => 'Tienda La Esquina', 'tipo' => 'tienda', 'ciudad' => 'Santa Cruz', 'verificacion' => EstadoVerificacion::VERIFICADO->value, 'verificado' => true],
+            ['_id' => 'sj', 'nombre' => 'Tienda San Juan', 'tipo' => 'tienda', 'ciudad' => 'Santa Cruz', 'verificacion' => EstadoVerificacion::VERIFICADO->value, 'verificado' => true],
         ];
         foreach ($lista as $o) {
             $organizaciones->replaceOne(['_id' => $o['_id']], $o, ['upsert' => true]);
