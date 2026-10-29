@@ -176,3 +176,17 @@ it('un producto pausado que se queda sin stock sigue pausado', function () {
 
     expect($ajustado->stock)->toBe(0)->and($ajustado->estado)->toBe(EstadoProducto::PAUSADO);
 });
+
+it('activar a mano un producto sin mercadería lo deja SIN_STOCK, no activo con 0', function () {
+    $producto = $this->crear->ejecutar('lp', 'VD-4501', 'Vaso 450 ml', 'Desechables', '', 0, escalasDeShampoo());
+    $producto = $this->editar->ejecutar($producto->id, 'lp', estado: EstadoProducto::ACTIVO);
+
+    expect($producto->estado)->toBe(EstadoProducto::SIN_STOCK);
+});
+
+it('ajustar el stock lo guarda por la vía del stock, no con el guardado general', function () {
+    $producto = $this->crear->ejecutar('lp', 'HP-0401', 'Shampoo 400 ml', 'Higiene', '', 10, escalasDeShampoo());
+    $this->ajustar->ejecutar($producto->id, 'lp', 0);
+
+    expect($this->productos->stockFijado)->toBe([$producto->id]);
+});

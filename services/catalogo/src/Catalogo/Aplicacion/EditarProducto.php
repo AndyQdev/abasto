@@ -54,7 +54,10 @@ final readonly class EditarProducto
             $producto->cambiarEscalas($escalas);
         }
         if ($estado !== null) {
-            $producto->estado = $estado;
+            // Activar un producto sin mercadería lo deja visible pero sin stock, nunca "activo con 0"
+            $producto->estado = $estado === EstadoProducto::ACTIVO && $producto->stock === 0
+                ? EstadoProducto::SIN_STOCK
+                : $estado;
         }
         $this->productos->guardar($producto);
 

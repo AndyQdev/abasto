@@ -24,7 +24,7 @@ final readonly class AjustarStock
         }
 
         $producto->ajustarStock($nuevoStock);
-        $this->productos->guardar($producto);
+        $this->productos->fijarStock($producto);
 
         return $producto;
     }

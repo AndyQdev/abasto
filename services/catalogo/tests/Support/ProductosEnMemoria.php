@@ -38,9 +38,18 @@ final class ProductosEnMemoria implements ProductoRepositorio
         return array_values($this->todos);
     }
 
+    /** @var list<string> productos cuyo stock se fijó a mano, para comprobarlo en las pruebas */
+    public array $stockFijado = [];
+
     public function guardar(Producto $producto): void
     {
         $this->todos[$producto->id] = $producto;
+    }
+
+    public function fijarStock(Producto $producto): void
+    {
+        $this->todos[$producto->id] = $producto;
+        $this->stockFijado[] = $producto->id;
     }
 
     public function siguienteId(): string
