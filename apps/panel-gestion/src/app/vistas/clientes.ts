@@ -78,7 +78,7 @@ const ESTADOS_RELACION: Record<string, { texto: string; clase: string }> = {
       <div>
         <h1 class="titulo-pantalla">Clientes</h1>
         <p class="subtitulo">
-          Administra las tiendas que te compran. Solo ves las tiendas que aprobaste.
+          Aprueba con una lista de precios a las tiendas que quieren comprarte, o rechaza su solicitud.
         </p>
       </div>
       <div class="contadores">
