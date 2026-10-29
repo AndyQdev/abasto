@@ -106,6 +106,13 @@ jobs:
       mongo:
         image: mongo:8.0
         ports: ['27020:27017']
+        # Sin chequeo de salud GitHub da el servicio por listo apenas arranca y las pruebas llegan antes que mongod
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      # 127.0.0.1 y no localhost: en el runner localhost puede resolver a ::1, donde el puerto no está publicado
+      MONGODB_URI: mongodb://127.0.0.1:27020/?directConnection=true
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
