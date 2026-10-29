@@ -11,6 +11,8 @@ import bo.abasto.pedidos.dominio.ListaDeCompras;
 import bo.abasto.pedidos.dominio.MetodoPago;
 import bo.abasto.pedidos.dominio.Pedido;
 import bo.abasto.pedidos.dominio.Presentacion;
+import bo.abasto.pedidos.dominio.ErrorDeDominio;
+import bo.abasto.pedidos.dominio.Traccion;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.graphql.data.federation.EntityMapping;
@@ -58,6 +60,20 @@ class PedidoController {
     record LineaDeCompraVista(Referencia producto, int unidades, DineroVista venta, List<String> pedidos) {
         static LineaDeCompraVista de(ListaDeCompras.Linea l) {
             return new LineaDeCompraVista(new Referencia(l.productoId()), l.unidades(), DineroVista.de(l.venta()), l.pedidos());
+        }
+    }
+
+    record SemanaVista(String desde, int pedidos, DineroVista ventas) {}
+
+    record TiendaCompradoraVista(Referencia tienda, int pedidos, DineroVista ventas) {}
+
+    record TraccionVista(int pedidos, DineroVista ventas, DineroVista ticketPromedio, int tiendasActivas,
+                         int tiendasQueRepiten, List<SemanaVista> semanas, List<TiendaCompradoraVista> tiendas) {
+        static TraccionVista de(Traccion t) {
+            return new TraccionVista(t.pedidos(), DineroVista.de(t.ventas()), DineroVista.de(t.ticketPromedio()),
+                    t.tiendasActivas(), t.tiendasQueRepiten(),
+                    t.semanas().stream().map(s -> new SemanaVista(s.desde().toString(), s.pedidos(), DineroVista.de(s.ventas()))).toList(),
+                    t.tiendas().stream().map(x -> new TiendaCompradoraVista(new Referencia(x.tiendaId()), x.pedidos(), DineroVista.de(x.ventas()))).toList());
         }
     }
 
@@ -124,10 +140,25 @@ class PedidoController {
         return entregar.listaDeCompras(org(jwt)).stream().map(LineaDeCompraVista::de).toList();
     }
 
+    /** Solo el equipo de Abasto (rol admin): los números de la plataforma o de un vendedor. */
+    @QueryMapping
+    TraccionVista traccion(@Argument String mayoristaId, @Argument Integer semanas, @AuthenticationPrincipal Jwt jwt) {
+        if (!roles(jwt).contains("admin")) {
+            throw new ErrorDeDominio("SOLO_ADMIN", "La tracción es solo para el equipo de Abasto");
+        }
+        return TraccionVista.de(entregar.traccion(mayoristaId, semanas == null ? 8 : Math.max(1, Math.min(semanas, 26))));
+    }
+
     /** Federación: otro subgrafo (por ejemplo Cobros) pide un Pedido por su id. */
     @EntityMapping
     PedidoVista pedido(@Argument String id) {
         return consultar.porId(UUID.fromString(id)).map(PedidoVista::de).orElse(null);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<String> roles(Jwt jwt) {
+        var acceso = jwt.getClaimAsMap("realm_access");
+        return acceso == null ? List.of() : (List<String>) acceso.getOrDefault("roles", List.of());
     }
 
     private static String org(Jwt jwt) {

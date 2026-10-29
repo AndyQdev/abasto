@@ -14,7 +14,10 @@ import bo.abasto.pedidos.dominio.ListaDeCompras;
 import bo.abasto.pedidos.dominio.Mensaje;
 import bo.abasto.pedidos.dominio.Pedido;
 import bo.abasto.pedidos.dominio.SagaDeCompra;
+import bo.abasto.pedidos.dominio.Traccion;
 import java.time.Clock;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -85,6 +88,14 @@ public class PedidosServicio implements CrearPedido, DecidirPedido, ConsultarPed
     @Override
     public List<ListaDeCompras.Linea> listaDeCompras(String mayoristaId) {
         return ListaDeCompras.de(pedidos.deMayorista(mayoristaId, null));
+    }
+
+    @Override
+    public Traccion traccion(String mayoristaId, int semanas) {
+        var zona = ZoneId.of("America/La_Paz");
+        var hoy = LocalDate.now(reloj.withZone(zona));
+        var desde = hoy.minusWeeks(semanas).atStartOfDay(zona).toInstant();
+        return Traccion.de(pedidos.desde(desde, mayoristaId), hoy, semanas, zona);
     }
 
     @Override

@@ -70,6 +70,14 @@ class PersistenciaAdaptador implements PedidoRepositorio, SagaRepositorio, Outbo
     }
 
     @Override
+    public List<Pedido> desde(java.time.Instant desde, String mayoristaId) {
+        var filas = mayoristaId == null
+                ? pedidos.findByCreadoEnGreaterThanEqual(desde)
+                : pedidos.findByMayoristaIdAndCreadoEnGreaterThanEqual(mayoristaId, desde);
+        return filas.stream().map(PersistenciaAdaptador::aDominio).toList();
+    }
+
+    @Override
     public void guardar(Pedido pedido) {
         var e = pedidos.findById(pedido.id()).orElseGet(PedidoEntidad::new);
         e.id = pedido.id();

@@ -556,6 +556,12 @@ type Query
   (Abasto vende bajo pedido). Costo y proveedor de cada producto los pone Catálogo.
   """
   listaDeCompras: [LineaDeCompra!]! @join__field(graph: PEDIDOS)
+
+  """
+  Solo para el equipo de Abasto (rol admin): pedidos y ventas por semana, tiendas activas y las que repiten.
+  Con mayoristaId, solo los de ese vendedor (por ejemplo "abasto").
+  """
+  traccion(mayoristaId: ID, semanas: Int = 8): Traccion! @join__field(graph: PEDIDOS)
 }
 
 type RelacionComercial
@@ -565,6 +571,15 @@ type RelacionComercial
   mayorista: Mayorista!
   estado: EstadoRelacion!
   lista: ListaDePrecios
+}
+
+type SemanaDeVentas
+  @join__type(graph: PEDIDOS)
+{
+  """Lunes de la semana, aaaa-mm-dd"""
+  desde: String!
+  pedidos: Int!
+  ventas: Dinero!
 }
 
 """Directions for ordering a list of records."""
@@ -587,6 +602,35 @@ type Tienda
   id: ID!
   nombre: String! @join__field(graph: CATALOGO)
   ciudad: String! @join__field(graph: CATALOGO)
+}
+
+type TiendaCompradora
+  @join__type(graph: PEDIDOS)
+{
+  tienda: Tienda!
+  pedidos: Int!
+  ventas: Dinero!
+}
+
+"""
+Los números que muestran que vender en Abasto funciona. Solo cuentan los pedidos confirmados en adelante.
+"""
+type Traccion
+  @join__type(graph: PEDIDOS)
+{
+  pedidos: Int!
+  ventas: Dinero!
+  ticketPromedio: Dinero!
+
+  """Tiendas que compraron en los últimos 30 días"""
+  tiendasActivas: Int!
+
+  """Tiendas con dos pedidos o más en el período"""
+  tiendasQueRepiten: Int!
+  semanas: [SemanaDeVentas!]!
+
+  """De la que más compra a la que menos"""
+  tiendas: [TiendaCompradora!]!
 }
 
 """

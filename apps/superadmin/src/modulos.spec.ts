@@ -3,8 +3,9 @@ import { MODULOS } from './modulos';
 import { SERVICIOS } from './servicios';
 
 describe('Superadmin', () => {
-  it('tiene los nueve módulos de la maqueta salvo Inicio', () => {
+  it('empieza por Tracción y tiene los módulos de la maqueta salvo Inicio', () => {
     expect(MODULOS.map((m) => m.titulo)).toEqual([
+      'Tracción',
       'Sistema',
       'Auditoría',
       'Mayoristas',

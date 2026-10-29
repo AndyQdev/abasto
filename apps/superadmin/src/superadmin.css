@@ -92,3 +92,19 @@ main {
   max-width: 480px;
   margin: 4rem auto;
 }
+
+/* Tracción */
+.filtros-traccion { display: flex; gap: 0.75rem; }
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+.kpi { display: flex; flex-direction: column; gap: 0.25rem; }
+.kpi span { color: hsl(var(--texto-2)); font-weight: 600; }
+.kpi strong { font-family: var(--fuente-titulo); font-size: 1.875rem; line-height: 1.1; }
+.kpi small { color: hsl(var(--texto-3)); }
+.carta + .carta { margin-top: 1rem; }
+.kpis .carta + .carta { margin-top: 0; }
+.barras { display: flex; align-items: flex-end; gap: 0.75rem; height: 220px; padding-top: 1.5rem; }
+.barra-col { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 0.35rem; }
+.barra { width: 100%; max-width: 3.5rem; border-radius: 0.5rem 0.5rem 0 0; background: hsl(var(--primary)); }
+.barra-valor { font-size: 0.6875rem; color: hsl(var(--texto-2)); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.barra-etiqueta { font-size: 0.75rem; color: hsl(var(--texto-3)); }
+@media (max-width: 900px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
