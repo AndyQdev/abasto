@@ -46,7 +46,8 @@ test.describe('Mercado · red privada (cita 2)', () => {
     await expect(page.getByText('Todavía no eres cliente de La Ramada')).toBeVisible();
     await expect(page.getByText('Precio para clientes').first()).toBeVisible();
     await page.getByRole('button', { name: 'Pedir ser cliente' }).click();
-    await expect(page.getByText('Solicitud enviada · por confirmar')).toBeVisible();
+    // Con la suite en paralelo Catálogo puede tardar unos segundos en responder la mutación
+    await expect(page.getByText('Solicitud enviada · por confirmar')).toBeVisible({ timeout: 15_000 });
 
     // La Ramada la aprueba con la lista NUEVOS (la pantalla Clientes de Gestión es la tarjeta CU-04 de Jhoel)
     const token = await tokenDe(request, 'laramada@abasto.bo');
