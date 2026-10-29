@@ -52,6 +52,19 @@ input CargarProductoEntrada
   precioUnitarioCentavos: Int!
 }
 
+type CobroQr
+  @join__type(graph: COBROS)
+{
+  pedidoId: ID!
+  monto: Dinero!
+  estado: EstadoCobroQr!
+
+  """Lo que lleva el QR. En la demo es un texto simulado."""
+  codigo: String!
+  venceEn: String!
+  pagadoEn: String
+}
+
 input CrearPedidoEntrada
   @join__type(graph: PEDIDOS)
 {
@@ -124,6 +137,16 @@ input EscalaEntrada
   presentacion: Presentacion!
   unidades: Int!
   precioUnitarioCentavos: Int!
+}
+
+enum EstadoCobroQr
+  @join__type(graph: COBROS)
+{
+  PENDIENTE @join__enumValue(graph: COBROS)
+  PAGADO @join__enumValue(graph: COBROS)
+  VENCIDO @join__enumValue(graph: COBROS)
+  DEVUELTO @join__enumValue(graph: COBROS)
+  ANULADO @join__enumValue(graph: COBROS)
 }
 
 """El estado que el mayorista fija editando; el resto lo decide el stock."""
@@ -287,6 +310,12 @@ type Mutation
   autorizarCredito(entrada: AutorizarCreditoEntrada!): AutorizacionDeCredito! @join__field(graph: COBROS)
 
   """
+  Solo en desarrollo y en la demo (QR_DE_PRUEBA=si): simula que la tienda pagó el QR.
+  Con un banco real, el pago lo avisa el banco.
+  """
+  pagarQrDePrueba(pedidoId: ID!): CobroQr! @join__field(graph: COBROS)
+
+  """
   Paso 1 de la saga de compra. La clave la genera la app una sola vez:
   repetir la mutación con la misma clave devuelve el mismo pedido.
   """
@@ -342,24 +371,29 @@ enum OrderByRelationWithColumnAggregateFunction
   COUNT @join__enumValue(graph: CATALOGO)
 }
 
+"""El pedido es de Pedidos; Cobros le agrega su cobro (federación)."""
 type Pedido
+  @join__type(graph: COBROS, key: "id")
   @join__type(graph: PEDIDOS, key: "id")
 {
   id: ID!
 
+  """Null si se paga a crédito o si todavía no se generó el QR."""
+  cobro: CobroQr @join__field(graph: COBROS)
+
   """Código para las personas, por ejemplo A-1042"""
-  codigo: String!
-  clave: ID!
-  tienda: Tienda!
-  mayorista: Mayorista!
-  lineas: [LineaDePedido!]!
-  estado: EstadoPedido!
-  metodoPago: MetodoPago!
+  codigo: String! @join__field(graph: PEDIDOS)
+  clave: ID! @join__field(graph: PEDIDOS)
+  tienda: Tienda! @join__field(graph: PEDIDOS)
+  mayorista: Mayorista! @join__field(graph: PEDIDOS)
+  lineas: [LineaDePedido!]! @join__field(graph: PEDIDOS)
+  estado: EstadoPedido! @join__field(graph: PEDIDOS)
+  metodoPago: MetodoPago! @join__field(graph: PEDIDOS)
 
   """Cero hasta que Catálogo reserva y fija los precios"""
-  total: Dinero!
-  creadoEn: String!
-  motivoRechazo: String
+  total: Dinero! @join__field(graph: PEDIDOS)
+  creadoEn: String! @join__field(graph: PEDIDOS)
+  motivoRechazo: String @join__field(graph: PEDIDOS)
 }
 
 enum Presentacion
@@ -413,6 +447,11 @@ type Query
 
   """Crédito que un mayorista le dio a una tienda. Null si no tiene."""
   lineaDeCredito(tiendaId: ID!, mayoristaId: ID!): LineaDeCredito @join__field(graph: COBROS)
+
+  """
+  El cobro por QR de un pedido. Solo lo ven la tienda que compra y el mayorista que vende.
+  """
+  cobroDePedido(pedidoId: ID!): CobroQr @join__field(graph: COBROS)
 
   """Lo que compró la empresa de la sesión (Mercado)."""
   misCompras(estado: EstadoPedido): [Pedido!]! @join__field(graph: PEDIDOS)

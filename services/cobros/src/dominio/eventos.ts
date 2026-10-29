@@ -2,18 +2,15 @@
  * Eventos que publica Cobros. El nombre y la forma de cada uno están en contracts/asyncapi.yaml:
  * cambiarlos es cambiar un contrato.
  */
+type Referencia = {
+  pedidoId: string;
+  tiendaId: string;
+  mayoristaId: string;
+};
+
 export type EventoDeCobros =
-  | {
-      tipo: 'cobro.credito_autorizado';
-      pedidoId: string;
-      tiendaId: string;
-      mayoristaId: string;
-      centavos: number;
-    }
-  | {
-      tipo: 'cobro.credito_liberado';
-      pedidoId: string;
-      tiendaId: string;
-      mayoristaId: string;
-      centavos: number;
-    };
+  | (Referencia & { tipo: 'cobro.credito_autorizado'; centavos: number })
+  | (Referencia & { tipo: 'cobro.credito_liberado'; centavos: number })
+  | (Referencia & { tipo: 'cobro.qr_pagado'; centavos: number })
+  | (Referencia & { tipo: 'cobro.qr_devuelto'; centavos: number })
+  | (Referencia & { tipo: 'cobro.rechazado'; motivo: string });

@@ -170,9 +170,14 @@ services:
     environment:
       DATABASE_URL: postgresql://cobros:cobros@postgres:5432/cobros
       KEYCLOAK_JWKS_URL: http://keycloak:8080/realms/abasto/protocol/openid-connect/certs
+      RABBITMQ_URL: amqp://abasto:abasto@rabbitmq:5672
+      # En la demo la tienda «paga» el QR con un botón; con un banco real se apaga
+      QR_DE_PRUEBA: ${QR_DE_PRUEBA:-si}
+      QR_VIGENCIA_MINUTOS: ${QR_VIGENCIA_MINUTOS:-30}
     ports: ["8083:8083"]
     depends_on:
       postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8083/salud"]
       <<: *salud

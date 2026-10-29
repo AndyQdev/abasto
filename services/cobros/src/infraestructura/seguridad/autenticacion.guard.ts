@@ -57,6 +57,8 @@ export class AutenticacionGuard implements CanActivate {
         ? GqlExecutionContext.create(contexto).getContext().req
         : contexto.switchToHttp().getRequest();
 
+    // Los campos que llegan por federación (Pedido.cobro) pasan por aquí una vez por campo: el token se verifica una sola vez
+    if (peticion?.usuario) return true;
     const cabecera: string | undefined = peticion?.headers?.authorization;
     if (!cabecera?.startsWith('Bearer ')) throw new UnauthorizedException('Falta la sesión');
     try {
