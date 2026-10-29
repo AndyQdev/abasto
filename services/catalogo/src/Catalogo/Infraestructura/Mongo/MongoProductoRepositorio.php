@@ -73,6 +73,22 @@ final readonly class MongoProductoRepositorio implements ProductoRepositorio
         return (string) Str::ulid();
     }
 
+    public function descontarStock(string $id, int $unidades): bool
+    {
+        // Una sola actualización condicional: nadie más puede colarse entre la lectura y la escritura
+        $resultado = $this->coleccion->updateOne(
+            ['_id' => $id, 'stock' => ['$gte' => $unidades]],
+            ['$inc' => ['stock' => -$unidades]],
+        );
+
+        return $resultado->getModifiedCount() === 1;
+    }
+
+    public function devolverStock(string $id, int $unidades): void
+    {
+        $this->coleccion->updateOne(['_id' => $id], ['$inc' => ['stock' => $unidades]]);
+    }
+
     /**
 
      * @param array<string, mixed> $filtro

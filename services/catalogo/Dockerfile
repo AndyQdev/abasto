@@ -14,7 +14,7 @@ RUN apt-get update \
     && tar -xzf /tmp/mongodb.tgz -C /tmp \
     && cd "/tmp/mongodb-${MONGODB_EXT}" && phpize && ./configure --with-mongodb-ssl=openssl && make -j"$(nproc)" && make install \
     && docker-php-ext-enable mongodb \
-    && install-php-extensions zip bcmath pcntl intl \
+    && install-php-extensions zip bcmath pcntl intl sockets \
     && cd / && rm -rf /tmp/mongodb* /var/lib/apt/lists/*
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 ENV COMPOSER_ALLOW_SUPERUSER=1

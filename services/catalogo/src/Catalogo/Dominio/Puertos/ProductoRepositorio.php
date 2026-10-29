@@ -24,4 +24,9 @@ interface ProductoRepositorio
     public function guardar(Producto $producto): void;
 
     public function siguienteId(): string;
+
+    /** Descuenta el stock solo si alcanza, en una sola operación atómica. Devuelve false si no alcanzaba. */
+    public function descontarStock(string $id, int $unidades): bool;
+
+    public function devolverStock(string $id, int $unidades): void;
 }
