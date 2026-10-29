@@ -43,7 +43,7 @@ test.describe('Mercado · red privada (cita 2)', () => {
 
     // Sin relación: el catálogo se ve, el precio no
     await expect(page.getByText('Todavía no eres cliente de La Ramada')).toBeVisible();
-    await expect(page.getByText('Precio para clientes')).toBeVisible();
+    await expect(page.getByText('Precio para clientes').first()).toBeVisible();
     await page.getByRole('button', { name: 'Pedir ser cliente' }).click();
     await expect(page.getByText('Solicitud enviada · por confirmar')).toBeVisible();
 
