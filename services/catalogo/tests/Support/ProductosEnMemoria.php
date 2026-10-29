@@ -17,6 +17,17 @@ final class ProductosEnMemoria implements ProductoRepositorio
         return $this->todos[$id] ?? null;
     }
 
+    public function porCodigo(string $mayoristaId, string $codigo): ?Producto
+    {
+        foreach ($this->todos as $producto) {
+            if ($producto->mayoristaId === $mayoristaId && $producto->codigo === $codigo) {
+                return $producto;
+            }
+        }
+
+        return null;
+    }
+
     public function deMayorista(string $mayoristaId, ?string $busqueda = null): array
     {
         return array_values($this->todos);
@@ -27,9 +38,18 @@ final class ProductosEnMemoria implements ProductoRepositorio
         return array_values($this->todos);
     }
 
+    /** @var list<string> productos cuyo stock se fijó a mano, para comprobarlo en las pruebas */
+    public array $stockFijado = [];
+
     public function guardar(Producto $producto): void
     {
         $this->todos[$producto->id] = $producto;
+    }
+
+    public function fijarStock(Producto $producto): void
+    {
+        $this->todos[$producto->id] = $producto;
+        $this->stockFijado[] = $producto->id;
     }
 
     public function siguienteId(): string
