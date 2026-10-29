@@ -106,10 +106,6 @@ jobs:
       mongo:
         image: mongo:8.0
         ports: ['27020:27017']
-        # Sin chequeo de salud GitHub da el servicio por listo apenas arranca y las pruebas llegan antes que mongod
-        options: >-
-          --health-cmd "mongosh --quiet --eval 'db.runCommand({ ping: 1 })'"
-          --health-interval 5s --health-timeout 5s --health-retries 12
     env:
       # 127.0.0.1 y no localhost: en el runner localhost puede resolver a ::1, donde el puerto no está publicado
       MONGODB_URI: mongodb://127.0.0.1:27020/?directConnection=true
@@ -119,6 +115,9 @@ jobs:
         with: { php-version: '8.4', extensions: mongodb, tools: composer }
       - run: composer install --no-interaction --prefer-dist
       - run: cp .env.example .env && php artisan key:generate
+      # GitHub da el servicio por listo apenas arranca: se espera a que mongod acepte conexiones
+      - name: Esperar a MongoDB
+        run: for i in $(seq 1 30); do (echo > /dev/tcp/127.0.0.1/27020) 2>/dev/null && exit 0; sleep 2; done; exit 1
       - run: composer test
       - run: vendor/bin/deptrac analyse --no-progress
       - run: vendor/bin/phpstan analyse --no-progress
@@ -178,6 +177,10 @@ jobs:
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: pnpm }
+      # Construir las imágenes de los 12 contenedores llena el disco del runner («No space left on device»):
+      # se borran herramientas preinstaladas que no se usan (~25 GB)
+      - name: Liberar espacio en el runner
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL && docker system prune -af && df -h /
       - run: pnpm install --frozen-lockfile
       - run: pnpm todo
       - run: pnpm --filter @abasto/e2e navegadores --with-deps
