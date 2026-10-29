@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { expect, test, type APIRequestContext } from '@playwright/test';
+import { entrarComo } from './sesion';
 
 /**
  * Modelo de lanzamiento (28/10/2026): Abasto vende por su cuenta como vendedor de la casa.
@@ -138,4 +139,28 @@ test.describe('Abasto vende (vendedor de la casa)', () => {
     expect((await avanzar()).avanzarEntrega.estado).toBe('ENTREGADO');
     await expect(avanzar()).rejects.toThrow(/solo se avanza un pedido confirmado/);
   });
+});
+
+test('Panel de Abasto: la lista de compras por puesto y preparar un pedido confirmado', async ({ page, request }) => {
+  const tienda = await grafoDe(request, 'donarosa@abasto.bo');
+  const abasto = await grafoDe(request, 'ventas@abasto.bo');
+  const { crearPedido } = await tienda<{ crearPedido: { id: string; codigo: string } }>(
+    `mutation($e: CrearPedidoEntrada!) { crearPedido(entrada: $e) { id codigo } }`,
+    { e: { clave: randomUUID(), mayoristaId: 'abasto', metodoPago: 'CONTRA_ENTREGA', lineas: [{ productoId: 'AB-007', presentacion: 'DOCENA', cantidad: 1 }] } },
+  );
+  await expect
+    .poll(async () => (await abasto<{ pedido: { estado: string } }>(`query($id: ID!) { pedido(id: $id) { estado } }`, { id: crearPedido.id })).pedido.estado, { timeout: 20_000 })
+    .toBe('POR_CONFIRMAR');
+  await abasto(`mutation($id: ID!) { confirmarPedido(id: $id) { estado } }`, { id: crearPedido.id });
+
+  await page.goto('http://localhost:5170/compras');
+  await entrarComo(page, 'ventas@abasto.bo');
+  await expect(page.getByText('vas a gastar')).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Mercado Mutualista/ })).toBeVisible();
+  await expect(page.getByText('Sal yodada 1 kg')).toBeVisible();
+
+  await page.getByRole('link', { name: 'Pedidos' }).click();
+  const fila = page.getByRole('row').filter({ hasText: crearPedido.codigo });
+  await fila.getByRole('button', { name: 'Preparar' }).click();
+  await expect(fila.getByText('En preparación')).toBeVisible();
 });
