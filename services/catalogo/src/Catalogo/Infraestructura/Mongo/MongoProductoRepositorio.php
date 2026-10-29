@@ -78,6 +78,7 @@ final readonly class MongoProductoRepositorio implements ProductoRepositorio
                 'entrega_horas' => $producto->entregaHoras,
                 'costo_unitario_centavos' => $producto->costoUnitarioCentavos,
                 'proveedor' => $producto->proveedor,
+                'foto' => $producto->foto,
             ],
             '$setOnInsert' => ['stock' => $producto->stock],
         ], ['upsert' => true]);
@@ -164,6 +165,7 @@ final readonly class MongoProductoRepositorio implements ProductoRepositorio
             entregaHoras: isset($doc['entrega_horas']) ? (int) $doc['entrega_horas'] : null,
             costoUnitarioCentavos: isset($doc['costo_unitario_centavos']) ? (int) $doc['costo_unitario_centavos'] : null,
             proveedor: isset($doc['proveedor']) ? (string) $doc['proveedor'] : null,
+            foto: isset($doc['foto']) ? (string) $doc['foto'] : null,
         );
     }
 }

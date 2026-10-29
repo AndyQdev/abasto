@@ -373,6 +373,11 @@ type Mutation
   ajustarStock(id: ID!, stock: Int!): Producto! @join__field(graph: CATALOGO)
 
   """
+  El mayorista le pone o le cambia la foto a un producto suyo. imagen: JPG, PNG o WebP en base64 (o data URL), hasta 1,4 MB.
+  """
+  cambiarFotoDeProducto(id: ID!, imagen: String!): Producto! @join__field(graph: CATALOGO)
+
+  """
   Paso 3 de la saga de compra. Lo usa el orquestador de Pedidos; repetirlo con el mismo pedido no descuenta dos veces.
   """
   autorizarCredito(entrada: AutorizarCreditoEntrada!): AutorizacionDeCredito! @join__field(graph: COBROS)
@@ -512,6 +517,9 @@ type Producto
 
   """Dónde lo compra. Solo lo ve el mayorista"""
   proveedor: String @join__field(graph: CATALOGO)
+
+  """URL pública de la foto del producto. Null si todavía no tiene"""
+  foto: String @join__field(graph: CATALOGO)
 }
 
 type Query

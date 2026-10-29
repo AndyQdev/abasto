@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use Catalogo\Dominio\Puertos\AlmacenDeFotos;
 use Catalogo\Dominio\Puertos\OrganizacionRepositorio;
 use Catalogo\Dominio\Puertos\ProductoRepositorio;
 use Catalogo\Dominio\Puertos\PublicadorDeEventos;
 use Catalogo\Dominio\Puertos\RelacionRepositorio;
 use Catalogo\Dominio\Puertos\ReservaRepositorio;
+use Catalogo\Infraestructura\Fotos\AlmacenDeFotosEnDisco;
 use Catalogo\Infraestructura\Mensajeria\RabbitPublicador;
 use Catalogo\Infraestructura\Mongo\MongoOrganizacionRepositorio;
 use Catalogo\Infraestructura\Mongo\MongoProductoRepositorio;
@@ -42,6 +44,7 @@ final class CatalogoServiceProvider extends ServiceProvider
             $coleccion('organizaciones'),
         ));
         $this->app->singleton(ReservaRepositorio::class, fn () => new MongoReservaRepositorio($coleccion('reservas')));
+        $this->app->singleton(AlmacenDeFotos::class, fn () => new AlmacenDeFotosEnDisco((string) config('catalogo.fotos_carpeta')));
         $this->app->singleton(PublicadorDeEventos::class, fn () => new RabbitPublicador(
             static fn () => (new AMQPStreamConnection(
                 (string) config('rabbitmq.host'),

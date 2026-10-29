@@ -58,6 +58,7 @@ final class Vistas
             // El costo y el proveedor son del mayorista: nadie más los ve
             'costoUnitario' => $vista->esDelDueno && $p->costoUnitarioCentavos !== null ? self::dinero($p->costoUnitarioCentavos) : null,
             'proveedor' => $vista->esDelDueno ? $p->proveedor : null,
+            'foto' => $p->foto === null ? null : rtrim((string) config('catalogo.fotos_url'), '/').'/'.$p->foto,
         ];
     }
 

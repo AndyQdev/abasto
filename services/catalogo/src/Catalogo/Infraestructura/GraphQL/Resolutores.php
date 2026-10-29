@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Catalogo\Infraestructura\GraphQL;
 
 use Catalogo\Aplicacion\AjustarStock;
+use Catalogo\Aplicacion\CambiarFotoDeProducto;
 use Catalogo\Aplicacion\CargarProducto;
 use Catalogo\Aplicacion\ConsultarCatalogo;
 use Catalogo\Aplicacion\CrearProducto;
@@ -36,6 +37,7 @@ final readonly class Resolutores
         private CrearProducto $crear,
         private EditarProducto $editar,
         private AjustarStock $ajustar,
+        private CambiarFotoDeProducto $cambiarFoto,
         private OrganizacionRepositorio $organizaciones,
         private RelacionRepositorio $relaciones,
     ) {
@@ -258,6 +260,22 @@ final readonly class Resolutores
 
         return $this->conErrores(function () use ($usuario, $args) {
             $producto = $this->ajustar->ejecutar((string) $args['id'], $usuario->orgId, (int) $args['stock']);
+
+            return $this->vistaDe($producto->id, $usuario->orgId);
+        });
+    }
+
+    /**
+     * @param array<string, mixed> $args
+     *
+     * @return array<string, mixed>
+     */
+    public function cambiarFotoDeProducto(mixed $_, array $args): array
+    {
+        $usuario = Usuario::actual()->exigirRol('mayorista');
+
+        return $this->conErrores(function () use ($usuario, $args) {
+            $producto = $this->cambiarFoto->ejecutar((string) $args['id'], $usuario->orgId, (string) $args['imagen']);
 
             return $this->vistaDe($producto->id, $usuario->orgId);
         });

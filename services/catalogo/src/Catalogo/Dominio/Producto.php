@@ -28,6 +28,8 @@ final class Producto
         public ?int $costoUnitarioCentavos = null,
         /** Dónde lo compra (puesto, mercado o distribuidora). Solo lo ve él */
         public ?string $proveedor = null,
+        /** Archivo de la foto en el almacén de fotos (no la URL: la arma la infraestructura). Null si no tiene */
+        public ?string $foto = null,
     ) {
         self::validarEscalas($escalas);
         self::validarCosto($costoUnitarioCentavos);
@@ -52,6 +54,14 @@ final class Producto
         if ($this->bajoPedido() && $this->estado === EstadoProducto::SIN_STOCK) {
             $this->estado = EstadoProducto::ACTIVO;
         }
+    }
+
+    public function cambiarFoto(string $archivo): void
+    {
+        if (trim($archivo) === '') {
+            throw new ErrorDeDominio('FOTO_INVALIDA', 'La foto no tiene archivo');
+        }
+        $this->foto = $archivo;
     }
 
     /** @return list<EscalaDePrecio> ordenadas de menor a mayor volumen */

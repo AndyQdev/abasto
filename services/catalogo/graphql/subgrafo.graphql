@@ -97,6 +97,9 @@ type Producto @key(fields: "id") {
 
   "Dónde lo compra. Solo lo ve el mayorista"
   proveedor: String
+
+  "URL pública de la foto del producto. Null si todavía no tiene"
+  foto: String
 }
 
 "STOCK: lo tiene en depósito y reservar descuenta stock. BAJO_PEDIDO: se compra cuando entra el pedido."
@@ -260,5 +263,8 @@ type Mutation {
 
   "El mayorista corrige el stock de un producto suyo; el estado se deriva del stock."
   ajustarStock(id: ID!, stock: Int!): Producto!
+
+  "El mayorista le pone o le cambia la foto a un producto suyo. imagen: JPG, PNG o WebP en base64 (o data URL), hasta 1,4 MB."
+  cambiarFotoDeProducto(id: ID!, imagen: String!): Producto!
 }
 
