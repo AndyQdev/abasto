@@ -24,7 +24,7 @@ deptrac:
     - name: Frameworks
       collectors:
         - type: classNameRegex
-          value: '#^(Illuminate|Laravel|Nuwave|MongoDB|GraphQL|Firebase|Symfony)#'
+          value: '#^(Illuminate|Laravel|Nuwave|MongoDB|GraphQL|Firebase|Symfony|PhpAmqpLib)#'
   ruleset:
     Dominio: ~
     Aplicacion:

@@ -1,19 +1,23 @@
 # Jhoel · estado
 
-Actualizado: 21/10/2026 · rama main
+Actualizado: 28/10/2026 · rama `jhoel/reservar-stock`
 
 ## Estoy en
-Recién clono el repo. Primero: `pnpm verificar`, `pnpm install`, `pnpm todo` y `pnpm e2e` en verde en mi máquina.
+Catálogo en la saga (tarjeta 8): reservar y liberar stock. Código listo y probado; falta commit, PR y confirmar el e2e con datos de demo frescos.
 
 ## Terminé
-- (Andrés dejó la base de mis carpetas funcionando y con pruebas: Catálogo, Asistente, ML, Shell, Gestión, Inteligencia y Campo.)
+- Catálogo consume `catalogo.reservar_stock` y `catalogo.liberar_stock` (cola `catalogo.comandos`) y publica `stock.reservado` (con `precioUnitarioCentavos` por línea, ya con la lista de la tienda), `stock.rechazado` y `stock.liberado`.
+- Reserva atómica por línea en Mongo (`stock >= cantidad` con `$inc`) y compensación si falla una línea; idempotente por pedido (colección `reservas`); mensajes con id determinista.
+- 31 pruebas Pest nuevas/unitarias, PHPStan y Deptrac en verde; probado contra RabbitMQ real.
 
 ## Cambié en contratos
-- Nada todavía.
+- Nada. Se respeta `contracts/asyncapi.yaml` tal cual.
 
 ## Necesito del otro
-- Nada todavía.
+- `docker-compose.yml` (servicio `catalogo`): arranca también `php artisan catalogo:escuchar` y recibe `RABBITMQ_HOST/PUERTO`. Dockerfile de Catálogo ahora instala `sockets` (lo pide php-amqplib).
+- Acordar `relacion.aprobada` y `catalogo.reingresar_stock` (devoluciones); todavía no están en el contrato.
+- Los datos de demo de Pedidos vencen con el tiempo: tras días parado, `pnpm borrar-datos` + `pnpm todo` para que el e2e vuelva a ver «Despensa Lupita» por confirmar.
 
 ## Sigue
-- Catálogo: reservar y liberar stock para la saga (lo pide Andrés en su archivo).
-- Clientes en Gestión: solicitudes, aprobar con lista de precios y límite de crédito (F1).
+- Semilla de 40 productos y verificación de organizaciones (OpenCode, ramas `jhoel/semilla-catalogo` y `jhoel/verificacion-catalogo`).
+- Gestión: Clientes y Productos.
