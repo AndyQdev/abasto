@@ -32,6 +32,9 @@ const ESTADO_POR_EVENTO: Record<string, string> = {
   'pedido.por_confirmar': 'POR_CONFIRMAR',
   'pedido.confirmado': 'CONFIRMADO',
   'pedido.rechazado': 'RECHAZADO',
+  'pedido.en_preparacion': 'EN_PREPARACION',
+  'pedido.despachado': 'DESPACHADO',
+  'pedido.entregado': 'ENTREGADO',
 };
 
 /** Ids de tienda cuyos nombres necesita la proyección de este evento. */
@@ -46,6 +49,9 @@ export function proyectar(evento: Evento, tiendas: NombresDeTiendas = {}): Sente
     case 'pedido.creado':
     case 'pedido.por_confirmar':
     case 'pedido.rechazado':
+    case 'pedido.en_preparacion':
+    case 'pedido.despachado':
+    case 'pedido.entregado':
       return [estadoDelPedido(evento, tiendas)];
     case 'pedido.confirmado': {
       const fecha = fechaDe(evento);

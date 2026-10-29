@@ -10,7 +10,7 @@ const evento = (tipo: string, datos: Record<string, unknown>): Evento => ({
 });
 
 // Lo que publica Pedidos en cada pedido.* (SagaDeCompra.datosDe): sin nombre de tienda ni vencimiento
-const pedido = (metodoPago: 'qr' | 'credito', extra: Record<string, unknown> = {}) => ({
+const pedido = (metodoPago: 'qr' | 'credito' | 'contra_entrega', extra: Record<string, unknown> = {}) => ({
   pedidoId: '7b0d4f3e-0001-4000-8000-000000001051',
   codigo: 'A-1051',
   tiendaId: 'am',
@@ -82,6 +82,19 @@ describe('Proyector de reportes', () => {
     const [s] = proyectar(evento('producto.stock_cambiado', { productoId: 'HP-0400', nombre: 'Shampoo 400 ml', stock: 216 }));
 
     expect(s.parametros).toEqual(['lp', 'HP-0400', 'Shampoo 400 ml', 216]);
+  });
+
+  it.each([
+    ['pedido.en_preparacion', 'EN_PREPARACION'],
+    ['pedido.despachado', 'DESPACHADO'],
+    ['pedido.entregado', 'ENTREGADO'],
+  ])('%s avanza la entrega del pedido sin sumar otra venta', (tipo, estado) => {
+    const sentencias = proyectar(evento(tipo, pedido('contra_entrega')), tiendas);
+
+    expect(sentencias).toHaveLength(1);
+    expect(sentencias[0].sql).toContain('DO UPDATE SET estado');
+    expect(sentencias[0].parametros[5]).toBe('contra_entrega');
+    expect(sentencias[0].parametros[7]).toBe(estado);
   });
 
   it('pide nombres solo para los eventos de pedidos', () => {

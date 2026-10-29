@@ -31,9 +31,10 @@ export const ESQUEMA_REPORTES = {
       codigo: 'text, por ejemplo A-1042',
       tienda_id: 'text',
       tienda_nombre: 'text, por ejemplo Despensa Lupita',
-      metodo_pago: "text: 'qr' o 'credito'",
+      metodo_pago: "text: 'qr', 'credito' o 'contra_entrega'",
       total_centavos: 'bigint: total del pedido en centavos',
-      estado: "text: 'PENDIENTE', 'POR_CONFIRMAR', 'CONFIRMADO' o 'RECHAZADO'",
+      estado:
+        "text: 'PENDIENTE', 'POR_CONFIRMAR', 'CONFIRMADO', 'RECHAZADO', 'EN_PREPARACION', 'DESPACHADO' o 'ENTREGADO'",
       motivo_rechazo: 'text: por qué se rechazó (null si no se rechazó)',
       creado_en: 'timestamptz: cuándo lo hizo la tienda',
       actualizado_en: 'timestamptz: último cambio de estado',
