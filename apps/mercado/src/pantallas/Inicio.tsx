@@ -1,126 +1,144 @@
-import { useEffect, useState } from 'react';
-import type { ItemDeCarrito, Presentacion } from '../carrito';
+import { comprables, nombreCorto, ordenarMayoristas, precioDesde, rubros, type Producto } from '../catalogo';
 import { bs } from '../carrito';
-import { graphql, guardado } from '../servicios';
-
-export interface Producto {
-  id: string;
-  nombre: string;
-  rubro: string;
-  precioVisible: boolean;
-  mayorista: { id: string; nombre: string; verificado: boolean; relacion: 'NINGUNA' | 'SOLICITADA' | 'APROBADA' | 'RECHAZADA' };
-  escalas: { presentacion: Presentacion; cantidad: number; precioUnitario: { centavos: number; texto: string } | null }[];
-}
-
-// Red privada: el precio llega solo si el mayorista aprobó a esta tienda como cliente
-const PRODUCTOS = `
-  query Productos($busqueda: String) {
-    productos(busqueda: $busqueda) {
-      id nombre rubro precioVisible
-      mayorista { id nombre verificado relacion }
-      escalas { presentacion cantidad precioUnitario { centavos texto } }
-    }
-  }`;
+import { BotonAgregar, Foto, Iniciales, InsigniaRelacion, SinPrecio, type Navegar } from '../componentes';
+import { Icono } from '../Icono';
+import type { Catalogo } from '../useCatalogo';
 
 interface Props {
-  enLinea: boolean;
-  alAgregar: (item: ItemDeCarrito) => void;
+  catalogo: Catalogo;
+  ir: Navegar;
 }
 
-export function Inicio({ enLinea, alAgregar }: Props) {
-  const [busqueda, setBusqueda] = useState('');
-  const [productos, setProductos] = useState<Producto[]>(() => guardado.leer<Producto[]>('productos') ?? []);
-  const [error, setError] = useState<string | null>(null);
-  const [solicitados, setSolicitados] = useState<Set<string>>(new Set());
-
-  async function cargar(texto = busqueda) {
-    if (!enLinea) return; // sin señal se muestra lo guardado
-    try {
-      const datos = await graphql<{ productos: Producto[] }>(PRODUCTOS, { busqueda: texto || null });
-      setProductos(datos.productos);
-      if (!texto) guardado.escribir('productos', datos.productos);
-      setError(null);
-    } catch (e) {
-      setError((e as Error).message);
-    }
-  }
-
-  useEffect(() => {
-    void cargar('');
-  }, [enLinea]);
-
-  async function pedirSerCliente(mayoristaId: string) {
-    await graphql(`mutation($id: ID!) { pedirSerCliente(mayoristaId: $id) { estado } }`, { id: mayoristaId });
-    setSolicitados((s) => new Set(s).add(mayoristaId));
-  }
+/** Inicio según la maqueta: buscador, rubros, productos de mis mayoristas, mayoristas y ofertas por caja. */
+export function Inicio({ catalogo, ir }: Props) {
+  const productos = comprables(catalogo.productos);
+  // Primero lo que la tienda puede comprar ya (mayoristas que la aprobaron)
+  const destacados = [...productos].sort((a, b) => Number(b.precioVisible) - Number(a.precioVisible)).slice(0, 8);
+  const ofertas = productos.filter((p) => p.precioVisible && p.escalas.some((e) => e.presentacion === 'CAJA')).slice(0, 4);
+  const mayoristas = ordenarMayoristas(catalogo.mayoristas);
+  const cuantos = (id: string) => productos.filter((p) => p.mayorista.id === id).length;
 
   return (
-    <section className="pantalla">
-      <form
-        className="busqueda"
-        onSubmit={(e) => {
-          e.preventDefault();
-          void cargar();
-        }}
-      >
-        <input
-          className="entrada buscador"
-          placeholder="Buscar productos o mayoristas…"
-          value={busqueda}
-          onChange={(e) => setBusqueda(e.target.value)}
-        />
-      </form>
+    <div className="pantalla inicio">
+      <button type="button" className="buscador-falso" onClick={() => ir.buscar()}>
+        <Icono nombre="buscar" />
+        <span>Buscar productos o mayoristas...</span>
+      </button>
 
-      <h2 className="titulo-seccion">Precios de mayoreo para tu tienda</h2>
-      {error && <p className="falla">{error}</p>}
-      {!productos.length && !error && <p className="vacio">Todavía no hay productos para mostrar.</p>}
+      <section className="portada">
+        <div className="portada-cajas" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </div>
+        <h2 className="tit">Precios de mayoreo para tu tienda</h2>
+        <p>Compra directo de los mayoristas que te aprobaron como cliente</p>
+        <button type="button" onClick={() => ir.buscar()}>
+          Ver el catálogo <Icono nombre="seguir" tamano={16} />
+        </button>
+      </section>
 
-      <div className="productos">
-        {productos.map((p) => {
-          const caja = p.escalas.find((e) => e.presentacion === 'CAJA') ?? p.escalas[p.escalas.length - 1];
-          const solicitado = solicitados.has(p.mayorista.id) || p.mayorista.relacion === 'SOLICITADA';
-          return (
-            <article key={p.id} className="carta producto">
-              <div className="foto" aria-hidden="true" />
-              <strong>{p.nombre}</strong>
-              <span className="gris">
-                {p.mayorista.nombre}
-                {p.mayorista.verificado && ' · Verificado'}
-              </span>
-              {p.precioVisible && caja?.precioUnitario ? (
-                <>
-                  <span className="precio">{caja.precioUnitario.texto}</span>
-                  <span className="unitario">c/u por {caja.presentacion.toLowerCase()} ({caja.cantidad} u.)</span>
-                  <button
-                    className="boton-primario"
-                    onClick={() =>
-                      alAgregar({
-                        productoId: p.id,
-                        nombre: p.nombre,
-                        mayoristaId: p.mayorista.id,
-                        mayoristaNombre: p.mayorista.nombre,
-                        presentacion: caja.presentacion,
-                        cantidad: 1,
-                        unidadesPorPresentacion: caja.cantidad,
-                        precioUnitarioCentavos: caja.precioUnitario?.centavos ?? null,
-                      })
-                    }
-                  >
-                    Agregar · {bs((caja.precioUnitario?.centavos ?? 0) * caja.cantidad)}
-                  </button>
-                </>
-              ) : (
-                <>
-                  <span className="sin-precio">Pide ser cliente para ver precios</span>
-                  <button className="boton-secundario" disabled={solicitado || !enLinea} onClick={() => void pedirSerCliente(p.mayorista.id)}>
-                    {solicitado ? 'Solicitud enviada · por confirmar' : 'Pedir ser cliente'}
-                  </button>
-                </>
-              )}
-            </article>
-          );
-        })}
+      {catalogo.error && <p className="falla">{catalogo.error}</p>}
+
+      <div role="group" aria-label="Categorías" className="scroll-x">
+        {rubros(catalogo.productos).map((r) => (
+          <button key={r} type="button" className="chip" onClick={() => ir.buscar({ rubro: r })}>
+            {r}
+          </button>
+        ))}
       </div>
-    </section>
+
+      <section className="seccion">
+        <div className="seccion-cabeza">
+          <h2 className="tit t2">Productos destacados</h2>
+          <button type="button" className="enlace" onClick={() => ir.buscar()}>
+            Ver todos
+          </button>
+        </div>
+        {!destacados.length && <p className="vacio">{catalogo.cargando ? 'Cargando el catálogo…' : 'Todavía no hay productos para mostrar.'}</p>}
+        <div className="scroll-x">
+          {destacados.map((p) => (
+            <Destacado key={p.id} producto={p} ir={ir} />
+          ))}
+        </div>
+      </section>
+
+      <section className="seccion">
+        <div className="seccion-cabeza">
+          <h2 className="tit t2">Mayoristas</h2>
+          <button type="button" className="enlace" onClick={() => ir.buscar({ modo: 'mayoristas' })}>
+            Ver todos
+          </button>
+        </div>
+        <div className="scroll-x">
+          {mayoristas.map((m) => (
+            <button key={m.id} type="button" className="tarj mayorista-chico" onClick={() => ir.mayorista(m.id)}>
+              <span className="fila-chica">
+                <Iniciales nombre={m.nombre} />
+                <strong>{m.nombre}</strong>
+              </span>
+              <span className="gris">
+                {m.ciudad} · {cuantos(m.id)} productos
+              </span>
+              <span className="insignias">
+                {m.verificado && <span className="ins ins-verde">Verificado</span>}
+                <InsigniaRelacion relacion={m.relacion} />
+              </span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {ofertas.length > 0 && (
+        <section className="seccion">
+          <h2 className="tit t2">Ofertas por caja</h2>
+          {ofertas.map((p) => {
+            const caja = p.escalas.find((e) => e.presentacion === 'CAJA')!;
+            return (
+              <button key={p.id} type="button" className="tarj fila oferta" onClick={() => ir.producto(p.id)}>
+                <Foto producto={p} clase="foto-56" />
+                <span className="crece">
+                  <strong>{p.nombre}</strong>
+                  <span className="gris">
+                    {nombreCorto(p.mayorista.nombre)} · caja de {caja.cantidad} u.
+                  </span>
+                </span>
+                <span className="derecha">
+                  <span className="precio">{bs((caja.precioUnitario?.centavos ?? 0) * caja.cantidad)}</span>
+                  <span className="gris chico">{caja.precioUnitario?.texto} c/u</span>
+                </span>
+              </button>
+            );
+          })}
+        </section>
+      )}
+    </div>
+  );
+}
+
+function Destacado({ producto: p, ir }: { producto: Producto; ir: Navegar }) {
+  const desde = precioDesde(p);
+  return (
+    <div className="tarj destacado">
+      <Foto producto={p} clase="foto-destacado" alAbrir={() => ir.producto(p.id)} />
+      <button type="button" className="nombre" onClick={() => ir.producto(p.id)}>
+        {p.nombre}
+      </button>
+      <span className="gris">{nombreCorto(p.mayorista.nombre)}</span>
+      <div className="pie-destacado">
+        {desde ? (
+          <>
+            <span className="desde">
+              <span className="gris chico">desde</span>
+              <span className="precio">{desde.precioUnitario!.texto}</span>
+              <span className="gris chico">c/u por {desde.presentacion.toLowerCase()}</span>
+            </span>
+            <BotonAgregar producto={p} alAgregar={ir.agregar} />
+          </>
+        ) : (
+          <SinPrecio />
+        )}
+      </div>
+    </div>
   );
 }
