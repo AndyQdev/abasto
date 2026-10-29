@@ -99,3 +99,24 @@ describe('carrito', () => {
     expect(cambiarCantidad([item], 'HB-0090', 'DOCENA', -1)[0].cantidad).toBe(1);
   });
 });
+
+describe('contra entrega', () => {
+  it('no tiene paso de pago antes: después del stock espera al mayorista y se paga al recibir', () => {
+    const p = pedido({ estado: 'POR_CONFIRMAR', metodoPago: 'CONTRA_ENTREGA' });
+    expect(nodos(p)).toEqual([
+      'Pedido enviado:hecho',
+      'Stock reservado:hecho',
+      'Confirmación del mayorista:proc',
+      'En preparación:pend',
+      'En camino:pend',
+      'Entregado:pend',
+    ]);
+    expect(lineaDeTiempo(p).at(-1)?.detalle).toBe('Pagas al recibir, en efectivo o QR');
+  });
+
+  it('si el mayorista lo rechaza no se cobró nada', () => {
+    const p = pedido({ estado: 'RECHAZADO', metodoPago: 'CONTRA_ENTREGA', motivoRechazo: 'No llego hoy' });
+    expect(lineaDeTiempo(p).at(-1)).toEqual({ nombre: 'Confirmación del mayorista', detalle: 'No llego hoy', nodo: 'rojo' });
+    expect(compensaciones(p)).toEqual(['Liberamos la reserva del stock', 'No se te cobró nada']);
+  });
+});

@@ -4,7 +4,7 @@ import { nombreCorto } from '../catalogo';
 import { Icono } from '../Icono';
 import { bandeja, graphql } from '../servicios';
 
-export type MetodoPago = 'QR' | 'CREDITO';
+export type MetodoPago = 'QR' | 'CREDITO' | 'CONTRA_ENTREGA';
 
 interface Props {
   carrito: ItemDeCarrito[];
@@ -109,6 +109,13 @@ export function Confirmar({ carrito, enLinea, tiendaId, alVolver, alTerminar }: 
           <span className="crece">
             <strong>Crédito con el mayorista</strong>
             <span className="gris">Solo con los mayoristas que te dieron crédito</span>
+          </span>
+        </button>
+        <button type="button" className="radio" aria-pressed={metodo === 'CONTRA_ENTREGA'} onClick={() => setMetodo('CONTRA_ENTREGA')}>
+          <span className="punto" aria-hidden="true" />
+          <span className="crece">
+            <strong>Pago contra entrega</strong>
+            <span className="gris">Pagas en efectivo o QR cuando recibes el pedido</span>
           </span>
         </button>
         {metodo === 'CREDITO' && (

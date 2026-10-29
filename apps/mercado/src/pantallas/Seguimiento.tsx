@@ -88,7 +88,7 @@ export function Seguimiento({ pedidoId, enLinea, alVolver }: Props) {
         <span className="crece">
           <strong>{mayorista}</strong>
           <span className="gris">
-            {pedido.metodoPago === 'QR' ? 'Pago por QR' : 'Crédito'} · {fechaHora(pedido.creadoEn)}
+            {{ QR: 'Pago por QR', CREDITO: 'Crédito', CONTRA_ENTREGA: 'Contra entrega' }[pedido.metodoPago]} · {fechaHora(pedido.creadoEn)}
           </span>
         </span>
         <span className="derecha">

@@ -18,7 +18,7 @@ export interface Pedido {
   id: string;
   codigo: string;
   estado: EstadoPedido;
-  metodoPago: 'QR' | 'CREDITO';
+  metodoPago: 'QR' | 'CREDITO' | 'CONTRA_ENTREGA';
   creadoEn: string;
   motivoRechazo: string | null;
   total: { centavos: number; texto: string };
@@ -96,9 +96,11 @@ export interface Paso {
  * y los siguientes no se muestran: la pantalla agrega «Lo deshicimos por ti».
  */
 export function lineaDeTiempo(p: Pick<Pedido, 'estado' | 'metodoPago' | 'cobro' | 'total' | 'motivoRechazo'>): Paso[] {
+  // Contra entrega no hay paso de pago antes: se paga al recibir
+  const contraEntrega = p.metodoPago === 'CONTRA_ENTREGA';
   const pago = p.metodoPago === 'QR' ? 'Pago por QR' : 'Crédito con el mayorista';
   const reservado = p.total.centavos > 0;
-  const cobrado = p.metodoPago === 'QR' ? p.cobro?.estado === 'PAGADO' || p.cobro?.estado === 'DEVUELTO' : p.estado !== 'PENDIENTE';
+  const cobrado = contraEntrega || (p.metodoPago === 'QR' ? p.cobro?.estado === 'PAGADO' || p.cobro?.estado === 'DEVUELTO' : p.estado !== 'PENDIENTE');
   const orden: EstadoPedido[] = ['CONFIRMADO', 'EN_PREPARACION', 'DESPACHADO', 'ENTREGADO'];
   const llego = (e: EstadoPedido) => orden.indexOf(p.estado) >= orden.indexOf(e) && orden.includes(p.estado);
 
@@ -108,18 +110,23 @@ export function lineaDeTiempo(p: Pick<Pedido, 'estado' | 'metodoPago' | 'cobro' 
     if (!reservado) return [...pasos, { nombre: 'Reserva del stock', detalle: motivo, nodo: 'rojo' }];
     pasos.push({ nombre: 'Stock reservado', nodo: 'hecho' });
     if (!cobrado) return [...pasos, { nombre: pago, detalle: motivo, nodo: 'rojo' }];
-    pasos.push({ nombre: pago, nodo: 'hecho' });
+    if (!contraEntrega) pasos.push({ nombre: pago, nodo: 'hecho' });
     return [...pasos, { nombre: 'Confirmación del mayorista', detalle: motivo, nodo: 'rojo' }];
   }
 
+  const pasoDePago: Paso[] = contraEntrega
+    ? []
+    : [
+        {
+          nombre: pago,
+          detalle: !reservado ? undefined : cobrado ? undefined : p.metodoPago === 'QR' ? 'Esperando tu pago' : 'Autorizando el crédito',
+          nodo: !reservado ? 'pend' : cobrado ? 'hecho' : 'proc',
+        },
+      ];
   return [
     { nombre: 'Pedido enviado', nodo: 'hecho' },
     { nombre: reservado ? 'Stock reservado' : 'Reservando el stock', nodo: reservado ? 'hecho' : 'proc' },
-    {
-      nombre: pago,
-      detalle: !reservado ? undefined : cobrado ? undefined : p.metodoPago === 'QR' ? 'Esperando tu pago' : 'Autorizando el crédito',
-      nodo: !reservado ? 'pend' : cobrado ? 'hecho' : 'proc',
-    },
+    ...pasoDePago,
     {
       nombre: 'Confirmación del mayorista',
       nodo: p.estado === 'POR_CONFIRMAR' ? 'proc' : llego('CONFIRMADO') ? 'hecho' : 'pend',
@@ -127,7 +134,11 @@ export function lineaDeTiempo(p: Pick<Pedido, 'estado' | 'metodoPago' | 'cobro' 
     },
     { nombre: 'En preparación', nodo: llego('EN_PREPARACION') ? 'hecho' : 'pend' },
     { nombre: 'En camino', nodo: llego('DESPACHADO') ? 'hecho' : 'pend' },
-    { nombre: 'Entregado', nodo: llego('ENTREGADO') ? 'hecho' : 'pend' },
+    {
+      nombre: 'Entregado',
+      detalle: contraEntrega && !llego('ENTREGADO') ? 'Pagas al recibir, en efectivo o QR' : undefined,
+      nodo: llego('ENTREGADO') ? 'hecho' : 'pend',
+    },
   ];
 }
 
@@ -136,7 +147,8 @@ export function compensaciones(p: Pick<Pedido, 'estado' | 'metodoPago' | 'cobro'
   if (p.estado !== 'RECHAZADO' && p.estado !== 'CANCELADO') return [];
   if (p.total.centavos === 0) return ['No se reservó nada ni se te cobró'];
   const lista = ['Liberamos la reserva del stock'];
-  if (p.metodoPago === 'CREDITO') lista.push(`Te devolvimos ${p.total.texto} a tu crédito`);
+  if (p.metodoPago === 'CONTRA_ENTREGA') lista.push('No se te cobró nada');
+  else if (p.metodoPago === 'CREDITO') lista.push(`Te devolvimos ${p.total.texto} a tu crédito`);
   else if (p.cobro?.estado === 'DEVUELTO') lista.push(`Te devolvimos ${p.total.texto} de tu pago por QR`);
   else lista.push('No se te cobró nada');
   return lista;
