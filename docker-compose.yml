@@ -125,6 +125,7 @@ services:
         [ -f .env ] || cp .env.example .env;
         grep -q '^APP_KEY=base64' .env || php artisan key:generate --force;
         composer install --no-interaction --quiet;
+        php artisan catalogo:semilla;
         (while true; do php artisan catalogo:escuchar; sleep 3; done) &
         php -S 0.0.0.0:8082 -t public vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php
     environment:
