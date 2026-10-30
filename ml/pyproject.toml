@@ -13,7 +13,7 @@ dependencies = [
 [dependency-groups]
 dev = ["pytest>=8", "ruff>=0.6", "mypy>=1.11"]
 # TensorFlow pesa ~600 MB: solo lo instala quien entrena (uv sync --group vision) o se usa en Colab
-vision = ["tensorflow>=2.18", "tensorflowjs>=4.20", "pillow>=10"]
+vision = ["tensorflow>=2.18", "pillow>=10"]
 
 [project.scripts]
 abasto-ml-nocturno = "abasto_ml.nocturno:main"

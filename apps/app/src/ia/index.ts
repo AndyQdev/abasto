@@ -6,3 +6,5 @@
 export { leerTexto } from './leer-texto';
 export { Diagnostico } from './diagnostico';
 export { leerPrecio, enBolivianos } from './precio';
+export { reconocerProducto } from './reconocer';
+export { combinarConTexto, type Reconocido } from './parecido';

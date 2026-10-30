@@ -1,33 +1,27 @@
 # Jhoel · estado
 
-Actualizado: 28/10/2026 · rama `jhoel/reportes-voz` (sale de `jhoel/catalogo-gestion`, PR #2)
+Actualizado: 29/10/2026 · en main (reparto nuevo: toda la IA)
 
 ## Estoy en
-T18 y T19 terminados en `jhoel/reportes-voz`; esperan a que se mergeen los PR #1 y #2.
+Modelo propio de visión para buscar por foto (requisitos «IA local en móvil» y «deep learning con TensorFlow»): falta sacar las fotos de los 10 productos y entrenar.
 
 ## Terminé
-- Entorno en verde (`pnpm verificar/install/todo/test/e2e`; 12 contenedores).
-- Campo (`jhoel/campo-tflite`): diagnóstico TFLite + ML Kit, 11/11 pruebas y `tsc` limpio. En el teléfono: `1×224×224×3 → 1×1001`, 57 ms; OCR «Shampoo 400 ml / Bs 18,50» → «Bs 18,50».
-- T18: preguntar por voz con Whisper dentro del navegador (IA local, el audio no sale del equipo) y gráfico de barras/línea en el reporte. Probado con audio real en español.
-- T19: la guardia SQL rechaza también conversiones a tipos del sistema (regclass, oid) y permite CTE (WITH) sin abrir tablas prohibidas; suite de seguridad contra Postgres 7/7 (aislamiento de `pedidos`, inbox ilegible, `set_config` negado); evaluador de 20 preguntas (`pnpm --filter @abasto/asistente evaluar`).
-- PR #1: Catálogo en la saga (reserva/libera stock, `stock.*` con precio por línea).
-- PR #2:
-  - Proyector del Asistente: tabla `pedidos` (migración 002), nombres de tienda vía `_entities` de Catálogo, vencimiento del crédito, `producto.stock_cambiado` al reservar, liberar y ajustar.
-  - Catálogo: semilla de 40 productos; estado de verificación de organizaciones (`estadoVerificacion`); `crearProducto`, `editarProducto`, `ajustarStock` (editar ya no pisa el stock reservado).
-  - Gestión: vista Clientes (aprobar con lista NUEVOS/FRECUENTES/VIP o rechazar).
-  - Deptrac de Catálogo funciona dentro de Docker (capa Laravel por espacio de nombres).
+- `reconocerProducto(fotoUri, maximo = 5)` → `[{ codigo, confianza }]` en `apps/app/src/ia` (TFLite + vectores del catálogo, sin internet). En la vista web devuelve `[]`.
+- `combinarConTexto(porImagen, codigosPorTexto)`: sube a los productos cuyo nombre leyó ML Kit en la etiqueta.
+- `ml/src/abasto_ml/vision/entrenar.py`: MobileNetV3 con dos salidas (código de producto y vector de 576), exporta `productos.tflite`, `etiquetas.json` y `vectores.json` a `apps/app/assets/modelos/`. Prueba de paridad Keras = TFLite.
+- Antes del reparto: proyector con entrega y contra entrega (#7), foto por producto en Catálogo (#8), Panel PWA (#9) e ICONIX completo.
 
 ## Cambié en contratos
-- Schema GraphQL de Catálogo: `Mayorista.estadoVerificacion`, mutaciones `crearProducto`/`editarProducto`/`ajustarStock` e inputs. Subgrafo y supergrafo regenerados.
+- Nada.
 
 ## Necesito del otro
-- Una `ANTHROPIC_API_KEY` para la demo y para medir el Analista (meta 18/20). Sin llave usa el modelo simulado (acierta 2/20: solo conoce las preguntas de la demo).
-- Cobros: consumir `cobros.comandos`. Hoy los pedidos quedan en `COBRANDO`.
-- Contrato: agregar `vence` a `pedido.confirmado` o `cobro.credito_autorizado` (el proyector usa 15 días mientras tanto).
-- Superadmin: puede mostrar `estadoVerificacion` (PENDIENTE/VERIFICADO/RECHAZADO) de cada mayorista.
-- Los pedidos de demo vencen a las 2 h: para el e2e, `pnpm borrar-datos` + `pnpm todo`; si Catálogo da 401, `docker compose exec catalogo php artisan cache:clear`.
-- Revisar `contracts/asyncapi.yaml`: detalle en `plan-jhoel.md` (punto 7).
-- e2e: `pnpm todo` no siembra Catálogo (falta `catalogo:semilla`).
+- Andrés: agregué `expo-image-manipulator` y `jpeg-js` en `apps/app/package.json` (reducen la foto a 224×224 antes del modelo). `expo-image-manipulator` es nativo: hay que volver a correr `npx expo run:android` una vez.
+- Andrés: en Buscar por foto, `reconocerProducto(uri)` junto a `leerTexto(uri)`, y después `combinarConTexto(porImagen, buscarPorTextoLeido(productos, texto).map((p) => p.codigo))`. Mientras el modelo no está entrenado, `reconocerProducto` devuelve `[]` y la pantalla sigue funcionando solo con el texto.
+- Una `ANTHROPIC_API_KEY` para la demo y para medir el Analista (meta 18/20).
 
 ## Sigue
-- T18/T19 (yo). OpenCode: pantalla de Productos en Gestión y diagramas ICONIX.
+1. Fotos (20 por producto) y entrenamiento en Colab → reemplazar el modelo vacío.
+2. CU-14 Agentes (Cobranza, Reposición, Catálogo y Analista).
+3. Tableros de demanda y segmentos en Inteligencia.
+4. CU-13 de punta a punta, seguridad del MCP y evaluación de las 20 preguntas.
+5. ICONIX de CU-13, CU-14 y la IA de CU-05.
