@@ -151,3 +151,26 @@ export function mezclarConClasificador(
   reconocidos.sort((a, b) => b.confianza - a.confianza || a.codigo.localeCompare(b.codigo, 'es'));
   return reconocidos.slice(0, maximo);
 }
+
+/** Debajo de esto la foto no se parece de verdad a ningún producto: mejor no mostrarlo. */
+export const CONFIANZA_MINIMA = 0.35;
+
+/**
+ * Lo que muestra Buscar por foto: junta lo que reconoció el modelo con lo que encontró el texto de la etiqueta
+ * y devuelve los productos del catálogo en ese orden. Lo que leyó el texto siempre entra; lo que solo vio la
+ * imagen entra si pasa `CONFIANZA_MINIMA`.
+ */
+export function productosPorFoto<P extends { codigo: string }>(
+  productos: P[],
+  porImagen: Reconocido[],
+  porTexto: P[],
+  maximo = 10,
+): P[] {
+  const delTexto = new Set(porTexto.map((p) => p.codigo));
+  const porCodigo = new Map(productos.map((p) => [p.codigo, p] as const));
+  return combinarConTexto(porImagen, porTexto.map((p) => p.codigo))
+    .filter((r) => delTexto.has(r.codigo) || r.confianza >= CONFIANZA_MINIMA)
+    .map((r) => porCodigo.get(r.codigo))
+    .filter((p): p is P => p !== undefined)
+    .slice(0, maximo);
+}

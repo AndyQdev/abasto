@@ -21,7 +21,7 @@ CU-13 de punta a punta y seguridad del MCP.
 ## Necesito del otro
 - Andrés: agregué una línea en `apps/panel-shell/src/navegacion.ts` (`tableros`, remoto inteligencia) para el menú de Tableros.
 - Andrés: agregué `expo-image-manipulator` y `jpeg-js` en `apps/app/package.json` (reducen la foto a 224×224 antes del modelo). `expo-image-manipulator` es nativo: hay que volver a correr `npx expo run:android` una vez.
-- Andrés: en Buscar por foto, `reconocerProducto(uri)` junto a `leerTexto(uri)`, y después `combinarConTexto(porImagen, buscarPorTextoLeido(productos, texto).map((p) => p.codigo))`. `reconocerProducto` ya reconoce los 27 productos de Abasto (AB-xxx).
+- Andrés (aviso, 31/10): cambié 4 líneas de `apps/app/src/pantallas/BuscarPorFoto.tsx` para que use `reconocerProducto` junto a `leerTexto` y ordene con `productosPorFoto` (de `src/ia`). Si la pantalla cambia, mantén esa llamada.
 - Una `ANTHROPIC_API_KEY` para la demo y para medir el Analista (meta 18/20).
 
 ## Sigue

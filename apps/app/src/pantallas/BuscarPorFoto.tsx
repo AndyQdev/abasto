@@ -5,7 +5,7 @@ import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Boton, BotonMas, Falla, Foto, Icono, SinPrecio, Tarjeta, Texto, Vacio } from '../componentes';
 import { useEstado } from '../estado';
-import { leerTexto } from '../ia';
+import { leerTexto, productosPorFoto, reconocerProducto } from '../ia';
 import type { PantallaDePila } from '../navegacion';
 import { COLOR } from '../tema';
 
@@ -35,9 +35,10 @@ export function BuscarPorFoto({ navigation }: PantallaDePila<'BuscarPorFoto'>) {
     setLeyendo(true);
     setResultados(null);
     try {
-      const texto = await leerTexto(uri);
+      // La etiqueta (ML Kit) y cómo se ve el producto (modelo propio), los dos dentro del teléfono
+      const [texto, porImagen] = await Promise.all([leerTexto(uri), reconocerProducto(uri, 10).catch(() => [])]);
       setLeido(texto);
-      setResultados(buscarPorTextoLeido(catalogo.productos, texto));
+      setResultados(productosPorFoto(catalogo.productos, porImagen, buscarPorTextoLeido(catalogo.productos, texto)));
     } catch (e) {
       setError((e as Error).message);
     } finally {

@@ -3,6 +3,7 @@ import {
   leerVectores,
   masParecidos,
   mezclarConClasificador,
+  productosPorFoto,
   similitudCoseno,
   type Reconocido,
   type VectorDeProducto,
@@ -175,5 +176,32 @@ describe('mezclarConClasificador', () => {
     expect(() => mezclarConClasificador([1, 0, 0], catalogo, [0.5, 0.5], ['AB-001'])).toThrow(
       'El clasificador da 2 probabilidades y hay 1 etiquetas',
     );
+  });
+});
+
+describe('productosPorFoto', () => {
+  const arroz = { codigo: 'AB-001', nombre: 'Arroz' };
+  const azucar = { codigo: 'AB-002', nombre: 'Azúcar' };
+  const fideo = { codigo: 'AB-003', nombre: 'Fideo' };
+  const productos = [arroz, azucar, fideo];
+
+  it('lo que reconoce la imagen va primero aunque la etiqueta no se haya podido leer', () => {
+    expect(productosPorFoto(productos, [{ codigo: 'AB-002', confianza: 0.9 }], [])).toEqual([azucar]);
+  });
+
+  it('el texto de la etiqueta sube al producto y entra aunque la imagen no lo haya visto', () => {
+    const porImagen = [
+      { codigo: 'AB-001', confianza: 0.6 },
+      { codigo: 'AB-003', confianza: 0.55 },
+    ];
+    expect(productosPorFoto(productos, porImagen, [fideo, azucar])).toEqual([fideo, arroz, azucar]);
+  });
+
+  it('no muestra lo que la imagen apenas se parece ni códigos que no están en el catálogo', () => {
+    const porImagen = [
+      { codigo: 'AB-001', confianza: 0.2 },
+      { codigo: 'XX-999', confianza: 0.95 },
+    ];
+    expect(productosPorFoto(productos, porImagen, [])).toEqual([]);
   });
 });
