@@ -1,7 +1,10 @@
 {
   "modelo": "catalogo-imagenet-v1",
   "productos": 27,
+  "precision_validacion_clasificador": 1.0,
   "fotos_de_prueba": 162,
+  "top1_vector": 1.0,
+  "top1_clasificador": 1.0,
   "top1": 1.0,
   "top3": 1.0
 }

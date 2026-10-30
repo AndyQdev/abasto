@@ -124,3 +124,30 @@ export function leerVectores(datos: unknown): VectoresDelCatalogo {
 
   return datos as VectoresDelCatalogo;
 }
+
+/**
+ * Junta el parecido de los vectores con las probabilidades del clasificador entrenado con TensorFlow.
+ * Es la misma mezcla que mide `mezclar` en ml/src/abasto_ml/vision/catalogo.py.
+ * `etiquetas[i]` es el código de producto de `probabilidades[i]`.
+ */
+export function mezclarConClasificador(
+  consulta: ArrayLike<number>,
+  catalogo: VectorDeProducto[],
+  probabilidades: ArrayLike<number>,
+  etiquetas: string[],
+  maximo = 5,
+  pesoVector = 0.5,
+): Reconocido[] {
+  if (probabilidades.length !== etiquetas.length) {
+    throw new Error(`El clasificador da ${probabilidades.length} probabilidades y hay ${etiquetas.length} etiquetas`);
+  }
+  const probabilidadDe = new Map(etiquetas.map((codigo, i) => [codigo, probabilidades[i]]));
+  const reconocidos: Reconocido[] = [];
+  for (const producto of catalogo) {
+    const parecido = Math.min(1, Math.max(0, similitudCoseno(consulta, producto.vector)));
+    const confianza = recortar(pesoVector * parecido + (1 - pesoVector) * (probabilidadDe.get(producto.codigo) ?? 0));
+    if (confianza > 0) reconocidos.push({ codigo: producto.codigo, confianza });
+  }
+  reconocidos.sort((a, b) => b.confianza - a.confianza || a.codigo.localeCompare(b.codigo, 'es'));
+  return reconocidos.slice(0, maximo);
+}
