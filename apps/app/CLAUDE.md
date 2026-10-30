@@ -13,7 +13,13 @@ La app con la que tiendas y personas compran al por mayor. Es el producto que ve
 
 Correr:
 - Vista web de desarrollo: `npm run web` → http://localhost:8090.
-- Android (emulador Pixel 7 o teléfono por USB): `npx expo run:android`, y después `adb reverse tcp:8180 tcp:8180`, `adb reverse tcp:4000 tcp:4000` y `adb reverse tcp:8084 tcp:8084` para llegar a Keycloak, al Router y a Conecta.
+- Android (emulador Pixel 7 o teléfono por USB):
+  1. La primera vez, o si cambia algo nativo: `npx expo run:android` (en Windows, mira «rutas largas» en el `CLAUDE.md` de la raíz).
+  2. El resto de los días alcanza con `npm start`, que es Metro en el 8090 y recarga solo.
+  3. `adb reverse` de 8180, 4000, 8084 y 8090 (Keycloak, Router, Conecta y Metro). Hay que repetirlo cada vez que se reinicia adb.
+  4. Abrir la app apuntando a localhost: `adb shell am start -a android.intent.action.VIEW -d "exp+abasto://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8090" bo.abasto.app`.
+  - **No uses `--localhost` en Metro.** En Windows escucha solo en `::1` (IPv6), adb entra por `127.0.0.1` y la app muestra «unexpected end of stream».
+  - Usuario de prueba de una tienda: `donarosa@abasto.bo` / `abasto123`.
 - iPhone: build de desarrollo con EAS o una Mac.
 
 Probar: `npm test` y `npx tsc --noEmit`.
