@@ -1,3 +1,6 @@
+import { Image } from 'expo-image';
+import { Flotar } from '../animacion';
+import { ILUSTRACION } from '../ilustraciones';
 import {
   compensaciones,
   enCurso,
@@ -90,6 +93,15 @@ export function Seguimiento({ route, navigation }: PantallaDePila<'Seguimiento'>
   return (
     <SafeAreaView style={e.pantalla} edges={['bottom']}>
       <ScrollView contentContainerStyle={e.contenido}>
+        {/* La ilustración cuenta en qué va: cajas listas, en camino o entregado */}
+        <Flotar alto={6} style={{ alignSelf: 'center' }}>
+          <Image
+            source={pedido.estado === 'ENTREGADO' ? ILUSTRACION.pedidoEntregado : pedido.estado === 'DESPACHADO' ? ILUSTRACION.pedidoEnCamino : ILUSTRACION.vacioPedidos}
+            style={{ width: 200, height: 200 }}
+            contentFit="contain"
+            transition={300}
+          />
+        </Flotar>
         <Insignia texto={estado.texto} color={colorDeClase(estado.clase)} />
         <Tarjeta style={e.fila}>
           <Iniciales nombre={vendedor} />

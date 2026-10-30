@@ -15,7 +15,8 @@ export const ILUSTRACION = {
   bannerLimpieza: require('../assets/ilustraciones/banner-limpieza.webp'),
   vacioCarrito: require('../assets/ilustraciones/vacio-carrito.webp'),
   vacioPedidos: require('../assets/ilustraciones/vacio-pedidos.webp'),
-  pedidoEnCamino: require('../assets/ilustraciones/pedido-en-camino.webp'),
+  // El repartidor del banner de entrega sirve también para «en camino»
+  pedidoEnCamino: require('../assets/ilustraciones/banner-entrega.webp'),
   pedidoEntregado: require('../assets/ilustraciones/pedido-entregado.webp'),
   sinSenal: require('../assets/ilustraciones/sin-senal.webp'),
 } satisfies Record<string, Recurso>;

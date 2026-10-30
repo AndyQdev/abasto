@@ -141,7 +141,8 @@ def main():
         if img.get("tipo") == "maqueta" and img.get("recorte"):
             isla(cruda, args.salida, img["nombre"])
         elif img.get("tipo") == "objeto":
-            objetos.append(img["nombre"])
+            # «lado» en el manifiesto para los que se ven grandes (la portada); si no, 512
+            objetos.append((img["nombre"], int(img.get("lado", 512))))
         elif img.get("tipo") in ("foto", "maqueta") or img.get("proporcion"):
             foto(cruda, args.salida, img["nombre"])
             escenas.append(img["nombre"])
@@ -152,10 +153,10 @@ def main():
     if objetos:
         # recorte-objetos.py lee su propio manifiesto de la carpeta de crudas.
         with open(os.path.join(args.crudas, "manifiesto.json"), "w", encoding="utf-8") as f:
-            json.dump([{"nombre": n, "lado": 512} for n in objetos], f, ensure_ascii=False)
+            json.dump([{"nombre": n, "lado": lado} for n, lado in objetos], f, ensure_ascii=False)
         subprocess.run(
             [sys.executable, "-I", os.path.join(AQUI, "recorte-objetos.py"),
-             "--crudas", args.crudas, "--salida", args.salida, *objetos],
+             "--crudas", args.crudas, "--salida", args.salida, *[n for n, _ in objetos]],
             check=True,
         )
 

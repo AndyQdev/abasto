@@ -72,14 +72,16 @@ mkdirSync(join(CRUDAS, "descartadas"), { recursive: true });
 // ---------------------------------------------------------------------------
 const ESTILO = [
   "Stylized 3D animated-feature-film render, Pixar / Disney look: soft clay-like materials, rounded chunky friendly shapes,",
-  "smooth surfaces, warm soft studio lighting with gentle ambient occlusion and soft shadows. Polished, cheerful, premium.",
+  "smooth glossy surfaces, warm soft studio lighting with gentle ambient occlusion and soft realistic shadows. Polished, cheerful, premium.",
   "NOT photorealistic, NOT a photograph, NOT watercolor, NOT flat vector, NOT anime.",
-  "Palette: soft mint and white, deep forest green as the main accent, warm amber touches, very dark green-ink for contrast. Never write color codes or any characters on objects.",
-  "Setting: Bolivia (Santa Cruz), small neighborhood grocery stores and lively wholesale markets, sunny and warm.",
-  "Friendly Bolivian characters with expressive big eyes and warm smiles; delivery riders wear a forest-green jacket and cap with small amber details.",
-  "Grocery products are generic and cute: rice and sugar sacks, cooking-oil bottles, pasta, soda bottles, cookies, detergent, with plain colored packaging and NO brand names, NO labels with writing.",
-  "Simple, uncluttered composition with one clear focus and generous margin.",
-  "No text, no letters, no numbers, no logos, no price tags with numbers, no signs or boards with writing.",
+  "Palette: fresh turquoise-mint as the main color, deep dark green for contrast, small lime-yellow accents, white and very pale mint.",
+  "Never write color codes, letters or any characters on objects.",
+  "Setting: Bolivia (Santa Cruz), neighborhood grocery stores and wholesale markets, sunny and warm.",
+  "Friendly Bolivian characters with expressive big eyes and warm smiles; delivery riders wear a turquoise-mint jacket and cap with dark green details.",
+  "Grocery products look appetizing and real in color (golden cooking oil, white rice sacks, brown cardboard boxes, colorful soda bottles)",
+  "but are cute and simplified, with plain packaging and NO brand names, NO labels with writing.",
+  "Simple, uncluttered composition with one clear focus.",
+  "No text, no letters, no numbers, no logos, no signs or boards with writing.",
 ].join(" ");
 
 const FONDO_ESCENA =

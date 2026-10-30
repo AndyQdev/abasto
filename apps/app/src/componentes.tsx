@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState, type ComponentProps, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 import { imagenDeRubro } from './ilustraciones';
-import { COLOR, RADIO, SOMBRA, TINTES } from './tema';
+import { COLOR, fuenteDe, FUENTE, RADIO, SOMBRA, TINTES } from './tema';
 
 export type NombreDeIcono = ComponentProps<typeof Ionicons>['name'];
 
@@ -15,8 +15,11 @@ export function Icono({ nombre, tamano = 20, color = COLOR.texto }: { nombre: No
 type Variante = 'titulo' | 't1' | 't2' | 't3' | 'normal' | 'gris' | 'chico' | 'precio' | 'fuerte';
 
 export function Texto({ v = 'normal', style, children, lineas }: { v?: Variante; style?: StyleProp<TextStyle>; children: ReactNode; lineas?: number }) {
+  // Manrope: el grosor se elige por archivo; fontWeight se quita para que Android no lo engrose de nuevo
+  const plano: TextStyle = StyleSheet.flatten([estilos[v], style]) ?? {};
+  const { fontWeight, ...resto } = plano;
   return (
-    <Text numberOfLines={lineas} style={[estilos[v], style]}>
+    <Text numberOfLines={lineas} style={[resto, { fontFamily: resto.fontFamily ?? fuenteDe(fontWeight) }]}>
       {children}
     </Text>
   );
@@ -42,7 +45,7 @@ export function Boton({
   icono?: NombreDeIcono;
 }) {
   const inactivo = deshabilitado || cargando;
-  const color = tipo === 'primario' ? '#fff' : COLOR.verdeTexto;
+  const color = inactivoColor(tipo, deshabilitado || cargando);
   return (
     <Pressable
       accessibilityRole="button"
@@ -52,8 +55,9 @@ export function Boton({
       onPress={alTocar}
       style={({ pressed }) => [
         tipo === 'primario' ? estilos.boton : tipo === 'secundario' ? estilos.boton2 : estilos.botonChico,
-        inactivo && tipo === 'primario' && { backgroundColor: '#9DB3A9' },
-        pressed && { opacity: 0.85 },
+        inactivo && tipo === 'primario' && { backgroundColor: '#E4ECD2' },
+        pressed && tipo === 'primario' && { backgroundColor: COLOR.limaFuerte },
+        pressed && tipo !== 'primario' && { opacity: 0.85 },
       ]}
     >
       {cargando ? <ActivityIndicator color={color} /> : icono ? <Icono nombre={icono} color={color} tamano={18} /> : null}
@@ -62,15 +66,21 @@ export function Boton({
   );
 }
 
+/** Texto del botón: verde oscuro sobre el lima; apagado si está inactivo. */
+function inactivoColor(tipo: 'primario' | 'secundario' | 'chico', inactivo?: boolean) {
+  if (inactivo && tipo === 'primario') return '#93A188';
+  return COLOR.verde;
+}
+
 export function Chip({ texto, activo, alTocar }: { texto: string; activo?: boolean; alTocar: () => void }) {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ selected: !!activo }}
       onPress={alTocar}
-      style={[estilos.chip, activo && { backgroundColor: COLOR.verde, borderColor: COLOR.verde }]}
+      style={[estilos.chip, activo && { backgroundColor: COLOR.lima, borderColor: COLOR.verde }]}
     >
-      <Text style={[estilos.textoChip, activo && { color: '#fff' }]}>{texto}</Text>
+      <Text style={[estilos.textoChip, activo && { color: COLOR.verde }]}>{texto}</Text>
     </Pressable>
   );
 }
@@ -132,7 +142,7 @@ export function BotonMas({ producto, alAgregar }: { producto: Producto; alAgrega
       onPress={() => alAgregar(producto)}
       style={({ pressed }) => [estilos.botonMas, pressed && { opacity: 0.8 }]}
     >
-      <Icono nombre="add" color="#fff" tamano={22} />
+      <Icono nombre="add" color={COLOR.verde} tamano={22} />
     </Pressable>
   );
 }
@@ -224,41 +234,51 @@ export function Seccion({ titulo, enlace, alTocarEnlace, children }: { titulo: s
 }
 
 export const estilos = StyleSheet.create({
-  titulo: { fontSize: 26, fontWeight: '800', color: COLOR.verde, letterSpacing: -0.5 },
-  t1: { fontSize: 24, fontWeight: '800', color: COLOR.texto, letterSpacing: -0.4 },
-  t2: { fontSize: 18, fontWeight: '800', color: COLOR.texto, letterSpacing: -0.3 },
-  t3: { fontSize: 15, fontWeight: '700', color: COLOR.texto },
+  titulo: { fontSize: 28, fontWeight: '800', color: COLOR.texto, letterSpacing: -0.6 },
+  t1: { fontSize: 24, fontWeight: '800', color: COLOR.texto, letterSpacing: -0.5 },
+  t2: { fontSize: 19, fontWeight: '800', color: COLOR.texto, letterSpacing: -0.3 },
+  t3: { fontSize: 16, fontWeight: '700', color: COLOR.texto },
   normal: { fontSize: 14, color: COLOR.texto },
   fuerte: { fontSize: 14, fontWeight: '700', color: COLOR.texto },
-  gris: { fontSize: 12.5, color: COLOR.texto3 },
-  chico: { fontSize: 11, color: COLOR.texto3 },
-  precio: { fontSize: 15, fontWeight: '800', color: COLOR.ambarTexto, fontVariant: ['tabular-nums'] },
-  tarjeta: { backgroundColor: COLOR.superficie, borderRadius: RADIO.tarjeta, borderWidth: 1, borderColor: COLOR.borde, padding: 14, ...SOMBRA },
-  boton: { flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', height: 50, borderRadius: 15, backgroundColor: COLOR.verde },
+  gris: { fontSize: 13, color: COLOR.texto3 },
+  chico: { fontSize: 11.5, color: COLOR.texto3 },
+  precio: { fontSize: 17, fontWeight: '800', color: COLOR.texto, fontVariant: ['tabular-nums'], letterSpacing: -0.3 },
+  tarjeta: { backgroundColor: COLOR.superficie, borderRadius: RADIO.tarjeta, padding: 14, ...SOMBRA },
+  boton: { flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', height: 54, borderRadius: 18, backgroundColor: COLOR.lima, ...SOMBRA, shadowColor: '#5C7A00', shadowOpacity: 0.18 },
   boton2: {
     flexDirection: 'row',
     gap: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    height: 48,
-    borderRadius: 15,
-    backgroundColor: COLOR.superficie,
-    borderWidth: 1.5,
-    borderColor: COLOR.verde,
+    height: 52,
+    borderRadius: 18,
+    backgroundColor: COLOR.mentaClara,
   },
-  botonChico: { flexDirection: 'row', gap: 6, alignItems: 'center', justifyContent: 'center', height: 38, paddingHorizontal: 14, borderRadius: 12, backgroundColor: COLOR.verdeSuave },
-  textoBoton: { fontSize: 15, fontWeight: '700' },
-  chip: { height: 36, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1, borderColor: COLOR.borde, backgroundColor: COLOR.superficie, justifyContent: 'center' },
-  textoChip: { fontSize: 12.5, fontWeight: '600', color: COLOR.texto2 },
+  botonChico: { flexDirection: 'row', gap: 6, alignItems: 'center', justifyContent: 'center', height: 40, paddingHorizontal: 16, borderRadius: 14, backgroundColor: COLOR.mentaClara },
+  textoBoton: { fontSize: 15.5, fontFamily: FUENTE.fuerte },
+  chip: { height: 38, paddingHorizontal: 16, borderRadius: 999, borderWidth: 1.5, borderColor: COLOR.borde, backgroundColor: COLOR.superficie, justifyContent: 'center' },
+  textoChip: { fontSize: 13, fontFamily: FUENTE.semi, color: COLOR.texto2 },
   insignia: { alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
-  textoInsignia: { fontSize: 11, fontWeight: '700' },
+  textoInsignia: { fontSize: 11, fontFamily: FUENTE.fuerte },
   foto: { borderRadius: RADIO.medio, alignItems: 'center', justifyContent: 'center' },
-  iniciales: { backgroundColor: COLOR.verdeSuave, alignItems: 'center', justifyContent: 'center' },
-  textoIniciales: { fontWeight: '800', color: COLOR.verdeTexto },
-  botonMas: { width: 38, height: 38, borderRadius: 12, backgroundColor: COLOR.verde, alignItems: 'center', justifyContent: 'center' },
+  iniciales: { backgroundColor: COLOR.mentaClara, alignItems: 'center', justifyContent: 'center' },
+  textoIniciales: { fontFamily: FUENTE.negra, color: COLOR.verde },
+  botonMas: { width: 40, height: 40, borderRadius: 14, backgroundColor: COLOR.lima, alignItems: 'center', justifyContent: 'center' },
   sinPrecio: { flexDirection: 'row', gap: 6, alignItems: 'center', paddingHorizontal: 10, paddingVertical: 8, borderRadius: RADIO.chico, backgroundColor: COLOR.tenue },
-  textoSinPrecio: { fontSize: 12, fontWeight: '600', color: COLOR.texto2 },
+  textoSinPrecio: { fontSize: 12, fontFamily: FUENTE.semi, color: COLOR.texto2 },
   falla: { padding: 12, borderRadius: RADIO.medio, backgroundColor: COLOR.rojoSuave },
   cabezaSeccion: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
-  enlace: { color: COLOR.verdeTexto, fontWeight: '700', fontSize: 13, textDecorationLine: 'underline' },
+  enlace: { color: COLOR.verde, fontFamily: FUENTE.fuerte, fontSize: 13.5 },
 });
+
+/** El logo de ABASTO: el carrito en un cuadrado menta y la palabra en negrita. `claro` para fondos oscuros. */
+export function Logo({ tamano = 30, claro }: { tamano?: number; claro?: boolean }) {
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: tamano * 0.28 }}>
+      <View style={{ width: tamano, height: tamano, borderRadius: tamano * 0.3, backgroundColor: claro ? '#fff' : COLOR.menta, alignItems: 'center', justifyContent: 'center' }}>
+        <Ionicons name="cart" size={tamano * 0.6} color={COLOR.verde} />
+      </View>
+      <Text style={{ fontFamily: FUENTE.negra, fontSize: tamano * 0.72, letterSpacing: -0.5, color: claro ? '#fff' : COLOR.verde }}>ABASTO</Text>
+    </View>
+  );
+}

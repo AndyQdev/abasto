@@ -74,6 +74,34 @@ export function Aparecer({ children, orden = 0, desde = 18, style }: { children:
   );
 }
 
+/** Un objeto 3D que sube y baja despacio, como si flotara (las ilustraciones que sobresalen de las tarjetas). */
+export function Flotar({ children, alto = 6, duracion = 2600, retraso = 0, style }: { children: ReactNode; alto?: number; duracion?: number; retraso?: number; style?: StyleProp<ViewStyle> }) {
+  const v = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const ciclo = Animated.loop(
+      Animated.sequence([
+        Animated.delay(retraso),
+        Animated.timing(v, { toValue: 1, duration: duracion / 2, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        Animated.timing(v, { toValue: 0, duration: duracion / 2, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+      ]),
+    );
+    ciclo.start();
+    return () => ciclo.stop();
+  }, [v, duracion, retraso]);
+  return <Animated.View style={[style, { transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [0, -alto] }) }] }]}>{children}</Animated.View>;
+}
+
+/** Late suave (una vez y vuelve): para lo que acaba de elegirse o agregarse. */
+export function useLatido(): [Animated.Value, () => void] {
+  const v = useRef(new Animated.Value(1)).current;
+  const latir = () =>
+    Animated.sequence([
+      Animated.spring(v, { toValue: 1.08, useNativeDriver: true, speed: 40, bounciness: 12 }),
+      Animated.spring(v, { toValue: 1, useNativeDriver: true, speed: 18, bounciness: 10 }),
+    ]).start();
+  return [v, latir];
+}
+
 /** Rectángulo que brilla suave mientras llegan los datos. */
 export function Esqueleto({ alto, ancho = '100%', radio = 14, style }: { alto: number; ancho?: number | `${number}%`; radio?: number; style?: StyleProp<ViewStyle> }) {
   const v = useRef(new Animated.Value(0.45)).current;

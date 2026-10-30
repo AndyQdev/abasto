@@ -124,8 +124,8 @@ export function Ubicacion({ alTerminar, alCerrar }: { alTerminar?: () => void; a
                   const activa = et === etiqueta;
                   return (
                     <Tocable key={et} onPress={() => setEtiqueta(et)} style={[e.etiqueta, activa && e.etiquetaActiva]} accessibilityRole="button" accessibilityState={{ selected: activa }}>
-                      <Icono nombre={activa ? iconoDeEtiqueta(et) : (`${iconoDeEtiqueta(et)}-outline` as const)} tamano={18} color={activa ? '#fff' : COLOR.texto2} />
-                      <Texto v="fuerte" style={{ color: activa ? '#fff' : COLOR.texto2 }}>
+                      <Icono nombre={activa ? iconoDeEtiqueta(et) : (`${iconoDeEtiqueta(et)}-outline` as const)} tamano={18} color={activa ? COLOR.verde : COLOR.texto2} />
+                      <Texto v="fuerte" style={{ color: activa ? COLOR.verde : COLOR.texto2 }}>
                         {et}
                       </Texto>
                     </Tocable>
@@ -183,5 +183,5 @@ const e = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: COLOR.borde,
   },
-  etiquetaActiva: { backgroundColor: COLOR.verde, borderColor: COLOR.verde },
+  etiquetaActiva: { backgroundColor: COLOR.lima, borderColor: COLOR.verde },
 });

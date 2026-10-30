@@ -1,3 +1,4 @@
+import { Manrope_500Medium, Manrope_600SemiBold, Manrope_700Bold, Manrope_800ExtraBold, useFonts } from '@expo-google-fonts/manrope';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -55,7 +56,7 @@ function PestanasDeAbajo() {
     >
       <Tab.Screen name="Inicio" component={Inicio} />
       <Tab.Screen name="Buscar" component={Buscar} />
-      <Tab.Screen name="Carrito" component={Carrito} options={{ tabBarBadge: carrito.length || undefined, tabBarBadgeStyle: { backgroundColor: COLOR.ambar } }} />
+      <Tab.Screen name="Carrito" component={Carrito} options={{ tabBarBadge: carrito.length || undefined, tabBarBadgeStyle: { backgroundColor: COLOR.lima, color: COLOR.verde, fontWeight: '800' } }} />
       <Tab.Screen name="Pedidos" component={Pedidos} />
       <Tab.Screen name="Cuenta" component={Cuenta} />
     </Tab.Navigator>
@@ -117,6 +118,8 @@ function Aviso() {
 }
 
 export default function App() {
+  const [fuentes] = useFonts({ Manrope_500Medium, Manrope_600SemiBold, Manrope_700Bold, Manrope_800ExtraBold });
+  if (!fuentes) return <View style={e.centro} />;
   return (
     <SafeAreaProvider>
       <StatusBar style="auto" />

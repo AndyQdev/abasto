@@ -1,132 +1,138 @@
 {
-  "estilo": "Gibby: 3D estilizado tipo película animada, con la paleta de Abasto (verde bosque, ámbar y menta). El texto del estilo está en scripts/ilustraciones/generar.mjs.",
+  "estilo": "Gibby: 3D estilizado tipo película animada, con la paleta de Abasto (turquesa menta, verde oscuro y lima). Todas son objetos recortados para que sobresalgan de las tarjetas. El texto del estilo está en scripts/ilustraciones/generar.mjs.",
   "imagenes": [
     {
       "nombre": "bienvenida",
-      "tipo": "escena",
-      "proporcion": "4:5",
-      "uso": "Bienvenida: arriba de «Ingresa tu número»",
-      "tema": "A cheerful young delivery rider in a forest-green jacket and cap on a cute rounded scooter with a big cargo box full of groceries (rice sacks, oil bottles, soda bottles peeking out), just arriving at a small colorful Bolivian corner store; the smiling store owner woman waves happily from the door. Warm morning sun, a palm tree, a few potted plants."
+      "tipo": "objeto",
+      "lado": 1024,
+      "uso": "Acceso: la composición 3D sobre el fondo menta",
+      "tema": "A cheerful young delivery rider in a turquoise-mint jacket and cap with dark green details, waist-up, smiling and holding a smartphone that shows one big green chat bubble with a white check mark; two or three cardboard boxes and a paper grocery bag stacked behind him. Floating in the air with nothing under it, big and filling most of the frame."
     },
     {
       "nombre": "codigo",
-      "tipo": "escena",
-      "proporcion": "1:1",
-      "uso": "Código: arriba de las cajitas del código",
-      "tema": "A big cute rounded smartphone floating at a slight angle, its screen showing one large green chat bubble with a shield and a checkmark inside (no text). Small sparkles and a couple of floating green chat bubbles around it. Friendly and reassuring."
+      "tipo": "objeto",
+      "lado": 768,
+      "uso": "Acceso: paso del código",
+      "tema": "A big cute rounded white smartphone floating at a slight angle, its screen showing a large green chat bubble with a white shield and check mark inside; a few small lime and mint sparkles and two tiny chat bubbles around it. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no table, no shadow under the objects and no reflection: only the objects on the flat background."
     },
     {
       "nombre": "ubicacion",
-      "tipo": "escena",
-      "proporcion": "1:1",
-      "uso": "Ubicación: «¿Dónde te lo llevamos?»",
-      "tema": "A giant glossy forest-green map pin standing on a tiny miniature neighborhood of rounded colorful houses, little round trees and a small corner store; a tiny delivery scooter with a cargo box rides along the curvy street toward the pin. Seen slightly from above."
+      "tipo": "objeto",
+      "lado": 1024,
+      "uso": "Ubicación: ¿Dónde te lo llevamos?",
+      "tema": "A giant glossy dark green map pin with a lime ring standing on a tiny round floating island of a neighborhood: rounded mint and white houses, little round trees, a small corner store with a striped awning and a tiny mint delivery scooter on a curvy street. Floating in the air with nothing under it, big and filling most of the frame."
     },
     {
       "nombre": "banner-abarrotes",
-      "tipo": "escena",
-      "proporcion": "16:9",
-      "uso": "Inicio: banner de abarrotes",
-      "tema": "A generous arrangement of groceries on rustic wooden crates at a market stall: stacked rice and sugar sacks, rows of cooking-oil bottles, pasta packs and canned goods, with a few fresh green leaves. Composition leaves the left third calm and empty for text overlay; products on the right."
+      "tipo": "objeto",
+      "lado": 768,
+      "uso": "Inicio: banner de abarrotes (sobresale del banner)",
+      "tema": "A generous pile of groceries: white rice sacks, golden cooking-oil bottles, pasta packs, sugar bags and an open cardboard box, plain packaging. Floating in the air with nothing under it, big and filling most of the frame."
     },
     {
       "nombre": "banner-bebidas",
-      "tipo": "escena",
-      "proporcion": "16:9",
+      "tipo": "objeto",
+      "lado": 768,
       "uso": "Inicio: banner de bebidas",
-      "tema": "Crates of colorful soda bottles, water bottles and juice boxes with ice cubes and refreshing splashes, cool and fresh mood. Composition leaves the left third calm and empty for text overlay; drinks on the right."
-    },
-    {
-      "nombre": "banner-entrega",
-      "tipo": "escena",
-      "proporcion": "16:9",
-      "uso": "Inicio: banner «pide hoy, te lo llevamos»",
-      "tema": "A cute rounded forest-green delivery van loaded with cardboard boxes driving along a sunny Santa Cruz street lined with palm trees toward a small corner store, motion lines behind it. Composition leaves the left third calm and empty for text overlay; van on the right."
+      "tema": "A wooden crate full of colorful soda bottles and water bottles with a few juice boxes, ice cubes and fresh water splashes around. Floating in the air with nothing under it, big and filling most of the frame."
     },
     {
       "nombre": "banner-limpieza",
-      "tipo": "escena",
-      "proporcion": "16:9",
+      "tipo": "objeto",
+      "lado": 768,
       "uso": "Inicio: banner de limpieza",
-      "tema": "Colorful detergent bottles, bars of soap, sponges and a bucket overflowing with soft soap bubbles, clean and sparkling mood. Composition leaves the left third calm and empty for text overlay; products on the right."
+      "tema": "Colorful detergent bottles, a bleach jug, soap bars, a sponge and a small mint bucket overflowing with soft soap bubbles. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no table, no shadow under the objects and no reflection: only the objects on the flat background."
     },
     {
-      "nombre": "vacio-carrito",
-      "tipo": "escena",
-      "uso": "Carrito vacío",
-      "tema": "An empty woven market basket with a forest-green handle sitting on a wooden counter, a few soft sparkles around it, inviting to be filled. Calm and friendly."
-    },
-    {
-      "nombre": "vacio-pedidos",
-      "tipo": "escena",
-      "uso": "Mis pedidos vacío",
-      "tema": "A neat little stack of closed cardboard boxes tied with a forest-green ribbon, a small blank clipboard leaning on them and a tiny potted plant beside. Calm and friendly."
-    },
-    {
-      "nombre": "pedido-en-camino",
-      "tipo": "escena",
-      "uso": "Seguimiento: el pedido va en camino",
-      "tema": "A happy delivery rider in a forest-green jacket on a cute rounded scooter with a cargo box, riding along a sunny curvy street with motion lines, small houses and palm trees in the background."
-    },
-    {
-      "nombre": "pedido-entregado",
-      "tipo": "escena",
-      "uso": "Seguimiento: pedido entregado",
-      "tema": "At the door of a small colorful corner store, a smiling store owner woman receives a stack of cardboard boxes from a delivery rider in a forest-green jacket; both smile, small confetti sparkles in the air."
-    },
-    {
-      "nombre": "sin-senal",
-      "tipo": "escena",
-      "uso": "Aviso sin señal",
-      "tema": "A cute rounded smartphone resting on a wooden counter next to a small woven basket of groceries, a soft little cloud floating above the phone, calm and reassuring mood."
+      "nombre": "banner-entrega",
+      "tipo": "objeto",
+      "lado": 768,
+      "uso": "Inicio: banner de entrega · Seguimiento: en camino",
+      "tema": "A happy delivery rider in a turquoise-mint jacket and helmet riding a cute rounded mint scooter with a big mint cargo box on the back, cardboard boxes peeking out, seen from the side with a slight three-quarter angle, motion feeling. Floating in the air with nothing under it, big and filling most of the frame."
     },
     {
       "nombre": "rubro-abarrotes",
       "tipo": "objeto",
+      "lado": 512,
       "uso": "Rubro Abarrotes",
-      "tema": "A small group of groceries: a rice sack, a cooking-oil bottle and a pasta pack, plain colored packaging without writing."
+      "tema": "A small group of groceries: a white rice sack, a golden cooking-oil bottle and a pasta pack, plain packaging without writing. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no table, no shadow under the objects and no reflection: only the objects on the flat background."
     },
     {
       "nombre": "rubro-bebidas",
       "tipo": "objeto",
+      "lado": 512,
       "uso": "Rubro Bebidas",
-      "tema": "Three drinks standing close together and touching: a tall soda bottle, a water bottle and a juice box with a straw, plain colored packaging without writing. The group is big and fills about 80 percent of the frame. Absolutely no floor, no shelf, no table, no ground shadow, nothing under them."
+      "tema": "Three drinks touching each other: a soda bottle, a water bottle and a juice box with a straw, plain packaging without writing. Floating in the air with nothing under it, big and filling most of the frame."
     },
     {
       "nombre": "rubro-cosmeticos",
       "tipo": "objeto",
+      "lado": 512,
       "uso": "Rubro Cosméticos",
-      "tema": "A small group of cosmetics: a lipstick, a cream jar and a perfume bottle, pastel colors, no writing. The group is big and fills most of the frame, centered, floating in the air with nothing under it."
+      "tema": "A small group of cosmetics: a lipstick, a cream jar and a perfume bottle, pastel colors, no writing. Floating in the air with nothing under it, big and filling most of the frame."
     },
     {
       "nombre": "rubro-galletas-y-dulces",
       "tipo": "objeto",
+      "lado": 512,
       "uso": "Rubro Galletas y dulces",
-      "tema": "A small group of sweets: a cookie pack, a few wrapped candies and a chocolate bar, plain colored packaging without writing."
+      "tema": "A small group of sweets: a cookie pack, a few wrapped candies and a chocolate bar, plain packaging without writing. Floating in the air with nothing under it, big and filling most of the frame."
     },
     {
       "nombre": "rubro-higiene",
       "tipo": "objeto",
+      "lado": 512,
       "uso": "Rubro Higiene y cuidado personal",
-      "tema": "A small group of personal care items: a shampoo bottle, a toothpaste tube, a soap bar and a toilet paper roll, no writing. The group is big and fills most of the frame, centered, floating in the air with nothing under it."
+      "tema": "A small group of personal care items: a shampoo bottle, a toothpaste tube, a soap bar and a toilet paper roll, no writing. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no table, no shadow under the objects and no reflection: only the objects on the flat background."
     },
     {
       "nombre": "rubro-limpieza",
       "tipo": "objeto",
+      "lado": 512,
       "uso": "Rubro Limpieza del hogar",
-      "tema": "A small group of cleaning products: a detergent bottle, a bleach jug and a yellow-green sponge with a few bubbles, no writing."
+      "tema": "A small group of cleaning products: a detergent bottle, a bleach jug and a sponge with a few bubbles, no writing. Floating in the air with nothing under it, big and filling most of the frame."
     },
     {
       "nombre": "rubro-lacteos",
       "tipo": "objeto",
+      "lado": 512,
       "uso": "Rubro Lácteos",
-      "tema": "A small group of dairy: a milk carton, a yogurt cup and a cheese wedge, plain colored packaging without writing."
+      "tema": "A small group of dairy: a milk carton, a yogurt cup and a cheese wedge, plain packaging without writing. Floating in the air with nothing under it, big and filling most of the frame."
     },
     {
       "nombre": "rubro-varios",
       "tipo": "objeto",
+      "lado": 512,
       "uso": "Rubro Varios",
-      "tema": "A small group of household odds and ends: a white candle, a box of matches and a pack of batteries, plain packaging without writing. Inanimate objects: no faces, no eyes, no mouths. The group is big and fills most of the frame, floating with nothing under it."
+      "tema": "A white candle, a box of matches and a pack of batteries, plain packaging without writing. Inanimate objects: no faces, no eyes. Floating in the air with nothing under it, big and filling most of the frame."
+    },
+    {
+      "nombre": "vacio-carrito",
+      "tipo": "objeto",
+      "lado": 768,
+      "uso": "Carrito vacío",
+      "tema": "An empty woven market basket with a mint handle, a few lime and mint sparkles around it, inviting to be filled. Floating in the air with nothing under it, big and filling most of the frame."
+    },
+    {
+      "nombre": "vacio-pedidos",
+      "tipo": "objeto",
+      "lado": 768,
+      "uso": "Mis pedidos vacío",
+      "tema": "A neat stack of closed cardboard boxes tied with a mint ribbon and a small clipboard leaning on them, a tiny potted plant beside. Floating in the air with nothing under it, big and filling most of the frame."
+    },
+    {
+      "nombre": "pedido-entregado",
+      "tipo": "objeto",
+      "lado": 768,
+      "uso": "Seguimiento: entregado",
+      "tema": "A smiling store owner woman holding a stack of cardboard boxes next to a delivery rider in a turquoise-mint jacket giving a thumbs up, small lime confetti around. Floating in the air with nothing under it, big and filling most of the frame."
+    },
+    {
+      "nombre": "sin-senal",
+      "tipo": "objeto",
+      "lado": 512,
+      "uso": "Aviso sin señal",
+      "tema": "A cute rounded smartphone resting next to a small woven basket of groceries, a soft little cloud floating above the phone. Floating in the air with nothing under it, big and filling most of the frame."
     }
   ]
 }
