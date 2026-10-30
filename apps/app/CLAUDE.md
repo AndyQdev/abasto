@@ -5,7 +5,7 @@ La app con la que tiendas y personas compran al por mayor. Es el producto que ve
 
 - Pantallas en `src/pantallas`: Entrar, Inicio, Buscar, Producto, Vendedor, Carrito, Finalizar, Pedidos, Seguimiento (con el QR), BuscarPorFoto y Cuenta. Siguen la maqueta `docs/uix-mockup/Abasto v1 (1).html`.
 - La lógica sin pantallas viene de `packages/comercio` (catálogo, precios por volumen, carrito y saga) y la bandeja offline de `packages/outbox-offline`, por ruta: `metro.config.js`, `tsconfig.json` y `jest.moduleNameMapper`.
-- Sesión con Keycloak (`src/sesion.tsx`, cliente `abasto-app`, PKCE). Los tokens van al llavero (expo-secure-store) y se renuevan solos.
+- **Inicio de sesión nativo:** correo y contraseña en la pantalla Entrar, sin abrir el navegador. `src/keycloak.ts` los manda a Keycloak (password grant del cliente `abasto-app`); es la misma cuenta del Panel. Los tokens van al llavero (expo-secure-store) y se renuevan solos. No volver al login web con redirección: el usuario quiere la app 100 % nativa.
 - Sin señal: el catálogo y el carrito quedan guardados (`src/guardado.ts`) y los pedidos salen por la bandeja (`src/bandeja-pedidos.ts`) hacia Conecta con una clave única.
 - **IA local = `src/ia/` (dueño: Jhoel).** Ahí están ML Kit (`leer-texto.ts`), los modelos TFLite (`modelo.ts`, `assets/modelos/`), la lectura de precios (`precio.ts`) y el diagnóstico. Las pantallas importan **solo** desde `src/ia/index.ts` y nunca de un archivo de adentro. El resto de la app es de Andrés.
 - Buscar con una foto: `leerTexto` (de `src/ia`) lee la etiqueta en el teléfono y `buscarPorTextoLeido` (`packages/comercio`) ordena el catálogo. Cuando esté el modelo propio, `src/ia` exportará también el reconocimiento del producto por cómo se ve.
