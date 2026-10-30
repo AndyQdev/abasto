@@ -68,3 +68,33 @@ def test_el_tflite_responde_igual_que_keras():
         # Los pesos en float16 mueven un poco los números, pero no la dirección del vector ni la clase ganadora
         assert coseno > 0.995
         assert np.argmax(clases) == np.argmax(keras["probabilidades"][0])
+
+
+def test_el_catalogo_toma_el_codigo_del_nombre_de_cada_foto(tmp_path):
+    from abasto_ml.vision import catalogo
+
+    for nombre in ["AB-002.webp", "AB-001.JPG", "LEEME.md", "notas.txt"]:
+        (tmp_path / nombre).write_bytes(b"")
+    assert list(catalogo.leer_fotos(tmp_path)) == ["AB-001", "AB-002"]
+
+
+def test_las_vistas_de_una_foto_son_del_tamano_del_modelo_y_la_oscura_tiene_menos_luz():
+    image = pytest.importorskip("PIL.Image")
+    from abasto_ml.vision import catalogo
+
+    foto = image.new("RGB", (640, 480), (200, 100, 50))
+    vistas = catalogo.vistas(foto)
+    assert len(vistas) == 2 * len(catalogo.RECORTES)
+    assert all(v.shape == (224, 224, 3) and v.dtype == np.float32 for v in vistas)
+    assert np.allclose(vistas[1], vistas[0] * 0.85)
+
+
+def test_la_foto_de_celular_simulada_es_repetible_con_la_misma_semilla():
+    image = pytest.importorskip("PIL.Image")
+    from abasto_ml.vision import catalogo
+
+    foto = image.new("RGB", (640, 640), (10, 120, 200))
+    a = catalogo.como_foto_de_celular(foto, np.random.default_rng(3))
+    b = catalogo.como_foto_de_celular(foto, np.random.default_rng(3))
+    assert a.shape == (224, 224, 3)
+    assert np.array_equal(a, b)

@@ -14,17 +14,18 @@ from pathlib import Path
 
 EXTENSIONES = {".jpg", ".jpeg", ".png", ".webp"}
 
+# Productos reales del catálogo de Abasto (SembrarAbasto.php) que se consiguen en cualquier tienda
 PRODUCTOS_DE_LA_DEMO: dict[str, str] = {
-    "AR-0100": "Arroz grano largo 1 kg",
-    "AZ-1000": "Azúcar refinada 1 kg",
-    "AC-0500": "Aceite comestible 500 ml",
-    "FA-0900": "Fideo tallarín 900 g",
-    "SA-1000": "Sal yodada 1 kg",
-    "CA-0250": "Café molido 250 g",
-    "RF-2000": "Refresco cola 2 L",
-    "AG-0600": "Agua mineral 600 ml",
-    "DE-1000": "Detergente en polvo 1 kg",
-    "HB-0090": "Pasta dental 90 g",
+    "AB-001": "Arroz Caisy Grano de Oro 1 kg",
+    "AB-002": "Azúcar Guabirá 1 kg",
+    "AB-003": "Fideo spaghetti Don Vittorio 500 g",
+    "AB-005": "Aceite Fino 900 ml",
+    "AB-007": "Sal fina Lobos 1 kg",
+    "AB-014": "Coca-Cola 2 L",
+    "AB-015": "Agua Vital sin gas 2 L",
+    "AB-017": "Leche PIL fresca 900 ml",
+    "AB-025": "Detergente Skip 700 g",
+    "AB-031": "Pasta dental Colgate Triple Acción 180 g",
 }
 
 MINIMO_POR_PRODUCTO = 15
