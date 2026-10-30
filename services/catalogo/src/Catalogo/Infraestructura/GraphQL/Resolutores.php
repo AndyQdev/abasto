@@ -10,12 +10,16 @@ use Catalogo\Aplicacion\CargarProducto;
 use Catalogo\Aplicacion\ConsultarCatalogo;
 use Catalogo\Aplicacion\CrearProducto;
 use Catalogo\Aplicacion\EditarProducto;
+use Catalogo\Aplicacion\EntrarConTelefono;
 use Catalogo\Aplicacion\GestionarClientes;
+use Catalogo\Aplicacion\RegistrarOrganizacion;
+use Catalogo\Aplicacion\VerificarMayorista;
 use Catalogo\Aplicacion\VistaDeProducto;
 use Catalogo\Dominio\Abastecimiento;
 use Catalogo\Dominio\ErrorDeDominio;
 use Catalogo\Dominio\EscalaDePrecio;
 use Catalogo\Dominio\EstadoProducto;
+use Catalogo\Dominio\EstadoVerificacion;
 use Catalogo\Dominio\ListaDePrecios;
 use Catalogo\Dominio\Organizacion;
 use Catalogo\Dominio\Presentacion;
@@ -40,7 +44,116 @@ final readonly class Resolutores
         private CambiarFotoDeProducto $cambiarFoto,
         private OrganizacionRepositorio $organizaciones,
         private RelacionRepositorio $relaciones,
+        private EntrarConTelefono $entrada,
+        private RegistrarOrganizacion $registro,
+        private VerificarMayorista $verificacion,
     ) {
+    }
+
+    // ------------------------------------------------------------------ app de clientes: entrar con el celular
+
+    /**
+     * @param array<string, mixed> $args
+     *
+     * @return array<string, mixed>
+     */
+    public function pedirCodigo(mixed $_, array $args): array
+    {
+        return $this->conErrores(fn () => $this->entrada->pedirCodigo((string) $args['telefono']));
+    }
+
+    /**
+     * @param array<string, mixed> $args
+     *
+     * @return array<string, mixed>
+     */
+    public function entrarConCodigo(mixed $_, array $args): array
+    {
+        $r = $this->conErrores(fn () => $this->entrada->entrar(
+            (string) $args['telefono'],
+            (string) $args['codigo'],
+            isset($args['nombre']) ? (string) $args['nombre'] : null,
+        ));
+
+        return [
+            'tokenDeAcceso' => $r['sesion']->acceso,
+            'tokenDeRenovacion' => $r['sesion']->renovacion,
+            'venceEnSegundos' => $r['sesion']->venceEnSegundos,
+            'cuentaNueva' => $r['nuevo'],
+            'nombre' => $r['cliente']->nombre,
+        ];
+    }
+
+    // ------------------------------------------------------------------ mayoristas: registro y verificación (CU-01)
+
+    /** @return array<string, mixed> */
+    public function miOrganizacion(): array
+    {
+        $usuario = Usuario::actual();
+        $o = $this->organizaciones->porId($usuario->orgId);
+        if ($o === null) {
+            throw new Error('Tu cuenta no tiene empresa', extensions: ['code' => 'SIN_EMPRESA']);
+        }
+
+        return [
+            'id' => $o->id,
+            'nombre' => $o->nombre,
+            'tipo' => $o->tipo,
+            'estadoVerificacion' => $o->verificacion->value,
+            'motivoRechazo' => $o->motivoRechazo,
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $args
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function mayoristasPorVerificar(mixed $_, array $args): array
+    {
+        Usuario::actual()->exigirRol('admin');
+        $estado = EstadoVerificacion::tryFrom((string) ($args['estado'] ?? 'PENDIENTE')) ?? EstadoVerificacion::PENDIENTE;
+
+        return array_map(Vistas::solicitud(...), $this->verificacion->porEstado($estado));
+    }
+
+    /**
+     * @param array<string, mixed> $args
+     *
+     * @return array<string, mixed>
+     */
+    public function registrarMayorista(mixed $_, array $args): array
+    {
+        /** @var array<string, string> $e */
+        $e = $args['entrada'];
+
+        return Vistas::solicitud($this->conErrores(fn () => $this->registro->mayorista(
+            $e['empresa'], $e['nit'], $e['ciudad'], $e['representante'], $e['telefono'], $e['correo'], $e['clave'],
+        )));
+    }
+
+    /**
+     * @param array<string, mixed> $args
+     *
+     * @return array<string, mixed>
+     */
+    public function verificarMayorista(mixed $_, array $args): array
+    {
+        Usuario::actual()->exigirRol('admin');
+
+        return Vistas::solicitud($this->conErrores(fn () => $this->verificacion->aprobar((string) $args['id'])));
+    }
+
+    /**
+     * @param array<string, mixed> $args
+     *
+     * @return array<string, mixed>
+     */
+    public function rechazarMayorista(mixed $_, array $args): array
+    {
+        Usuario::actual()->exigirRol('admin');
+
+        return Vistas::solicitud($this->conErrores(fn () => $this->verificacion->rechazar((string) $args['id'], (string) $args['motivo'])));
     }
 
     /**

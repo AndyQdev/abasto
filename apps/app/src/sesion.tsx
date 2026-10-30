@@ -1,11 +1,7 @@
-import * as AuthSession from 'expo-auth-session';
 import * as SecureStore from 'expo-secure-store';
-import * as WebBrowser from 'expo-web-browser';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Platform } from 'react-native';
-import { CLIENTE_KEYCLOAK, URLS } from './config';
-
-WebBrowser.maybeCompleteAuthSession();
+import { cerrarEnKeycloak, renovar, SesionVencida, type Tokens } from './keycloak';
 
 /** Lo que la app sabe de quien entró, sacado del token de Keycloak. */
 export interface Usuario {
@@ -14,13 +10,9 @@ export interface Usuario {
   correo: string;
   orgId: string;
   orgNombre: string;
+  /** Los 8 dígitos, si entró con su celular */
+  telefono: string;
   roles: string[];
-}
-
-interface Tokens {
-  acceso: string;
-  refresco: string | null;
-  venceEn: number;
 }
 
 const CLAVE = 'abasto.sesion';
@@ -67,6 +59,7 @@ export function usuarioDe(jwt: string): Usuario {
     correo: String(p.email ?? ''),
     orgId: String(p.org_id ?? ''),
     orgNombre: String(p.org_nombre ?? p.name ?? ''),
+    telefono: /^591\d{8}$/.test(String(p.preferred_username)) ? String(p.preferred_username).slice(3) : '',
     roles,
   };
 }
@@ -75,11 +68,11 @@ interface Sesion {
   usuario: Usuario | null;
   /** Mientras se lee el llavero al abrir la app */
   cargando: boolean;
-  entrar: () => Promise<void>;
+  /** Guarda la sesión que devolvió entrarConCodigo (src/acceso.ts). Desde ahí la app no vuelve a pedir el celular. */
+  iniciar: (tokens: Tokens) => Promise<void>;
   salir: () => Promise<void>;
   /** Token vigente (lo renueva si está por vencer). Null si no hay sesión. */
   token: () => Promise<string | null>;
-  error: string | null;
 }
 
 const Contexto = createContext<Sesion | null>(null);
@@ -89,15 +82,8 @@ let tokenGlobal: () => Promise<string | null> = async () => null;
 export const tokenActual = () => tokenGlobal();
 
 export function ProveedorDeSesion({ children }: { children: ReactNode }) {
-  const descubrimiento = AuthSession.useAutoDiscovery(URLS.keycloak);
-  const redirectUri = AuthSession.makeRedirectUri({ scheme: 'abasto' });
-  const [peticion, respuesta, pedir] = AuthSession.useAuthRequest(
-    { clientId: CLIENTE_KEYCLOAK, redirectUri, scopes: ['openid', 'profile', 'email', 'offline_access'], usePKCE: true },
-    descubrimiento,
-  );
   const [tokens, setTokens] = useState<Tokens | null>(null);
   const [cargando, setCargando] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const tokensRef = useRef<Tokens | null>(null);
 
   const guardar = useCallback(async (t: Tokens | null) => {
@@ -114,32 +100,23 @@ export function ProveedorDeSesion({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  // Vuelve de Keycloak con el código: se canjea por los tokens (PKCE)
-  useEffect(() => {
-    if (respuesta?.type !== 'success' || !descubrimiento || !peticion?.codeVerifier) return;
-    AuthSession.exchangeCodeAsync(
-      { clientId: CLIENTE_KEYCLOAK, code: respuesta.params.code, redirectUri, extraParams: { code_verifier: peticion.codeVerifier } },
-      descubrimiento,
-    )
-      .then((r) => guardar({ acceso: r.accessToken, refresco: r.refreshToken ?? null, venceEn: Date.now() + (r.expiresIn ?? 300) * 1000 }))
-      .catch(() => setError('No se pudo iniciar sesión. Vuelve a intentar.'));
-  }, [respuesta, descubrimiento, peticion, redirectUri, guardar]);
-
   const token = useCallback(async () => {
     const t = tokensRef.current;
     if (!t) return null;
     if (Date.now() < t.venceEn - 30_000) return t.acceso;
     // Por vencer: se renueva con el refresh token. Sin señal se usa el que hay y el servicio dirá si venció.
-    if (!t.refresco || !descubrimiento) return t.acceso;
+    if (!t.refresco) return t.acceso;
     try {
-      const r = await AuthSession.refreshAsync({ clientId: CLIENTE_KEYCLOAK, refreshToken: t.refresco }, descubrimiento);
-      const nuevo = { acceso: r.accessToken, refresco: r.refreshToken ?? t.refresco, venceEn: Date.now() + (r.expiresIn ?? 300) * 1000 };
+      const r = await renovar(t.refresco);
+      const nuevo = { ...r, refresco: r.refresco ?? t.refresco };
       await guardar(nuevo);
       return nuevo.acceso;
-    } catch {
-      return t.acceso;
+    } catch (e) {
+      // Keycloak ya no la reconoce: vuelve a la bienvenida. Sin señal, se sigue con lo que hay.
+      if (e instanceof SesionVencida) await guardar(null);
+      return tokensRef.current?.acceso ?? null;
     }
-  }, [descubrimiento, guardar]);
+  }, [guardar]);
 
   useEffect(() => {
     tokenGlobal = token;
@@ -149,16 +126,15 @@ export function ProveedorDeSesion({ children }: { children: ReactNode }) {
     () => ({
       usuario: tokens ? usuarioDe(tokens.acceso) : null,
       cargando,
-      error,
       token,
-      entrar: async () => {
-        setError(null);
-        if (!peticion) return setError('Todavía no hay conexión con el servidor. Revisa tu señal.');
-        await pedir();
+      iniciar: guardar,
+      salir: async () => {
+        const refresco = tokensRef.current?.refresco;
+        await guardar(null);
+        if (refresco) await cerrarEnKeycloak(refresco);
       },
-      salir: () => guardar(null),
     }),
-    [tokens, cargando, error, token, peticion, pedir, guardar],
+    [tokens, cargando, token, guardar],
   );
 
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>;

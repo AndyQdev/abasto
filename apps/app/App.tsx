@@ -7,16 +7,18 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Icono, Texto, type NombreDeIcono } from './src/componentes';
 import { ProveedorDeEstado, useEstado } from './src/estado';
 import type { Pestanas, Pila } from './src/navegacion';
+import { ProveedorDeDirecciones, useDirecciones } from './src/direcciones-estado';
+import { Acceso } from './src/pantallas/Acceso';
 import { BuscarPorFoto } from './src/pantallas/BuscarPorFoto';
 import { Buscar } from './src/pantallas/Buscar';
 import { Carrito } from './src/pantallas/Carrito';
 import { Cuenta } from './src/pantallas/Cuenta';
-import { Entrar } from './src/pantallas/Entrar';
 import { Finalizar } from './src/pantallas/Finalizar';
 import { Inicio } from './src/pantallas/Inicio';
 import { Pedidos } from './src/pantallas/Pedidos';
 import { Producto } from './src/pantallas/Producto';
 import { Seguimiento } from './src/pantallas/Seguimiento';
+import { Ubicacion } from './src/pantallas/Ubicacion';
 import { Vendedor } from './src/pantallas/Vendedor';
 import { ProveedorDeSesion, useSesion } from './src/sesion';
 import { COLOR } from './src/tema';
@@ -46,8 +48,9 @@ function PestanasDeAbajo() {
         headerShown: false,
         tabBarActiveTintColor: COLOR.verde,
         tabBarInactiveTintColor: COLOR.texto3,
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
-        tabBarIcon: ({ color }) => <Icono nombre={ICONOS[route.name]} color={color} tamano={22} />,
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '700' },
+        tabBarStyle: { height: 64, paddingTop: 6, paddingBottom: 8, borderTopWidth: 0, elevation: 12, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 12 },
+        tabBarIcon: ({ color, focused }) => <Icono nombre={focused ? (ICONOS[route.name].replace('-outline', '') as NombreDeIcono) : ICONOS[route.name]} color={color} tamano={23} />,
       })}
     >
       <Tab.Screen name="Inicio" component={Inicio} />
@@ -68,7 +71,20 @@ function Navegacion() {
       </View>
     );
   }
-  if (!usuario) return <Entrar />;
+  // Como PedidosYa: sin sesión, celular y código; con sesión, nunca más se pide
+  if (!usuario) return <Acceso />;
+  return (
+    <ProveedorDeDirecciones>
+      <ConDireccion />
+    </ProveedorDeDirecciones>
+  );
+}
+
+/** La primera vez, antes de comprar, se pide dónde llevarle el pedido. */
+function ConDireccion() {
+  const { cargando, lista } = useDirecciones();
+  if (cargando) return <View style={e.centro} />;
+  if (!lista.length) return <Ubicacion />;
   return (
     <ProveedorDeEstado>
       <NavigationContainer theme={TEMA}>
@@ -79,6 +95,9 @@ function Navegacion() {
           <Stack.Screen name="Finalizar" component={Finalizar} options={{ title: 'Finalizar pedido' }} />
           <Stack.Screen name="Seguimiento" component={Seguimiento} options={{ title: 'Pedido' }} />
           <Stack.Screen name="BuscarPorFoto" component={BuscarPorFoto} options={{ title: 'Buscar con una foto' }} />
+          <Stack.Screen name="NuevaDireccion" options={{ headerShown: false, presentation: 'modal', animation: 'slide_from_bottom' }}>
+            {({ navigation }) => <Ubicacion alTerminar={() => navigation.goBack()} alCerrar={() => navigation.goBack()} />}
+          </Stack.Screen>
         </Stack.Navigator>
       </NavigationContainer>
       <Aviso />
@@ -100,7 +119,7 @@ function Aviso() {
 export default function App() {
   return (
     <SafeAreaProvider>
-      <StatusBar style="dark" />
+      <StatusBar style="auto" />
       <ProveedorDeSesion>
         <Navegacion />
       </ProveedorDeSesion>

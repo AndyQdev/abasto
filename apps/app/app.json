@@ -24,7 +24,6 @@
     },
     "plugins": [
       "expo-sqlite",
-      "expo-web-browser",
       [
         "expo-build-properties",
         {
@@ -40,6 +39,14 @@
         {
           "photosPermission": "Abasto usa tus fotos para buscar productos.",
           "cameraPermission": "Abasto usa la cámara para buscar productos con una foto."
+        }
+      ],
+      "expo-image",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Abasto usa tu ubicación solo para saber a dónde llevarte tu pedido.",
+          "isAndroidBackgroundLocationEnabled": false
         }
       ]
     ],

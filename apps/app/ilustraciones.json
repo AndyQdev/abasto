@@ -1,0 +1,132 @@
+{
+  "estilo": "Gibby: 3D estilizado tipo película animada, con la paleta de Abasto (verde bosque, ámbar y menta). El texto del estilo está en scripts/ilustraciones/generar.mjs.",
+  "imagenes": [
+    {
+      "nombre": "bienvenida",
+      "tipo": "escena",
+      "proporcion": "4:5",
+      "uso": "Bienvenida: arriba de «Ingresa tu número»",
+      "tema": "A cheerful young delivery rider in a forest-green jacket and cap on a cute rounded scooter with a big cargo box full of groceries (rice sacks, oil bottles, soda bottles peeking out), just arriving at a small colorful Bolivian corner store; the smiling store owner woman waves happily from the door. Warm morning sun, a palm tree, a few potted plants."
+    },
+    {
+      "nombre": "codigo",
+      "tipo": "escena",
+      "proporcion": "1:1",
+      "uso": "Código: arriba de las cajitas del código",
+      "tema": "A big cute rounded smartphone floating at a slight angle, its screen showing one large green chat bubble with a shield and a checkmark inside (no text). Small sparkles and a couple of floating green chat bubbles around it. Friendly and reassuring."
+    },
+    {
+      "nombre": "ubicacion",
+      "tipo": "escena",
+      "proporcion": "1:1",
+      "uso": "Ubicación: «¿Dónde te lo llevamos?»",
+      "tema": "A giant glossy forest-green map pin standing on a tiny miniature neighborhood of rounded colorful houses, little round trees and a small corner store; a tiny delivery scooter with a cargo box rides along the curvy street toward the pin. Seen slightly from above."
+    },
+    {
+      "nombre": "banner-abarrotes",
+      "tipo": "escena",
+      "proporcion": "16:9",
+      "uso": "Inicio: banner de abarrotes",
+      "tema": "A generous arrangement of groceries on rustic wooden crates at a market stall: stacked rice and sugar sacks, rows of cooking-oil bottles, pasta packs and canned goods, with a few fresh green leaves. Composition leaves the left third calm and empty for text overlay; products on the right."
+    },
+    {
+      "nombre": "banner-bebidas",
+      "tipo": "escena",
+      "proporcion": "16:9",
+      "uso": "Inicio: banner de bebidas",
+      "tema": "Crates of colorful soda bottles, water bottles and juice boxes with ice cubes and refreshing splashes, cool and fresh mood. Composition leaves the left third calm and empty for text overlay; drinks on the right."
+    },
+    {
+      "nombre": "banner-entrega",
+      "tipo": "escena",
+      "proporcion": "16:9",
+      "uso": "Inicio: banner «pide hoy, te lo llevamos»",
+      "tema": "A cute rounded forest-green delivery van loaded with cardboard boxes driving along a sunny Santa Cruz street lined with palm trees toward a small corner store, motion lines behind it. Composition leaves the left third calm and empty for text overlay; van on the right."
+    },
+    {
+      "nombre": "banner-limpieza",
+      "tipo": "escena",
+      "proporcion": "16:9",
+      "uso": "Inicio: banner de limpieza",
+      "tema": "Colorful detergent bottles, bars of soap, sponges and a bucket overflowing with soft soap bubbles, clean and sparkling mood. Composition leaves the left third calm and empty for text overlay; products on the right."
+    },
+    {
+      "nombre": "vacio-carrito",
+      "tipo": "escena",
+      "uso": "Carrito vacío",
+      "tema": "An empty woven market basket with a forest-green handle sitting on a wooden counter, a few soft sparkles around it, inviting to be filled. Calm and friendly."
+    },
+    {
+      "nombre": "vacio-pedidos",
+      "tipo": "escena",
+      "uso": "Mis pedidos vacío",
+      "tema": "A neat little stack of closed cardboard boxes tied with a forest-green ribbon, a small blank clipboard leaning on them and a tiny potted plant beside. Calm and friendly."
+    },
+    {
+      "nombre": "pedido-en-camino",
+      "tipo": "escena",
+      "uso": "Seguimiento: el pedido va en camino",
+      "tema": "A happy delivery rider in a forest-green jacket on a cute rounded scooter with a cargo box, riding along a sunny curvy street with motion lines, small houses and palm trees in the background."
+    },
+    {
+      "nombre": "pedido-entregado",
+      "tipo": "escena",
+      "uso": "Seguimiento: pedido entregado",
+      "tema": "At the door of a small colorful corner store, a smiling store owner woman receives a stack of cardboard boxes from a delivery rider in a forest-green jacket; both smile, small confetti sparkles in the air."
+    },
+    {
+      "nombre": "sin-senal",
+      "tipo": "escena",
+      "uso": "Aviso sin señal",
+      "tema": "A cute rounded smartphone resting on a wooden counter next to a small woven basket of groceries, a soft little cloud floating above the phone, calm and reassuring mood."
+    },
+    {
+      "nombre": "rubro-abarrotes",
+      "tipo": "objeto",
+      "uso": "Rubro Abarrotes",
+      "tema": "A small group of groceries: a rice sack, a cooking-oil bottle and a pasta pack, plain colored packaging without writing."
+    },
+    {
+      "nombre": "rubro-bebidas",
+      "tipo": "objeto",
+      "uso": "Rubro Bebidas",
+      "tema": "Three drinks standing close together and touching: a tall soda bottle, a water bottle and a juice box with a straw, plain colored packaging without writing. The group is big and fills about 80 percent of the frame. Absolutely no floor, no shelf, no table, no ground shadow, nothing under them."
+    },
+    {
+      "nombre": "rubro-cosmeticos",
+      "tipo": "objeto",
+      "uso": "Rubro Cosméticos",
+      "tema": "A small group of cosmetics: a lipstick, a cream jar and a perfume bottle, pastel colors, no writing. The group is big and fills most of the frame, centered, floating in the air with nothing under it."
+    },
+    {
+      "nombre": "rubro-galletas-y-dulces",
+      "tipo": "objeto",
+      "uso": "Rubro Galletas y dulces",
+      "tema": "A small group of sweets: a cookie pack, a few wrapped candies and a chocolate bar, plain colored packaging without writing."
+    },
+    {
+      "nombre": "rubro-higiene",
+      "tipo": "objeto",
+      "uso": "Rubro Higiene y cuidado personal",
+      "tema": "A small group of personal care items: a shampoo bottle, a toothpaste tube, a soap bar and a toilet paper roll, no writing. The group is big and fills most of the frame, centered, floating in the air with nothing under it."
+    },
+    {
+      "nombre": "rubro-limpieza",
+      "tipo": "objeto",
+      "uso": "Rubro Limpieza del hogar",
+      "tema": "A small group of cleaning products: a detergent bottle, a bleach jug and a yellow-green sponge with a few bubbles, no writing."
+    },
+    {
+      "nombre": "rubro-lacteos",
+      "tipo": "objeto",
+      "uso": "Rubro Lácteos",
+      "tema": "A small group of dairy: a milk carton, a yogurt cup and a cheese wedge, plain colored packaging without writing."
+    },
+    {
+      "nombre": "rubro-varios",
+      "tipo": "objeto",
+      "uso": "Rubro Varios",
+      "tema": "A small group of household odds and ends: a white candle, a box of matches and a pack of batteries, plain packaging without writing. Inanimate objects: no faces, no eyes, no mouths. The group is big and fills most of the frame, floating with nothing under it."
+    }
+  ]
+}

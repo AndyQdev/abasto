@@ -16,6 +16,14 @@ final readonly class Organizacion
         public ?string $nit = null,
         /** Abasto mismo vendiendo: cualquier tienda registrada ve sus precios sin pedir ser cliente */
         public bool $deLaCasa = false,
+        /** Lo que el admin revisa antes de verificar a un mayorista que se registró solo */
+        public ?string $representante = null,
+        public ?string $telefono = null,
+        public ?string $correo = null,
+        /** Por qué Abasto lo rechazó; el Panel se lo muestra al mayorista */
+        public ?string $motivoRechazo = null,
+        /** Fecha y hora del registro (ISO 8601); null en las de la semilla */
+        public ?string $registradaEn = null,
     ) {
     }
 
@@ -40,17 +48,20 @@ final readonly class Organizacion
             );
         }
 
-        return self::con($this, EstadoVerificacion::VERIFICADO);
+        return self::con($this, EstadoVerificacion::VERIFICADO, null);
     }
 
-    /** Devuelve una organización nueva en RECHAZADO. */
-    public function rechazar(): self
+    /** Devuelve una organización nueva en RECHAZADO, con el motivo que verá el mayorista. */
+    public function rechazar(?string $motivo = null): self
     {
-        return self::con($this, EstadoVerificacion::RECHAZADO);
+        return self::con($this, EstadoVerificacion::RECHAZADO, $motivo);
     }
 
-    private static function con(Organizacion $o, EstadoVerificacion $verificacion): self
+    private static function con(Organizacion $o, EstadoVerificacion $verificacion, ?string $motivo): self
     {
-        return new self($o->id, $o->nombre, $o->tipo, $o->ciudad, $verificacion, $o->nit, $o->deLaCasa);
+        return new self(
+            $o->id, $o->nombre, $o->tipo, $o->ciudad, $verificacion, $o->nit, $o->deLaCasa,
+            $o->representante, $o->telefono, $o->correo, $motivo, $o->registradaEn,
+        );
     }
 }

@@ -4,13 +4,21 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use Catalogo\Aplicacion\EntrarConTelefono;
+use Catalogo\Aplicacion\RegistrarOrganizacion;
 use Catalogo\Dominio\Puertos\AlmacenDeFotos;
+use Catalogo\Dominio\Puertos\CodigosDeAcceso;
+use Catalogo\Dominio\Puertos\CuentasDeAcceso;
+use Catalogo\Dominio\Puertos\EnviadorDeCodigos;
 use Catalogo\Dominio\Puertos\OrganizacionRepositorio;
 use Catalogo\Dominio\Puertos\ProductoRepositorio;
 use Catalogo\Dominio\Puertos\PublicadorDeEventos;
 use Catalogo\Dominio\Puertos\RelacionRepositorio;
 use Catalogo\Dominio\Puertos\ReservaRepositorio;
+use Catalogo\Infraestructura\Codigos\EnviadorDePrueba;
 use Catalogo\Infraestructura\Fotos\AlmacenDeFotosEnDisco;
+use Catalogo\Infraestructura\Keycloak\KeycloakCuentas;
+use Catalogo\Infraestructura\Mongo\MongoCodigosDeAcceso;
 use Catalogo\Infraestructura\Mensajeria\RabbitPublicador;
 use Catalogo\Infraestructura\Mongo\MongoOrganizacionRepositorio;
 use Catalogo\Infraestructura\Mongo\MongoProductoRepositorio;
@@ -45,6 +53,25 @@ final class CatalogoServiceProvider extends ServiceProvider
         ));
         $this->app->singleton(ReservaRepositorio::class, fn () => new MongoReservaRepositorio($coleccion('reservas')));
         $this->app->singleton(AlmacenDeFotos::class, fn () => new AlmacenDeFotosEnDisco((string) config('catalogo.fotos_carpeta')));
+        $this->app->singleton(CodigosDeAcceso::class, fn () => new MongoCodigosDeAcceso($coleccion('codigos_de_acceso')));
+        $this->app->singleton(EnviadorDeCodigos::class, fn () => new EnviadorDePrueba((bool) config('catalogo.codigos_de_prueba')));
+        $this->app->singleton(CuentasDeAcceso::class, fn () => new KeycloakCuentas(
+            (string) config('services.keycloak.base'),
+            (string) config('services.keycloak.realm'),
+            (string) config('services.keycloak.cliente_cuentas'),
+            (string) config('services.keycloak.secreto_cuentas'),
+            (string) config('services.keycloak.cliente_app'),
+        ));
+        $this->app->singleton(EntrarConTelefono::class, fn ($app) => EntrarConTelefono::conReloj(
+            $app->make(CodigosDeAcceso::class),
+            $app->make(EnviadorDeCodigos::class),
+            $app->make(OrganizacionRepositorio::class),
+            $app->make(CuentasDeAcceso::class),
+        ));
+        $this->app->singleton(RegistrarOrganizacion::class, fn ($app) => RegistrarOrganizacion::conReloj(
+            $app->make(OrganizacionRepositorio::class),
+            $app->make(CuentasDeAcceso::class),
+        ));
         $this->app->singleton(PublicadorDeEventos::class, fn () => new RabbitPublicador(
             static fn () => (new AMQPStreamConnection(
                 (string) config('rabbitmq.host'),

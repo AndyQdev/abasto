@@ -160,6 +160,21 @@ input EditarProductoEntrada
   proveedor: String
 }
 
+"""Lo que recibe la app al pedir el código."""
+type EnvioDeCodigo
+  @join__type(graph: CATALOGO)
+{
+  """591 + los 8 dígitos"""
+  telefono: String!
+
+  """Primera vez con este celular: después del código la app pide el nombre"""
+  esNuevo: Boolean!
+  venceEnSegundos: Int!
+
+  """Solo mientras no está WhatsApp: el código, para mostrarlo en la app"""
+  codigoDePrueba: String
+}
+
 type Escala
   @join__type(graph: CATALOGO)
 {
@@ -343,11 +358,47 @@ enum MetodoPago
   CONTRA_ENTREGA @join__enumValue(graph: PEDIDOS)
 }
 
+type MiOrganizacion
+  @join__type(graph: CATALOGO)
+{
+  id: ID!
+  nombre: String!
+
+  """mayorista o tienda"""
+  tipo: String!
+
+  """PENDIENTE, VERIFICADO o RECHAZADO"""
+  estadoVerificacion: String!
+  motivoRechazo: String
+}
+
 type Mutation
   @join__type(graph: CATALOGO)
   @join__type(graph: COBROS)
   @join__type(graph: PEDIDOS)
 {
+  """
+  Público. App de clientes: manda un código de 6 dígitos al celular. En modo prueba vuelve en codigoDePrueba.
+  """
+  pedirCodigo(telefono: String!): EnvioDeCodigo! @join__field(graph: CATALOGO)
+
+  """
+  Público. Con el código correcto entra; la primera vez pide el nombre (error NECESITA_NOMBRE) y crea la cuenta.
+  """
+  entrarConCodigo(telefono: String!, codigo: String!, nombre: String): SesionDeCliente! @join__field(graph: CATALOGO)
+
+  """
+  Público. Un mayorista se registra (CU-01) y queda PENDIENTE hasta que Abasto lo verifica.
+  """
+  registrarMayorista(entrada: RegistrarMayoristaEntrada!): SolicitudDeMayorista! @join__field(graph: CATALOGO)
+
+  """
+  Solo admin: verifica al mayorista; desde ahí sus productos salen en la app.
+  """
+  verificarMayorista(id: ID!): SolicitudDeMayorista! @join__field(graph: CATALOGO)
+
+  """Solo admin: rechaza al mayorista con un motivo que él ve en su Panel."""
+  rechazarMayorista(id: ID!, motivo: String!): SolicitudDeMayorista! @join__field(graph: CATALOGO)
   pedirSerCliente(mayoristaId: ID!): RelacionComercial! @join__field(graph: CATALOGO)
   aprobarCliente(tiendaId: ID!, lista: ListaDePrecios!): RelacionComercial! @join__field(graph: CATALOGO)
   rechazarCliente(tiendaId: ID!): RelacionComercial! @join__field(graph: CATALOGO)
@@ -540,6 +591,16 @@ type Query
   """Tiendas que pidieron ser clientes del mayorista de la sesión."""
   misSolicitudes: [RelacionComercial!]! @join__field(graph: CATALOGO)
 
+  """
+  La empresa de la sesión, con su verificación (el Panel muestra «en revisión» o el motivo del rechazo).
+  """
+  miOrganizacion: MiOrganizacion! @join__field(graph: CATALOGO)
+
+  """
+  Solo admin (Superadmin): mayoristas en ese estado, los registrados más recientemente primero.
+  """
+  mayoristasPorVerificar(estado: String = "PENDIENTE"): [SolicitudDeMayorista!]! @join__field(graph: CATALOGO)
+
   """Crédito que un mayorista le dio a una tienda. Null si no tiene."""
   lineaDeCredito(tiendaId: ID!, mayoristaId: ID!): LineaDeCredito @join__field(graph: COBROS)
 
@@ -572,6 +633,18 @@ type Query
   traccion(mayoristaId: ID, semanas: Int = 8): Traccion! @join__field(graph: PEDIDOS)
 }
 
+input RegistrarMayoristaEntrada
+  @join__type(graph: CATALOGO)
+{
+  empresa: String!
+  nit: String!
+  ciudad: String!
+  representante: String!
+  telefono: String!
+  correo: String!
+  clave: String!
+}
+
 type RelacionComercial
   @join__type(graph: CATALOGO)
 {
@@ -588,6 +661,41 @@ type SemanaDeVentas
   desde: String!
   pedidos: Int!
   ventas: Dinero!
+}
+
+"""
+La sesión de la app de clientes. La app la guarda y la renueva sola con tokenDeRenovacion.
+"""
+type SesionDeCliente
+  @join__type(graph: CATALOGO)
+{
+  tokenDeAcceso: String!
+  tokenDeRenovacion: String!
+  venceEnSegundos: Int!
+
+  """Recién creó su cuenta"""
+  cuentaNueva: Boolean!
+  nombre: String!
+}
+
+"""Un mayorista tal como lo revisa Abasto en el Superadmin."""
+type SolicitudDeMayorista
+  @join__type(graph: CATALOGO)
+{
+  id: ID!
+  nombre: String!
+  nit: String
+  ciudad: String!
+  representante: String
+  telefono: String
+  correo: String
+
+  """PENDIENTE, VERIFICADO o RECHAZADO"""
+  estadoVerificacion: String!
+  motivoRechazo: String
+
+  """ISO 8601; null en los de la semilla"""
+  registradaEn: String
 }
 
 """Directions for ordering a list of records."""

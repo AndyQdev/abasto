@@ -35,6 +35,49 @@ final readonly class MongoOrganizacionRepositorio implements OrganizacionReposit
         return array_values(array_map(static fn ($doc) => self::aDominio((array) $doc), $docs));
     }
 
+    public function guardar(Organizacion $organizacion): void
+    {
+        // $set y no replace: la semilla guarda campos que este repositorio no conoce
+        $this->coleccion->updateOne(['_id' => $organizacion->id], ['$set' => [
+            'nombre' => $organizacion->nombre,
+            'tipo' => $organizacion->tipo,
+            'ciudad' => $organizacion->ciudad,
+            'verificacion' => $organizacion->verificacion->value,
+            'verificado' => $organizacion->estaVerificada(),
+            'nit' => $organizacion->nit,
+            'de_la_casa' => $organizacion->deLaCasa,
+            'representante' => $organizacion->representante,
+            'telefono' => $organizacion->telefono,
+            'correo' => $organizacion->correo,
+            'motivo_rechazo' => $organizacion->motivoRechazo,
+            'registrada_en' => $organizacion->registradaEn,
+        ]], ['upsert' => true]);
+    }
+
+    public function porNit(string $nit): ?Organizacion
+    {
+        $doc = $this->coleccion->findOne(['nit' => $nit]);
+
+        return $doc === null ? null : self::aDominio((array) $doc);
+    }
+
+    public function porTelefono(string $telefono): ?Organizacion
+    {
+        $doc = $this->coleccion->findOne(['telefono' => $telefono]);
+
+        return $doc === null ? null : self::aDominio((array) $doc);
+    }
+
+    public function mayoristasPorVerificacion(EstadoVerificacion $estado): array
+    {
+        $docs = $this->coleccion->find(
+            ['tipo' => 'mayorista', 'verificacion' => $estado->value],
+            ['sort' => ['registrada_en' => -1, 'nombre' => 1]],
+        )->toArray();
+
+        return array_values(array_map(static fn ($doc) => self::aDominio((array) $doc), $docs));
+    }
+
     /** @param array<string, mixed> $doc */
     private static function aDominio(array $doc): Organizacion
     {
@@ -51,6 +94,17 @@ final readonly class MongoOrganizacionRepositorio implements OrganizacionReposit
             verificacion: $verificacion,
             nit: isset($doc['nit']) ? (string) $doc['nit'] : null,
             deLaCasa: (bool) ($doc['de_la_casa'] ?? false),
+            representante: self::texto($doc, 'representante'),
+            telefono: self::texto($doc, 'telefono'),
+            correo: self::texto($doc, 'correo'),
+            motivoRechazo: self::texto($doc, 'motivo_rechazo'),
+            registradaEn: self::texto($doc, 'registrada_en'),
         );
+    }
+
+    /** @param array<string, mixed> $doc */
+    private static function texto(array $doc, string $campo): ?string
+    {
+        return isset($doc[$campo]) ? (string) $doc[$campo] : null;
     }
 }
