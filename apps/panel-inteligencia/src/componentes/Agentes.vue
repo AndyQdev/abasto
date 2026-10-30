@@ -50,6 +50,27 @@ async function ejecutar(agente: Agente) {
   }
 }
 
+interface Resumen {
+  total: number;
+  agentes: { agenteId: string; nuevas: number; error?: string }[];
+}
+
+const resumen = ref<Resumen | null>(null);
+
+async function monitorear() {
+  ocupado.value = 'monitorear';
+  try {
+    resumen.value = await llamarAsistente<Resumen>(props.sesion, '/v1/agentes/monitorear', { metodo: 'POST' });
+    await cargar();
+  } catch (e) {
+    error.value = (e as Error).message;
+  } finally {
+    ocupado.value = null;
+  }
+}
+
+const nombreDe = (id: string) => agentes.value.find((a) => a.id === id)?.nombre ?? id;
+
 async function decidir(propuesta: Propuesta, aprobar: boolean) {
   ocupado.value = propuesta.id;
   try {
@@ -73,6 +94,21 @@ onMounted(cargar);
     <h1 class="titulo-pantalla">Agentes de Abasto</h1>
     <div class="contadores"><div><strong>{{ propuestas.length }}</strong>esperan tu aprobación</div></div>
   </div>
+
+  <div class="carta monitor">
+    <div>
+      <strong>Monitorear mi negocio</strong>
+      <span class="gris">Corren todos los agentes juntos: cobranza, reposición y catálogo. Nada se hace sin tu aprobación.</span>
+    </div>
+    <button class="boton-primario" :disabled="ocupado === 'monitorear'" @click="monitorear">Revisar ahora</button>
+  </div>
+  <p v-if="resumen" class="resumen" role="status">
+    <template v-if="resumen.total">{{ resumen.total }} propuestas nuevas:</template>
+    <template v-else>Todo en orden: ningún agente encontró algo nuevo.</template>
+    <span v-for="r in resumen.agentes" :key="r.agenteId" class="gris">
+      {{ nombreDe(r.agenteId) }}: {{ r.error ? `no pudo revisar (${r.error})` : r.nuevas }}
+    </span>
+  </p>
 
   <p v-if="error" class="falla">{{ error }}</p>
 
@@ -110,4 +146,6 @@ onMounted(cargar);
 .mision .gris { display: block; }
 .propuesta { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 0.75rem 0; border-top: 1px solid hsl(var(--borde)); }
 .propuesta:first-of-type { border-top: 0; }
+.monitor { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 0.75rem; }
+.resumen { margin: 0 0 1.25rem; }
 </style>

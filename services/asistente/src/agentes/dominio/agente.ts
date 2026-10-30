@@ -35,8 +35,8 @@ export const AGENTES: Record<IdDeAgente, DefinicionDeAgente> = {
   catalogo: {
     id: 'catalogo',
     nombre: 'Catálogo',
-    mision: 'Que tu catálogo se vea bien y esté completo',
-    habilidades: ['buscar_fotos_borrosas', 'buscar_productos_sin_precio', 'proponer_correccion'],
+    mision: 'Que las tiendas no pidan lo que no tienes',
+    habilidades: ['buscar_productos_sin_stock', 'proponer_pausa'],
     horario: '0 9 * * 1',
     requiereAprobacion: ['pausar_producto'],
   },
@@ -60,6 +60,8 @@ export interface Propuesta {
   titulo: string;
   detalle: string;
   accion: { tipo: string; datos: Record<string, unknown> };
+  /** El asunto (por ejemplo «reposicion:AR-0100»): mientras espera una decisión no se vuelve a proponer */
+  clave?: string;
   estado: EstadoDePropuesta;
   creadaEn: string;
   decididaPor?: string;

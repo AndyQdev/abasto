@@ -1,9 +1,18 @@
 import { Inject, Logger, Module, OnModuleInit } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import type pg from 'pg';
-import { DecidirPropuesta, EjecutarCobranza } from './agentes/aplicacion/agentes.js';
+import {
+  DecidirPropuesta,
+  EjecutarMision,
+  MisionCatalogo,
+  MisionCobranza,
+  MisionReposicion,
+  MonitorearNegocio,
+  type Mision,
+} from './agentes/aplicacion/agentes.js';
 import {
   EJECUTOR_DE_ACCIONES,
+  MISIONES,
   REPOSITORIO_DE_PROPUESTAS,
   type EjecutorDeAcciones,
   type RepositorioDePropuestas,
@@ -24,11 +33,13 @@ import {
   McpController,
   ReportesController,
   SaludController,
+  TablerosController,
 } from './interfaz/http/asistente.controllers.js';
 import { DirectorioCatalogo } from './infraestructura/catalogo/directorio.catalogo.js';
 import { ProyectorServicio } from './proyector/proyector.servicio.js';
 import { DIRECTORIO_DE_TIENDAS } from './proyector/puertos.js';
 import { ConsultarReportes } from './reportes/aplicacion/consultar-reportes.js';
+import { ConsultarTableros } from './reportes/aplicacion/consultar-tableros.js';
 import { ResponderPregunta } from './reportes/aplicacion/responder-pregunta.js';
 import {
   AUDITORIA_DE_CONSULTAS,
@@ -44,7 +55,14 @@ const elegirModelo = (): ModeloDeLenguaje =>
   process.env.ANTHROPIC_API_KEY ? new ModeloAnthropic() : new ModeloSimulado();
 
 @Module({
-  controllers: [SaludController, ReportesController, AgentesController, McpController, AuditoriaController],
+  controllers: [
+    SaludController,
+    ReportesController,
+    AgentesController,
+    TablerosController,
+    McpController,
+    AuditoriaController,
+  ],
   providers: [
     { provide: DYNAMODB, useFactory: crearClienteDynamoDB },
     { provide: POOL_DUENO, useFactory: crearPoolDueno },
@@ -66,9 +84,28 @@ const elegirModelo = (): ModeloDeLenguaje =>
       inject: [MODELO_DE_LENGUAJE, ConsultarReportes],
     },
     {
-      provide: EjecutarCobranza,
-      useFactory: (r: ConsultarReportes, p: RepositorioDePropuestas) => new EjecutarCobranza(r, p),
-      inject: [ConsultarReportes, REPOSITORIO_DE_PROPUESTAS],
+      provide: ConsultarTableros,
+      useFactory: (r: ConsultarReportes) => new ConsultarTableros(r),
+      inject: [ConsultarReportes],
+    },
+    {
+      provide: MISIONES,
+      useFactory: (r: ConsultarReportes): Mision[] => [
+        new MisionCobranza(r),
+        new MisionReposicion(r),
+        new MisionCatalogo(r),
+      ],
+      inject: [ConsultarReportes],
+    },
+    {
+      provide: EjecutarMision,
+      useFactory: (p: RepositorioDePropuestas) => new EjecutarMision(p),
+      inject: [REPOSITORIO_DE_PROPUESTAS],
+    },
+    {
+      provide: MonitorearNegocio,
+      useFactory: (m: Mision[], e: EjecutarMision) => new MonitorearNegocio(m, e),
+      inject: [MISIONES, EjecutarMision],
     },
     {
       provide: DecidirPropuesta,

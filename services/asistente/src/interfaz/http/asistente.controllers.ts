@@ -16,14 +16,15 @@ import {
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import type { Request, Response } from 'express';
 import { z } from 'zod';
-import { DecidirPropuesta, EjecutarCobranza } from '../../agentes/aplicacion/agentes.js';
+import { DecidirPropuesta, EjecutarMision, MonitorearNegocio, type Mision } from '../../agentes/aplicacion/agentes.js';
 import { AGENTES } from '../../agentes/dominio/agente.js';
-import { REPOSITORIO_DE_PROPUESTAS, type RepositorioDePropuestas } from '../../agentes/puertos.js';
+import { MISIONES, REPOSITORIO_DE_PROPUESTAS, type RepositorioDePropuestas } from '../../agentes/puertos.js';
 import { AuditoriaDynamoDB } from '../../infraestructura/dynamodb/auditoria.dynamodb.js';
 import { generarExcel } from '../../infraestructura/excel/excel.js';
 import { Publico, type Usuario } from '../../infraestructura/seguridad/autenticacion.guard.js';
 import { crearServidorMcp } from '../../mcp/servidor-mcp.js';
 import { ConsultaRechazada, ConsultarReportes } from '../../reportes/aplicacion/consultar-reportes.js';
+import { ConsultarTableros } from '../../reportes/aplicacion/consultar-tableros.js';
 import { ResponderPregunta } from '../../reportes/aplicacion/responder-pregunta.js';
 import type { Solicitante } from '../../reportes/puertos.js';
 
@@ -84,7 +85,9 @@ export class ReportesController {
 @Controller('v1/agentes')
 export class AgentesController {
   constructor(
-    @Inject(EjecutarCobranza) private readonly cobranza: EjecutarCobranza,
+    @Inject(MISIONES) private readonly misiones: Mision[],
+    @Inject(EjecutarMision) private readonly mision: EjecutarMision,
+    @Inject(MonitorearNegocio) private readonly monitor: MonitorearNegocio,
     @Inject(DecidirPropuesta) private readonly decidir: DecidirPropuesta,
     @Inject(REPOSITORIO_DE_PROPUESTAS) private readonly propuestas: RepositorioDePropuestas,
   ) {}
@@ -99,11 +102,20 @@ export class AgentesController {
     return this.propuestas.pendientes(req.usuario.orgId);
   }
 
+  /** «Monitorear mi negocio»: corren todas las misiones juntas. También lo puede llamar un horario de n8n. */
+  @Post('monitorear')
+  @HttpCode(200)
+  monitorear(@Req() req: ConUsuario) {
+    return this.monitor.monitorear(solicitanteDe(req));
+  }
+
   @Post(':id/ejecutar')
   @HttpCode(200)
   async ejecutar(@Param('id') id: string, @Req() req: ConUsuario) {
-    if (id !== 'cobranza') throw new NotFoundException(`La misión de ${id} todavía no está implementada`);
-    return this.cobranza.ejecutar(solicitanteDe(req));
+    if (id === 'analista') throw new BadRequestException('El Analista no corre solo: hazle una pregunta en Reportes');
+    const mision = this.misiones.find((m) => m.agenteId === id);
+    if (!mision) throw new NotFoundException(`No existe el agente ${id}`);
+    return this.mision.ejecutar(mision, solicitanteDe(req));
   }
 
   @Post('propuestas/:id/decision')
@@ -111,6 +123,17 @@ export class AgentesController {
   decision(@Param('id') id: string, @Body() cuerpo: unknown, @Req() req: ConUsuario) {
     const { aprobar } = leer(z.object({ aprobar: z.boolean() }), cuerpo);
     return this.decidir.ejecutar(req.usuario.orgId, id, aprobar, req.usuario.id);
+  }
+}
+
+/** Tableros de Inteligencia: demanda prevista, stock en riesgo, segmentos, ventas y cobranza. */
+@Controller('v1/tableros')
+export class TablerosController {
+  constructor(@Inject(ConsultarTableros) private readonly tableros: ConsultarTableros) {}
+
+  @Get()
+  ver(@Req() req: ConUsuario) {
+    return this.tableros.ejecutar(solicitanteDe(req));
   }
 }
 
