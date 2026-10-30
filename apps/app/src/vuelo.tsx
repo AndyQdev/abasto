@@ -7,17 +7,18 @@ import { createContext, useCallback, useContext, useRef, useState, type Componen
 import { Animated, Easing, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { vibrar } from './animacion';
+import type { Imagen } from './ilustraciones';
 
 /** La vista desde donde sale (la foto del producto) */
 export type Origen = RefObject<ComponentRef<typeof View> | null>;
 
-type Volar = (origen: Origen, imagen: number) => void;
+type Volar = (origen: Origen, imagen: Imagen) => void;
 
 const Contexto = createContext<Volar>(() => undefined);
 
 interface Vuelo {
   id: number;
-  imagen: number;
+  imagen: Imagen;
   x: number;
   y: number;
   lado: number;

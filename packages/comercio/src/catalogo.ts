@@ -38,6 +38,8 @@ export interface Producto {
   entregaHoras: number | null;
   mayorista: Mayorista;
   escalas: Escala[];
+  /** URL pública de la foto real del producto (la sirve Catálogo). Null mientras no tenga */
+  foto?: string | null;
 }
 
 const CAMPOS_MAYORISTA = 'id nombre ciudad verificado relacion deLaCasa';
@@ -45,7 +47,7 @@ const CAMPOS_MAYORISTA = 'id nombre ciudad verificado relacion deLaCasa';
 export const CONSULTA_CATALOGO = `
   query Catalogo {
     productos {
-      id codigo nombre rubro descripcion stock estado precioVisible abastecimiento entregaHoras
+      id codigo nombre rubro descripcion stock estado precioVisible abastecimiento entregaHoras foto
       mayorista { ${CAMPOS_MAYORISTA} }
       escalas { presentacion cantidad precioUnitario { centavos texto } }
     }
@@ -96,6 +98,28 @@ export function escalaPorDefecto(p: Producto) {
 export function precioDesde(p: Producto) {
   const escalas = escalasConPrecio(p);
   return escalas.length ? escalas[escalas.length - 1] : null;
+}
+
+/**
+ * La primera vista de la app: lo que vende Abasto (vendedor de la casa) con precio, del precio por unidad
+ * más bajo al más alto, para que lo barato salte a la vista. Los mayoristas afiliados no entran aquí:
+ * en la red privada nunca se ordena por el más barato.
+ */
+export function preciosDeLaCasa(productos: Producto[]) {
+  const unitario = (p: Producto) => precioDesde(p)?.precioUnitario?.centavos ?? Infinity;
+  return comprables(productos)
+    .filter((p) => p.mayorista.deLaCasa && disponible(p) && precioDesde(p))
+    .sort((a, b) => unitario(a) - unitario(b) || a.nombre.localeCompare(b.nombre, 'es'));
+}
+
+const CONTENIDO = /\s(\d+(?:[.,]\d+)?\s?(?:kg|g|ml|l|cc|u\.?))$/i;
+
+/** «Aceite Fino 900 ml» → «Aceite Fino» y «900 ml»; «Papel higiénico Elite · 4 rollos» → «Papel higiénico Elite» y «4 rollos» */
+export function separarContenido(nombre: string): { nombre: string; contenido: string | null } {
+  const [antes, ...despues] = nombre.split(' · ');
+  if (despues.length) return { nombre: antes.trim(), contenido: despues.join(' · ').trim() };
+  const m = nombre.match(CONTENIDO);
+  return m ? { nombre: nombre.slice(0, m.index).trim(), contenido: m[1] } : { nombre, contenido: null };
 }
 
 export interface OpcionDeCompra {

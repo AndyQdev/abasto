@@ -1,6 +1,5 @@
 import { filtrarPedidos, MIS_COMPRAS, type Pedido } from '@abasto/comercio';
 import { useFocusEffect } from '@react-navigation/native';
-import { Image } from 'expo-image';
 import { useCallback, useState } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,16 +8,15 @@ import { Aparecer, Tocable } from './animacion';
 import { graphql } from './api';
 import { Icono, Texto } from './componentes';
 import { resumen, type Direccion } from './direcciones';
-import { ILUSTRACION } from './ilustraciones';
 import { CABECERA, COLOR, FUENTE, SOMBRA } from './tema';
 
 /** Cuánto baja el bosque por debajo de la línea del buscador (la curva de la derecha) */
-const COLA = 60;
+const COLA = 34;
 
 /**
- * Encabezado del Inicio: un bosque de forma orgánica (alto a la izquierda, con una curva que baja a la
- * derecha detrás de la cámara), la dirección en una cápsula, la campana con los pedidos en curso,
- * la composición 3D flotando y el buscador blanco que sale por debajo del borde.
+ * Encabezado del Inicio, compacto para que los productos se vean apenas se abre la app (31/10, referencia
+ * `pedidosYa/image7.png`): el logo, la dirección en una cápsula y la campana en una sola fila, y el buscador
+ * blanco montado sobre el borde, que baja en curva por la derecha.
  */
 export function CabeceraInicio({
   direccion,
@@ -37,7 +35,7 @@ export function CabeceraInicio({
   const arriba = useSafeAreaInsets().top;
   const pendientes = usePedidosEnCurso();
   // H: la línea donde se apoya el buscador (lo cruza por la mitad)
-  const H = arriba + 152;
+  const H = arriba + 100;
 
   return (
     <View style={{ height: H + COLA }}>
@@ -55,17 +53,14 @@ export function CabeceraInicio({
         <Path d={calles(W, H)} stroke="#FFFFFF" strokeOpacity={0.05} strokeWidth={2} fill="none" strokeDasharray="6 10" />
       </Svg>
 
-      {/* La composición 3D, fija: ocupa todo el lado derecho (la campana va encima) y su base baja hasta la
-          curva de la derecha, donde la tapa el buscador */}
-      <View pointerEvents="none" style={[e.composicion, { top: arriba + 4, height: H - arriba + 22, width: W * 0.6 }]}>
-        <Image source={ILUSTRACION.cabeceraMercado} style={{ width: '100%', height: '100%' }} contentFit="contain" contentPosition="right bottom" transition={300} />
-      </View>
-
-      <View style={[e.fila, { paddingTop: arriba + 12 }]}>
-        <Aparecer desde={-8}>
+      <View style={[e.fila, { paddingTop: arriba + 8 }]}>
+        <Texto style={e.logo}>
+          ABAST<Texto style={[e.logo, { color: COLOR.lima }]}>O</Texto>
+        </Texto>
+        <Aparecer desde={-8} style={{ flex: 1 }}>
           <Tocable onPress={alCambiarDireccion} style={e.direccion} accessibilityRole="button" accessibilityLabel={`Entregar en ${resumen(direccion)}. Cambiar dirección`}>
             <View style={e.pin}>
-              <Icono nombre="location" tamano={22} color={CABECERA.medio} />
+              <Icono nombre="location" tamano={19} color={CABECERA.medio} />
             </View>
             <View style={{ flexShrink: 1 }}>
               <Texto style={e.etiqueta}>Entregar en{direccion ? ` · ${direccion.etiqueta}` : ''}</Texto>
@@ -73,13 +68,13 @@ export function CabeceraInicio({
                 <Texto lineas={1} style={e.calle}>
                   {resumen(direccion)}
                 </Texto>
-                <Icono nombre="chevron-down" tamano={17} color="#FFFFFF" />
+                <Icono nombre="chevron-down" tamano={15} color="#FFFFFF" />
               </View>
             </View>
           </Tocable>
         </Aparecer>
         <Tocable onPress={alVerPedidos} style={e.campana} accessibilityRole="button" accessibilityLabel={pendientes ? `${pendientes} pedidos en curso` : 'Mis pedidos'}>
-          <Icono nombre="notifications" tamano={22} color="#FFFFFF" />
+          <Icono nombre="notifications" tamano={20} color="#FFFFFF" />
           {pendientes > 0 && (
             <View style={e.puntoRojo}>
               <Texto style={e.numero}>{pendientes > 9 ? '9+' : pendientes}</Texto>
@@ -88,7 +83,7 @@ export function CabeceraInicio({
         </Tocable>
       </View>
 
-      <Aparecer orden={1} desde={14} style={[e.lugarBuscador, { top: H - 28 }]}>
+      <Aparecer orden={1} desde={14} style={[e.lugarBuscador, { top: H - 27 }]}>
         <View style={e.buscador}>
           <Tocable hundir={0.98} conVibracion={false} accessibilityRole="search" exterior={{ flex: 1 }} style={e.buscadorTexto} onPress={alBuscar}>
             <Icono nombre="search" tamano={22} color={COLOR.texto} />
@@ -105,13 +100,13 @@ export function CabeceraInicio({
   );
 }
 
-/** Borde de abajo asimétrico: alto a la izquierda (deja ver el fondo claro sobre el buscador) y una curva que baja a la derecha. */
+/** Borde de abajo: casi recto a la izquierda (el buscador asoma sobre el fondo claro) y una curva que baja a la derecha. */
 function silueta(W: number, H: number) {
   return [
-    `M0 0 H${W} V${H + 26}`,
-    `C${W} ${H + 52} ${W - 34} ${H + COLA} ${W - 70} ${H + 44}`,
-    `C${W - 150} ${H + 22} ${W * 0.64} ${H - 4} ${W * 0.47} ${H - 16}`,
-    `C${W * 0.3} ${H - 28} ${W * 0.13} ${H - 64} 0 ${H - 48} Z`,
+    `M0 0 H${W} V${H + 14}`,
+    `C${W} ${H + 30} ${W - 24} ${H + COLA} ${W - 56} ${H + 26}`,
+    `C${W - 120} ${H + 12} ${W * 0.6} ${H - 6} ${W * 0.42} ${H - 10}`,
+    `C${W * 0.25} ${H - 14} ${W * 0.1} ${H - 30} 0 ${H - 22} Z`,
   ].join(' ');
 }
 
@@ -142,29 +137,28 @@ function usePedidosEnCurso(): number {
 }
 
 const e = StyleSheet.create({
-  fila: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingHorizontal: 16 },
+  fila: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16 },
+  logo: { fontFamily: FUENTE.negra, fontSize: 25, color: '#FFFFFF', letterSpacing: -0.8 },
   direccion: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    paddingVertical: 10,
-    paddingLeft: 10,
-    paddingRight: 16,
-    borderRadius: 24,
-    // Bosque translúcido: el 3D pasa por detrás y la dirección se sigue leyendo
-    backgroundColor: 'rgba(11,48,39,0.78)',
+    gap: 9,
+    paddingVertical: 6,
+    paddingLeft: 6,
+    paddingRight: 12,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.08)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.16)',
-    maxWidth: 214,
   },
-  pin: { width: 48, height: 48, borderRadius: 16, backgroundColor: COLOR.lima, alignItems: 'center', justifyContent: 'center' },
-  etiqueta: { fontFamily: FUENTE.semi, fontSize: 12.5, color: COLOR.lima },
-  filaChica: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  calle: { fontFamily: FUENTE.negra, fontSize: 18, color: '#FFFFFF', flexShrink: 1, letterSpacing: -0.3 },
+  pin: { width: 36, height: 36, borderRadius: 13, backgroundColor: COLOR.lima, alignItems: 'center', justifyContent: 'center' },
+  etiqueta: { fontFamily: FUENTE.semi, fontSize: 11.5, color: COLOR.lima },
+  filaChica: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  calle: { fontFamily: FUENTE.negra, fontSize: 15, color: '#FFFFFF', flexShrink: 1, letterSpacing: -0.3 },
   campana: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: 'rgba(255,255,255,0.12)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.16)',
@@ -186,13 +180,12 @@ const e = StyleSheet.create({
     justifyContent: 'center',
   },
   numero: { fontFamily: FUENTE.negra, fontSize: 11, color: '#FFFFFF' },
-  composicion: { position: 'absolute', right: -6 },
   lugarBuscador: { position: 'absolute', left: 16, right: 16 },
   buscador: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 58,
-    borderRadius: 29,
+    height: 54,
+    borderRadius: 27,
     backgroundColor: COLOR.superficie,
     paddingLeft: 20,
     paddingRight: 6,
@@ -201,7 +194,7 @@ const e = StyleSheet.create({
     shadowRadius: 20,
     elevation: 8,
   },
-  buscadorTexto: { flexDirection: 'row', alignItems: 'center', gap: 12, height: 54 },
+  buscadorTexto: { flexDirection: 'row', alignItems: 'center', gap: 12, height: 50 },
   placeholder: { fontFamily: FUENTE.normal, fontSize: 15, color: COLOR.texto3, flexShrink: 1 },
-  camara: { width: 46, height: 46, borderRadius: 23, backgroundColor: COLOR.lima, alignItems: 'center', justifyContent: 'center' },
+  camara: { width: 42, height: 42, borderRadius: 21, backgroundColor: COLOR.lima, alignItems: 'center', justifyContent: 'center' },
 });

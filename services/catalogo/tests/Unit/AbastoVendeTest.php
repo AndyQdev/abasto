@@ -119,12 +119,13 @@ it('la semilla de Abasto: códigos únicos, escalas válidas y siempre con marge
     $catalogo = SembrarAbasto::catalogo();
     $codigos = array_column($catalogo, 'codigo');
 
-    expect($catalogo)->toHaveCount(36)
-        ->and(array_unique($codigos))->toHaveCount(36);
+    expect($catalogo)->toHaveCount(27)
+        ->and(array_unique($codigos))->toHaveCount(27);
     foreach ($catalogo as $p) {
         // Construirlo valida las escalas (más volumen, más unidades y precio que no sube)
         new Producto($p['codigo'], 'abasto', $p['codigo'], $p['nombre'], $p['rubro'], '', 0, EstadoProducto::ACTIVO, $p['escalas']);
         $masBarato = min(array_map(static fn (EscalaDePrecio $e) => $e->precioUnitarioCentavos, $p['escalas']));
         expect($p['costo'])->toBeLessThan($masBarato, "{$p['nombre']} se vendería a pérdida");
+        expect(is_file(__DIR__."/../../database/fotos-abasto/{$p['codigo']}.webp"))->toBeTrue("{$p['nombre']} no tiene foto");
     }
 });

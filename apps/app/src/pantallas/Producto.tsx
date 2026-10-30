@@ -7,7 +7,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Aparecer, Flotar, Tocable, useLatido } from '../animacion';
 import { Boton, colorDeClase, Icono, Insignia, PedirSerCliente, Texto, Vacio } from '../componentes';
 import { useEstado } from '../estado';
-import { imagenDePresentacion, imagenDeRubro } from '../ilustraciones';
+import { fotoDe, imagenDePresentacion } from '../ilustraciones';
 import type { PantallaDePila } from '../navegacion';
 import { COLOR, FUENTE, SOMBRA } from '../tema';
 import { useVuelo, type Origen } from '../vuelo';
@@ -57,7 +57,7 @@ export function Producto({ navigation, route }: PantallaDePila<'Producto'>) {
           <Aparecer desde={20}>
             <Flotar alto={10} duracion={3200}>
               <View ref={foto}>
-                <Image source={imagenDeRubro(p.rubro)} style={e.imagen} contentFit="contain" transition={300} />
+                <Image source={fotoDe(p)} style={[e.imagen, !!p.foto && e.conFoto]} contentFit="contain" transition={300} />
               </View>
             </Flotar>
           </Aparecer>
@@ -184,7 +184,7 @@ export function Producto({ navigation, route }: PantallaDePila<'Producto'>) {
                 icono="cart"
                 deshabilitado={!sePuede}
                 alTocar={() => {
-                  volar(foto, imagenDeRubro(p.rubro));
+                  volar(foto, fotoDe(p));
                   agregarAlCarrito(itemDeCarrito(p, escala, cantidad));
                   setCantidad(1);
                 }}
@@ -206,6 +206,8 @@ const e = StyleSheet.create({
   barraArriba: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', alignSelf: 'stretch' },
   botonRedondo: { width: 44, height: 44, borderRadius: 22, backgroundColor: COLOR.superficie, alignItems: 'center', justifyContent: 'center', ...SOMBRA },
   imagen: { width: 260, height: 260 },
+  // La foto real lleva su fondo blanco: va en una tarjeta redonda para que no quede un cuadrado suelto
+  conFoto: { borderRadius: 32, backgroundColor: '#FFFFFF' },
   cuerpo: { marginTop: -30, borderTopLeftRadius: 30, borderTopRightRadius: 30, backgroundColor: COLOR.superficie, padding: 20, gap: 18 },
   filaPrecio: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   precioGrande: { fontFamily: FUENTE.negra, fontSize: 36, color: COLOR.bosque, letterSpacing: -1 },

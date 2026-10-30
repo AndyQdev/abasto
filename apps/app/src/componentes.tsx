@@ -3,7 +3,7 @@ import { iniciales, tinte, escalaPorDefecto, disponible, type Mayorista, type Pr
 import { Ionicons } from '@expo/vector-icons';
 import { useState, type ComponentProps, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
-import { imagenDeRubro } from './ilustraciones';
+import { fotoDe } from './ilustraciones';
 import { COLOR, fuenteDe, FUENTE, RADIO, SOMBRA, TINTES } from './tema';
 
 export type NombreDeIcono = ComponentProps<typeof Ionicons>['name'];
@@ -110,10 +110,11 @@ export function Insignia({ texto, color = 'verde' }: { texto: string; color?: Co
 export const colorDeClase = (clase: string): ColorDeInsignia =>
   clase.includes('verde') ? 'verde' : clase.includes('ambar') ? 'ambar' : clase.includes('rojo') ? 'rojo' : 'gris';
 
-export function Foto({ producto, alto = 76, ancho = 76, alTocar }: { producto: Pick<Producto, 'rubro' | 'nombre'>; alto?: number; ancho?: number | '100%'; alTocar?: () => void }) {
+export function Foto({ producto, alto = 76, ancho = 76, alTocar }: { producto: Pick<Producto, 'rubro' | 'nombre' | 'foto'>; alto?: number; ancho?: number | '100%'; alTocar?: () => void }) {
+  // La foto real va sobre blanco, como en cualquier tienda; la ilustración del rubro, sobre su tinte
   const caja = (
-    <View style={[estilos.foto, { height: alto, width: ancho, backgroundColor: TINTES[tinte(producto.rubro)] }]}>
-      <Image source={imagenDeRubro(producto.rubro)} style={{ width: '82%', height: '82%' }} contentFit="contain" transition={200} accessibilityIgnoresInvertColors />
+    <View style={[estilos.foto, { height: alto, width: ancho, backgroundColor: producto.foto ? COLOR.superficie : TINTES[tinte(producto.rubro)] }]}>
+      <Image source={fotoDe(producto)} style={{ width: '86%', height: '86%' }} contentFit="contain" transition={200} accessibilityIgnoresInvertColors />
     </View>
   );
   return alTocar ? (

@@ -5,6 +5,9 @@
 /** Un recurso empaquetado con require(): para React Native es un número. */
 type Recurso = number;
 
+/** Lo que se le pasa a <Image>: una ilustración empaquetada o la foto real que sirve Catálogo. */
+export type Imagen = Recurso | { uri: string };
+
 export const ILUSTRACION = {
   bienvenida: require('../assets/ilustraciones/bienvenida.webp'),
   codigo: require('../assets/ilustraciones/codigo.webp'),
@@ -48,6 +51,11 @@ const RUBROS: Record<string, Recurso> = {
 /** La imagen del rubro; si es un rubro nuevo, la de Varios. */
 export function imagenDeRubro(rubro: string): Recurso {
   return RUBROS[rubro] ?? RUBROS.Varios;
+}
+
+/** La foto real del producto; si todavía no tiene, la ilustración de su rubro. */
+export function fotoDe(producto: { rubro: string; foto?: string | null }): Imagen {
+  return producto.foto ? { uri: producto.foto } : imagenDeRubro(producto.rubro);
 }
 
 /** Nombre corto del rubro para las tarjetas («Higiene y cuidado personal» → «Higiene»). */

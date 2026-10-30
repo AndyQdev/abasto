@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Aparecer, Tocable, vibrar } from '../animacion';
 import { Boton, Icono, Insignia, Texto, Vacio } from '../componentes';
 import { useEstado } from '../estado';
-import { ILUSTRACION, imagenDeRubro } from '../ilustraciones';
+import { fotoDe, ILUSTRACION } from '../ilustraciones';
 import type { PantallaDePestana } from '../navegacion';
 import { COLOR, FUENTE, SOMBRA, TINTES } from '../tema';
 
@@ -17,7 +17,7 @@ export function Carrito({ navigation }: PantallaDePestana<'Carrito'>) {
   const grupos = porMayorista(carrito);
   const total = grupos.reduce((s, g) => s + g.totalEstimadoCentavos, 0);
   const unidades = carrito.reduce((s, i) => s + unidadesDe(i), 0);
-  const rubroDe = (id: string) => catalogo.productos.find((p) => p.id === id)?.rubro ?? 'Varios';
+  const delCatalogo = (id: string) => catalogo.productos.find((p) => p.id === id) ?? { rubro: 'Varios', foto: null };
 
   return (
     <SafeAreaView style={e.pantalla} edges={['top']}>
@@ -51,11 +51,11 @@ export function Carrito({ navigation }: PantallaDePestana<'Carrito'>) {
                 <Icono nombre="chevron-forward" tamano={18} color={COLOR.texto3} />
               </Tocable>
               {g.items.map((i) => {
-                const rubro = rubroDe(i.productoId);
+                const enCatalogo = delCatalogo(i.productoId);
                 return (
                   <View key={`${i.productoId}-${i.presentacion}`} style={e.item}>
-                    <View style={[e.miniatura, { backgroundColor: TINTES[tinte(rubro)] }]}>
-                      <Image source={imagenDeRubro(rubro)} style={{ width: 52, height: 52 }} contentFit="contain" />
+                    <View style={[e.miniatura, { backgroundColor: enCatalogo.foto ? COLOR.superficie : TINTES[tinte(enCatalogo.rubro)] }]}>
+                      <Image source={fotoDe(enCatalogo)} style={{ width: 54, height: 54 }} contentFit="contain" />
                     </View>
                     <View style={{ flex: 1, gap: 6 }}>
                       <View style={e.entre}>

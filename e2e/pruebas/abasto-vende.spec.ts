@@ -42,11 +42,11 @@ test.describe('Abasto vende (vendedor de la casa)', () => {
     const tienda = await grafoDe(request, 'donarosa@abasto.bo');
     const { productos } = await tienda<{ productos: ProductoVisto[] }>(`query { productos(mayoristaId: "abasto") { ${CAMPOS} } }`);
 
-    expect(productos.length).toBeGreaterThanOrEqual(36);
+    expect(productos.length).toBeGreaterThanOrEqual(27);
     const arroz = productos.find((p) => p.id === 'AB-001')!;
     expect(arroz.mayorista).toEqual({ deLaCasa: true, relacion: 'NINGUNA' });
     expect(arroz.precioVisible).toBe(true);
-    expect(arroz.escalas.map((e) => e.precioUnitario?.centavos)).toEqual([820, 790]);
+    expect(arroz.escalas.map((e) => e.precioUnitario?.centavos)).toEqual([1540, 1400]);
     expect(arroz.abastecimiento).toBe('BAJO_PEDIDO');
     expect(arroz.entregaHoras).toBe(24);
     expect(arroz.costoUnitario).toBeNull();
@@ -58,7 +58,7 @@ test.describe('Abasto vende (vendedor de la casa)', () => {
     const { misProductos } = await abasto<{ misProductos: ProductoVisto[] }>(`query { misProductos { ${CAMPOS} } }`);
 
     const arroz = misProductos.find((p) => p.id === 'AB-001')!;
-    expect(arroz.costoUnitario?.texto).toBe('Bs 7,35');
+    expect(arroz.costoUnitario?.texto).toBe('Bs 13,00');
     expect(arroz.proveedor).toBe('Mercado Los Pozos');
   });
 
@@ -78,9 +78,9 @@ test.describe('Abasto vende (vendedor de la casa)', () => {
         )
       ).pedido;
 
-    // 2 fardos de 24 a Bs 7,90 = Bs 379,20, aunque el stock de Abasto sea 0
+    // 2 fardos de 24 a Bs 14,00 = Bs 672,00, aunque el stock de Abasto sea 0
     await expect.poll(async () => (await leer()).cobro?.estado, { timeout: 20_000 }).toBe('PENDIENTE');
-    expect((await leer()).total.centavos).toBe(2 * 24 * 790);
+    expect((await leer()).total.centavos).toBe(2 * 24 * 1400);
 
     await tienda(`mutation($id: ID!) { pagarQrDePrueba(pedidoId: $id) { estado } }`, { id: crearPedido.id });
     await expect.poll(async () => (await leer()).estado, { timeout: 20_000 }).toBe('POR_CONFIRMAR');
@@ -103,7 +103,7 @@ test.describe('Abasto vende (vendedor de la casa)', () => {
           clave: randomUUID(),
           mayoristaId: 'abasto',
           metodoPago: 'CONTRA_ENTREGA',
-          lineas: [{ productoId: 'AB-036', presentacion: 'DOCENA', cantidad: 3 }],
+          lineas: [{ productoId: 'AB-007', presentacion: 'DOCENA', cantidad: 3 }],
         },
       },
     );
@@ -127,9 +127,9 @@ test.describe('Abasto vende (vendedor de la casa)', () => {
           `{ listaDeCompras { unidades venta { centavos } pedidos producto { id nombre proveedor costoUnitario { centavos } } } }`,
         )
       ).listaDeCompras.find((l) => l.pedidos.includes(crearPedido.codigo));
-    const pilas = await lista();
-    expect(pilas?.producto).toMatchObject({ id: 'AB-036', nombre: 'Pilas AA · par', proveedor: 'Mercado Mutualista', costoUnitario: { centavos: 540 } });
-    expect(pilas!.unidades).toBeGreaterThanOrEqual(36);
+    const sal = await lista();
+    expect(sal?.producto).toMatchObject({ id: 'AB-007', nombre: 'Sal fina Lobos 1 kg', proveedor: 'Mercado Mutualista', costoUnitario: { centavos: 550 } });
+    expect(sal!.unidades).toBeGreaterThanOrEqual(36);
 
     const avanzar = () => abasto<{ avanzarEntrega: { estado: string } }>(`mutation($id: ID!) { avanzarEntrega(id: $id) { estado } }`, { id: crearPedido.id });
     expect((await avanzar()).avanzarEntrega.estado).toBe('EN_PREPARACION');
@@ -157,7 +157,7 @@ test('Panel de Abasto: la lista de compras por puesto y preparar un pedido confi
   await entrarComo(page, 'ventas@abasto.bo');
   await expect(page.getByText('vas a gastar')).toBeVisible();
   await expect(page.getByRole('heading', { name: /Mercado Mutualista/ })).toBeVisible();
-  await expect(page.getByText('Sal yodada 1 kg')).toBeVisible();
+  await expect(page.getByText('Sal fina Lobos 1 kg')).toBeVisible();
 
   await page.getByRole('link', { name: 'Pedidos' }).click();
   const fila = page.getByRole('row').filter({ hasText: crearPedido.codigo });
