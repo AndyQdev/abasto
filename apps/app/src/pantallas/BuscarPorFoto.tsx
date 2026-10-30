@@ -5,7 +5,7 @@ import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Boton, BotonMas, Falla, Foto, Icono, SinPrecio, Tarjeta, Texto, Vacio } from '../componentes';
 import { useEstado } from '../estado';
-import { leerTexto } from '../leer-texto';
+import { leerTexto } from '../ia';
 import type { PantallaDePila } from '../navegacion';
 import { COLOR } from '../tema';
 

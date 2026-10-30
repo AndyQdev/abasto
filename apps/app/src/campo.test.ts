@@ -1,5 +1,5 @@
 import { BandejaCampo, type Almacen, type Enviar, type OperacionLocal } from './bandeja';
-import { leerPrecio } from './precio';
+import { leerPrecio } from './ia/precio';
 
 class AlmacenEnMemoria implements Almacen {
   private readonly ops = new Map<string, OperacionLocal>();

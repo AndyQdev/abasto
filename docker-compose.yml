@@ -3,13 +3,18 @@
 #   pnpm todo        → lo anterior + los cinco servicios construidos desde su Dockerfile
 #   pnpm n8n         → n8n aparte (pesa y no siempre hace falta)
 # Puertos del host: ver README.md. Contraseñas solo de desarrollo.
+# Cada contenedor tiene tope de memoria (mem_limit): todo junto entra en ~5 GB y en reposo usa ~2 GB.
 
 name: abasto
 
+# Mientras arranca se revisa cada 2 s (así `--wait` no tarda); ya sano, cada 30 s.
+# Antes era cada 5 s siempre: RabbitMQ y Mongo levantan un proceso pesado en cada revisión y se comían la CPU.
 x-salud: &salud
-  interval: 5s
+  interval: 30s
   timeout: 5s
-  retries: 40
+  retries: 3
+  start_period: 180s
+  start_interval: 2s
 
 x-host: &host
   extra_hosts:
@@ -18,6 +23,7 @@ x-host: &host
 services:
   # ---------------------------------------------------------------- bases
   postgres:
+    mem_limit: 256m
     image: postgres:17-alpine
     environment:
       POSTGRES_USER: abasto
@@ -32,10 +38,11 @@ services:
       <<: *salud
 
   mongo:
+    mem_limit: 512m
     # La CI usa 9.0: mongo 8.0 no arranca con kernels 6.19+ (los runners de GitHub). Local sigue en 8.0 por los volúmenes.
     image: mongo:${VERSION_MONGO:-8.0}
     # Réplica de un nodo: sin réplica no hay transacciones (las reservas de stock las usan)
-    command: ["--replSet", "rs0", "--bind_ip_all"]
+    command: ["--replSet", "rs0", "--bind_ip_all", "--wiredTigerCacheSizeGB", "0.25"]
     ports: ["${PUERTO_MONGO:-27020}:27017"]
     volumes:
       - mongo:/data/db
@@ -44,8 +51,9 @@ services:
       <<: *salud
 
   dynamodb:
+    mem_limit: 384m
     image: amazon/dynamodb-local:2.5.4
-    command: ["-jar", "DynamoDBLocal.jar", "-sharedDb", "-dbPath", "/home/dynamodblocal/data"]
+    command: ["-Xmx256m", "-jar", "DynamoDBLocal.jar", "-sharedDb", "-dbPath", "/home/dynamodblocal/data"]
     working_dir: /home/dynamodblocal
     user: root
     ports: ["${PUERTO_DYNAMODB:-8800}:8000"]
@@ -54,6 +62,7 @@ services:
 
   # ---------------------------------------------------------------- mensajería y sesión
   rabbitmq:
+    mem_limit: 512m
     image: rabbitmq:4.1-management
     ports:
       - "${PUERTO_RABBITMQ:-5680}:5672"
@@ -67,6 +76,7 @@ services:
       <<: *salud
 
   keycloak:
+    mem_limit: 896m
     image: quay.io/keycloak/keycloak:26.4
     command: ["start-dev", "--import-realm"]
     environment:
@@ -93,6 +103,7 @@ services:
 
   # ---------------------------------------------------------------- puertas de entrada y trazas
   router:
+    mem_limit: 256m
     image: ghcr.io/apollographql/router:v2.7.0
     command: ["--config", "/config/router.yaml", "--supergraph", "/config/supergraph.graphql", "--hot-reload"]
     environment:
@@ -106,6 +117,7 @@ services:
     <<: *host
 
   jaeger:
+    mem_limit: 256m
     image: jaegertracing/jaeger:2.11.0
     ports:
       - "${PUERTO_JAEGER:-16686}:16686"
@@ -116,6 +128,7 @@ services:
   # Cada uno se construye desde su Dockerfile: quien no trabaja en un servicio no necesita su lenguaje.
 
   catalogo:
+    mem_limit: 384m
     profiles: ["servicios"]
     build: { context: ./services/catalogo, target: dev }
     command:
@@ -148,10 +161,13 @@ services:
       <<: *salud
 
   pedidos:
+    mem_limit: 768m
     profiles: ["servicios"]
     build: ./services/pedidos
     environment:
       SPRING_PROFILES_ACTIVE: demo
+      # La JVM se ajusta al mem_limit del contenedor
+      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=60 -XX:+UseSerialGC"
       DB_HOST: postgres
       DB_PUERTO: "5432"
       RABBITMQ_HOST: rabbitmq
@@ -167,6 +183,7 @@ services:
       <<: *salud
 
   cobros:
+    mem_limit: 256m
     profiles: ["servicios"]
     build: { context: ., dockerfile: services/cobros/Dockerfile }
     environment:
@@ -185,6 +202,7 @@ services:
       <<: *salud
 
   conecta:
+    mem_limit: 256m
     profiles: ["servicios"]
     build: { context: ., dockerfile: services/conecta/Dockerfile }
     environment:
@@ -199,6 +217,7 @@ services:
       <<: *salud
 
   asistente:
+    mem_limit: 384m
     profiles: ["servicios"]
     build: { context: ., dockerfile: services/asistente/Dockerfile }
     environment:
@@ -220,6 +239,7 @@ services:
 
   # ---------------------------------------------------------------- automatización
   n8n:
+    mem_limit: 512m
     image: n8nio/n8n:1.112.0
     profiles: ["n8n"]
     environment:

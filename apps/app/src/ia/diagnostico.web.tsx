@@ -1,4 +1,4 @@
-import { Boton, Texto } from './componentes';
+import { Boton, Texto } from '../componentes';
 
 /** En la vista web de desarrollo no hay cámara ni TFLite: el diagnóstico corre en el teléfono. */
 export function Diagnostico({ alCerrar }: { alCerrar: () => void }) {

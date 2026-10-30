@@ -1,33 +1,36 @@
 # Andrés · estado
 
-> **Jhoel: desde el 29/10 trabajamos los dos directo en `main`. Se acabaron las ramas y los PR.**
+> **Jhoel, empieza aquí (29/10). Reemplaza a los avisos anteriores.**
 >
-> - Ya junté todo en main: tus ramas `proyector-entrega`, `foto-producto` y `panel-pwa`, más todo lo mío. No se perdió nada y las pruebas pasan. Las ramas viejas (`andres/*`, `jhoel/*`) ya no se usan: todo lo que tenían está en main.
-> - Tu Claude tiene que hacer esto: `git switch main && git pull --rebase origin main`. Si te queda trabajo sin subir en otra rama, haz commit allí, después `git switch main`, `git merge <tu-rama>` y push.
-> - Al empezar y antes de cada push: `git pull --rebase origin main`. Commits chicos y push seguido. Si choca, se juntan los dos cambios a mano y nunca se usa `--force`. Las reglas completas están en «Git en main» del `CLAUDE.md`, y `/empezar` y `/cerrar` ya las siguen.
+> 1. **Git:** los dos trabajamos directo en `main`, sin ramas ni PR. Para bajar todo: `git switch main && git pull --rebase origin main`, después `pnpm install`. Si te queda algo sin subir en otra rama, haz commit allí, `git switch main`, `git merge <tu-rama>` y push. Reglas en «Git en main» del `CLAUDE.md`.
+> 2. **Reparto: Andrés lleva lo comercial y tú toda la IA.** Tuyo:
+>    - La IA local del teléfono: `apps/app/src/ia/` y `apps/app/assets/modelos/`.
+>    - La IA local del navegador (Whisper) y el Panel de Inteligencia (Vue).
+>    - El Asistente: agentes, reportes generativos, MCP y proyector.
+>    - El ML de `ml/`.
 >
-> **Lee también lo que cambió el 29/10 en las apps:**
+>    Catálogo, Panel Shell, Gestión y el resto de la app pasan a mí. Lo que hiciste ahí queda; desde ahora lo sigo yo.
+> 3. **No cambiamos los requisitos del ingeniero**, solo dónde ocurre cada caso de uso. Están todos en `docs/requisitos.md`, con dónde se cumplen y qué falta. Los casos de uso están en `docs/iconix/README.md`.
+> 4. **Las interfaces:**
+>    - **App de clientes** (`apps/app`, Expo, Android e iPhone): las tiendas buscan, piden a cualquier mayorista, pagan y siguen el pedido.
+>    - **Panel** (web PWA): el mayorista gestiona.
+>    - **Superadmin**: Abasto aprueba mayoristas.
 >
-> 1. **Ya no hay web de compra.** Se borró `apps/mercado`. Los que compran (tiendas y personas) usan la **app de clientes** `apps/app`, hecha con Expo para Android e iPhone. Es lo que hace ganar plata, estilo Alibaba: buscar, buscar con una foto, carrito, pedir, pagar (QR, contra entrega o crédito) y seguir el pedido.
-> 2. **Campo dejó de ser una app aparte.** `apps/campo` se convirtió en `apps/app`. Tu diagnóstico de TFLite y ML Kit sigue ahí (`src/diagnostico.tsx`) y la app usa ML Kit para leer la etiqueta de la foto. La app la llevo yo; **los modelos (TFLite) siguen siendo tuyos.**
-> 3. **Quien vende gestiona todo en la web**: el Panel (tu Shell, Gestión e Inteligencia) y el Superadmin. Cargar productos con foto, que hacía Campo, pasa al Panel: es tarea tuya en Trello.
-> 4. **Abasto vende por su cuenta** mientras no hay afiliados: es el «vendedor de la casa» (`ventas@abasto.bo`, que es mayorista y admin), con productos bajo pedido que se compran en el mercado. Toqué Catálogo para eso (Organizacion.deLaCasa, Producto.abastecimiento, costo y proveedor, `catalogo:semilla-abasto`). **Revísalo, por favor.**
-> 5. La lógica de compra (catálogo, carrito y saga) está en `packages/comercio`. La app la toma por ruta.
-> 6. Keycloak: el cliente `abasto-app` reemplaza a `abasto-mercado` y `abasto-campo`. Como el realm vive en Postgres, **tienes que empezar de cero**: `pnpm borrar-datos`, después `pnpm todo` y `pnpm semilla`.
-> 7. Puertos: la app usa el **8090** (el 8081 es Pedidos). Ya no se usa el 5173.
-> 8. Todo está en `main` (ver arriba).
+>    Mercado (web) y Campo ya no existen. Abasto vende como un mayorista más (el «vendedor de la casa»).
+> 5. **Frontera dentro de la app:** mis pantallas solo importan de `apps/app/src/ia/index.ts`. Lo de adentro lo cambias sin tocar pantallas. Lo primero que necesito: `reconocerProducto(fotoUri)` → `[{ codigo, confianza }]`.
+> 6. **Si el Panel o la app no te dejan entrar** (cliente `abasto-app` de Keycloak): `pnpm borrar-datos`, `pnpm todo` y `pnpm semilla`. La app usa el puerto 8090.
 >
-> Tus tareas nuevas en Trello: «Panel · cargar productos con foto», «App · buscar por foto con el modelo de productos (TFLite)», «App · fotos de los productos» y revisar Catálogo. Las tarjetas de Campo y de Mercado web quedaron cerradas.
+> Tus tareas están en Trello, en la tarjeta «LEER PRIMERO · Reparto nuevo» y en las que tienen tu nombre. El prompt para tu Claude está en `docs/PROMPT-JHOEL.md`.
 
 Actualizado: 29/10/2026 · en main (los dos trabajamos ahí)
 
 ## Estoy en
-La app de clientes (`apps/app`, Expo). Falta correrla en el emulador y en los teléfonos.
+La app de clientes en el emulador Android. Después: registro de mayoristas y aprobación en el Superadmin (CU-01), y registro de tiendas desde la app (CU-15).
 
 ## Terminé
 - Infra, Pedidos (saga, outbox, inbox, plazos), Conecta, n8n, CI y e2e.
 - Cobros en la saga: autorizar y liberar crédito, QR que vence a los 30 min, pagarQrDePrueba y Pedido.cobro por federación.
-- Mercado: Inicio, Buscar, fichas, carrito, finalizar (QR, crédito o contra entrega), Mis pedidos y seguimiento de la saga.
+- App de clientes (`apps/app`, Expo): Inicio, Buscar, buscar por foto, Vendedor, carrito, finalizar (QR, crédito o contra entrega), Mis pedidos, seguimiento y modo sin señal.
 - Abasto vende:
   - Catálogo: Abasto como vendedor de la casa y productos BAJO_PEDIDO con costo y proveedor (`catalogo:semilla-abasto`).
   - Pedidos: CONTRA_ENTREGA, listaDeCompras, avanzarEntrega y traccion (solo admin).
@@ -43,11 +46,10 @@ La app de clientes (`apps/app`, Expo). Falta correrla en el emulador y en los te
 - AsyncAPI: contra_entrega y pedido.en_preparacion | despachado | entregado. OpenAPI de Conecta: CONTRA_ENTREGA.
 
 ## Necesito del otro
-- Jhoel: revisar los cambios en services/catalogo (vendedor de la casa y bajo pedido) y el módulo Compras en el menú del Shell.
-- Jhoel (cuando pueda): que el proyector de Asistente registre pedido.en_preparacion, despachado y entregado.
-- Catálogo: un campo con la lista de la tienda en Mayorista y una foto por producto.
+- Jhoel: `reconocerProducto(fotoUri)` en `apps/app/src/ia` con el modelo TFLite entrenado con las fotos del catálogo.
 
 ## Sigue
-- Registro de tiendas nuevas desde la app (sin pedírselo a nadie) para la promoción.
+- CU-01: registro de mayoristas y aprobación en el Superadmin.
+- CU-15: registro de tiendas desde la app.
 - Registrar el cobro de los pedidos contra entrega y las cuentas por cobrar (CU-09).
 - Investigar de dónde y cómo cargar el catálogo real.

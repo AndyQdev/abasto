@@ -5,7 +5,7 @@ import { useTensorflowModel } from 'react-native-fast-tflite';
 import { describirTensor, entradaNeutra } from './modelo';
 import { enBolivianos, leerPrecio } from './precio';
 
-const CARTEL = Image.resolveAssetSource(require('../assets/cartel-precio.png'))?.uri ?? '';
+const CARTEL = Image.resolveAssetSource(require('../../assets/cartel-precio.png'))?.uri ?? '';
 
 const COLORES = { marca: '#1A7554', tinta: '#123027', fondo: '#EEF3F0', borde: '#D9E3DE', ambar: '#FCF1DA', ambarTexto: '#8F5B00' };
 
@@ -14,7 +14,7 @@ const COLORES = { marca: '#1A7554', tinta: '#123027', fondo: '#EEF3F0', borde: '
  * No entra a la app ni pide sesión; sirve para saber si las dos librerías nativas corren.
  */
 export function Diagnostico({ alCerrar }: { alCerrar: () => void }) {
-  const modelo = useTensorflowModel(require('../assets/modelos/ejemplo.tflite'), []);
+  const modelo = useTensorflowModel(require('../../assets/modelos/ejemplo.tflite'), []);
   const [ocupado, setOcupado] = useState(false);
   const [error, setError] = useState('');
   const [resultadoModelo, setResultadoModelo] = useState('Toca «Probar TFLite».');

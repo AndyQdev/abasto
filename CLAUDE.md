@@ -6,6 +6,8 @@ Tareas: Trello https://trello.com/b/ABo8gFFG/abasto · Código: GitHub, los dos 
 
 ## Decisiones tomadas (no se reabren sin hablarlo entre los dos)
 
+- **Los requisitos del ingeniero y dónde se cumple cada uno: `docs/requisitos.md`.** Ningún cambio puede dejar uno sin cumplir sin hablarlo antes.
+
 - **Replanteo del 29/10:** el negocio es la **app de clientes** (`apps/app`, Expo, Android e iPhone), con la que tiendas y personas compran al por mayor: buscar (también con una foto), pedir, pagar (QR, contra entrega o crédito) y seguir el pedido. **No hay web de compra.**
 - Quien vende gestiona en la web: **Panel Mayorista** (Shell React que carga Gestión en Angular e Inteligencia en Vue como Web Components) y **Superadmin** (React).
 - **Abasto vende** (modelo de lanzamiento, 28/10): mientras no hay mayoristas afiliados, Abasto es el vendedor de la casa (`ventas@abasto.bo`), con productos bajo pedido que compra en el mercado cuando entra el pedido.
@@ -19,12 +21,18 @@ Tareas: Trello https://trello.com/b/ABo8gFFG/abasto · Código: GitHub, los dos 
 
 ## Dueños
 
-| Andrés | Jhoel |
+**Reparto del 29/10: Andrés lleva todo lo comercial y Jhoel toda la IA.**
+
+| Andrés · lo comercial | Jhoel · la IA |
 |---|---|
-| infra, Router, Pedidos, Cobros, Conecta, n8n | Catálogo (y verificación y red privada), Asistente, ML |
-| **App de clientes (`apps/app`)**, Superadmin | Panel Shell, Gestión base, Inteligencia (Vue) |
-| Módulos Pedidos, Compras y Cuentas por cobrar dentro de Gestión | Modelos de la app (TFLite) |
-| Lógica de compra compartida (`packages/comercio`) | |
+| **App de clientes** (`apps/app`): pantallas, UIX, lógica, sesión y modo sin señal | **IA local en el teléfono**: `apps/app/src/ia/` (modelo TFLite propio para reconocer productos por foto, ML Kit, lectura de precios) |
+| Lógica de compra compartida (`packages/comercio`) | **IA local en el navegador**: voz con Whisper en Inteligencia |
+| Panel web: Shell, Gestión (Angular) y el modo PWA | Panel de **Inteligencia** (Vue): reportes generativos y agentes |
+| Superadmin (alta y aprobación de mayoristas, tracción) | **Asistente**: agentes, reportes generativos, MCP y proyector de reportes |
+| Catálogo (productos, mayoristas, registro, verificación y red privada) | **ML** en `ml/`: demanda, mora, segmentos y el entrenamiento del modelo de visión (TensorFlow → TFLite) |
+| Pedidos, Cobros, Conecta, n8n, infra, Router, Keycloak y CI | |
+
+Dentro de la app, las pantallas solo usan la IA a través de `apps/app/src/ia/index.ts`. Jhoel cambia lo que hay detrás sin tocar pantallas. Si necesita cambiar lo que exporta, lo anota en su archivo de estado.
 
 El detalle está en `.github/CODEOWNERS`. Si tu cambio toca una carpeta del otro, avísale en tu archivo de estado de `docs/equipo/` en el mismo commit y dile qué cambiaste.
 Antes de cambiar algo en `contracts/`, escríbelo en tu archivo de estado y haz push.
@@ -77,6 +85,11 @@ Puertos, usuarios de prueba y arranque paso a paso: `README.md`. Arquitectura: `
 - Catálogo corre en Docker (PHP 8.4 + extensión mongodb): no hace falta PHP en la máquina. Composer: `docker compose exec catalogo composer ...`.
 - Angular se queda en 21 mientras alguien tenga Node < 22.22.
 - La app (`apps/app`) está fuera del workspace de pnpm: ahí se usa npm. Toma `packages/comercio` y la bandeja de `packages/outbox-offline` por ruta (metro.config.js y tsconfig.json). Corre en el puerto **8090** porque 8081 es Pedidos.
+- Compilar la app para Android en Windows falla con «Filename longer than 260 characters» (ninja 1.10 del SDK). Arreglo, una vez por máquina:
+  1. Activar las rutas largas como administrador: `New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name LongPathsEnabled -Value 1 -PropertyType DWORD -Force`.
+  2. Instalar `cmake;4.0.2` con el `sdkmanager`, que trae ninja 1.12.1.
+  3. Copiar ese `ninja.exe` sobre el de `Android\Sdk\cmake\3.22.1\bin`, guardando antes el viejo.
+- Docker tiene tope: cada contenedor con `mem_limit` y la máquina de WSL con 6 GB en `%USERPROFILE%\.wslconfig`. En reposo todo usa ~2 GB. Los chequeos de salud van cada 30 s (cada 2 s mientras arranca).
 - La saga corre de punta a punta (Pedidos → Catálogo → Cobros). Los pedidos de demostración vencen a las 2 h: `e2e/preparar.ts` los recarga antes de cada corrida.
 
 ## Al terminar
