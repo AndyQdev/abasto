@@ -27,4 +27,4 @@ CU-13 de punta a punta y seguridad del MCP.
 ## Sigue
 1. Si hay fotos sacadas en tienda: afinar con `entrenar.py` y medir con fotos reales.
 2. CU-13 de punta a punta, seguridad del MCP y evaluación de las 20 preguntas.
-3. ICONIX de CU-13, CU-14 y la IA de CU-05.
+3. `docs/trazabilidad.md` y ensayo de la demo.
