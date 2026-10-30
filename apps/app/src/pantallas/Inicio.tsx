@@ -1,21 +1,22 @@
+import { useEspacioBarra } from '../BarraInferior';
 import { bs, comprables, nombreCorto, opcionesDeCompra, ordenarMayoristas, precioDesde, rubros, tinte, type Producto } from '@abasto/comercio';
 import { useIsFocused } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
-import { FlatList, RefreshControl, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Animated, FlatList, RefreshControl, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Aparecer, Esqueleto, Flotar, Tocable } from '../animacion';
 import { BotonMas, Falla, Icono, Iniciales, Insignia, Seccion, SinPrecio, Texto } from '../componentes';
-import { resumen } from '../direcciones';
 import { useDirecciones } from '../direcciones-estado';
 import { useEstado } from '../estado';
+import { CabeceraInicio } from '../CabeceraInicio';
 import { HojaDeDirecciones } from '../HojaDeDirecciones';
 import { ILUSTRACION, imagenDeRubro, rubroCorto } from '../ilustraciones';
 import type { PantallaDePestana } from '../navegacion';
 import { useSesion } from '../sesion';
-import { COLOR, FUENTE, SOMBRA, TINTES } from '../tema';
+import { CABECERA, COLOR, FUENTE, SOMBRA, TINTES } from '../tema';
 import { useVuelo, type Origen } from '../vuelo';
 
 interface Banner {
@@ -42,6 +43,8 @@ export function Inicio({ navigation }: PantallaDePestana<'Inicio'>) {
   const [hoja, setHoja] = useState(false);
   const arriba = useSafeAreaInsets().top;
   const enFoco = useIsFocused();
+  const espacio = useEspacioBarra();
+  const bajada = useRef(new Animated.Value(0)).current;
 
   // Al abrir la app se confirma la dirección una vez
   useEffect(() => {
@@ -63,45 +66,19 @@ export function Inicio({ navigation }: PantallaDePestana<'Inicio'>) {
   return (
     <View style={e.pantalla}>
       {enFoco && <StatusBar style="light" />}
-      <ScrollView
-        contentContainerStyle={{ paddingBottom: 32 }}
+      <Animated.ScrollView
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: bajada } } }], { useNativeDriver: true })}
+        scrollEventThrottle={16}
+        contentContainerStyle={{ paddingBottom: espacio }}
         refreshControl={<RefreshControl refreshing={catalogo.cargando && productos.length > 0} onRefresh={() => void catalogo.recargar()} tintColor={COLOR.lima} colors={[COLOR.bosque]} />}
       >
-        <LinearGradient colors={[COLOR.bosque, COLOR.bosqueMedio]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[e.cabecera, { paddingTop: arriba + 10 }]}>
-          <View style={e.filaCabecera}>
-            <Tocable onPress={() => setHoja(true)} exterior={{ flex: 1 }} style={e.direccion} accessibilityRole="button" accessibilityLabel={`Entregar en ${resumen(elegida)}. Cambiar dirección`}>
-              <View style={e.pin}>
-                <Icono nombre="location" tamano={18} color={COLOR.bosque} />
-              </View>
-              <View style={{ flexShrink: 1 }}>
-                <Texto v="chico" style={{ color: COLOR.lima }}>
-                  Entregar en{elegida ? ` · ${elegida.etiqueta}` : ''}
-                </Texto>
-                <View style={e.filaChica}>
-                  <Texto v="fuerte" lineas={1} style={{ flexShrink: 1, color: '#fff', fontSize: 15 }}>
-                    {resumen(elegida)}
-                  </Texto>
-                  <Icono nombre="chevron-down" tamano={16} color="#fff" />
-                </View>
-              </View>
-            </Tocable>
-            <Tocable onPress={() => navigation.navigate('Pedidos')} style={e.campana} accessibilityRole="button" accessibilityLabel="Mis pedidos y avisos">
-              <Icono nombre="notifications-outline" tamano={21} color="#fff" />
-            </Tocable>
-          </View>
-
-          <View style={e.buscador}>
-            <Tocable hundir={0.98} conVibracion={false} accessibilityRole="search" exterior={{ flex: 1 }} style={e.buscadorTexto} onPress={() => navigation.navigate('Buscar')}>
-              <Icono nombre="search" color={COLOR.texto3} />
-              <Texto v="gris" style={{ fontSize: 14.5 }}>
-                Busca productos al por mayor…
-              </Texto>
-            </Tocable>
-            <Tocable accessibilityRole="button" accessibilityLabel="Buscar con una foto" onPress={() => navigation.navigate('BuscarPorFoto')} style={e.camara}>
-              <Icono nombre="camera" color={COLOR.bosque} tamano={20} />
-            </Tocable>
-          </View>
-        </LinearGradient>
+        <CabeceraInicio
+          direccion={elegida}
+          alCambiarDireccion={() => setHoja(true)}
+          alBuscar={() => navigation.navigate('Buscar')}
+          alBuscarConFoto={() => navigation.navigate('BuscarPorFoto')}
+          alVerPedidos={() => navigation.navigate('Pedidos')}
+        />
 
         {!enLinea && <AvisoSinSenal />}
 
@@ -206,10 +183,10 @@ export function Inicio({ navigation }: PantallaDePestana<'Inicio'>) {
             </Aparecer>
           )}
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
 
       {/* Franja bosque detrás de la barra de estado: al bajar, la hora sigue viéndose en blanco */}
-      <View pointerEvents="none" style={[e.franja, { height: arriba }]} />
+      <Animated.View pointerEvents="none" style={[e.franja, { height: arriba, opacity: bajada.interpolate({ inputRange: [40, 110], outputRange: [0, 1], extrapolate: 'clamp' }) }]} />
 
       <HojaDeDirecciones
         visible={hoja}
@@ -351,17 +328,9 @@ export function AvisoSinSenal() {
 
 const e = StyleSheet.create({
   pantalla: { flex: 1, backgroundColor: COLOR.fondo },
-  franja: { position: 'absolute', top: 0, left: 0, right: 0, backgroundColor: COLOR.bosque },
-  cabecera: { paddingHorizontal: 16, paddingBottom: 18, gap: 14, borderBottomLeftRadius: 30, borderBottomRightRadius: 30 },
-  filaCabecera: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  direccion: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  pin: { width: 38, height: 38, borderRadius: 19, backgroundColor: COLOR.lima, alignItems: 'center', justifyContent: 'center' },
+  franja: { position: 'absolute', top: 0, left: 0, right: 0, backgroundColor: CABECERA.oscuro },
   filaChica: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  campana: { width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center' },
-  buscador: { flexDirection: 'row', alignItems: 'center', height: 54, borderRadius: 27, backgroundColor: COLOR.superficie, paddingLeft: 18, paddingRight: 6 },
-  buscadorTexto: { flexDirection: 'row', alignItems: 'center', gap: 10, height: 50 },
-  camara: { width: 44, height: 44, borderRadius: 22, backgroundColor: COLOR.lima, alignItems: 'center', justifyContent: 'center' },
-  cuerpo: { padding: 16, gap: 22 },
+  cuerpo: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 16, gap: 22 },
   banner: { flex: 1, borderRadius: 28, overflow: 'hidden' },
   textoBanner: { flex: 1, justifyContent: 'center', paddingHorizontal: 20, gap: 4, maxWidth: '58%' },
   tituloBanner: { fontFamily: FUENTE.negra, fontSize: 23, lineHeight: 27, color: COLOR.bosque, letterSpacing: -0.5 },

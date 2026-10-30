@@ -11,9 +11,10 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Icono, Texto, type NombreDeIcono } from './src/componentes';
+import { Texto } from './src/componentes';
 import { ProveedorDeEstado, useEstado } from './src/estado';
 import type { Pestanas, Pila } from './src/navegacion';
+import { BarraInferior } from './src/BarraInferior';
 import { ProveedorDeDirecciones, useDirecciones } from './src/direcciones-estado';
 import { Acceso } from './src/pantallas/Acceso';
 import { BuscarPorFoto } from './src/pantallas/BuscarPorFoto';
@@ -38,32 +39,14 @@ import { COLOR } from './src/tema';
 const Tab = createBottomTabNavigator<Pestanas>();
 const Stack = createNativeStackNavigator<Pila>();
 
-const ICONOS: Record<keyof Pestanas, NombreDeIcono> = {
-  Inicio: 'home-outline',
-  Buscar: 'search-outline',
-  Carrito: 'cart-outline',
-  Pedidos: 'receipt-outline',
-  Cuenta: 'person-outline',
-};
-
 const TEMA = { ...DefaultTheme, colors: { ...DefaultTheme.colors, background: COLOR.fondo, primary: COLOR.verde, card: COLOR.superficie, border: COLOR.borde } };
 
 function PestanasDeAbajo() {
-  const { carrito } = useEstado();
   return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        headerShown: false,
-        tabBarActiveTintColor: COLOR.verde,
-        tabBarInactiveTintColor: COLOR.texto3,
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '700' },
-        tabBarStyle: { height: 64, paddingTop: 6, paddingBottom: 8, borderTopWidth: 0, elevation: 12, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 12 },
-        tabBarIcon: ({ color, focused }) => <Icono nombre={focused ? (ICONOS[route.name].replace('-outline', '') as NombreDeIcono) : ICONOS[route.name]} color={color} tamano={23} />,
-      })}
-    >
+    <Tab.Navigator screenOptions={{ headerShown: false }} tabBar={(props) => <BarraInferior {...props} />}>
       <Tab.Screen name="Inicio" component={Inicio} />
       <Tab.Screen name="Buscar" component={Buscar} />
-      <Tab.Screen name="Carrito" component={Carrito} options={{ tabBarBadge: carrito.length || undefined, tabBarBadgeStyle: { backgroundColor: COLOR.lima, color: COLOR.verde, fontWeight: '800' } }} />
+      <Tab.Screen name="Carrito" component={Carrito} />
       <Tab.Screen name="Pedidos" component={Pedidos} />
       <Tab.Screen name="Cuenta" component={Cuenta} />
     </Tab.Navigator>

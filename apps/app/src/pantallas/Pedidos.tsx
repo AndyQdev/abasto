@@ -1,3 +1,4 @@
+import { useEspacioBarra } from '../BarraInferior';
 import { ILUSTRACION } from '../ilustraciones';
 import { estadoVisible, fechaHora, filtrarPedidos, MIS_COMPRAS, nombreCorto, porPagar, productos as cuantos, type FiltroDePedidos, type Pedido } from '@abasto/comercio';
 import type { OperacionLocal } from '@abasto/bandeja';
@@ -22,6 +23,7 @@ const PESTANAS: [FiltroDePedidos, string][] = [
 
 /** Mis pedidos: los que ya llegaron y los que esperan señal en el teléfono. */
 export function Pedidos({ navigation }: PantallaDePestana<'Pedidos'>) {
+  const espacio = useEspacioBarra();
   const { enLinea, catalogo } = useEstado();
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [enTelefono, setEnTelefono] = useState<OperacionLocal[]>([]);
@@ -72,7 +74,7 @@ export function Pedidos({ navigation }: PantallaDePestana<'Pedidos'>) {
       <FlatList
         data={lista}
         keyExtractor={(p) => p.id}
-        contentContainerStyle={e.contenido}
+        contentContainerStyle={[e.contenido, { paddingBottom: espacio }]}
         refreshControl={<RefreshControl refreshing={cargando} onRefresh={() => void traer()} />}
         ListHeaderComponent={
           <View style={{ gap: 12 }}>

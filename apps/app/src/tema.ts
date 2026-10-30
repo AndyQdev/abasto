@@ -44,6 +44,16 @@ export const COLOR = {
   rosaSuave: '#FCEFF1',
 } as const;
 
+/**
+ * El bosque del encabezado del Inicio y de la pestaña activa (30/10, referencia `pedidosYa/image5.png`):
+ * un verde bosque más vivo que el de los textos, en tres tonos para darle profundidad. Solo esas dos piezas lo usan.
+ */
+export const CABECERA = {
+  oscuro: '#0B3027',
+  medio: '#103F32',
+  claro: '#1A5643',
+} as const;
+
 /** Plus Jakarta Sans en sus pesos. En Android, con una fuente propia hay que elegir el archivo del peso. */
 export const FUENTE = {
   normal: 'PlusJakartaSans_500Medium',

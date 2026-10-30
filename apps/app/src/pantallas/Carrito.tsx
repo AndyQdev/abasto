@@ -1,3 +1,4 @@
+import { useEspacioBarra } from '../BarraInferior';
 import { bs, cambiarCantidad, nombreDe, porMayorista, productos as cuantosProductos, quitar, tinte, totalDe, unidadesDe } from '@abasto/comercio';
 import { Image } from 'expo-image';
 import { ScrollView, StyleSheet, View } from 'react-native';
@@ -11,6 +12,7 @@ import { COLOR, FUENTE, SOMBRA, TINTES } from '../tema';
 
 /** El carrito vive en el teléfono y se cambia sin señal. Sale un pedido por mayorista. */
 export function Carrito({ navigation }: PantallaDePestana<'Carrito'>) {
+  const espacio = useEspacioBarra();
   const { carrito, cambiarCarrito, enLinea, catalogo } = useEstado();
   const grupos = porMayorista(carrito);
   const total = grupos.reduce((s, g) => s + g.totalEstimadoCentavos, 0);
@@ -19,7 +21,7 @@ export function Carrito({ navigation }: PantallaDePestana<'Carrito'>) {
 
   return (
     <SafeAreaView style={e.pantalla} edges={['top']}>
-      <ScrollView contentContainerStyle={[e.contenido, carrito.length > 0 && { paddingBottom: 200 }]}>
+      <ScrollView contentContainerStyle={[e.contenido, { paddingBottom: espacio + (carrito.length > 0 ? 190 : 0) }]}>
         <View style={e.entre}>
           <Texto v="t1">Tu carrito ({carrito.length})</Texto>
           {carrito.length > 0 && (
@@ -131,7 +133,7 @@ export function Carrito({ navigation }: PantallaDePestana<'Carrito'>) {
       </ScrollView>
 
       {carrito.length > 0 && (
-        <View style={e.barra}>
+        <View style={[e.barra, { bottom: espacio - 6 }]}>
           <View style={e.entre}>
             <Texto v="gris">
               Total ({cuantosProductos(carrito.length)} · {unidades} u.)
@@ -174,7 +176,7 @@ const e = StyleSheet.create({
   filaPagos: { flexDirection: 'row', gap: 8 },
   pago: { flex: 1, alignItems: 'center', gap: 6, paddingVertical: 14, borderRadius: 20, backgroundColor: COLOR.superficie, borderWidth: 2, borderColor: COLOR.superficie, ...SOMBRA },
   pagoDestacado: { backgroundColor: COLOR.lima, borderColor: COLOR.bosque },
-  barra: { position: 'absolute', left: 0, right: 0, bottom: 0, padding: 16, paddingBottom: 14, gap: 10, borderTopLeftRadius: 28, borderTopRightRadius: 28, backgroundColor: COLOR.superficie, ...SOMBRA, shadowOffset: { width: 0, height: -6 } },
+  barra: { position: 'absolute', left: 12, right: 12, padding: 16, paddingBottom: 14, gap: 10, borderRadius: 28, backgroundColor: COLOR.superficie, ...SOMBRA, shadowOpacity: 0.12 },
   total: { fontFamily: FUENTE.negra, fontSize: 26, color: COLOR.bosque, letterSpacing: -0.6 },
   continuar: { flexDirection: 'row', alignItems: 'center', gap: 8, height: 52, paddingHorizontal: 20, borderRadius: 18, backgroundColor: COLOR.lima },
 });

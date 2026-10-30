@@ -161,6 +161,14 @@
       "lado": 512,
       "uso": "Producto: presentaciones · Inicio: comprar otra vez",
       "tema": "A small woven shopping basket with groceries inside and a glossy lime circular arrow ribbon looping around it, meaning buy again. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
+    },
+    {
+      "nombre": "cabecera-mercado",
+      "tipo": "objeto",
+      "lado": 900,
+      "uso": "Inicio: la composición 3D del encabezado, entre la dirección y la campana",
+      "tema": "A rich, abundant pile of wholesale groceries, full and generous but tidy: a big glossy lime-green map pin rising from the middle, several kraft cardboard boxes (one open with products peeking out, one tied with a lime ribbon), golden cooking-oil bottles, colorful soda bottles, plain white cloth sacks with absolutely no letters or print, an egg tray, a bunch of bananas, red tomatoes, a fresh lettuce, pasta packs without writing and glossy green leaves tucked around the pile. Three-quarter view, the pile is wider than tall and fills the frame from side to side. Floating in the air with nothing under it. Absolutely no floor, no ground plane, no shadow under the objects.",
+      "proporcion": "4:3"
     }
   ]
 }

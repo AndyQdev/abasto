@@ -1,3 +1,4 @@
+import { useEspacioBarra } from '../BarraInferior';
 import { filtrar, filtrarMayoristas, nombreCorto, opcionesDeCompra, ordenarMayoristas, rubros, textoDeStock, type Producto } from '@abasto/comercio';
 import { useEffect, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, TextInput, View } from 'react-native';
@@ -11,6 +12,7 @@ const fecha = (iso: string) => new Date(iso).toLocaleDateString('es-BO', { day: 
 
 /** Busca sobre el catálogo guardado en el teléfono: anda igual sin señal. Nunca se ordena por precio. */
 export function Buscar({ navigation, route }: PantallaDePestana<'Buscar'>) {
+  const espacio = useEspacioBarra();
   const { catalogo, enLinea, agregarRapido } = useEstado();
   const [texto, setTexto] = useState('');
   const [rubro, setRubro] = useState<string | null>(route.params?.rubro ?? null);
@@ -81,7 +83,7 @@ export function Buscar({ navigation, route }: PantallaDePestana<'Buscar'>) {
         <FlatList
           data={productos}
           keyExtractor={(p) => p.id}
-          contentContainerStyle={e.contenido}
+          contentContainerStyle={[e.contenido, { paddingBottom: espacio }]}
           ListHeaderComponent={cabecera}
           ListEmptyComponent={
             <Vacio titulo="No encontramos productos" detalle="Prueba con otra palabra, quita algún filtro o busca con una foto.">
@@ -101,7 +103,7 @@ export function Buscar({ navigation, route }: PantallaDePestana<'Buscar'>) {
         <FlatList
           data={vendedores}
           keyExtractor={(m) => m.id}
-          contentContainerStyle={e.contenido}
+          contentContainerStyle={[e.contenido, { paddingBottom: espacio }]}
           ListHeaderComponent={cabecera}
           ListEmptyComponent={<Vacio titulo="No encontramos vendedores con ese nombre" />}
           renderItem={({ item: m }) => (
