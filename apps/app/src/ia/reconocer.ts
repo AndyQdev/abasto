@@ -14,7 +14,7 @@ let catalogo: VectoresDelCatalogo | null = null;
 /** Se carga una sola vez y queda en memoria: la segunda foto ya no paga la carga (~200 ms). */
 function cargar(): { modelo: Promise<TensorflowModel>; catalogo: VectoresDelCatalogo } {
   catalogo ??= leerVectores(ARCHIVO_DE_VECTORES);
-  modelo ??= loadTensorflowModel(ARCHIVO_DEL_MODELO).catch((e: unknown) => {
+  modelo ??= loadTensorflowModel(ARCHIVO_DEL_MODELO, []).catch((e: unknown) => {
     modelo = null; // si falla, la próxima foto vuelve a intentar
     throw e;
   });
@@ -34,8 +34,8 @@ async function pixeles(uri: string): Promise<Float32Array> {
 }
 
 /** El vector de la foto: es la salida que tiene tantos números como los vectores del catálogo. */
-function vectorDe(salidas: ArrayBufferLike[] | ArrayLike<number>[], dimension: number): Float32Array {
-  const vector = salidas.map((s) => (s instanceof ArrayBuffer ? new Float32Array(s) : Float32Array.from(s as ArrayLike<number>))).find((s) => s.length === dimension);
+function vectorDe(salidas: ArrayBuffer[], dimension: number): Float32Array {
+  const vector = salidas.map((s) => new Float32Array(s)).find((s) => s.length === dimension);
   if (!vector) throw new Error(`El modelo no tiene una salida de ${dimension} números: revisa que productos.tflite y vectores.json sean del mismo entrenamiento`);
   return vector;
 }
