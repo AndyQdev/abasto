@@ -40,6 +40,12 @@ export interface Producto {
   escalas: Escala[];
   /** URL pública de la foto real del producto (la sirve Catálogo). Null mientras no tenga */
   foto?: string | null;
+  /** PIL, Fino… */
+  marca?: string | null;
+  /** La marca es boliviana (verificado en Catálogo) */
+  marcaBoliviana?: boolean;
+  /** Lo que cuesta una unidad al público en un supermercado, con dónde y cuándo (aaaa-mm-dd) */
+  precioEnSuper?: { precio: { centavos: number; texto: string }; donde: string; fecha: string } | null;
 }
 
 const CAMPOS_MAYORISTA = 'id nombre ciudad verificado relacion deLaCasa';
@@ -48,6 +54,7 @@ export const CONSULTA_CATALOGO = `
   query Catalogo {
     productos {
       id codigo nombre rubro descripcion stock estado precioVisible abastecimiento entregaHoras foto
+      marca marcaBoliviana precioEnSuper { precio { centavos texto } donde fecha }
       mayorista { ${CAMPOS_MAYORISTA} }
       escalas { presentacion cantidad precioUnitario { centavos texto } }
     }

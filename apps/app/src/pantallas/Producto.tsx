@@ -1,4 +1,4 @@
-import { bs, cantidadDe, disponible, escalaPorDefecto, escalasConPrecio, itemDeCarrito, opcionesDeCompra, textoDeStock } from '@abasto/comercio';
+import { bs, cantidadDe, disponible, escalaPorDefecto, escalasConPrecio, frenteAlSuper, itemDeCarrito, nombreDe, opcionesDeCompra, textoDeStock } from '@abasto/comercio';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRef, useState } from 'react';
@@ -43,6 +43,7 @@ export function Producto({ navigation, route }: PantallaDePila<'Producto'>) {
   // La de mejor precio por unidad: la última que ahorra (las presentaciones vienen de menor a mayor)
   const mejor = [...opciones].reverse().find((o) => o.ahorra)?.presentacion;
   const rebaja = elegida?.ahorra ? elegida.ahorro.match(/\d+/)?.[0] : null;
+  const alSuper = escala ? frenteAlSuper(p, escala) : null;
 
   return (
     <View style={e.pantalla}>
@@ -85,6 +86,29 @@ export function Producto({ navigation, route }: PantallaDePila<'Producto'>) {
                     <Texto style={e.textoRebaja}>-{rebaja} %</Texto>
                   </View>
                 )}
+              </View>
+            )}
+
+            {/* El ancla: lo que cuesta en el súper y lo que le queda a la tienda si lo revende a ese precio */}
+            {alSuper && alSuper.gananciaPorUnidad > 0 && escala && (
+              <View style={e.super}>
+                <View style={e.filaSuper}>
+                  <Icono nombre="storefront-outline" tamano={18} color={COLOR.bosque} />
+                  <Texto style={{ flex: 1, color: COLOR.texto2 }}>
+                    En el súper <Texto style={e.tachadoSuper}>{alSuper.precioSuper}</Texto> · aquí ahorras{' '}
+                    <Texto style={e.fuerteSuper}>{alSuper.porcentaje} %</Texto>
+                  </Texto>
+                </View>
+                <View style={e.filaSuper}>
+                  <Icono nombre="trending-up" tamano={18} color={COLOR.bosque} />
+                  <Texto style={{ flex: 1, color: COLOR.texto2 }}>
+                    Si lo revendes a ese precio ganas <Texto style={e.fuerteSuper}>{bs(alSuper.gananciaPorUnidad)} c/u</Texto>
+                    {escala.cantidad > 1 && ` · ${bs(alSuper.gananciaPorUnidad * escala.cantidad)} por ${nombreDe(escala.presentacion)}`}
+                  </Texto>
+                </View>
+                <Texto v="chico">
+                  Precio de {alSuper.donde} del {alSuper.fecha}
+                </Texto>
               </View>
             )}
 
@@ -201,6 +225,10 @@ export function Producto({ navigation, route }: PantallaDePila<'Producto'>) {
 }
 
 const e = StyleSheet.create({
+  super: { gap: 8, padding: 14, borderRadius: 20, backgroundColor: COLOR.limaSuave, borderWidth: 1, borderColor: COLOR.limaMedia },
+  filaSuper: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  tachadoSuper: { textDecorationLine: 'line-through', color: COLOR.texto3 },
+  fuerteSuper: { fontFamily: FUENTE.negra, color: COLOR.bosque },
   pantalla: { flex: 1, backgroundColor: COLOR.fondo },
   vitrina: { paddingHorizontal: 16, paddingBottom: 46, alignItems: 'center' },
   barraArriba: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', alignSelf: 'stretch' },

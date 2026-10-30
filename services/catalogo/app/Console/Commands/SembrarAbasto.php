@@ -8,6 +8,7 @@ use Catalogo\Dominio\Abastecimiento;
 use Catalogo\Dominio\EscalaDePrecio;
 use Catalogo\Dominio\EstadoProducto;
 use Catalogo\Dominio\EstadoVerificacion;
+use Catalogo\Dominio\PrecioDeReferencia;
 use Catalogo\Dominio\Presentacion;
 use Catalogo\Dominio\Producto;
 use Catalogo\Dominio\Puertos\AlmacenDeFotos;
@@ -40,6 +41,9 @@ final class SembrarAbasto extends Command
     private const SIETE_CALLES = 'Mercado 7 Calles';
 
     private const DISTRIBUIDORA = 'Distribuidora (pedido por WhatsApp)';
+
+    /** El día en que se tomaron los precios al público de Fidalga y Amarket */
+    public const FECHA_SUPER = '2026-10-30';
 
     public function handle(ProductoRepositorio $productos, AlmacenDeFotos $fotos): int
     {
@@ -76,6 +80,9 @@ final class SembrarAbasto extends Command
                 costoUnitarioCentavos: $p['costo'],
                 proveedor: $p['proveedor'],
                 foto: $foto,
+                marca: $p['marca'],
+                marcaBoliviana: $p['marcaBoliviana'],
+                precioEnSuper: new PrecioDeReferencia($p['super'][0], $p['super'][1], self::FECHA_SUPER),
             ));
         }
 
@@ -94,40 +101,45 @@ final class SembrarAbasto extends Command
     /**
      * Precios por unidad en centavos. El costo es lo que se paga en el mercado; la diferencia es el margen.
      *
-     * @return list<array{codigo: string, nombre: string, rubro: string, escalas: list<EscalaDePrecio>, costo: int, proveedor: string, entregaHoras: int}>
+     * La marca boliviana está verificada (31/10): PIL, Paceña, Fino, Guabirá, Para Ti, Mabel's, Caisy y Famosa.
+     * Don Vittorio (Alicorp), Ola (Unilever) y Vital (Embol) se fabrican aquí pero no son marcas bolivianas;
+     * Simba y Mendocina no se pudieron confirmar.
+     *
+     * @return list<array{codigo: string, nombre: string, rubro: string, escalas: list<EscalaDePrecio>, costo: int, proveedor: string, entregaHoras: int, marca: string, marcaBoliviana: bool, super: array{int, string}}>
      */
     public static function catalogo(): array
     {
         $e = static fn (Presentacion $p, int $unidades, int $precio) => new EscalaDePrecio($p, $unidades, $precio);
         $filas = [
-            // código, nombre, rubro, escalas (la chica a ~92 % del precio al público y la grande a ~85 %), costo por unidad, proveedor, horas de entrega
-            ['AB-001', 'Arroz Caisy Grano de Oro 1 kg', 'Abarrotes', [$e(Presentacion::DOCENA, 12, 1540), $e(Presentacion::FARDO, 24, 1400)], 1300, self::LOS_POZOS, 24], // al público Bs 16,70
-            ['AB-002', 'Azúcar Guabirá 1 kg', 'Abarrotes', [$e(Presentacion::DOCENA, 12, 700), $e(Presentacion::FARDO, 24, 650)], 590, self::LOS_POZOS, 24], // al público Bs 7,60
-            ['AB-003', 'Fideo spaghetti Don Victorio 500 g', 'Abarrotes', [$e(Presentacion::DOCENA, 12, 860), $e(Presentacion::CAJA, 24, 770)], 730, self::DISTRIBUIDORA, 24], // al público Bs 9,40
-            ['AB-004', 'Harina Famosa 1 kg', 'Abarrotes', [$e(Presentacion::DOCENA, 12, 980), $e(Presentacion::FARDO, 24, 910)], 830, self::LOS_POZOS, 24], // al público Bs 10,70
-            ['AB-005', 'Aceite Fino 900 ml', 'Abarrotes', [$e(Presentacion::UNIDAD, 1, 1750), $e(Presentacion::CAJA, 12, 1670)], 1480, self::LOS_POZOS, 24], // al público Bs 19,00
-            ['AB-007', 'Sal fina Lobos 1 kg', 'Abarrotes', [$e(Presentacion::DOCENA, 12, 640), $e(Presentacion::FARDO, 24, 580)], 550, self::MUTUALISTA, 24], // al público Bs 7,00
-            ['AB-014', 'Coca-Cola 2 L', 'Bebidas', [$e(Presentacion::UNIDAD, 1, 1260), $e(Presentacion::CAJA, 6, 1190)], 1070, self::DISTRIBUIDORA, 24], // al público Bs 13,70
-            ['AB-015', 'Agua Vital sin gas 2 L', 'Bebidas', [$e(Presentacion::UNIDAD, 1, 710), $e(Presentacion::CAJA, 6, 650)], 600, self::DISTRIBUIDORA, 24], // al público Bs 7,70
-            ['AB-016', 'Simba piña 2 L', 'Bebidas', [$e(Presentacion::UNIDAD, 1, 1010), $e(Presentacion::CAJA, 6, 950)], 860, self::DISTRIBUIDORA, 24], // al público Bs 11,00
-            ['AB-037', 'Mendocina papaya 3 L', 'Bebidas', [$e(Presentacion::UNIDAD, 1, 1290), $e(Presentacion::CAJA, 6, 1150)], 1090, self::DISTRIBUIDORA, 24], // al público Bs 14,00
-            ['AB-038', 'Cerveza Paceña lata 269 ml', 'Bebidas', [$e(Presentacion::DOCENA, 12, 720), $e(Presentacion::CAJA, 24, 660)], 610, self::DISTRIBUIDORA, 24], // al público Bs 7,80
-            ['AB-017', 'Leche PIL fresca 900 ml', 'Lácteos', [$e(Presentacion::DOCENA, 12, 980), $e(Presentacion::CAJA, 24, 940)], 830, self::DISTRIBUIDORA, 24], // al público Bs 10,70
-            ['AB-019', 'Leche PIL enriquecida 800 ml', 'Lácteos', [$e(Presentacion::DOCENA, 12, 880), $e(Presentacion::CAJA, 24, 800)], 750, self::DISTRIBUIDORA, 24], // al público Bs 9,60
-            ['AB-018', 'Yogurt bebible PIL durazno 1 L', 'Lácteos', [$e(Presentacion::UNIDAD, 1, 2120), $e(Presentacion::DOCENA, 12, 2000)], 1790, self::DISTRIBUIDORA, 24], // al público Bs 23,00
-            ['AB-039', 'Biogurt PIL frutilla 1 L', 'Lácteos', [$e(Presentacion::UNIDAD, 1, 1800), $e(Presentacion::DOCENA, 12, 1650)], 1530, self::DISTRIBUIDORA, 24], // al público Bs 19,60
-            ['AB-040', 'Mantequilla PIL con sal 200 g', 'Lácteos', [$e(Presentacion::UNIDAD, 1, 2390), $e(Presentacion::DOCENA, 12, 2240)], 2030, self::DISTRIBUIDORA, 24], // al público Bs 26,00
-            ['AB-027', 'Lavandina Mr. Cloro 1 L', 'Limpieza del hogar', [$e(Presentacion::UNIDAD, 1, 1100), $e(Presentacion::DOCENA, 12, 980)], 940, self::LOS_POZOS, 24], // al público Bs 12,00
-            ['AB-025', 'Detergente Skip 700 g', 'Limpieza del hogar', [$e(Presentacion::UNIDAD, 1, 2390), $e(Presentacion::DOCENA, 12, 2210)], 2030, self::LA_RAMADA, 24], // al público Bs 26,00
-            ['AB-026', 'Limpia baños Ola Maximus 890 ml', 'Limpieza del hogar', [$e(Presentacion::UNIDAD, 1, 2350), $e(Presentacion::DOCENA, 12, 2240)], 1990, self::LA_RAMADA, 24], // al público Bs 25,50
-            ['AB-029', 'Papel higiénico Elite Plus · 24 rollos', 'Higiene y cuidado personal', [$e(Presentacion::UNIDAD, 1, 7800), $e(Presentacion::CAJA, 4, 7030)], 6610, self::LOS_POZOS, 24], // al público Bs 84,74
-            ['AB-041', 'Papel higiénico Nacional · 12 rollos', 'Higiene y cuidado personal', [$e(Presentacion::UNIDAD, 1, 2820), $e(Presentacion::CAJA, 6, 2660)], 2390, self::LOS_POZOS, 24], // al público Bs 30,60
-            ['AB-031', 'Pasta dental Colgate Triple Acción 180 g', 'Higiene y cuidado personal', [$e(Presentacion::UNIDAD, 1, 1660), $e(Presentacion::DOCENA, 12, 1510)], 1400, self::LA_RAMADA, 24], // al público Bs 18,00
-            ['AB-030', 'Jabón Protex Avena · 3 de 110 g', 'Higiene y cuidado personal', [$e(Presentacion::UNIDAD, 1, 3190), $e(Presentacion::DOCENA, 12, 2980)], 2710, self::LA_RAMADA, 24], // al público Bs 34,70
-            ['AB-032', 'Shampoo Sedal Zero Caspa 340 ml', 'Higiene y cuidado personal', [$e(Presentacion::UNIDAD, 1, 2830), $e(Presentacion::DOCENA, 12, 2530)], 2400, self::LA_RAMADA, 24], // al público Bs 30,80
-            ['AB-020', 'Galleta wafer Mabel\'s chocolate 100 g', 'Galletas y dulces', [$e(Presentacion::DOCENA, 12, 600), $e(Presentacion::CAJA, 36, 550)], 510, self::SIETE_CALLES, 24], // al público Bs 6,50
-            ['AB-021', 'Galletas Mabel\'s Cremositas Max 216 g', 'Galletas y dulces', [$e(Presentacion::DOCENA, 12, 1220), $e(Presentacion::CAJA, 24, 1170)], 1040, self::SIETE_CALLES, 24], // al público Bs 13,30
-            ['AB-023', 'Chocolate Para Ti blanco 100 g', 'Galletas y dulces', [$e(Presentacion::UNIDAD, 1, 3560), $e(Presentacion::DOCENA, 12, 3210)], 3020, self::SIETE_CALLES, 24], // al público Bs 38,70
+            // código, nombre, rubro, escalas (la chica a ~92 % del precio al público y la grande a ~85 %), costo por unidad, proveedor,
+            // horas de entrega, marca, marca boliviana y [precio al público en centavos, supermercado]
+            ['AB-001', 'Arroz Caisy Grano de Oro 1 kg', 'Abarrotes', [$e(Presentacion::DOCENA, 12, 1540), $e(Presentacion::FARDO, 24, 1400)], 1300, self::LOS_POZOS, 24, 'Caisy', true, [1670, 'Fidalga']],
+            ['AB-002', 'Azúcar Guabirá 1 kg', 'Abarrotes', [$e(Presentacion::DOCENA, 12, 700), $e(Presentacion::FARDO, 24, 650)], 590, self::LOS_POZOS, 24, 'Guabirá', true, [760, 'Fidalga']],
+            ['AB-003', 'Fideo spaghetti Don Vittorio 500 g', 'Abarrotes', [$e(Presentacion::DOCENA, 12, 860), $e(Presentacion::CAJA, 24, 770)], 730, self::DISTRIBUIDORA, 24, 'Don Vittorio', false, [940, 'Fidalga']],
+            ['AB-004', 'Harina Famosa 1 kg', 'Abarrotes', [$e(Presentacion::DOCENA, 12, 980), $e(Presentacion::FARDO, 24, 910)], 830, self::LOS_POZOS, 24, 'Famosa', true, [1070, 'Fidalga']],
+            ['AB-005', 'Aceite Fino 900 ml', 'Abarrotes', [$e(Presentacion::UNIDAD, 1, 1750), $e(Presentacion::CAJA, 12, 1670)], 1480, self::LOS_POZOS, 24, 'Fino', true, [1900, 'Fidalga']],
+            ['AB-007', 'Sal fina Lobos 1 kg', 'Abarrotes', [$e(Presentacion::DOCENA, 12, 640), $e(Presentacion::FARDO, 24, 580)], 550, self::MUTUALISTA, 24, 'Lobos', false, [700, 'Fidalga']],
+            ['AB-014', 'Coca-Cola 2 L', 'Bebidas', [$e(Presentacion::UNIDAD, 1, 1260), $e(Presentacion::CAJA, 6, 1190)], 1070, self::DISTRIBUIDORA, 24, 'Coca-Cola', false, [1370, 'Fidalga']],
+            ['AB-015', 'Agua Vital sin gas 2 L', 'Bebidas', [$e(Presentacion::UNIDAD, 1, 710), $e(Presentacion::CAJA, 6, 650)], 600, self::DISTRIBUIDORA, 24, 'Vital', false, [770, 'Fidalga']],
+            ['AB-016', 'Simba piña 2 L', 'Bebidas', [$e(Presentacion::UNIDAD, 1, 1010), $e(Presentacion::CAJA, 6, 950)], 860, self::DISTRIBUIDORA, 24, 'Simba', false, [1100, 'Fidalga']],
+            ['AB-037', 'Mendocina papaya 3 L', 'Bebidas', [$e(Presentacion::UNIDAD, 1, 1290), $e(Presentacion::CAJA, 6, 1150)], 1090, self::DISTRIBUIDORA, 24, 'Mendocina', false, [1400, 'Fidalga']],
+            ['AB-038', 'Cerveza Paceña lata 269 ml', 'Bebidas', [$e(Presentacion::DOCENA, 12, 720), $e(Presentacion::CAJA, 24, 660)], 610, self::DISTRIBUIDORA, 24, 'Paceña', true, [780, 'Fidalga']],
+            ['AB-017', 'Leche PIL fresca 900 ml', 'Lácteos', [$e(Presentacion::DOCENA, 12, 980), $e(Presentacion::CAJA, 24, 940)], 830, self::DISTRIBUIDORA, 24, 'PIL', true, [1070, 'Fidalga']],
+            ['AB-019', 'Leche PIL enriquecida 800 ml', 'Lácteos', [$e(Presentacion::DOCENA, 12, 880), $e(Presentacion::CAJA, 24, 800)], 750, self::DISTRIBUIDORA, 24, 'PIL', true, [960, 'Amarket']],
+            ['AB-018', 'Yogurt bebible PIL durazno 1 L', 'Lácteos', [$e(Presentacion::UNIDAD, 1, 2120), $e(Presentacion::DOCENA, 12, 2000)], 1790, self::DISTRIBUIDORA, 24, 'PIL', true, [2300, 'Fidalga']],
+            ['AB-039', 'Biogurt PIL frutilla 1 L', 'Lácteos', [$e(Presentacion::UNIDAD, 1, 1800), $e(Presentacion::DOCENA, 12, 1650)], 1530, self::DISTRIBUIDORA, 24, 'PIL', true, [1960, 'Fidalga']],
+            ['AB-040', 'Mantequilla PIL con sal 200 g', 'Lácteos', [$e(Presentacion::UNIDAD, 1, 2390), $e(Presentacion::DOCENA, 12, 2240)], 2030, self::DISTRIBUIDORA, 24, 'PIL', true, [2600, 'Fidalga']],
+            ['AB-027', 'Lavandina Mr. Cloro 1 L', 'Limpieza del hogar', [$e(Presentacion::UNIDAD, 1, 1100), $e(Presentacion::DOCENA, 12, 980)], 940, self::LOS_POZOS, 24, 'Mr. Cloro', false, [1200, 'Fidalga']],
+            ['AB-025', 'Detergente Skip 700 g', 'Limpieza del hogar', [$e(Presentacion::UNIDAD, 1, 2390), $e(Presentacion::DOCENA, 12, 2210)], 2030, self::LA_RAMADA, 24, 'Skip', false, [2600, 'Fidalga']],
+            ['AB-026', 'Limpia baños Ola Maximus 890 ml', 'Limpieza del hogar', [$e(Presentacion::UNIDAD, 1, 2350), $e(Presentacion::DOCENA, 12, 2240)], 1990, self::LA_RAMADA, 24, 'Ola', false, [2550, 'Fidalga']],
+            ['AB-029', 'Papel higiénico Elite Plus · 24 rollos', 'Higiene y cuidado personal', [$e(Presentacion::UNIDAD, 1, 7800), $e(Presentacion::CAJA, 4, 7030)], 6610, self::LOS_POZOS, 24, 'Elite', false, [8474, 'Amarket']],
+            ['AB-041', 'Papel higiénico Nacional · 12 rollos', 'Higiene y cuidado personal', [$e(Presentacion::UNIDAD, 1, 2820), $e(Presentacion::CAJA, 6, 2660)], 2390, self::LOS_POZOS, 24, 'Nacional', false, [3060, 'Fidalga']],
+            ['AB-031', 'Pasta dental Colgate Triple Acción 180 g', 'Higiene y cuidado personal', [$e(Presentacion::UNIDAD, 1, 1660), $e(Presentacion::DOCENA, 12, 1510)], 1400, self::LA_RAMADA, 24, 'Colgate', false, [1800, 'Fidalga']],
+            ['AB-030', 'Jabón Protex Avena · 3 de 110 g', 'Higiene y cuidado personal', [$e(Presentacion::UNIDAD, 1, 3190), $e(Presentacion::DOCENA, 12, 2980)], 2710, self::LA_RAMADA, 24, 'Protex', false, [3470, 'Amarket']],
+            ['AB-032', 'Shampoo Sedal Zero Caspa 340 ml', 'Higiene y cuidado personal', [$e(Presentacion::UNIDAD, 1, 2830), $e(Presentacion::DOCENA, 12, 2530)], 2400, self::LA_RAMADA, 24, 'Sedal', false, [3080, 'Amarket']],
+            ['AB-020', 'Galleta wafer Mabel\'s chocolate 100 g', 'Galletas y dulces', [$e(Presentacion::DOCENA, 12, 600), $e(Presentacion::CAJA, 36, 550)], 510, self::SIETE_CALLES, 24, 'Mabel\'s', true, [650, 'Fidalga']],
+            ['AB-021', 'Galletas Mabel\'s Cremositas Max 216 g', 'Galletas y dulces', [$e(Presentacion::DOCENA, 12, 1220), $e(Presentacion::CAJA, 24, 1170)], 1040, self::SIETE_CALLES, 24, 'Mabel\'s', true, [1330, 'Fidalga']],
+            ['AB-023', 'Chocolate Para Ti blanco 100 g', 'Galletas y dulces', [$e(Presentacion::UNIDAD, 1, 3560), $e(Presentacion::DOCENA, 12, 3210)], 3020, self::SIETE_CALLES, 24, 'Para Ti', true, [3870, 'Amarket']],
         ];
 
         return array_values(array_map(static fn (array $f) => [
@@ -138,6 +150,9 @@ final class SembrarAbasto extends Command
             'costo' => $f[4],
             'proveedor' => $f[5],
             'entregaHoras' => $f[6],
+            'marca' => $f[7],
+            'marcaBoliviana' => $f[8],
+            'super' => $f[9],
         ], $filas));
     }
 }

@@ -14,6 +14,7 @@ use Catalogo\Dominio\EstadoVerificacion;
 use Catalogo\Dominio\ListaDePrecios;
 use Catalogo\Dominio\Organizacion;
 use Catalogo\Dominio\PoliticaDePrecios;
+use Catalogo\Dominio\PrecioDeReferencia;
 use Catalogo\Dominio\Presentacion;
 use Catalogo\Dominio\Producto;
 use Catalogo\Dominio\RelacionComercial;
@@ -127,5 +128,30 @@ it('la semilla de Abasto: códigos únicos, escalas válidas y siempre con marge
         $masBarato = min(array_map(static fn (EscalaDePrecio $e) => $e->precioUnitarioCentavos, $p['escalas']));
         expect($p['costo'])->toBeLessThan($masBarato, "{$p['nombre']} se vendería a pérdida");
         expect(is_file(__DIR__."/../../database/fotos-abasto/{$p['codigo']}.webp"))->toBeTrue("{$p['nombre']} no tiene foto");
+        // «Más barato que en el súper» tiene que ser verdad para todo lo que vende Abasto
+        $masCaro = max(array_map(static fn (EscalaDePrecio $e) => $e->precioUnitarioCentavos, $p['escalas']));
+        expect($masCaro)->toBeLessThan($p['super'][0], "{$p['nombre']} sale más caro que en el súper");
     }
+});
+
+it('el precio del súper siempre dice dónde y cuándo se tomó', function () {
+    $referencia = new PrecioDeReferencia(1900, 'Fidalga', '2026-10-30');
+
+    expect($referencia->centavos)->toBe(1900)
+        ->and(fn () => new PrecioDeReferencia(1900, ' ', '2026-10-30'))->toThrow(ErrorDeDominio::class, 'Falta dónde')
+        ->and(fn () => new PrecioDeReferencia(1900, 'Fidalga', '30/10/2026'))->toThrow(ErrorDeDominio::class, 'aaaa-mm-dd')
+        ->and(fn () => new PrecioDeReferencia(0, 'Fidalga', '2026-10-30'))->toThrow(ErrorDeDominio::class, 'mayor a cero');
+});
+
+it('la vista del producto trae la marca y el precio del súper', function () {
+    $con = new Producto('AB-005', 'abasto', 'AB-005', 'Aceite Fino 900 ml', 'Abarrotes', '', 0, EstadoProducto::ACTIVO, [
+        new EscalaDePrecio(Presentacion::UNIDAD, 1, 1750),
+    ], Abastecimiento::BAJO_PEDIDO, 24, 1480, null, null, 'Fino', true, new PrecioDeReferencia(1900, 'Fidalga', '2026-10-30'));
+    $this->productos->guardar($con);
+    $vista = Vistas::producto((new ConsultarCatalogo($this->productos, $this->relaciones, $this->organizaciones))->uno('AB-005', 'dr'));
+
+    expect($vista['marca'])->toBe('Fino')
+        ->and($vista['marcaBoliviana'])->toBeTrue()
+        ->and($vista['precioEnSuper'])->toMatchArray(['donde' => 'Fidalga', 'fecha' => '2026-10-30'])
+        ->and($vista['precioEnSuper']['precio']['texto'])->toBe('Bs 19,00');
 });
