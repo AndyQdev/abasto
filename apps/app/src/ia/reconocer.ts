@@ -2,11 +2,12 @@ import { SaveFormat, manipulateAsync } from 'expo-image-manipulator';
 import { decode } from 'jpeg-js';
 import { loadTensorflowModel, type TensorflowModel } from 'react-native-fast-tflite';
 import { LADO, aEntradaDelModelo, recorteCentrado } from './imagen';
-import { leerVectores, masParecidos, type Reconocido, type VectoresDelCatalogo } from './parecido';
+import { leerVectores, masParecidos, mezclarConClasificador, type Reconocido, type VectoresDelCatalogo } from './parecido';
 
 // Los dos salen juntos de ml/src/abasto_ml/vision/entrenar.py: si se reentrena, se cambian los dos
 const ARCHIVO_DEL_MODELO = require('../../assets/modelos/productos.tflite');
 const ARCHIVO_DE_VECTORES: unknown = require('../../assets/modelos/vectores.json');
+const ETIQUETAS: string[] = require('../../assets/modelos/etiquetas.json');
 
 let modelo: Promise<TensorflowModel> | null = null;
 let catalogo: VectoresDelCatalogo | null = null;
@@ -33,11 +34,15 @@ async function pixeles(uri: string): Promise<Float32Array> {
   return aEntradaDelModelo(data, width, height);
 }
 
-/** El vector de la foto: es la salida que tiene tantos números como los vectores del catálogo. */
-function vectorDe(salidas: ArrayBuffer[], dimension: number): Float32Array {
-  const vector = salidas.map((s) => new Float32Array(s)).find((s) => s.length === dimension);
-  if (!vector) throw new Error(`El modelo no tiene una salida de ${dimension} números: revisa que productos.tflite y vectores.json sean del mismo entrenamiento`);
-  return vector;
+/** El vector es la salida con tantos números como los del catálogo; las probabilidades, la que tiene uno por etiqueta. */
+function salidasDe(salidas: ArrayBuffer[], dimension: number) {
+  const enNumeros = salidas.map((s) => new Float32Array(s));
+  const vector = enNumeros.find((s) => s.length === dimension);
+  if (!vector) {
+    throw new Error(`El modelo no tiene una salida de ${dimension} números: revisa que productos.tflite y vectores.json sean del mismo entrenamiento`);
+  }
+  const probabilidades = ETIQUETAS.length !== dimension ? enNumeros.find((s) => s.length === ETIQUETAS.length) : undefined;
+  return { vector, probabilidades };
 }
 
 /**
@@ -50,5 +55,9 @@ export async function reconocerProducto(fotoUri: string, maximo = 5): Promise<Re
   if (!vectores.productos.length) return [];
   const [m, entrada] = await Promise.all([cargando, pixeles(fotoUri)]);
   const salidas = await m.run([entrada.buffer as ArrayBuffer]);
-  return masParecidos(vectorDe(salidas, vectores.dimension), vectores.productos, maximo);
+  const { vector, probabilidades } = salidasDe(salidas, vectores.dimension);
+  // Con el clasificador entrenado se juntan las dos señales; sin él, solo el parecido
+  return probabilidades
+    ? mezclarConClasificador(vector, vectores.productos, probabilidades, ETIQUETAS, maximo)
+    : masParecidos(vector, vectores.productos, maximo);
 }

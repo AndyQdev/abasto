@@ -7,6 +7,8 @@ propias ni entrenamiento. Cuando haya fotos sacadas en tienda, `entrenar.py` afi
 Cada producto se describe con varias vistas de su foto (recortes más cerrados y con menos luz), porque en la
 tienda el producto nunca sale tan centrado ni tan iluminado como en la foto del catálogo.
 
+Después se entrena con TensorFlow la capa que clasifica (transfer learning) con fotos de celular simuladas.
+
 La evaluación simula fotos de celular (recorte corrido, giro, otra luz y desenfoque) y mide si el producto
 correcto queda primero (top-1) o entre los 3 primeros (top-3).
 
@@ -68,6 +70,38 @@ def como_foto_de_celular(imagen, rng: np.random.Generator) -> np.ndarray:
     return a_entrada(imagen)
 
 
+def entrenar_clasificador(vectores_de, imagenes, codigos, rng, por_producto: int = 40, epocas: int = 60):
+    """Deep learning con TensorFlow: entrena la capa que decide qué producto es.
+
+    Los ejemplos son fotos de celular simuladas desde la foto del catálogo. La base de MobileNetV3 queda congelada:
+    se entrena sobre su vector (transfer learning), así el vector que usa la búsqueda por parecido no cambia.
+    """
+    import tensorflow as tf
+
+    x, y = [], []
+    for i, codigo in enumerate(codigos):
+        x.append(vectores_de([como_foto_de_celular(imagenes[codigo], rng) for _ in range(por_producto)]))
+        y += [i] * por_producto
+    x, y = np.concatenate(x), np.array(y)
+    orden = rng.permutation(
+        len(y)
+    )  # validation_split toma el final: sin mezclar, validaría solo los últimos productos
+    x, y = x[orden], y[orden]
+
+    cabeza = tf.keras.Sequential(
+        [
+            tf.keras.Input(shape=(x.shape[1],)),
+            tf.keras.layers.Dropout(0.2),
+            tf.keras.layers.Dense(len(codigos), activation="softmax"),
+        ]
+    )
+    cabeza.compile(
+        optimizer=tf.keras.optimizers.Adam(1e-3), loss="sparse_categorical_crossentropy", metrics=["accuracy"]
+    )
+    historial = cabeza.fit(x, y, validation_split=0.2, epochs=epocas, batch_size=32, verbose=0)
+    return cabeza.layers[-1].get_weights(), float(historial.history["val_accuracy"][-1])
+
+
 def generar(fotos: Path, salida: Path, pruebas_por_producto: int = 6, semilla: int = 7) -> dict:
     from PIL import Image
 
@@ -77,11 +111,22 @@ def generar(fotos: Path, salida: Path, pruebas_por_producto: int = 6, semilla: i
     codigos = list(archivos)
     modelo, _ = construir(categorias=len(codigos), semilla=semilla)
 
+    def salidas_de(lote: list[np.ndarray]) -> tuple[np.ndarray, np.ndarray]:
+        partes = [modelo(np.stack(lote[i : i + 64]), training=False) for i in range(0, len(lote), 64)]
+        return (
+            np.concatenate([p["vector"].numpy() for p in partes]),
+            np.concatenate([p["probabilidades"].numpy() for p in partes]),
+        )
+
     def vectores_de(lote: list[np.ndarray]) -> np.ndarray:
-        return modelo(np.stack(lote), training=False)["vector"].numpy()
+        return salidas_de(lote)[0]
 
     imagenes = {c: Image.open(f) for c, f in archivos.items()}
     por_codigo = {c: vectores.normalizar(vectores_de(vistas(im)).mean(axis=0)) for c, im in imagenes.items()}
+
+    rng = np.random.default_rng(semilla)
+    pesos, precision_validacion = entrenar_clasificador(vectores_de, imagenes, codigos, rng)
+    modelo.get_layer("probabilidades").set_weights(pesos)
 
     salida.mkdir(parents=True, exist_ok=True)
     (salida / "productos.tflite").write_bytes(a_tflite(modelo))
@@ -90,28 +135,42 @@ def generar(fotos: Path, salida: Path, pruebas_por_producto: int = 6, semilla: i
         json.dumps(codigos, ensure_ascii=False, indent=2), encoding="utf-8"
     )
 
-    rng = np.random.default_rng(semilla)
+    # Fotos de prueba nuevas (otra semilla): el modelo nunca las vio al entrenar
+    rng = np.random.default_rng(semilla + 1000)
     matriz = np.stack([por_codigo[c] for c in codigos])
-    aciertos_1 = aciertos_3 = total = 0
+    aciertos = {"vector": 0, "clasificador": 0, "juntos": 0}
+    aciertos_3 = total = 0
     for i, codigo in enumerate(codigos):
-        fotos_de_prueba = [como_foto_de_celular(imagenes[codigo], rng) for _ in range(pruebas_por_producto)]
-        parecidos = vectores.normalizar(vectores_de(fotos_de_prueba)) @ matriz.T
-        orden = np.argsort(-parecidos, axis=1)
-        aciertos_1 += int((orden[:, 0] == i).sum())
-        aciertos_3 += int((orden[:, :3] == i).any(axis=1).sum())
+        vecs, probs = salidas_de(
+            [como_foto_de_celular(imagenes[codigo], rng) for _ in range(pruebas_por_producto)]
+        )
+        parecidos = np.clip(vectores.normalizar(vecs) @ matriz.T, 0, 1)
+        juntos = mezclar(parecidos, probs)
+        aciertos["vector"] += int((parecidos.argmax(axis=1) == i).sum())
+        aciertos["clasificador"] += int((probs.argmax(axis=1) == i).sum())
+        aciertos["juntos"] += int((juntos.argmax(axis=1) == i).sum())
+        aciertos_3 += int((np.argsort(-juntos, axis=1)[:, :3] == i).any(axis=1).sum())
         total += pruebas_por_producto
 
     metricas = {
         "modelo": NOMBRE_DEL_MODELO,
         "productos": len(codigos),
+        "precision_validacion_clasificador": round(precision_validacion, 3),
         "fotos_de_prueba": total,
-        "top1": round(aciertos_1 / total, 3),
+        "top1_vector": round(aciertos["vector"] / total, 3),
+        "top1_clasificador": round(aciertos["clasificador"] / total, 3),
+        "top1": round(aciertos["juntos"] / total, 3),
         "top3": round(aciertos_3 / total, 3),
     }
     (salida / "metricas.json").write_text(
         json.dumps(metricas, ensure_ascii=False, indent=2), encoding="utf-8"
     )
     return metricas
+
+
+def mezclar(parecidos: np.ndarray, probabilidades: np.ndarray, peso_vector: float = 0.5) -> np.ndarray:
+    """La misma mezcla que hace la app en `mezclarConClasificador` (apps/app/src/ia/parecido.ts)."""
+    return peso_vector * parecidos + (1 - peso_vector) * probabilidades
 
 
 def main() -> None:

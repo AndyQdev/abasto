@@ -3,10 +3,10 @@
 Actualizado: 31/10/2026 · en main (reparto nuevo: toda la IA)
 
 ## Estoy en
-Entrenar el modelo de visión con TensorFlow (requisito de deep learning). Buscar por foto ya funciona con los vectores del catálogo real.
+CU-13 de punta a punta y seguridad del MCP.
 
 ## Terminé
-- Buscar por foto con el catálogo real: `ml/src/abasto_ml/vision/catalogo.py` saca un vector por cada uno de los 27 productos de Abasto desde su foto (MobileNetV3 preentrenado). Con fotos de celular simuladas (recorte, giro, luz y desenfoque) acierta el primero 162/162. `reconocerProducto` ya devuelve resultados.
+- Buscar por foto con el catálogo real: `ml/src/abasto_ml/vision/catalogo.py` saca un vector por cada uno de los 27 productos de Abasto desde su foto (MobileNetV3 preentrenado). Con fotos de celular simuladas (recorte, giro, luz y desenfoque) acierta el primero 162/162. Además se entrena con TensorFlow el clasificador (transfer learning) con fotos de celular simuladas, y `reconocerProducto` mezcla las dos señales (`mezclarConClasificador`).
 - CU-14 Agentes: Cobranza, Reposición (stock que no alcanza para 7 días según la demanda del ML → pedido para 2 semanas) y Catálogo (sin stock → pausar). Lo que ya espera una decisión no se vuelve a proponer.
 - T20 «Monitorear mi negocio»: `POST /v1/agentes/monitorear` corre todos los agentes; botón «Revisar ahora» en Inteligencia › Agentes.
 - Inteligencia › Tableros (`GET /v1/tableros`): ventas de 30 días, lo que se te puede acabar esta semana, demanda prevista (ML supervisado) y segmentos de tiendas (K-means).
@@ -25,6 +25,6 @@ Entrenar el modelo de visión con TensorFlow (requisito de deep learning). Busca
 - Una `ANTHROPIC_API_KEY` para la demo y para medir el Analista (meta 18/20).
 
 ## Sigue
-1. Entrenar con TensorFlow (fotos del catálogo aumentadas y, si hay, fotos de tienda) y comparar contra los vectores.
+1. Si hay fotos sacadas en tienda: afinar con `entrenar.py` y medir con fotos reales.
 2. CU-13 de punta a punta, seguridad del MCP y evaluación de las 20 preguntas.
 3. ICONIX de CU-13, CU-14 y la IA de CU-05.

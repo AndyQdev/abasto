@@ -2,6 +2,7 @@ import {
   combinarConTexto,
   leerVectores,
   masParecidos,
+  mezclarConClasificador,
   similitudCoseno,
   type Reconocido,
   type VectorDeProducto,
@@ -145,5 +146,34 @@ describe('leerVectores', () => {
         productos: [{ codigo: 'AR-0100', vector: [0.1, Number.NaN, 0.3] }],
       }),
     ).toThrow('vectores.json: el producto AR-0100 tiene un número que no es finito');
+  });
+});
+
+describe('mezclarConClasificador', () => {
+  const catalogo = [
+    { codigo: 'AB-001', vector: [1, 0, 0] },
+    { codigo: 'AB-002', vector: [0.8, 0.6, 0] },
+  ];
+
+  it('el clasificador desempata lo que el vector ve parecido', () => {
+    // por vector AB-001 gana (1 contra 0,8); el clasificador está seguro de AB-002
+    const consulta = [1, 0, 0];
+    expect(mezclarConClasificador(consulta, catalogo, [0.1, 0.9], ['AB-001', 'AB-002'])).toEqual([
+      { codigo: 'AB-002', confianza: 0.85 },
+      { codigo: 'AB-001', confianza: 0.55 },
+    ]);
+  });
+
+  it('un producto que el clasificador no conoce solo suma su parecido', () => {
+    expect(mezclarConClasificador([1, 0, 0], catalogo, [1], ['AB-002'])).toEqual([
+      { codigo: 'AB-002', confianza: 0.9 },
+      { codigo: 'AB-001', confianza: 0.5 },
+    ]);
+  });
+
+  it('avisa si el modelo y las etiquetas no son del mismo entrenamiento', () => {
+    expect(() => mezclarConClasificador([1, 0, 0], catalogo, [0.5, 0.5], ['AB-001'])).toThrow(
+      'El clasificador da 2 probabilidades y hay 1 etiquetas',
+    );
   });
 });
