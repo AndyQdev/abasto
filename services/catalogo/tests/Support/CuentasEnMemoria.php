@@ -6,18 +6,33 @@ namespace Tests\Support;
 
 use Catalogo\Dominio\ErrorDeDominio;
 use Catalogo\Dominio\Puertos\CuentasDeAcceso;
+use Catalogo\Dominio\SesionEmitida;
 
-/** Keycloak de mentira: guarda las cuentas creadas y rechaza un correo repetido. */
+/** Keycloak de mentira: guarda las cuentas creadas y rechaza un usuario o un correo repetido. */
 final class CuentasEnMemoria implements CuentasDeAcceso
 {
-    /** @var array<string, array{clave: string, nombre: string, apellido: string, orgId: string, orgNombre: string, rol: string}> */
+    /** @var array<string, array{correo: string, clave: string, nombre: string, apellido: string, orgId: string, orgNombre: string, rol: string}> */
     public array $cuentas = [];
 
-    public function crear(string $correo, string $clave, string $nombre, string $apellido, string $orgId, string $orgNombre, string $rol): void
+    /** @var list<string> */
+    public array $sesiones = [];
+
+    public function crear(string $usuario, string $correo, string $clave, string $nombre, string $apellido, string $orgId, string $orgNombre, string $rol): void
     {
-        if (isset($this->cuentas[$correo])) {
+        $correoRepetido = in_array($correo, array_column($this->cuentas, 'correo'), true);
+        if (isset($this->cuentas[$usuario]) || $correoRepetido) {
             throw new ErrorDeDominio('CORREO_EN_USO', 'Ya hay una cuenta con ese correo');
         }
-        $this->cuentas[$correo] = compact('clave', 'nombre', 'apellido', 'orgId', 'orgNombre', 'rol');
+        $this->cuentas[$usuario] = compact('correo', 'clave', 'nombre', 'apellido', 'orgId', 'orgNombre', 'rol');
+    }
+
+    public function sesionPara(string $usuario): SesionEmitida
+    {
+        if (!isset($this->cuentas[$usuario])) {
+            throw new ErrorDeDominio('SIN_CUENTA', 'No hay cuenta');
+        }
+        $this->sesiones[] = $usuario;
+
+        return new SesionEmitida("acceso-{$usuario}", "renovacion-{$usuario}", 900);
     }
 }

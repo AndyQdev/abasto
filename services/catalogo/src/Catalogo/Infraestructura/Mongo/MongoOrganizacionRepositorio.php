@@ -61,6 +61,13 @@ final readonly class MongoOrganizacionRepositorio implements OrganizacionReposit
         return $doc === null ? null : self::aDominio((array) $doc);
     }
 
+    public function porTelefono(string $telefono): ?Organizacion
+    {
+        $doc = $this->coleccion->findOne(['telefono' => $telefono]);
+
+        return $doc === null ? null : self::aDominio((array) $doc);
+    }
+
     public function mayoristasPorVerificacion(EstadoVerificacion $estado): array
     {
         $docs = $this->coleccion->find(

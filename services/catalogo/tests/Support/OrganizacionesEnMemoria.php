@@ -39,6 +39,17 @@ final class OrganizacionesEnMemoria implements OrganizacionRepositorio
         return null;
     }
 
+    public function porTelefono(string $telefono): ?Organizacion
+    {
+        foreach ($this->todas as $o) {
+            if ($o->telefono === $telefono) {
+                return $o;
+            }
+        }
+
+        return null;
+    }
+
     public function mayoristasPorVerificacion(EstadoVerificacion $estado): array
     {
         $lista = array_values(array_filter(

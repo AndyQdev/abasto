@@ -8,7 +8,7 @@
   },
   "scripts": {
     "infra": "docker compose up -d --wait postgres mongo dynamodb rabbitmq keycloak jaeger router && node infra/dynamodb/crear-tablas.mjs",
-    "todo": "docker compose --profile servicios up -d --build --wait && node infra/dynamodb/crear-tablas.mjs",
+    "todo": "docker compose --profile servicios up -d --build --wait && node infra/dynamodb/crear-tablas.mjs && node infra/keycloak/al-dia.mjs",
     "n8n": "docker compose --profile n8n up -d --wait n8n && docker compose exec n8n n8n import:workflow --separate --input=/flujos",
     "parar": "docker compose --profile servicios --profile n8n stop",
     "borrar-datos": "docker compose --profile servicios --profile n8n down -v",

@@ -122,7 +122,7 @@ final readonly class RegistrarOrganizacion
 
         // Primero la cuenta: si el correo ya existe, no queda una empresa huérfana
         [$nombre, $apellido] = explode(' ', $representante, 2);
-        $this->cuentas->crear($correo, $clave, $nombre, $apellido, $organizacion->id, $empresa, $tipo);
+        $this->cuentas->crear($correo, $correo, $clave, $nombre, $apellido, $organizacion->id, $empresa, $tipo);
         $this->organizaciones->guardar($organizacion);
 
         return $organizacion;

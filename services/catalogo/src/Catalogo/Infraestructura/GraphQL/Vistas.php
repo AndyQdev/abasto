@@ -77,6 +77,23 @@ final class Vistas
     }
 
     /** @return array<string, mixed> */
+    public static function solicitud(Organizacion $o): array
+    {
+        return [
+            'id' => $o->id,
+            'nombre' => $o->nombre,
+            'nit' => $o->nit,
+            'ciudad' => $o->ciudad,
+            'representante' => $o->representante,
+            'telefono' => $o->telefono,
+            'correo' => $o->correo,
+            'estadoVerificacion' => $o->verificacion->value,
+            'motivoRechazo' => $o->motivoRechazo,
+            'registradaEn' => $o->registradaEn,
+        ];
+    }
+
+    /** @return array<string, mixed> */
     public static function tienda(?Organizacion $o, string $id): array
     {
         return ['id' => $id, 'nombre' => $o->nombre ?? $id, 'ciudad' => $o->ciudad ?? ''];

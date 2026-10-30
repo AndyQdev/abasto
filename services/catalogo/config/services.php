@@ -39,6 +39,12 @@ return [
         // El emisor es el que ve el navegador; las llaves se piden por la red de Docker
         'emisor' => env('KEYCLOAK_ISSUER', 'http://localhost:8180/realms/abasto'),
         'jwks' => env('KEYCLOAK_JWKS_URL', 'http://localhost:8180/realms/abasto/protocol/openid-connect/certs'),
+        // Para crear cuentas y abrir la sesión de quien entra con su celular (cuenta de servicio catalogo-cuentas)
+        'base' => env('KEYCLOAK_URL', 'http://localhost:8180'),
+        'realm' => env('KEYCLOAK_REALM', 'abasto'),
+        'cliente_cuentas' => env('KEYCLOAK_CUENTAS_CLIENTE', 'catalogo-cuentas'),
+        'secreto_cuentas' => env('KEYCLOAK_CUENTAS_SECRETO', 'catalogo-cuentas-local'),
+        'cliente_app' => env('KEYCLOAK_CLIENTE_APP', 'abasto-app'),
     ],
 
 ];

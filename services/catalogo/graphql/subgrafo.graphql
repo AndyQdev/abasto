@@ -132,6 +132,70 @@ type Mayorista @key(fields: "id") {
   deLaCasa: Boolean!
 }
 
+"Lo que recibe la app al pedir el código."
+type EnvioDeCodigo {
+  "591 + los 8 dígitos"
+  telefono: String!
+
+  "Primera vez con este celular: después del código la app pide el nombre"
+  esNuevo: Boolean!
+  venceEnSegundos: Int!
+
+  "Solo mientras no está WhatsApp: el código, para mostrarlo en la app"
+  codigoDePrueba: String
+}
+
+"La sesión de la app de clientes. La app la guarda y la renueva sola con tokenDeRenovacion."
+type SesionDeCliente {
+  tokenDeAcceso: String!
+  tokenDeRenovacion: String!
+  venceEnSegundos: Int!
+
+  "Recién creó su cuenta"
+  cuentaNueva: Boolean!
+  nombre: String!
+}
+
+type MiOrganizacion {
+  id: ID!
+  nombre: String!
+
+  "mayorista o tienda"
+  tipo: String!
+
+  "PENDIENTE, VERIFICADO o RECHAZADO"
+  estadoVerificacion: String!
+  motivoRechazo: String
+}
+
+"Un mayorista tal como lo revisa Abasto en el Superadmin."
+type SolicitudDeMayorista {
+  id: ID!
+  nombre: String!
+  nit: String
+  ciudad: String!
+  representante: String
+  telefono: String
+  correo: String
+
+  "PENDIENTE, VERIFICADO o RECHAZADO"
+  estadoVerificacion: String!
+  motivoRechazo: String
+
+  "ISO 8601; null en los de la semilla"
+  registradaEn: String
+}
+
+input RegistrarMayoristaEntrada {
+  empresa: String!
+  nit: String!
+  ciudad: String!
+  representante: String!
+  telefono: String!
+  correo: String!
+  clave: String!
+}
+
 type Tienda @key(fields: "id") {
   id: ID!
   nombre: String!
@@ -245,9 +309,29 @@ type Query {
 
   "Tiendas que pidieron ser clientes del mayorista de la sesión."
   misSolicitudes: [RelacionComercial!]!
+
+  "La empresa de la sesión, con su verificación (el Panel muestra «en revisión» o el motivo del rechazo)."
+  miOrganizacion: MiOrganizacion!
+
+  "Solo admin (Superadmin): mayoristas en ese estado, los registrados más recientemente primero."
+  mayoristasPorVerificar(estado: String = "PENDIENTE"): [SolicitudDeMayorista!]!
 }
 
 type Mutation {
+  "Público. App de clientes: manda un código de 6 dígitos al celular. En modo prueba vuelve en codigoDePrueba."
+  pedirCodigo(telefono: String!): EnvioDeCodigo!
+
+  "Público. Con el código correcto entra; la primera vez pide el nombre (error NECESITA_NOMBRE) y crea la cuenta."
+  entrarConCodigo(telefono: String!, codigo: String!, nombre: String): SesionDeCliente!
+
+  "Público. Un mayorista se registra (CU-01) y queda PENDIENTE hasta que Abasto lo verifica."
+  registrarMayorista(entrada: RegistrarMayoristaEntrada!): SolicitudDeMayorista!
+
+  "Solo admin: verifica al mayorista; desde ahí sus productos salen en la app."
+  verificarMayorista(id: ID!): SolicitudDeMayorista!
+
+  "Solo admin: rechaza al mayorista con un motivo que él ve en su Panel."
+  rechazarMayorista(id: ID!, motivo: String!): SolicitudDeMayorista!
   pedirSerCliente(mayoristaId: ID!): RelacionComercial!
   aprobarCliente(tiendaId: ID!, lista: ListaDePrecios!): RelacionComercial!
   rechazarCliente(tiendaId: ID!): RelacionComercial!
