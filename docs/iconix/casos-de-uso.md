@@ -108,15 +108,17 @@ La tabla con actor, interfaz, servicios, dueño y fase está en `README.md`. Aba
 1. `estado.tsx` carga `CONSULTA_CATALOGO` y guarda `{productos, mayoristas, actualizado}` en `guardado.ts` (AsyncStorage, prefijo `abasto:`).
 2. El cliente abre Buscar y escribe texto; `filtrar` recorre el catálogo guardado y muestra productos.
 3. Puede cambiar a vendedores; `filtrarMayoristas` y `ordenarMayoristas` ordenan por nombre, nunca por precio.
-4. En BuscarPorFoto, el cliente toma una foto o elige una de la galería con `expo-image-picker`.
-5. `leerTexto` (ML Kit) lee el texto de la imagen; `palabrasClave` lo limpia y `buscarPorTextoLeido` busca en el catálogo del teléfono.
-6. El resultado se muestra agrupado por vendedor; el precio solo aparece si `PoliticaDePrecios` lo permite.
+4. En BuscarPorFoto, la tienda toma una foto o elige una de la galería con `expo-image-picker`.
+5. En el teléfono y sin internet, en paralelo: `leerTexto` (ML Kit) lee el texto de la etiqueta y `reconocerProducto` recorta la foto con `recorteCentrado`, la reduce a 224×224 con `expo-image-manipulator`, la pasa por `aEntradaDelModelo` y corre `productos.tflite`; `masParecidos` compara el vector con los de `vectores.json` por similitud coseno.
+6. `palabrasClave` limpia lo leído y `buscarPorTextoLeido` busca en el catálogo del teléfono; `combinarConTexto` suma los códigos que leyó el texto a los que reconoció la imagen y la pantalla muestra los productos ordenados por confianza.
+7. El resultado se muestra agrupado por vendedor; el precio solo aparece si `PoliticaDePrecios` lo permite.
 
 **Cursos alternos**
 
 - Si el cliente niega el permiso de cámara: «Abasto necesita la cámara para buscar con una foto. Actívala en los ajustes del teléfono.»
 - Sin señal, la búsqueda sigue sobre el catálogo guardado; si nunca hubo catálogo, la lista queda vacía.
-- **ML Pendiente:** no hay modelo TFLite conectado. `apps/app/src/modelo.ts` solo calcula tamaños de tensor (`elementosDe`, `bytesDe`, `entradaNeutra`, `describirTensor`); ninguna pantalla carga un modelo ni llama a inferencia. La foto hoy se resuelve con OCR, no con un modelo de objetos.
+- Si el modelo está sin entrenar, `vectores.json` trae `productos: []`; `reconocerProducto` devuelve `[]` y la búsqueda queda solo con el texto leído.
+- **Pendiente en la pantalla:** `BuscarPorFoto.tsx` ya llama a `leerTexto` y `buscarPorTextoLeido`; la llamada a `reconocerProducto` y `combinarConTexto` está pedida a Andrés en `docs/equipo/jhoel.md`.
 
 ## CU-06 · Hacer un pedido
 
@@ -232,20 +234,31 @@ La tabla con actor, interfaz, servicios, dueño y fase está en `README.md`. Aba
 ## CU-14 · Aprobar la propuesta de un agente
 
 **Actor:** Mayorista.
-**Precondición:** existe al menos una propuesta pendiente en el Asistente.
+**Precondición:** hay una sesión con `org_id`; el Asistente tiene acceso de solo lectura a la base de reportes.
 **Servicios:** Asistente y n8n.
 
 **Curso básico**
 
 1. El mayorista abre Inteligencia → Agentes; `Agentes.vue` consulta `GET /v1/agentes` y `GET /v1/agentes/propuestas`.
-2. La vista muestra la propuesta (por ejemplo, un recordatorio de cobranza para las cuentas que vencen mañana).
-3. El mayorista aprueba o rechaza; la vista hace `POST /v1/agentes/propuestas/:id/decision`.
-4. `DecidirPropuesta` guarda la decisión. Si se aprueba, `EjecutorN8n` hace `POST N8N_WEBHOOK_ACCIONES` con `idempotency-key: propuesta.id`.
-5. n8n ejecuta la acción aprobada (el flujo de WhatsApp) y la propuesta queda resuelta en la vista.
+2. Toca «Revisar ahora»: `POST /v1/agentes/monitorear` llama a `MonitorearNegocio.monitorear`.
+3. `MonitorearNegocio` corre las tres misiones (`MisionCobranza`, `MisionReposicion` y `MisionCatalogo`) con `EjecutarMision.ejecutar`.
+4. Cada misión consulta los reportes con `ConsultarReportes.ejecutar` y devuelve `Hallazgo[]`; `EjecutarMision` descarta los que ya esperan una decisión con la misma `clave` y guarda las nuevas con `PropuestasDynamoDB.guardar`.
+5. `MonitorearNegocio` responde `{ total, agentes }`; la vista muestra cuántas propuestas nuevas dejó cada agente y recarga la lista.
+6. El mayorista toca «Aprobar» o «Rechazar»; la vista hace `POST /v1/agentes/propuestas/:id/decision` con `{ aprobar }`.
+7. `DecidirPropuesta.ejecutar` busca la propuesta, `decidir` la pasa a `aprobada` o `rechazada` y guarda la decisión.
+8. Si se aprobó, `EjecutorN8n.ejecutar` hace `POST N8N_WEBHOOK_ACCIONES` con `idempotency-key` igual al id de la propuesta; n8n ejecuta la acción (por ejemplo, el WhatsApp de cobranza) y la propuesta sale de la lista.
 
 **Cursos alternos**
 
+- Si la propuesta ya no está `pendiente`, `decidir` lanza `PropuestaYaDecidida`: «La propuesta {id} ya está {estado}».
+- Si se rechaza, `decidir` la deja `rechazada`, se guarda y no se llama a `EjecutorN8n`.
 - Si `N8N_WEBHOOK_ACCIONES` no está configurado, `EjecutorN8n` no falla: devuelve `{enviado:false, detalle:'n8n no está configurado (N8N_WEBHOOK_ACCIONES)'}` y deja un warning.
-- Si la propuesta se rechaza, no se llama a n8n.
-- El agente de cobranza consulta `cuentas_por_cobrar` con `vence = current_date + 1 AND estado = 'pendiente'` y propone `enviar_recordatorio_whatsapp`.
-- **Pendiente:** solo `EjecutarCobranza` tiene caso de uso de ejecución. `reposicion`, `catalogo` y `analista` están definidos en `AGENTES` con sus cron, pero no tienen ejecución implementada. El envío real por WhatsApp depende de que n8n esté configurado.
+- Si una misión falla, `MonitorearNegocio` sigue con las demás y el resumen trae `{ agenteId, nuevas: 0, error }`; la vista muestra «no pudo revisar ({error})».
+- Si nada es nuevo, el resumen trae `total: 0` y la vista dice «Todo en orden: ningún agente encontró algo nuevo.».
+- `POST /v1/agentes/:id/ejecutar` corre una sola misión; para `analista` responde «El Analista no corre solo: hazle una pregunta en Reportes» y si el id no existe, «No existe el agente {id}».
+
+**Qué propone cada agente**
+
+- **Cobranza** (`MisionCobranza`): las cuentas por cobrar que vencen mañana y están `pendiente` → un `enviar_recordatorio_whatsapp` por cuenta, con el saldo y el mensaje.
+- **Reposición** (`MisionReposicion`): con `demandaDeLaSemana`, `enRiesgo` (menos de 7 días de stock) y `cantidadAPedir` (dos semanas), lo que no alcanza → `crear_pedido_a_proveedor`.
+- **Catálogo** (`MisionCatalogo`): los productos con `stock = 0` que siguen publicados → `pausar_producto`, primero los que más se venden.
