@@ -5,7 +5,7 @@ import { useCallback, useState } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Path, Stop } from 'react-native-svg';
-import { Aparecer, Flotar, Tocable } from './animacion';
+import { Aparecer, Tocable } from './animacion';
 import { graphql } from './api';
 import { Icono, Texto } from './componentes';
 import { resumen, type Direccion } from './direcciones';
@@ -55,10 +55,11 @@ export function CabeceraInicio({
         <Path d={calles(W, H)} stroke="#FFFFFF" strokeOpacity={0.05} strokeWidth={2} fill="none" strokeDasharray="6 10" />
       </Svg>
 
-      {/* La composición 3D, entre la dirección y la campana; el buscador la tapa por abajo */}
-      <Flotar alto={6} duracion={3400} style={[e.composicion, { top: arriba + 2, height: H - arriba - 4, width: Math.min(W * 0.46, 200) }]}>
-        <Image source={ILUSTRACION.cabeceraMercado} style={{ width: '100%', height: '100%' }} contentFit="contain" transition={300} />
-      </Flotar>
+      {/* La composición 3D, fija: ocupa todo el lado derecho (la campana va encima) y su base baja hasta la
+          curva de la derecha, donde la tapa el buscador */}
+      <View pointerEvents="none" style={[e.composicion, { top: arriba + 4, height: H - arriba + 22, width: W * 0.6 }]}>
+        <Image source={ILUSTRACION.cabeceraMercado} style={{ width: '100%', height: '100%' }} contentFit="contain" contentPosition="right bottom" transition={300} />
+      </View>
 
       <View style={[e.fila, { paddingTop: arriba + 12 }]}>
         <Aparecer desde={-8}>
@@ -109,7 +110,7 @@ function silueta(W: number, H: number) {
   return [
     `M0 0 H${W} V${H + 26}`,
     `C${W} ${H + 52} ${W - 34} ${H + COLA} ${W - 70} ${H + 44}`,
-    `C${W - 112} ${H + 24} ${W * 0.66} ${H - 4} ${W * 0.47} ${H - 16}`,
+    `C${W - 150} ${H + 22} ${W * 0.64} ${H - 4} ${W * 0.47} ${H - 16}`,
     `C${W * 0.3} ${H - 28} ${W * 0.13} ${H - 64} 0 ${H - 48} Z`,
   ].join(' ');
 }
@@ -185,7 +186,7 @@ const e = StyleSheet.create({
     justifyContent: 'center',
   },
   numero: { fontFamily: FUENTE.negra, fontSize: 11, color: '#FFFFFF' },
-  composicion: { position: 'absolute', right: 56 },
+  composicion: { position: 'absolute', right: -6 },
   lugarBuscador: { position: 'absolute', left: 16, right: 16 },
   buscador: {
     flexDirection: 'row',

@@ -109,8 +109,9 @@ export function useEspacioBarra(): number {
   return ALTO_BARRA + margenAbajo(abajo) + 16;
 }
 
-const ALTO_BARRA = 70;
-const margenAbajo = (abajo: number) => Math.max(abajo, 8) + 6;
+const ALTO_BARRA = 64;
+/** Pegada al borde de abajo: solo el área segura (la barra de gestos) y un respiro mínimo */
+const margenAbajo = (abajo: number) => (abajo > 0 ? Math.max(abajo - 6, 6) : 8);
 
 function useTecladoAbierto() {
   const [abierto, setAbierto] = useState(false);
@@ -133,7 +134,7 @@ const e = StyleSheet.create({
     alignItems: 'center',
     height: ALTO_BARRA,
     paddingHorizontal: 6,
-    borderRadius: 30,
+    borderRadius: 28,
     backgroundColor: COLOR.superficie,
     ...SOMBRA,
     shadowOpacity: 0.12,
@@ -141,7 +142,7 @@ const e = StyleSheet.create({
     shadowOffset: { width: 0, height: 10 },
     elevation: 12,
   },
-  pestana: { flex: 1, height: 58, alignItems: 'center', justifyContent: 'center', gap: 2, marginHorizontal: 2 },
+  pestana: { flex: 1, height: 54, alignItems: 'center', justifyContent: 'center', gap: 2, marginHorizontal: 2 },
   capsula: { borderRadius: 22, backgroundColor: CABECERA.medio },
   texto: { fontFamily: FUENTE.semi, fontSize: 11.5 },
   capsulaLima: { borderRadius: 22, backgroundColor: COLOR.limaMedia },
