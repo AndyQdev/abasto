@@ -5,6 +5,9 @@
 /** Un recurso empaquetado con require(): para React Native es un número. */
 type Recurso = number;
 
+/** Lo que se le pasa a <Image>: una ilustración empaquetada o la foto real que sirve Catálogo. */
+export type Imagen = Recurso | { uri: string };
+
 export const ILUSTRACION = {
   bienvenida: require('../assets/ilustraciones/bienvenida.webp'),
   codigo: require('../assets/ilustraciones/codigo.webp'),
@@ -19,7 +22,20 @@ export const ILUSTRACION = {
   pedidoEnCamino: require('../assets/ilustraciones/banner-entrega.webp'),
   pedidoEntregado: require('../assets/ilustraciones/pedido-entregado.webp'),
   sinSenal: require('../assets/ilustraciones/sin-senal.webp'),
+  comprarOtraVez: require('../assets/ilustraciones/comprar-otra-vez.webp'),
+  cabeceraMercado: require('../assets/ilustraciones/cabecera-mercado.webp'),
 } satisfies Record<string, Recurso>;
+
+const PRESENTACIONES: Record<string, Recurso> = {
+  DOCENA: require('../assets/ilustraciones/presentacion-docena.webp'),
+  CAJA: require('../assets/ilustraciones/presentacion-caja.webp'),
+  FARDO: require('../assets/ilustraciones/presentacion-fardo.webp'),
+};
+
+/** La imagen de una presentación (docena, caja, fardo); la unidad y la cuarta muestran el producto. */
+export function imagenDePresentacion(presentacion: string, rubro: string): Recurso {
+  return PRESENTACIONES[presentacion] ?? imagenDeRubro(rubro);
+}
 
 const RUBROS: Record<string, Recurso> = {
   Abarrotes: require('../assets/ilustraciones/rubro-abarrotes.webp'),
@@ -35,6 +51,11 @@ const RUBROS: Record<string, Recurso> = {
 /** La imagen del rubro; si es un rubro nuevo, la de Varios. */
 export function imagenDeRubro(rubro: string): Recurso {
   return RUBROS[rubro] ?? RUBROS.Varios;
+}
+
+/** La foto real del producto; si todavía no tiene, la ilustración de su rubro. */
+export function fotoDe(producto: { rubro: string; foto?: string | null }): Imagen {
+  return producto.foto ? { uri: producto.foto } : imagenDeRubro(producto.rubro);
 }
 
 /** Nombre corto del rubro para las tarjetas («Higiene y cuidado personal» → «Higiene»). */

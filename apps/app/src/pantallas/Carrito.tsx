@@ -1,3 +1,4 @@
+import { useEspacioBarra } from '../BarraInferior';
 import { bs, cambiarCantidad, nombreDe, porMayorista, productos as cuantosProductos, quitar, tinte, totalDe, unidadesDe } from '@abasto/comercio';
 import { Image } from 'expo-image';
 import { ScrollView, StyleSheet, View } from 'react-native';
@@ -5,21 +6,22 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Aparecer, Tocable, vibrar } from '../animacion';
 import { Boton, Icono, Insignia, Texto, Vacio } from '../componentes';
 import { useEstado } from '../estado';
-import { ILUSTRACION, imagenDeRubro } from '../ilustraciones';
+import { fotoDe, ILUSTRACION } from '../ilustraciones';
 import type { PantallaDePestana } from '../navegacion';
 import { COLOR, FUENTE, SOMBRA, TINTES } from '../tema';
 
 /** El carrito vive en el teléfono y se cambia sin señal. Sale un pedido por mayorista. */
 export function Carrito({ navigation }: PantallaDePestana<'Carrito'>) {
+  const espacio = useEspacioBarra();
   const { carrito, cambiarCarrito, enLinea, catalogo } = useEstado();
   const grupos = porMayorista(carrito);
   const total = grupos.reduce((s, g) => s + g.totalEstimadoCentavos, 0);
   const unidades = carrito.reduce((s, i) => s + unidadesDe(i), 0);
-  const rubroDe = (id: string) => catalogo.productos.find((p) => p.id === id)?.rubro ?? 'Varios';
+  const delCatalogo = (id: string) => catalogo.productos.find((p) => p.id === id) ?? { rubro: 'Varios', foto: null };
 
   return (
     <SafeAreaView style={e.pantalla} edges={['top']}>
-      <ScrollView contentContainerStyle={[e.contenido, carrito.length > 0 && { paddingBottom: 190 }]}>
+      <ScrollView contentContainerStyle={[e.contenido, { paddingBottom: espacio + (carrito.length > 0 ? 190 : 0) }]}>
         <View style={e.entre}>
           <Texto v="t1">Tu carrito ({carrito.length})</Texto>
           {carrito.length > 0 && (
@@ -49,11 +51,11 @@ export function Carrito({ navigation }: PantallaDePestana<'Carrito'>) {
                 <Icono nombre="chevron-forward" tamano={18} color={COLOR.texto3} />
               </Tocable>
               {g.items.map((i) => {
-                const rubro = rubroDe(i.productoId);
+                const enCatalogo = delCatalogo(i.productoId);
                 return (
                   <View key={`${i.productoId}-${i.presentacion}`} style={e.item}>
-                    <View style={[e.miniatura, { backgroundColor: TINTES[tinte(rubro)] }]}>
-                      <Image source={imagenDeRubro(rubro)} style={{ width: 52, height: 52 }} contentFit="contain" />
+                    <View style={[e.miniatura, { backgroundColor: enCatalogo.foto ? COLOR.superficie : TINTES[tinte(enCatalogo.rubro)] }]}>
+                      <Image source={fotoDe(enCatalogo)} style={{ width: 54, height: 54 }} contentFit="contain" />
                     </View>
                     <View style={{ flex: 1, gap: 6 }}>
                       <View style={e.entre}>
@@ -90,7 +92,7 @@ export function Carrito({ navigation }: PantallaDePestana<'Carrito'>) {
                             onPress={() => cambiarCarrito(cambiarCantidad(carrito, i.productoId, i.presentacion, 1))}
                             style={[e.paso, e.pasoMas]}
                           >
-                            <Icono nombre="add" tamano={17} color={COLOR.lima} />
+                            <Icono nombre="add" tamano={18} color={COLOR.bosque} />
                           </Tocable>
                         </View>
                         <Texto v="chico">
@@ -118,8 +120,8 @@ export function Carrito({ navigation }: PantallaDePestana<'Carrito'>) {
                 { icono: 'cash' as const, texto: 'Contra entrega' },
                 { icono: 'card' as const, texto: 'Crédito' },
               ].map((m) => (
-                <View key={m.texto} style={e.pago}>
-                  <Icono nombre={m.icono} tamano={20} color={COLOR.verde} />
+                <View key={m.texto} style={[e.pago, m.texto === 'QR' && e.pagoDestacado]}>
+                  <Icono nombre={m.icono} tamano={22} color={COLOR.bosque} />
                   <Texto v="fuerte" style={{ fontSize: 12.5 }}>
                     {m.texto}
                   </Texto>
@@ -131,28 +133,23 @@ export function Carrito({ navigation }: PantallaDePestana<'Carrito'>) {
       </ScrollView>
 
       {carrito.length > 0 && (
-        <View style={e.barra}>
+        <View style={[e.barra, { bottom: espacio - 6 }]}>
           <View style={e.entre}>
-            <View>
-              <Texto v="chico" style={{ color: 'rgba(255,255,255,0.75)' }}>
-                Total del pedido · {cuantosProductos(carrito.length)} · {unidades} u.
-              </Texto>
-              <Texto style={e.total}>{bs(total)}</Texto>
-            </View>
-            <Tocable
-              onPress={() => {
-                vibrar.toque();
-                navigation.navigate('Finalizar');
-              }}
-              style={e.continuar}
-              accessibilityRole="button"
-              accessibilityLabel="Continuar compra"
-            >
-              <Texto style={{ color: COLOR.verde, fontFamily: FUENTE.fuerte, fontSize: 15 }}>Continuar</Texto>
-              <Icono nombre="arrow-forward" tamano={18} color={COLOR.verde} />
-            </Tocable>
+            <Texto v="gris">
+              Total ({cuantosProductos(carrito.length)} · {unidades} u.)
+            </Texto>
+            <Texto style={e.total}>{bs(total)}</Texto>
           </View>
-          <Texto v="chico" style={{ color: 'rgba(255,255,255,0.7)' }}>
+          <Boton
+            tipo="oscuro"
+            texto={`Continuar · ${bs(total)}`}
+            icono="arrow-forward"
+            alTocar={() => {
+              vibrar.toque();
+              navigation.navigate('Finalizar');
+            }}
+          />
+          <Texto v="chico" style={{ textAlign: 'center' }}>
             {grupos.length === 1 ? 'Sale 1 pedido.' : `Salen ${grupos.length} pedidos, uno por mayorista.`} El precio final se confirma al reservar.
           </Texto>
         </View>
@@ -168,17 +165,18 @@ const e = StyleSheet.create({
   vaciar: { width: 42, height: 42, borderRadius: 21, backgroundColor: COLOR.rojoSuave, alignItems: 'center', justifyContent: 'center' },
   grupo: { backgroundColor: COLOR.superficie, borderRadius: 24, padding: 14, gap: 4, ...SOMBRA },
   cabezaGrupo: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingBottom: 8 },
-  iconoTienda: { width: 36, height: 36, borderRadius: 12, backgroundColor: COLOR.mentaClara, alignItems: 'center', justifyContent: 'center' },
+  iconoTienda: { width: 36, height: 36, borderRadius: 12, backgroundColor: COLOR.lima, alignItems: 'center', justifyContent: 'center' },
   item: { flexDirection: 'row', gap: 12, paddingVertical: 10, borderTopWidth: 1, borderTopColor: COLOR.borde },
   miniatura: { width: 64, height: 64, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   contador: { flexDirection: 'row', alignItems: 'center', gap: 4, padding: 3, borderRadius: 14, backgroundColor: COLOR.fondo },
-  paso: { width: 34, height: 34, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
-  pasoMas: { backgroundColor: COLOR.verde },
+  paso: { width: 40, height: 40, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
+  pasoMas: { backgroundColor: COLOR.lima },
   subtotal: { paddingTop: 10, borderTopWidth: 1, borderTopColor: COLOR.borde },
   pagos: { gap: 10 },
   filaPagos: { flexDirection: 'row', gap: 8 },
-  pago: { flex: 1, alignItems: 'center', gap: 6, paddingVertical: 12, borderRadius: 18, backgroundColor: COLOR.superficie, ...SOMBRA },
-  barra: { position: 'absolute', left: 12, right: 12, bottom: 12, padding: 16, gap: 8, borderRadius: 26, backgroundColor: COLOR.verde, ...SOMBRA },
-  total: { fontFamily: FUENTE.negra, fontSize: 26, color: COLOR.lima, letterSpacing: -0.6 },
+  pago: { flex: 1, alignItems: 'center', gap: 6, paddingVertical: 14, borderRadius: 20, backgroundColor: COLOR.superficie, borderWidth: 2, borderColor: COLOR.superficie, ...SOMBRA },
+  pagoDestacado: { backgroundColor: COLOR.lima, borderColor: COLOR.bosque },
+  barra: { position: 'absolute', left: 12, right: 12, padding: 16, paddingBottom: 14, gap: 10, borderRadius: 28, backgroundColor: COLOR.superficie, ...SOMBRA, shadowOpacity: 0.12 },
+  total: { fontFamily: FUENTE.negra, fontSize: 26, color: COLOR.bosque, letterSpacing: -0.6 },
   continuar: { flexDirection: 'row', alignItems: 'center', gap: 8, height: 52, paddingHorizontal: 20, borderRadius: 18, backgroundColor: COLOR.lima },
 });

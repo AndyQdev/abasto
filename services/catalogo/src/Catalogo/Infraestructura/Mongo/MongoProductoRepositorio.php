@@ -8,6 +8,7 @@ use Catalogo\Dominio\Abastecimiento;
 use Catalogo\Dominio\EscalaDePrecio;
 use Catalogo\Dominio\EstadoProducto;
 use Catalogo\Dominio\EstadoVerificacion;
+use Catalogo\Dominio\PrecioDeReferencia;
 use Catalogo\Dominio\Presentacion;
 use Catalogo\Dominio\Producto;
 use Catalogo\Dominio\Puertos\ProductoRepositorio;
@@ -79,6 +80,13 @@ final readonly class MongoProductoRepositorio implements ProductoRepositorio
                 'costo_unitario_centavos' => $producto->costoUnitarioCentavos,
                 'proveedor' => $producto->proveedor,
                 'foto' => $producto->foto,
+                'marca' => $producto->marca,
+                'marca_boliviana' => $producto->marcaBoliviana,
+                'precio_en_super' => $producto->precioEnSuper === null ? null : [
+                    'centavos' => $producto->precioEnSuper->centavos,
+                    'donde' => $producto->precioEnSuper->donde,
+                    'fecha' => $producto->precioEnSuper->fecha,
+                ],
             ],
             '$setOnInsert' => ['stock' => $producto->stock],
         ], ['upsert' => true]);
@@ -166,6 +174,19 @@ final readonly class MongoProductoRepositorio implements ProductoRepositorio
             costoUnitarioCentavos: isset($doc['costo_unitario_centavos']) ? (int) $doc['costo_unitario_centavos'] : null,
             proveedor: isset($doc['proveedor']) ? (string) $doc['proveedor'] : null,
             foto: isset($doc['foto']) ? (string) $doc['foto'] : null,
+            marca: isset($doc['marca']) ? (string) $doc['marca'] : null,
+            marcaBoliviana: (bool) ($doc['marca_boliviana'] ?? false),
+            precioEnSuper: self::referencia($doc['precio_en_super'] ?? null),
         );
+    }
+
+    private static function referencia(mixed $guardada): ?PrecioDeReferencia
+    {
+        if ($guardada === null) {
+            return null;
+        }
+        $r = (array) $guardada;
+
+        return new PrecioDeReferencia((int) $r['centavos'], (string) $r['donde'], (string) $r['fecha']);
     }
 }

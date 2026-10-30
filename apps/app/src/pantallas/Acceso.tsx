@@ -81,7 +81,10 @@ export function Acceso() {
 
   return (
     <View style={{ flex: 1 }}>
-      <LinearGradient colors={[COLOR.menta, '#93E8D6', COLOR.mentaClara]} locations={[0, 0.55, 1]} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={['#DDF4A0', '#EEF8D5', COLOR.fondo]} locations={[0, 0.5, 1]} style={StyleSheet.absoluteFill} />
+      {/* Círculos lima de fondo, para que no sea plano */}
+      <View style={[e.burbuja, { width: 260, height: 260, top: -60, right: -80 }]} />
+      <View style={[e.burbuja, { width: 180, height: 180, top: 220, left: -70, opacity: 0.5 }]} />
       <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
         <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
           <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" bounces={false}>
@@ -112,7 +115,7 @@ export function Acceso() {
                       <Texto v="t2">Ingresa tu número de celular</Texto>
                       <Texto v="gris">Te enviaremos un código por WhatsApp.</Texto>
                     </View>
-                    <View style={[e.campoTelefono, esCelular(telefono) && { borderColor: COLOR.menta }]}>
+                    <View style={[e.campoTelefono, esCelular(telefono) && { borderColor: COLOR.bosque }]}>
                       <View style={e.prefijo}>
                         <Texto style={{ fontSize: 18 }}>🇧🇴</Texto>
                         <Texto v="fuerte">+591</Texto>
@@ -131,10 +134,10 @@ export function Acceso() {
                         returnKeyType="done"
                         onSubmitEditing={() => esCelular(telefono) && void mandarCodigo()}
                       />
-                      {esCelular(telefono) && <Icono nombre="checkmark-circle" color={COLOR.menta} tamano={24} />}
+                      {esCelular(telefono) && <Icono nombre="checkmark-circle" color={COLOR.bosque} tamano={24} />}
                     </View>
                     {error && <Falla texto={error} />}
-                    <Boton texto="Enviar código" icono="logo-whatsapp" deshabilitado={!esCelular(telefono)} cargando={ocupado} alTocar={() => void mandarCodigo()} />
+                    <Boton texto="Enviar código por WhatsApp" icono="logo-whatsapp" deshabilitado={!esCelular(telefono)} cargando={ocupado} alTocar={() => void mandarCodigo()} />
                     <View style={e.nota}>
                       <Icono nombre="lock-closed" tamano={13} color={COLOR.texto3} />
                       <Texto v="chico">Es rápido, seguro y gratis. Sin contraseñas.</Texto>
@@ -194,7 +197,7 @@ export function Acceso() {
                       <Texto v="gris">¿Cómo te llamas? Así te saluda quien te lleva tu pedido.</Texto>
                     </View>
                     <View style={e.campo}>
-                      <Icono nombre="person" color={COLOR.menta} />
+                      <Icono nombre="person" color={COLOR.bosque} />
                       <TextInput
                         accessibilityLabel="Tu nombre"
                         value={nombre}
@@ -212,8 +215,9 @@ export function Acceso() {
                     </View>
                     {error && <Falla texto={error} />}
                     <Boton
-                      texto="Empezar a comprar"
-                      icono="bag-handle"
+                      tipo="oscuro"
+                      texto="Continuar"
+                      icono="arrow-forward"
                       deshabilitado={nombre.trim().length < 2}
                       cargando={ocupado}
                       alTocar={() => void entrar(codigo || envio?.codigoDePrueba || '', nombre)}
@@ -304,8 +308,9 @@ const e = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cajitaLlena: { borderColor: COLOR.menta, backgroundColor: COLOR.mentaClara },
-  cajitaActiva: { borderColor: COLOR.verde, backgroundColor: COLOR.superficie },
+  cajitaLlena: { borderColor: COLOR.limaFuerte, backgroundColor: COLOR.limaSuave },
+  cajitaActiva: { borderColor: COLOR.bosque, backgroundColor: COLOR.superficie },
+  burbuja: { position: 'absolute', borderRadius: 999, backgroundColor: COLOR.lima, opacity: 0.35 },
   digito: { fontSize: 26, fontFamily: FUENTE.negra, color: COLOR.texto },
   invisible: { position: 'absolute', opacity: 0, width: 1, height: 1 },
   prueba: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 18, backgroundColor: COLOR.lima },

@@ -3,7 +3,7 @@ import { iniciales, tinte, escalaPorDefecto, disponible, type Mayorista, type Pr
 import { Ionicons } from '@expo/vector-icons';
 import { useState, type ComponentProps, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
-import { imagenDeRubro } from './ilustraciones';
+import { fotoDe } from './ilustraciones';
 import { COLOR, fuenteDe, FUENTE, RADIO, SOMBRA, TINTES } from './tema';
 
 export type NombreDeIcono = ComponentProps<typeof Ionicons>['name'];
@@ -15,7 +15,7 @@ export function Icono({ nombre, tamano = 20, color = COLOR.texto }: { nombre: No
 type Variante = 'titulo' | 't1' | 't2' | 't3' | 'normal' | 'gris' | 'chico' | 'precio' | 'fuerte';
 
 export function Texto({ v = 'normal', style, children, lineas }: { v?: Variante; style?: StyleProp<TextStyle>; children: ReactNode; lineas?: number }) {
-  // Manrope: el grosor se elige por archivo; fontWeight se quita para que Android no lo engrose de nuevo
+  // Plus Jakarta Sans: el grosor se elige por archivo; fontWeight se quita para que Android no lo engrose de nuevo
   const plano: TextStyle = StyleSheet.flatten([estilos[v], style]) ?? {};
   const { fontWeight, ...resto } = plano;
   return (
@@ -39,7 +39,8 @@ export function Boton({
 }: {
   texto: string;
   alTocar: () => void;
-  tipo?: 'primario' | 'secundario' | 'chico';
+  /** primario: lima (enviar, agregar) · oscuro: bosque (continuar, cerrar la compra) */
+  tipo?: 'primario' | 'oscuro' | 'secundario' | 'chico';
   deshabilitado?: boolean;
   cargando?: boolean;
   icono?: NombreDeIcono;
@@ -54,10 +55,11 @@ export function Boton({
       disabled={inactivo}
       onPress={alTocar}
       style={({ pressed }) => [
-        tipo === 'primario' ? estilos.boton : tipo === 'secundario' ? estilos.boton2 : estilos.botonChico,
-        inactivo && tipo === 'primario' && { backgroundColor: '#E4ECD2' },
+        tipo === 'primario' ? estilos.boton : tipo === 'oscuro' ? estilos.botonOscuro : tipo === 'secundario' ? estilos.boton2 : estilos.botonChico,
+        inactivo && (tipo === 'primario' || tipo === 'oscuro') && { backgroundColor: '#DDE5D2' },
+        pressed && tipo === 'oscuro' && { backgroundColor: COLOR.bosqueMedio },
         pressed && tipo === 'primario' && { backgroundColor: COLOR.limaFuerte },
-        pressed && tipo !== 'primario' && { opacity: 0.85 },
+        pressed && tipo !== 'primario' && tipo !== 'oscuro' && { opacity: 0.85 },
       ]}
     >
       {cargando ? <ActivityIndicator color={color} /> : icono ? <Icono nombre={icono} color={color} tamano={18} /> : null}
@@ -67,9 +69,9 @@ export function Boton({
 }
 
 /** Texto del botón: verde oscuro sobre el lima; apagado si está inactivo. */
-function inactivoColor(tipo: 'primario' | 'secundario' | 'chico', inactivo?: boolean) {
-  if (inactivo && tipo === 'primario') return '#93A188';
-  return COLOR.verde;
+function inactivoColor(tipo: 'primario' | 'oscuro' | 'secundario' | 'chico', inactivo?: boolean) {
+  if (inactivo && (tipo === 'primario' || tipo === 'oscuro')) return '#93A188';
+  return tipo === 'oscuro' ? '#fff' : COLOR.bosque;
 }
 
 export function Chip({ texto, activo, alTocar }: { texto: string; activo?: boolean; alTocar: () => void }) {
@@ -108,10 +110,11 @@ export function Insignia({ texto, color = 'verde' }: { texto: string; color?: Co
 export const colorDeClase = (clase: string): ColorDeInsignia =>
   clase.includes('verde') ? 'verde' : clase.includes('ambar') ? 'ambar' : clase.includes('rojo') ? 'rojo' : 'gris';
 
-export function Foto({ producto, alto = 76, ancho = 76, alTocar }: { producto: Pick<Producto, 'rubro' | 'nombre'>; alto?: number; ancho?: number | '100%'; alTocar?: () => void }) {
+export function Foto({ producto, alto = 76, ancho = 76, alTocar }: { producto: Pick<Producto, 'rubro' | 'nombre' | 'foto'>; alto?: number; ancho?: number | '100%'; alTocar?: () => void }) {
+  // La foto real va sobre blanco, como en cualquier tienda; la ilustración del rubro, sobre su tinte
   const caja = (
-    <View style={[estilos.foto, { height: alto, width: ancho, backgroundColor: TINTES[tinte(producto.rubro)] }]}>
-      <Image source={imagenDeRubro(producto.rubro)} style={{ width: '82%', height: '82%' }} contentFit="contain" transition={200} accessibilityIgnoresInvertColors />
+    <View style={[estilos.foto, { height: alto, width: ancho, backgroundColor: producto.foto ? COLOR.superficie : TINTES[tinte(producto.rubro)] }]}>
+      <Image source={fotoDe(producto)} style={{ width: '86%', height: '86%' }} contentFit="contain" transition={200} accessibilityIgnoresInvertColors />
     </View>
   );
   return alTocar ? (
@@ -244,7 +247,8 @@ export const estilos = StyleSheet.create({
   chico: { fontSize: 11.5, color: COLOR.texto3 },
   precio: { fontSize: 17, fontWeight: '800', color: COLOR.texto, fontVariant: ['tabular-nums'], letterSpacing: -0.3 },
   tarjeta: { backgroundColor: COLOR.superficie, borderRadius: RADIO.tarjeta, padding: 14, ...SOMBRA },
-  boton: { flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', height: 54, borderRadius: 18, backgroundColor: COLOR.lima, ...SOMBRA, shadowColor: '#5C7A00', shadowOpacity: 0.18 },
+  boton: { flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', height: 54, borderRadius: 18, backgroundColor: COLOR.lima, ...SOMBRA, shadowColor: '#6E9400', shadowOpacity: 0.22 },
+  botonOscuro: { flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', height: 54, borderRadius: 18, backgroundColor: COLOR.bosque, ...SOMBRA },
   boton2: {
     flexDirection: 'row',
     gap: 8,
@@ -275,7 +279,7 @@ export const estilos = StyleSheet.create({
 export function Logo({ tamano = 30, claro }: { tamano?: number; claro?: boolean }) {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: tamano * 0.28 }}>
-      <View style={{ width: tamano, height: tamano, borderRadius: tamano * 0.3, backgroundColor: claro ? '#fff' : COLOR.menta, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={{ width: tamano, height: tamano, borderRadius: tamano * 0.3, backgroundColor: COLOR.lima, alignItems: 'center', justifyContent: 'center' }}>
         <Ionicons name="cart" size={tamano * 0.6} color={COLOR.verde} />
       </View>
       <Text style={{ fontFamily: FUENTE.negra, fontSize: tamano * 0.72, letterSpacing: -0.5, color: claro ? '#fff' : COLOR.verde }}>ABASTO</Text>

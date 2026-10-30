@@ -59,6 +59,13 @@ final class Vistas
             'costoUnitario' => $vista->esDelDueno && $p->costoUnitarioCentavos !== null ? self::dinero($p->costoUnitarioCentavos) : null,
             'proveedor' => $vista->esDelDueno ? $p->proveedor : null,
             'foto' => $p->foto === null ? null : rtrim((string) config('catalogo.fotos_url'), '/').'/'.$p->foto,
+            'marca' => $p->marca,
+            'marcaBoliviana' => $p->marcaBoliviana,
+            'precioEnSuper' => $p->precioEnSuper === null ? null : [
+                'precio' => self::dinero($p->precioEnSuper->centavos),
+                'donde' => $p->precioEnSuper->donde,
+                'fecha' => $p->precioEnSuper->fecha,
+            ],
         ];
     }
 

@@ -525,6 +525,19 @@ type Pedido
   motivoRechazo: String @join__field(graph: PEDIDOS)
 }
 
+"""Un precio al público tomado de un supermercado, con dónde y cuándo"""
+type PrecioDeReferencia
+  @join__type(graph: CATALOGO)
+{
+  precio: Dinero!
+
+  """Fidalga, Amarket…"""
+  donde: String!
+
+  """aaaa-mm-dd"""
+  fecha: String!
+}
+
 enum Presentacion
   @join__type(graph: CATALOGO)
   @join__type(graph: PEDIDOS)
@@ -571,6 +584,17 @@ type Producto
 
   """URL pública de la foto del producto. Null si todavía no tiene"""
   foto: String @join__field(graph: CATALOGO)
+
+  """La marca (PIL, Fino…). Null si no se cargó"""
+  marca: String @join__field(graph: CATALOGO)
+
+  """La marca es boliviana (verificado)"""
+  marcaBoliviana: Boolean! @join__field(graph: CATALOGO)
+
+  """
+  Lo que cuesta una unidad al público en un supermercado, para comparar. Null si no se tomó
+  """
+  precioEnSuper: PrecioDeReferencia @join__field(graph: CATALOGO)
 }
 
 type Query

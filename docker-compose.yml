@@ -140,7 +140,7 @@ services:
         composer install --no-interaction --quiet;
         php artisan catalogo:semilla;
         (while true; do php artisan catalogo:escuchar; sleep 3; done) &
-        php -S 0.0.0.0:8082 -t public vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php
+        php -S 0.0.0.0:8082 -t public public/index.php
     environment:
       # php -S hereda estas variables (artisan serve no se las pasa a sus procesos)
       MONGODB_URI: mongodb://mongo:27017/?replicaSet=rs0

@@ -22,7 +22,7 @@
 >
 > Tus tareas están en Trello, en la tarjeta «LEER PRIMERO · Reparto nuevo» y en las que tienen tu nombre. El prompt para tu Claude está en `docs/PROMPT-JHOEL.md`.
 
-Actualizado: 29/10/2026 · en main (los dos trabajamos ahí)
+Actualizado: 31/10/2026 · en main (los dos trabajamos ahí)
 
 ## Estoy en
 La app de clientes en el emulador Android. Después: registro de mayoristas y aprobación en el Superadmin (CU-01), y registro de tiendas desde la app (CU-15).
@@ -31,6 +31,9 @@ La app de clientes en el emulador Android. Después: registro de mayoristas y ap
 - Infra, Pedidos (saga, outbox, inbox, plazos), Conecta, n8n, CI y e2e.
 - Cobros en la saga: autorizar y liberar crédito, QR que vence a los 30 min, pagarQrDePrueba y Pedido.cobro por federación.
 - App de clientes (`apps/app`, Expo): Inicio, Buscar, buscar por foto, Vendedor, carrito, finalizar (QR, crédito o contra entrega), Mis pedidos, seguimiento y modo sin señal.
+- App (30–31/10): entrar con el celular y un código (sin contraseña), direcciones con GPS, identidad lima/bosque/ámbar, encabezado compacto y el Inicio con vitrinas en carrusel («Más barato que en el súper», «Gana revendiendo», «Pruébalo con poco», «Más llevas, más ahorras», «Marcas de aquí»).
+- Catálogo: 27 productos reales de Bolivia con foto, precio del súper (Fidalga y Amarket, 30/10) y marca boliviana verificada; `Producto.marca`, `marcaBoliviana` y `precioEnSuper`. Los genéricos de antes quedaron pausados.
+  **Jhoel:** después de `git pull`, `pnpm todo` y `pnpm semilla`; en el emulador suma `adb reverse tcp:8082 tcp:8082` para ver las fotos.
 - Abasto vende:
   - Catálogo: Abasto como vendedor de la casa y productos BAJO_PEDIDO con costo y proveedor (`catalogo:semilla-abasto`).
   - Pedidos: CONTRA_ENTREGA, listaDeCompras, avanzarEntrega y traccion (solo admin).

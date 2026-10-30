@@ -13,6 +13,8 @@ import {
   ordenarMayoristas,
   palabrasClave,
   precioDesde,
+  preciosDeLaCasa,
+  separarContenido,
   rubros,
   textoDeStock,
   type Mayorista,
@@ -177,5 +179,23 @@ describe('buscar con una foto (texto leído de la etiqueta)', () => {
     expect(buscarPorTextoLeido(todos, 'Papel HIGIÉNICO doble hoja 4 rollos').map((p) => p.id)).toEqual(['LP-0004']);
     expect(buscarPorTextoLeido(todos, 'arroz').map((p) => p.id)).toEqual(['AB-001']);
     expect(buscarPorTextoLeido(todos, '123 bs')).toEqual([]);
+  });
+});
+
+describe('primera vista: precios de la casa', () => {
+  const abasto: Mayorista = { ...losPozos, id: 'abasto', nombre: 'Abasto', deLaCasa: true };
+  const barato = producto({ id: 'sal', nombre: 'Sal 1 kg', mayorista: abasto, escalas: [{ presentacion: 'FARDO', cantidad: 50, precioUnitario: dinero(220) }] });
+  const caro = producto({ id: 'aceite', nombre: 'Aceite 900 ml', mayorista: abasto, escalas: [{ presentacion: 'DOCENA', cantidad: 12, precioUnitario: dinero(1420) }] });
+  const ajeno = producto({ id: 'ajeno', nombre: 'Shampoo', escalas: [{ presentacion: 'CAJA', cantidad: 48, precioUnitario: dinero(100) }] });
+
+  it('ordena lo de Abasto del precio por unidad más bajo al más alto y deja afuera a los afiliados', () => {
+    expect(preciosDeLaCasa([caro, ajeno, barato]).map((p) => p.id)).toEqual(['sal', 'aceite']);
+  });
+
+  it('separa el contenido del nombre', () => {
+    expect(separarContenido('Aceite Fino 900 ml')).toEqual({ nombre: 'Aceite Fino', contenido: '900 ml' });
+    expect(separarContenido('Coca-Cola 2 L')).toEqual({ nombre: 'Coca-Cola', contenido: '2 L' });
+    expect(separarContenido('Papel higiénico Elite · 4 rollos')).toEqual({ nombre: 'Papel higiénico Elite', contenido: '4 rollos' });
+    expect(separarContenido('Velas')).toEqual({ nombre: 'Velas', contenido: null });
   });
 });

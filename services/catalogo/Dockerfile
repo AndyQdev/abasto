@@ -27,4 +27,6 @@ COPY . .
 RUN composer dump-autoload --optimize && php artisan package:discover --ansi
 EXPOSE 8082
 ENV PHP_CLI_SERVER_WORKERS=4
-CMD ["php", "-S", "0.0.0.0:8082", "-t", "public", "vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php"]
+# Todo pasa por Laravel (index.php como enrutador): el server.php de Laravel busca index.php en el directorio
+# de trabajo y rompe las URLs que terminan en un archivo, como /fotos/AB-005-xxxx.webp
+CMD ["php", "-S", "0.0.0.0:8082", "-t", "public", "public/index.php"]

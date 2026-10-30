@@ -100,6 +100,26 @@ type Producto @key(fields: "id") {
 
   "URL pública de la foto del producto. Null si todavía no tiene"
   foto: String
+
+  "La marca (PIL, Fino…). Null si no se cargó"
+  marca: String
+
+  "La marca es boliviana (verificado)"
+  marcaBoliviana: Boolean!
+
+  "Lo que cuesta una unidad al público en un supermercado, para comparar. Null si no se tomó"
+  precioEnSuper: PrecioDeReferencia
+}
+
+"Un precio al público tomado de un supermercado, con dónde y cuándo"
+type PrecioDeReferencia {
+  precio: Dinero!
+
+  "Fidalga, Amarket…"
+  donde: String!
+
+  "aaaa-mm-dd"
+  fecha: String!
 }
 
 "STOCK: lo tiene en depósito y reservar descuenta stock. BAJO_PEDIDO: se compra cuando entra el pedido."

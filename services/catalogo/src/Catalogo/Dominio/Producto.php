@@ -30,6 +30,12 @@ final class Producto
         public ?string $proveedor = null,
         /** Archivo de la foto en el almacén de fotos (no la URL: la arma la infraestructura). Null si no tiene */
         public ?string $foto = null,
+        /** La marca (PIL, Fino…), para agrupar y buscar. Null si no se cargó */
+        public ?string $marca = null,
+        /** La marca es boliviana: va en «Marcas de aquí». Solo se marca lo que está verificado */
+        public bool $marcaBoliviana = false,
+        /** Lo que cuesta al público en un supermercado, para comparar. Null si no se tomó */
+        public ?PrecioDeReferencia $precioEnSuper = null,
     ) {
         self::validarEscalas($escalas);
         self::validarCosto($costoUnitarioCentavos);

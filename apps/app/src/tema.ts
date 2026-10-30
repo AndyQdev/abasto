@@ -1,50 +1,65 @@
 /**
- * La identidad de ABASTO (30/10/2026): turquesa menta como color de marca, botones en verde lima #C9F45A
- * con texto verde oscuro, y el verde oscuro para los contrastes fuertes (barras, contadores, textos).
- * Los nombres viejos (verde, tinta…) se mantienen para que todas las pantallas tomen la paleta nueva.
+ * La identidad de ABASTO (30/10/2026, la eligió el usuario): un mercado mayorista fresco y con personalidad.
+ * Lima #C9F45A (lo que se toca y lo que destaca), Bosque #182D25 (encabezados, textos y botones finales),
+ * Ámbar #FFB454 (ofertas y descuentos) sobre un fondo crema verdoso #F2F7EB. Nada de menta ni azul.
+ * Los nombres viejos (verde, menta…) apuntan a la paleta nueva para que todas las pantallas la tomen.
  */
 export const COLOR = {
-  // Acciones y confianza: verde oscuro
-  verde: '#103F32',
-  verdeFuerte: '#0A2C23',
-  verdeSuave: '#E4F8F2',
-  verdeTexto: '#103F32',
-  tinta: '#103F32',
-  // Marca: turquesa menta
-  menta: '#64DDC5',
-  mentaMedia: '#A6EDDE',
-  mentaClara: '#E4F8F2',
-  // Botones principales, lo elegido y las promociones: verde lima, siempre con texto verde oscuro encima
+  // Bosque: encabezados, textos fuertes y botones de cierre («Continuar», «Agregar 1 fardo»)
+  bosque: '#182D25',
+  bosqueMedio: '#2C4A3D',
+  verde: '#182D25',
+  verdeFuerte: '#0F1F19',
+  verdeSuave: '#EAF5D6',
+  verdeTexto: '#182D25',
+  tinta: '#182D25',
+  // Lima: botones principales, lo elegido y la tarjeta protagonista (siempre con texto bosque encima)
   lima: '#C9F45A',
-  limaFuerte: '#B2E03C',
-  limaSuave: '#EEFBC8',
+  limaFuerte: '#B4E03D',
+  limaMedia: '#DDF59B',
+  limaSuave: '#EEF8D5',
   limaTexto: '#3A4D00',
+  // Compatibilidad: lo que antes era menta ahora es lima
+  menta: '#C9F45A',
+  mentaMedia: '#DDF59B',
+  mentaClara: '#EEF8D5',
+  // Ámbar: ofertas y descuentos
+  ambar: '#FFB454',
+  ambarTexto: '#7A4300',
+  ambarSuave: '#FFF0D9',
   // Fondos y superficies
-  fondo: '#F0FAF8',
+  fondo: '#F2F7EB',
   superficie: '#FFFFFF',
-  borde: '#DCEFE9',
-  tenue: '#F0FAF8',
-  // Textos: azul petróleo casi negro
-  texto: '#1A2940',
-  texto2: '#44536A',
-  texto3: '#6E7C90',
+  borde: '#E2EBD5',
+  tenue: '#F7FAF2',
+  // Textos
+  texto: '#182D25',
+  texto2: '#43564B',
+  texto3: '#717F76',
   // Avisos
-  ambar: '#E8A21B',
-  ambarTexto: '#8A5A00',
-  ambarSuave: '#FFF4DC',
-  rojo: '#D64545',
-  rojoSuave: '#FDECEC',
-  rojoTexto: '#A62B2B',
-  azulSuave: '#E3F4FA',
+  rojo: '#E0533D',
+  rojoSuave: '#FDECE8',
+  rojoTexto: '#A8331F',
+  azulSuave: '#E7F1FA',
   rosaSuave: '#FCEFF1',
 } as const;
 
-/** Manrope en sus pesos. En Android, con una fuente propia hay que elegir el archivo del peso (fontWeight no basta). */
+/**
+ * El bosque del encabezado del Inicio y de la pestaña activa (30/10, referencia `pedidosYa/image5.png`):
+ * un verde bosque más vivo que el de los textos, en tres tonos para darle profundidad. Solo esas dos piezas lo usan.
+ */
+export const CABECERA = {
+  oscuro: '#0B3027',
+  medio: '#103F32',
+  claro: '#1A5643',
+} as const;
+
+/** Plus Jakarta Sans en sus pesos. En Android, con una fuente propia hay que elegir el archivo del peso. */
 export const FUENTE = {
-  normal: 'Manrope_500Medium',
-  semi: 'Manrope_600SemiBold',
-  fuerte: 'Manrope_700Bold',
-  negra: 'Manrope_800ExtraBold',
+  normal: 'PlusJakartaSans_500Medium',
+  semi: 'PlusJakartaSans_600SemiBold',
+  fuerte: 'PlusJakartaSans_700Bold',
+  negra: 'PlusJakartaSans_800ExtraBold',
 } as const;
 
 /** La fuente que corresponde a un peso de CSS ('600', 'bold'…). */
@@ -55,16 +70,16 @@ export function fuenteDe(peso: string | number | undefined): string {
 
 export const RADIO = { chico: 12, medio: 16, grande: 20, tarjeta: 22 } as const;
 
-/** Fondo de la foto del producto según el rubro: tonos menta, cielo, lima y rosa muy suaves */
+/** Fondo de la foto del producto según el rubro: lima, ámbar, cielo y rosa muy suaves */
 export const TINTES = {
-  'tinte-verde': '#E4F8F2',
-  'tinte-azul': '#E3F4FA',
-  'tinte-ambar': '#F3FAD9',
+  'tinte-verde': '#EEF8D5',
+  'tinte-azul': '#E7F1FA',
+  'tinte-ambar': '#FFF0D9',
   'tinte-rosa': '#FCEFF1',
 } as const;
 
 export const SOMBRA = {
-  shadowColor: '#0E3B4A',
+  shadowColor: '#182D25',
   shadowOpacity: 0.08,
   shadowRadius: 16,
   shadowOffset: { width: 0, height: 8 },

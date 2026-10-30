@@ -1,3 +1,4 @@
+import { useEspacioBarra } from '../BarraInferior';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { Alert, Linking, ScrollView, StyleSheet, View } from 'react-native';
@@ -16,6 +17,7 @@ const PANEL = process.env.EXPO_PUBLIC_PANEL_URL ?? 'http://localhost:5170/';
 
 /** La cuenta del cliente: su nombre y celular, sus direcciones y salir. Si además vende, el enlace al Panel. */
 export function Cuenta({ navigation }: PantallaDePestana<'Cuenta'>) {
+  const espacio = useEspacioBarra();
   const { usuario, salir } = useSesion();
   const { lista, elegida, borrar } = useDirecciones();
   const [diagnostico, setDiagnostico] = useState(false);
@@ -32,9 +34,9 @@ export function Cuenta({ navigation }: PantallaDePestana<'Cuenta'>) {
 
   return (
     <SafeAreaView style={e.pantalla} edges={['top']}>
-      <ScrollView contentContainerStyle={e.contenido}>
+      <ScrollView contentContainerStyle={[e.contenido, { paddingBottom: espacio }]}>
         <Aparecer>
-          <LinearGradient colors={[COLOR.verde, '#1E7A62']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={e.perfil}>
+          <LinearGradient colors={[COLOR.bosque, COLOR.bosqueMedio]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={e.perfil}>
             <Iniciales nombre={nombre} tamano={60} />
             <View style={{ flex: 1, gap: 2 }}>
               <Texto v="t2" style={{ color: '#fff' }}>
