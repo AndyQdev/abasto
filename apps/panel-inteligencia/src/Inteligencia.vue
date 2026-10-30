@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import Agentes from './componentes/Agentes.vue';
 import Reportes from './componentes/Reportes.vue';
+import Tableros from './componentes/Tableros.vue';
 import type { SesionDelShell } from './sesion';
 
 /** Raíz del microfrontend: <abasto-inteligencia ruta="reportes">. La ruta la decide el Shell. */
@@ -10,6 +11,7 @@ defineProps<{ ruta?: string; sesion?: SesionDelShell }>();
 <template>
   <p v-if="!sesion" class="vacio">Esperando la sesión del Panel…</p>
   <Agentes v-else-if="ruta === 'agentes'" :sesion="sesion" />
+  <Tableros v-else-if="ruta === 'tableros'" :sesion="sesion" />
   <Reportes v-else :sesion="sesion" />
 </template>
 

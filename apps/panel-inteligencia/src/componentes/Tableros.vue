@@ -86,14 +86,16 @@ onMounted(cargar);
 
     <article class="carta tablero-medio">
       <h3>Demanda prevista de la semana</h3>
-      <Grafico :serie="demanda" tipo="barras" />
+      <Grafico v-if="demanda.puntos.length" :serie="demanda" tipo="barras" />
+      <p v-else class="vacio">Todavía no hay productos con stock para estimar.</p>
       <p class="gris">Modelo supervisado (GradientBoosting) entrenado cada noche con tus ventas.</p>
     </article>
 
     <article class="carta tablero-medio">
       <h3>Cómo compran tus tiendas</h3>
-      <Grafico :serie="segmentos" tipo="barras" />
-      <table>
+      <p v-if="!segmentos.puntos.length" class="vacio">Los segmentos salen del ML nocturno: todavía no corrió (<code>uv run abasto-ml-nocturno</code>).</p>
+      <Grafico v-if="segmentos.puntos.length" :serie="segmentos" tipo="barras" />
+      <table v-if="segmentos.puntos.length">
         <thead>
           <tr>
             <th>Segmento</th>
