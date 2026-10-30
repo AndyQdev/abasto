@@ -6,6 +6,8 @@ Tareas: Trello https://trello.com/b/ABo8gFFG/abasto · Código: GitHub, los dos 
 
 ## Decisiones tomadas (no se reabren sin hablarlo entre los dos)
 
+- **Los requisitos del ingeniero y dónde se cumple cada uno: `docs/requisitos.md`.** Ningún cambio puede dejar uno sin cumplir sin hablarlo antes.
+
 - **Replanteo del 29/10:** el negocio es la **app de clientes** (`apps/app`, Expo, Android e iPhone), con la que tiendas y personas compran al por mayor: buscar (también con una foto), pedir, pagar (QR, contra entrega o crédito) y seguir el pedido. **No hay web de compra.**
 - Quien vende gestiona en la web: **Panel Mayorista** (Shell React que carga Gestión en Angular e Inteligencia en Vue como Web Components) y **Superadmin** (React).
 - **Abasto vende** (modelo de lanzamiento, 28/10): mientras no hay mayoristas afiliados, Abasto es el vendedor de la casa (`ventas@abasto.bo`), con productos bajo pedido que compra en el mercado cuando entra el pedido.

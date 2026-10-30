@@ -49,7 +49,7 @@ flowchart LR
 
 ```mermaid
 sequenceDiagram
-  participant T as Tienda (Mercado)
+  participant T as Tienda (App)
   participant P as Pedidos
   participant CA as Catálogo
   participant CB as Cobros
@@ -73,7 +73,7 @@ sequenceDiagram
 - El mayorista ve sus precios base.
 - Una tienda aprobada ve las escalas con el porcentaje de su lista: NUEVOS 100 %, FRECUENTES 97 %, VIP 95 %.
 - Una tienda sin relación, o con la solicitud pendiente o rechazada, no ve precios.
-- Una empresa que es mayorista y tienda a la vez no ve sus propios productos en Mercado.
+- Una empresa que es mayorista y tienda a la vez no ve sus propios productos en la app.
 
 ## Reportes y agentes
 
