@@ -44,5 +44,5 @@ Ya tienen prueba punta a punta: la sesión única (Panel → Superadmin), el Pan
 
 ## Archivos por caso
 
-- Robustez: [CU-02](robustez/CU-02.md) · [CU-03](robustez/CU-03.md) · [CU-04](robustez/CU-04.md) · [CU-05](robustez/CU-05.md) · [CU-06](robustez/CU-06.md) · [CU-07](robustez/CU-07.md) · [CU-13](robustez/CU-13.md).
-- Secuencia: [CU-03](secuencia/CU-03.md) · [CU-04](secuencia/CU-04.md) · [CU-06](secuencia/CU-06.md) · [CU-07](secuencia/CU-07.md) · [CU-13](secuencia/CU-13.md).
+- Robustez: [CU-02](robustez/CU-02.md) · [CU-03](robustez/CU-03.md) · [CU-04](robustez/CU-04.md) · [CU-05](robustez/CU-05.md) · [CU-06](robustez/CU-06.md) · [CU-07](robustez/CU-07.md) · [CU-13](robustez/CU-13.md) · [CU-14](robustez/CU-14.md).
+- Secuencia: [CU-03](secuencia/CU-03.md) · [CU-04](secuencia/CU-04.md) · [CU-05](secuencia/CU-05.md) · [CU-06](secuencia/CU-06.md) · [CU-07](secuencia/CU-07.md) · [CU-13](secuencia/CU-13.md) · [CU-14](secuencia/CU-14.md).
