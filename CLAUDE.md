@@ -85,6 +85,11 @@ Puertos, usuarios de prueba y arranque paso a paso: `README.md`. Arquitectura: `
 - Catálogo corre en Docker (PHP 8.4 + extensión mongodb): no hace falta PHP en la máquina. Composer: `docker compose exec catalogo composer ...`.
 - Angular se queda en 21 mientras alguien tenga Node < 22.22.
 - La app (`apps/app`) está fuera del workspace de pnpm: ahí se usa npm. Toma `packages/comercio` y la bandeja de `packages/outbox-offline` por ruta (metro.config.js y tsconfig.json). Corre en el puerto **8090** porque 8081 es Pedidos.
+- Compilar la app para Android en Windows falla con «Filename longer than 260 characters» (ninja 1.10 del SDK). Arreglo, una vez por máquina:
+  1. Activar las rutas largas como administrador: `New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name LongPathsEnabled -Value 1 -PropertyType DWORD -Force`.
+  2. Instalar `cmake;4.0.2` con el `sdkmanager`, que trae ninja 1.12.1.
+  3. Copiar ese `ninja.exe` sobre el de `Android\Sdk\cmake\3.22.1\bin`, guardando antes el viejo.
+- Docker tiene tope: cada contenedor con `mem_limit` y la máquina de WSL con 6 GB en `%USERPROFILE%\.wslconfig`. En reposo todo usa ~2 GB. Los chequeos de salud van cada 30 s (cada 2 s mientras arranca).
 - La saga corre de punta a punta (Pedidos → Catálogo → Cobros). Los pedidos de demostración vencen a las 2 h: `e2e/preparar.ts` los recarga antes de cada corrida.
 
 ## Al terminar
