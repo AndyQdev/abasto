@@ -6,7 +6,8 @@ pg.types.setTypeParser(pg.types.builtins.DATE, (v) => v);
 pg.types.setTypeParser(pg.types.builtins.INT8, (v) => Number(v));
 pg.types.setTypeParser(pg.types.builtins.NUMERIC, (v) => Number(v));
 
-const host = process.env.REPORTES_HOST ?? 'localhost';
+// 127.0.0.1 y no localhost: en Windows, localhost a veces cae en ::1 (wslrelay) y la conexión se corta
+const host = process.env.REPORTES_HOST ?? '127.0.0.1';
 const puerto = Number(process.env.REPORTES_PUERTO ?? 5440);
 
 /** Dueño de la base `reportes`: migra y proyecta. Nunca se usa para las consultas del Analista ni del MCP. */

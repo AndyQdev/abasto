@@ -5,7 +5,8 @@ import { readdir, readFile } from 'node:fs/promises';
 import pg from 'pg';
 
 const cliente = new pg.Client({
-  host: process.env.REPORTES_HOST ?? 'localhost',
+  // 127.0.0.1 y no localhost: en Windows, localhost a veces cae en ::1 (wslrelay) y la conexión se corta
+  host: process.env.REPORTES_HOST ?? '127.0.0.1',
   port: Number(process.env.REPORTES_PUERTO ?? 5440),
   database: 'reportes',
   user: process.env.REPORTES_USUARIO ?? 'reportes',
