@@ -1,7 +1,7 @@
 import * as SecureStore from 'expo-secure-store';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Platform } from 'react-native';
-import { cerrarEnKeycloak, entrarConClave, ErrorDeSesion, renovar, type Tokens } from './keycloak';
+import { cerrarEnKeycloak, renovar, SesionVencida, type Tokens } from './keycloak';
 
 /** Lo que la app sabe de quien entró, sacado del token de Keycloak. */
 export interface Usuario {
@@ -10,6 +10,8 @@ export interface Usuario {
   correo: string;
   orgId: string;
   orgNombre: string;
+  /** Los 8 dígitos, si entró con su celular */
+  telefono: string;
   roles: string[];
 }
 
@@ -57,6 +59,7 @@ export function usuarioDe(jwt: string): Usuario {
     correo: String(p.email ?? ''),
     orgId: String(p.org_id ?? ''),
     orgNombre: String(p.org_nombre ?? p.name ?? ''),
+    telefono: /^591\d{8}$/.test(String(p.preferred_username)) ? String(p.preferred_username).slice(3) : '',
     roles,
   };
 }
@@ -65,8 +68,8 @@ interface Sesion {
   usuario: Usuario | null;
   /** Mientras se lee el llavero al abrir la app */
   cargando: boolean;
-  /** Entra con correo y contraseña dentro de la app. Si falla, lanza un error que se puede mostrar tal cual. */
-  entrar: (correo: string, clave: string) => Promise<void>;
+  /** Guarda la sesión que devolvió entrarConCodigo (src/acceso.ts). Desde ahí la app no vuelve a pedir el celular. */
+  iniciar: (tokens: Tokens) => Promise<void>;
   salir: () => Promise<void>;
   /** Token vigente (lo renueva si está por vencer). Null si no hay sesión. */
   token: () => Promise<string | null>;
@@ -109,8 +112,8 @@ export function ProveedorDeSesion({ children }: { children: ReactNode }) {
       await guardar(nuevo);
       return nuevo.acceso;
     } catch (e) {
-      // La sesión venció del todo (10 h sin usar la app): hay que volver a entrar
-      if (e instanceof ErrorDeSesion && /correo o la contraseña/.test(e.message)) await guardar(null);
+      // Keycloak ya no la reconoce: vuelve a la bienvenida. Sin señal, se sigue con lo que hay.
+      if (e instanceof SesionVencida) await guardar(null);
       return tokensRef.current?.acceso ?? null;
     }
   }, [guardar]);
@@ -124,9 +127,7 @@ export function ProveedorDeSesion({ children }: { children: ReactNode }) {
       usuario: tokens ? usuarioDe(tokens.acceso) : null,
       cargando,
       token,
-      entrar: async (correo, clave) => {
-        await guardar(await entrarConClave(correo, clave));
-      },
+      iniciar: guardar,
       salir: async () => {
         const refresco = tokensRef.current?.refresco;
         await guardar(null);

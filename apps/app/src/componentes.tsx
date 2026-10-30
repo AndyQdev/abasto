@@ -1,7 +1,9 @@
+import { Image } from 'expo-image';
 import { iniciales, tinte, escalaPorDefecto, disponible, type Mayorista, type Producto } from '@abasto/comercio';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, type ComponentProps, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
+import { imagenDeRubro } from './ilustraciones';
 import { COLOR, RADIO, SOMBRA, TINTES } from './tema';
 
 export type NombreDeIcono = ComponentProps<typeof Ionicons>['name'];
@@ -99,7 +101,7 @@ export const colorDeClase = (clase: string): ColorDeInsignia =>
 export function Foto({ producto, alto = 76, ancho = 76, alTocar }: { producto: Pick<Producto, 'rubro' | 'nombre'>; alto?: number; ancho?: number | '100%'; alTocar?: () => void }) {
   const caja = (
     <View style={[estilos.foto, { height: alto, width: ancho, backgroundColor: TINTES[tinte(producto.rubro)] }]}>
-      <Icono nombre="cube-outline" tamano={Math.min(alto / 3, 30)} color={COLOR.texto3} />
+      <Image source={imagenDeRubro(producto.rubro)} style={{ width: '82%', height: '82%' }} contentFit="contain" transition={200} accessibilityIgnoresInvertColors />
     </View>
   );
   return alTocar ? (
@@ -193,9 +195,10 @@ export function Falla({ texto }: { texto: string }) {
   );
 }
 
-export function Vacio({ titulo, detalle, children }: { titulo: string; detalle?: string; children?: ReactNode }) {
+export function Vacio({ titulo, detalle, imagen, children }: { titulo: string; detalle?: string; imagen?: number; children?: ReactNode }) {
   return (
-    <Tarjeta style={{ alignItems: 'center', gap: 8, paddingVertical: 28 }}>
+    <Tarjeta style={{ alignItems: 'center', gap: 8, paddingVertical: imagen ? 18 : 28 }}>
+      {imagen !== undefined && <Image source={imagen} style={{ width: 220, height: 165, borderRadius: 20 }} contentFit="cover" transition={250} />}
       <Texto v="t3">{titulo}</Texto>
       {detalle && <Texto v="gris" style={{ textAlign: 'center' }}>{detalle}</Texto>}
       {children}

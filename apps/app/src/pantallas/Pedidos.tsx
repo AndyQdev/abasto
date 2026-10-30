@@ -1,3 +1,4 @@
+import { ILUSTRACION } from '../ilustraciones';
 import { estadoVisible, fechaHora, filtrarPedidos, MIS_COMPRAS, nombreCorto, porPagar, productos as cuantos, type FiltroDePedidos, type Pedido } from '@abasto/comercio';
 import type { OperacionLocal } from '@abasto/bandeja';
 import { useFocusEffect } from '@react-navigation/native';
@@ -99,7 +100,7 @@ export function Pedidos({ navigation }: PantallaDePestana<'Pedidos'>) {
           </View>
         }
         ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
-        ListEmptyComponent={<Vacio titulo="No hay pedidos en esta pestaña" />}
+        ListEmptyComponent={<Vacio imagen={ILUSTRACION.vacioPedidos} titulo="Todavía no hay pedidos aquí" detalle="Cuando pidas, aquí ves en qué va cada uno." />}
         renderItem={({ item: p }) => {
           const estado = estadoVisible(p);
           return (

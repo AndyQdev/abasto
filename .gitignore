@@ -68,3 +68,6 @@ Thumbs.db
 
 # Claude Code: lo compartido va en .claude/settings.json y .claude/skills
 .claude/settings.local.json
+
+# Imágenes crudas de Gemini (las listas van en apps/app/assets/ilustraciones)
+.ilustraciones-crudas/

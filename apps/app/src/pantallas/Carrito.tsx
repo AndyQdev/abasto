@@ -1,3 +1,4 @@
+import { ILUSTRACION } from '../ilustraciones';
 import { bs, cambiarCantidad, nombreDe, porMayorista, productos as cuantosProductos, quitar, totalDe, unidadesDe } from '@abasto/comercio';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -27,7 +28,7 @@ export function Carrito({ navigation }: PantallaDePestana<'Carrito'>) {
         {!enLinea && <Insignia texto="Puedes cambiar tu carrito sin señal" color="ambar" />}
 
         {!carrito.length && (
-          <Vacio titulo="Tu carrito está vacío" detalle="Busca productos y agrégalos por docena, caja o fardo.">
+          <Vacio imagen={ILUSTRACION.vacioCarrito} titulo="Tu carrito está vacío" detalle="Busca productos y agrégalos por docena, caja o fardo.">
             <Boton tipo="chico" texto="Buscar productos" alTocar={() => navigation.navigate('Buscar')} />
           </Vacio>
         )}

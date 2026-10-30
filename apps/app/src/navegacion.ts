@@ -19,6 +19,7 @@ export type Pila = {
   Finalizar: undefined;
   Seguimiento: { id: string };
   BuscarPorFoto: undefined;
+  NuevaDireccion: undefined;
 };
 
 export type PantallaDePila<N extends keyof Pila> = NativeStackScreenProps<Pila, N>;
