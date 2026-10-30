@@ -13,3 +13,4 @@ export interface EjecutorDeAcciones {
 
 export const REPOSITORIO_DE_PROPUESTAS = Symbol('RepositorioDePropuestas');
 export const EJECUTOR_DE_ACCIONES = Symbol('EjecutorDeAcciones');
+export const MISIONES = Symbol('Misiones');

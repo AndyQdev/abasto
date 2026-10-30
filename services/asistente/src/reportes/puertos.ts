@@ -33,7 +33,7 @@ export interface ConsultorDeReportes {
 export interface RegistroDeAuditoria {
   orgId: string;
   usuarioId: string;
-  origen: 'analista' | 'mcp' | 'agente';
+  origen: 'analista' | 'mcp' | 'agente' | 'tablero';
   sql: string;
   resultado: 'ok' | 'rechazada' | 'error';
   filas?: number;

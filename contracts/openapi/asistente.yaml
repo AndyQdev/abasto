@@ -57,7 +57,60 @@ paths:
       summary: Propuestas pendientes de la empresa de la sesión
   /v1/agentes/{id}/ejecutar:
     post:
-      summary: Corre la misión del agente ahora (hoy solo cobranza). Solo crea propuestas; no ejecuta nada.
+      summary: Corre la misión del agente ahora (cobranza, reposicion o catalogo). Solo crea propuestas; no ejecuta nada. Lo que ya espera una decisión no se repite.
+  /v1/agentes/monitorear:
+    post:
+      summary: «Monitorear mi negocio». Corre todas las misiones y devuelve cuántas propuestas nuevas dejó cada agente.
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total: { type: integer }
+                  agentes:
+                    type: array
+                    items: { type: object, properties: { agenteId: { type: string }, nuevas: { type: integer }, error: { type: string } } }
+  /v1/tableros:
+    get:
+      summary: Tableros de Inteligencia. Demanda prevista con días de stock, segmentos K-means, ventas de 30 días y cobranza.
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  demanda:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        producto_id: { type: string }
+                        nombre: { type: string }
+                        stock: { type: integer }
+                        unidades_semana: { type: number }
+                        dias_de_stock: { type: number, nullable: true }
+                  segmentos:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        segmento: { type: string }
+                        tiendas: { type: integer }
+                        compras_mes: { type: number }
+                        ticket_promedio_centavos: { type: integer }
+                  ventas:
+                    type: array
+                    items: { type: object, properties: { fecha: { type: string, format: date }, total_centavos: { type: integer } } }
+                  cobranza:
+                    type: object
+                    properties:
+                      pendiente_centavos: { type: integer }
+                      vencida_centavos: { type: integer }
+                      cuentas_vencidas: { type: integer }
+                      vencen_esta_semana: { type: integer }
   /v1/agentes/propuestas/{id}/decision:
     post:
       requestBody:
