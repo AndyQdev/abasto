@@ -1,0 +1,7 @@
+{
+  "modelo": "catalogo-imagenet-v1",
+  "productos": 27,
+  "fotos_de_prueba": 162,
+  "top1": 1.0,
+  "top3": 1.0
+}
