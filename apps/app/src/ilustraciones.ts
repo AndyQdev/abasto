@@ -19,7 +19,19 @@ export const ILUSTRACION = {
   pedidoEnCamino: require('../assets/ilustraciones/banner-entrega.webp'),
   pedidoEntregado: require('../assets/ilustraciones/pedido-entregado.webp'),
   sinSenal: require('../assets/ilustraciones/sin-senal.webp'),
+  comprarOtraVez: require('../assets/ilustraciones/comprar-otra-vez.webp'),
 } satisfies Record<string, Recurso>;
+
+const PRESENTACIONES: Record<string, Recurso> = {
+  DOCENA: require('../assets/ilustraciones/presentacion-docena.webp'),
+  CAJA: require('../assets/ilustraciones/presentacion-caja.webp'),
+  FARDO: require('../assets/ilustraciones/presentacion-fardo.webp'),
+};
+
+/** La imagen de una presentación (docena, caja, fardo); la unidad y la cuarta muestran el producto. */
+export function imagenDePresentacion(presentacion: string, rubro: string): Recurso {
+  return PRESENTACIONES[presentacion] ?? imagenDeRubro(rubro);
+}
 
 const RUBROS: Record<string, Recurso> = {
   Abarrotes: require('../assets/ilustraciones/rubro-abarrotes.webp'),

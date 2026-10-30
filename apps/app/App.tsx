@@ -1,4 +1,10 @@
-import { Manrope_500Medium, Manrope_600SemiBold, Manrope_700Bold, Manrope_800ExtraBold, useFonts } from '@expo-google-fonts/manrope';
+import {
+  PlusJakartaSans_500Medium,
+  PlusJakartaSans_600SemiBold,
+  PlusJakartaSans_700Bold,
+  PlusJakartaSans_800ExtraBold,
+  useFonts,
+} from '@expo-google-fonts/plus-jakarta-sans';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -22,6 +28,7 @@ import { Seguimiento } from './src/pantallas/Seguimiento';
 import { Ubicacion } from './src/pantallas/Ubicacion';
 import { Vendedor } from './src/pantallas/Vendedor';
 import { ProveedorDeSesion, useSesion } from './src/sesion';
+import { ProveedorDeVuelo } from './src/vuelo';
 import { COLOR } from './src/tema';
 
 /**
@@ -88,6 +95,7 @@ function ConDireccion() {
   if (!lista.length) return <Ubicacion />;
   return (
     <ProveedorDeEstado>
+      <ProveedorDeVuelo>
       <NavigationContainer theme={TEMA}>
         <Stack.Navigator screenOptions={{ headerTintColor: COLOR.texto, headerTitleStyle: { fontWeight: '800' }, headerShadowVisible: false, headerStyle: { backgroundColor: COLOR.fondo } }}>
           <Stack.Screen name="Pestanas" component={PestanasDeAbajo} options={{ headerShown: false }} />
@@ -102,6 +110,7 @@ function ConDireccion() {
         </Stack.Navigator>
       </NavigationContainer>
       <Aviso />
+      </ProveedorDeVuelo>
     </ProveedorDeEstado>
   );
 }
@@ -118,7 +127,7 @@ function Aviso() {
 }
 
 export default function App() {
-  const [fuentes] = useFonts({ Manrope_500Medium, Manrope_600SemiBold, Manrope_700Bold, Manrope_800ExtraBold });
+  const [fuentes] = useFonts({ PlusJakartaSans_500Medium, PlusJakartaSans_600SemiBold, PlusJakartaSans_700Bold, PlusJakartaSans_800ExtraBold });
   if (!fuentes) return <View style={e.centro} />;
   return (
     <SafeAreaProvider>

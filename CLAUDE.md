@@ -18,7 +18,7 @@ Tareas: Trello https://trello.com/b/ABo8gFFG/abasto · Código: GitHub, los dos 
 - Sesión única con **Keycloak** (OIDC + PKCE, `packages/sesion`): entrar en una app abre las otras sin volver a pedir la contraseña.
 - Interfaz en español de Bolivia con **tuteo, nunca voseo**. Montos «Bs 1.728,00», fechas dd/mm/aaaa, cantidades siempre con unidad («2 cajas · 96 u.»).
 - Las pantallas web salen de las maquetas de `docs/uix-mockup/` (ver su README) y usan los tokens de `packages/ui` (verde bosque `hsl(158 64% 28%)`).
-- **La app de clientes tiene identidad propia (30/10):** turquesa menta `#64DDC5`, botones lima `#C9F45A` con texto verde oscuro `#103F32`, textos `#1A2940`, fondo `#F0FAF8`, tipografía Manrope e ilustraciones 3D recortadas que sobresalen de las tarjetas. Los tokens están en `apps/app/src/tema.ts`.
+- **La app de clientes tiene identidad propia (30/10):** lima `#C9F45A`, bosque `#182D25`, ámbar `#FFB454` (ofertas) y fondo `#F2F7EB`. Nada de menta ni azul. Tipografía Plus Jakarta Sans e ilustraciones 3D recortadas que sobresalen de las tarjetas. Los tokens están en `apps/app/src/tema.ts`.
 
 ## Dueños
 

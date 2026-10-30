@@ -1,11 +1,13 @@
-import { bs, comprables, nombreCorto, ordenarMayoristas, precioDesde, rubros, tinte, type Producto } from '@abasto/comercio';
+import { bs, comprables, nombreCorto, opcionesDeCompra, ordenarMayoristas, precioDesde, rubros, tinte, type Producto } from '@abasto/comercio';
+import { useIsFocused } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
+import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
 import { FlatList, RefreshControl, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Aparecer, Esqueleto, Flotar, Tocable } from '../animacion';
-import { BotonMas, Falla, Icono, Iniciales, Insignia, Logo, Seccion, SinPrecio, Texto } from '../componentes';
+import { BotonMas, Falla, Icono, Iniciales, Insignia, Seccion, SinPrecio, Texto } from '../componentes';
 import { resumen } from '../direcciones';
 import { useDirecciones } from '../direcciones-estado';
 import { useEstado } from '../estado';
@@ -14,32 +16,32 @@ import { ILUSTRACION, imagenDeRubro, rubroCorto } from '../ilustraciones';
 import type { PantallaDePestana } from '../navegacion';
 import { useSesion } from '../sesion';
 import { COLOR, FUENTE, SOMBRA, TINTES } from '../tema';
+import { useVuelo, type Origen } from '../vuelo';
 
 interface Banner {
   titulo: string;
   detalle: string;
+  boton: string;
   imagen: number;
   rubro: string | null;
   fondo: [string, string];
 }
 
 const BANNERS: Banner[] = [
-  { titulo: 'Abarrotes\nal por mayor', detalle: 'Mejores precios para tu negocio', imagen: ILUSTRACION.bannerAbarrotes, rubro: 'Abarrotes', fondo: ['#DDF7F0', '#9FEBDA'] },
-  { titulo: 'Pide hoy,\nte lo llevamos', detalle: 'A tu tienda o a tu casa', imagen: ILUSTRACION.bannerEntrega, rubro: null, fondo: ['#E6F9F4', '#B5F0E2'] },
-  { titulo: 'Bebidas\npor caja', detalle: 'Gaseosas, agua y jugos', imagen: ILUSTRACION.bannerBebidas, rubro: 'Bebidas', fondo: ['#E3F6FA', '#A9E6EE'] },
-  { titulo: 'Limpieza\npara el hogar', detalle: 'Detergentes, jabones y más', imagen: ILUSTRACION.bannerLimpieza, rubro: 'Limpieza del hogar', fondo: ['#EEF9DA', '#CDEF8A'] },
+  { titulo: 'Compra por caja\no fardo', detalle: 'Mejores precios para tu negocio', boton: 'Ver ofertas', imagen: ILUSTRACION.bannerAbarrotes, rubro: 'Abarrotes', fondo: [COLOR.lima, COLOR.limaFuerte] },
+  { titulo: 'Pide hoy,\nte lo llevamos', detalle: 'A tu tienda o a tu casa', boton: 'Ver productos', imagen: ILUSTRACION.bannerEntrega, rubro: null, fondo: ['#FFD48C', COLOR.ambar] },
+  { titulo: 'Bebidas\npor caja', detalle: 'Gaseosas, agua y jugos', boton: 'Ver bebidas', imagen: ILUSTRACION.bannerBebidas, rubro: 'Bebidas', fondo: [COLOR.limaMedia, COLOR.lima] },
+  { titulo: 'Limpieza\npara el hogar', detalle: 'Detergentes, jabones y más', boton: 'Ver limpieza', imagen: ILUSTRACION.bannerLimpieza, rubro: 'Limpieza del hogar', fondo: ['#FFFFFF', COLOR.limaSuave] },
 ];
 
-/** Fondos suaves para los cuadros de los rubros */
-const COLORES_RUBRO = ['#DDF7EF', '#E1F1FB', '#EDE7FB', '#E2F6E9', '#E6F4FA', '#FCEFE3', '#F3FAD9', '#FCEFF1'];
-
-/** Inicio de ABASTO: dirección, buscador, banners con el 3D que sobresale, rubros y ofertas. */
+/** Inicio de ABASTO: encabezado bosque, tarjeta protagonista lima con el 3D que sale de sus bordes, rubros y ofertas. */
 export function Inicio({ navigation }: PantallaDePestana<'Inicio'>) {
   const { usuario } = useSesion();
   const { catalogo, enLinea, agregarRapido } = useEstado();
   const { elegida, porConfirmar } = useDirecciones();
   const [hoja, setHoja] = useState(false);
   const arriba = useSafeAreaInsets().top;
+  const enFoco = useIsFocused();
 
   // Al abrir la app se confirma la dirección una vez
   useEffect(() => {
@@ -60,48 +62,46 @@ export function Inicio({ navigation }: PantallaDePestana<'Inicio'>) {
 
   return (
     <View style={e.pantalla}>
+      {enFoco && <StatusBar style="light" />}
       <ScrollView
         contentContainerStyle={{ paddingBottom: 32 }}
-        refreshControl={<RefreshControl refreshing={catalogo.cargando && productos.length > 0} onRefresh={() => void catalogo.recargar()} tintColor={COLOR.verde} colors={[COLOR.verde]} />}
+        refreshControl={<RefreshControl refreshing={catalogo.cargando && productos.length > 0} onRefresh={() => void catalogo.recargar()} tintColor={COLOR.lima} colors={[COLOR.bosque]} />}
       >
-        <View style={[e.cabecera, { paddingTop: arriba + 8 }]}>
+        <LinearGradient colors={[COLOR.bosque, COLOR.bosqueMedio]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[e.cabecera, { paddingTop: arriba + 10 }]}>
           <View style={e.filaCabecera}>
-            <Logo tamano={30} />
-            <Tocable
-              onPress={() => setHoja(true)}
-              exterior={{ flex: 1, alignItems: 'flex-end' }}
-              style={e.direccion}
-              accessibilityRole="button"
-              accessibilityLabel={`Entregar en ${resumen(elegida)}. Cambiar dirección`}
-            >
-              <Icono nombre="location" tamano={18} color={COLOR.verde} />
+            <Tocable onPress={() => setHoja(true)} exterior={{ flex: 1 }} style={e.direccion} accessibilityRole="button" accessibilityLabel={`Entregar en ${resumen(elegida)}. Cambiar dirección`}>
+              <View style={e.pin}>
+                <Icono nombre="location" tamano={18} color={COLOR.bosque} />
+              </View>
               <View style={{ flexShrink: 1 }}>
-                <Texto v="chico">Entregar en</Texto>
+                <Texto v="chico" style={{ color: COLOR.lima }}>
+                  Entregar en{elegida ? ` · ${elegida.etiqueta}` : ''}
+                </Texto>
                 <View style={e.filaChica}>
-                  <Texto v="fuerte" lineas={1} style={{ flexShrink: 1, fontSize: 13.5 }}>
+                  <Texto v="fuerte" lineas={1} style={{ flexShrink: 1, color: '#fff', fontSize: 15 }}>
                     {resumen(elegida)}
                   </Texto>
-                  <Icono nombre="chevron-down" tamano={14} color={COLOR.texto} />
+                  <Icono nombre="chevron-down" tamano={16} color="#fff" />
                 </View>
               </View>
             </Tocable>
             <Tocable onPress={() => navigation.navigate('Pedidos')} style={e.campana} accessibilityRole="button" accessibilityLabel="Mis pedidos y avisos">
-              <Icono nombre="notifications-outline" tamano={22} color={COLOR.texto} />
+              <Icono nombre="notifications-outline" tamano={21} color="#fff" />
             </Tocable>
           </View>
 
           <View style={e.buscador}>
             <Tocable hundir={0.98} conVibracion={false} accessibilityRole="search" exterior={{ flex: 1 }} style={e.buscadorTexto} onPress={() => navigation.navigate('Buscar')}>
-              <Icono nombre="search" color={COLOR.texto2} />
+              <Icono nombre="search" color={COLOR.texto3} />
               <Texto v="gris" style={{ fontSize: 14.5 }}>
-                Buscar productos, categorías…
+                Busca productos al por mayor…
               </Texto>
             </Tocable>
             <Tocable accessibilityRole="button" accessibilityLabel="Buscar con una foto" onPress={() => navigation.navigate('BuscarPorFoto')} style={e.camara}>
-              <Icono nombre="scan" color={COLOR.verde} tamano={20} />
+              <Icono nombre="camera" color={COLOR.bosque} tamano={20} />
             </Tocable>
           </View>
-        </View>
+        </LinearGradient>
 
         {!enLinea && <AvisoSinSenal />}
 
@@ -109,7 +109,6 @@ export function Inicio({ navigation }: PantallaDePestana<'Inicio'>) {
           {!!usuario?.nombre && (
             <Aparecer>
               <Texto v="t2">Hola, {usuario.nombre.split(' ')[0]} 👋</Texto>
-              <Texto v="gris">Todo lo que necesitas por mayor, en un solo lugar.</Texto>
             </Aparecer>
           )}
 
@@ -122,12 +121,10 @@ export function Inicio({ navigation }: PantallaDePestana<'Inicio'>) {
           <Aparecer orden={2}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={e.filaRubros}>
               {cargandoPrimeraVez
-                ? [0, 1, 2, 3, 4].map((i) => <Esqueleto key={i} alto={92} ancho={70} radio={20} />)
-                : losRubros.map((r, i) => (
+                ? [0, 1, 2, 3].map((i) => <Esqueleto key={i} alto={112} ancho={92} radio={22} />)
+                : losRubros.map((r) => (
                     <Tocable key={r} onPress={() => navigation.navigate('Buscar', { rubro: r })} style={e.rubro} accessibilityRole="button" accessibilityLabel={r}>
-                      <View style={[e.cuadroRubro, { backgroundColor: COLORES_RUBRO[i % COLORES_RUBRO.length] }]}>
-                        <Image source={imagenDeRubro(r)} style={e.imagenRubro} contentFit="contain" transition={250} />
-                      </View>
+                      <Image source={imagenDeRubro(r)} style={e.imagenRubro} contentFit="contain" transition={250} />
                       <Texto style={e.textoRubro} lineas={1}>
                         {rubroCorto(r)}
                       </Texto>
@@ -137,6 +134,19 @@ export function Inicio({ navigation }: PantallaDePestana<'Inicio'>) {
           </Aparecer>
 
           <Aparecer orden={3}>
+            <Tocable onPress={() => navigation.navigate('Pedidos')} style={e.otraVez} accessibilityRole="button">
+              <Image source={ILUSTRACION.comprarOtraVez} style={{ width: 64, height: 64 }} contentFit="contain" />
+              <View style={{ flex: 1 }}>
+                <Texto v="t3">Comprar otra vez</Texto>
+                <Texto v="gris">Repite lo que pides siempre, en un toque.</Texto>
+              </View>
+              <View style={e.flecha}>
+                <Icono nombre="arrow-forward" tamano={18} color={COLOR.bosque} />
+              </View>
+            </Tocable>
+          </Aparecer>
+
+          <Aparecer orden={4}>
             <Seccion titulo="Ofertas de la semana" enlace="Ver todas →" alTocarEnlace={() => navigation.navigate('Buscar')}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={e.filaOfertas}>
                 {cargandoPrimeraVez
@@ -147,7 +157,7 @@ export function Inicio({ navigation }: PantallaDePestana<'Inicio'>) {
           </Aparecer>
 
           {porCaja.length > 0 && (
-            <Aparecer orden={4}>
+            <Aparecer orden={5}>
               <Seccion titulo="Conviene por caja">
                 {porCaja.map((p) => {
                   const grande = p.escalas.find((x) => x.presentacion === 'CAJA' || x.presentacion === 'FARDO')!;
@@ -176,7 +186,7 @@ export function Inicio({ navigation }: PantallaDePestana<'Inicio'>) {
           )}
 
           {vendedores.length > 0 && (
-            <Aparecer orden={5}>
+            <Aparecer orden={6}>
               <Seccion titulo="Mayoristas" enlace="Ver todos →" alTocarEnlace={() => navigation.navigate('Buscar', { modo: 'vendedores' })}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingRight: 16, paddingBottom: 8 }}>
                   {vendedores.map((m) => (
@@ -198,6 +208,9 @@ export function Inicio({ navigation }: PantallaDePestana<'Inicio'>) {
         </View>
       </ScrollView>
 
+      {/* Franja bosque detrás de la barra de estado: al bajar, la hora sigue viéndose en blanco */}
+      <View pointerEvents="none" style={[e.franja, { height: arriba }]} />
+
       <HojaDeDirecciones
         visible={hoja}
         alCerrar={() => setHoja(false)}
@@ -210,17 +223,27 @@ export function Inicio({ navigation }: PantallaDePestana<'Inicio'>) {
   );
 }
 
+/** El descuento por volumen de la mejor presentación («-5 %»), o null si no hay. */
+function descuento(p: Producto): string | null {
+  const mejor = [...opcionesDeCompra(p)].reverse().find((o) => o.ahorra);
+  const n = mejor?.ahorro.match(/\d+/)?.[0];
+  return n ? `-${n} %` : null;
+}
+
 function TarjetaDeOferta({ producto: p, orden, alAbrir, alAgregar }: { producto: Producto; orden: number; alAbrir: () => void; alAgregar: (p: Producto) => void }) {
   const desde = precioDesde(p);
+  const rebaja = descuento(p);
+  const foto: Origen = useRef(null);
+  const volar = useVuelo();
   return (
     <Tocable hundir={0.97} conVibracion={false} onPress={alAbrir} style={e.oferta}>
-      <View style={[e.fotoOferta, { backgroundColor: TINTES[tinte(p.rubro)] }]}>
+      <View ref={foto} style={[e.fotoOferta, { backgroundColor: TINTES[tinte(p.rubro)] }]}>
         <Flotar alto={4} duracion={3000} retraso={orden * 220}>
           <Image source={imagenDeRubro(p.rubro)} style={e.imagenOferta} contentFit="contain" transition={250} />
         </Flotar>
-        {desde && (
-          <View style={e.porcentaje}>
-            <Texto style={e.textoPorcentaje}>%</Texto>
+        {rebaja && (
+          <View style={e.rebaja}>
+            <Texto style={e.textoRebaja}>{rebaja}</Texto>
           </View>
         )}
       </View>
@@ -237,7 +260,13 @@ function TarjetaDeOferta({ producto: p, orden, alAbrir, alAgregar }: { producto:
               <Texto v="precio">{desde.precioUnitario!.texto}</Texto>
               <Texto v="chico">c/u por {desde.presentacion.toLowerCase()}</Texto>
             </View>
-            <BotonMas producto={p} alAgregar={alAgregar} />
+            <BotonMas
+              producto={p}
+              alAgregar={(x) => {
+                volar(foto, imagenDeRubro(x.rubro));
+                alAgregar(x);
+              }}
+            />
           </>
         ) : (
           <SinPrecio />
@@ -247,7 +276,7 @@ function TarjetaDeOferta({ producto: p, orden, alAbrir, alAgregar }: { producto:
   );
 }
 
-/** Banners con degradado menta: el 3D flota y sale por arriba; pasan solos cada 4,5 s. */
+/** La tarjeta protagonista: lima (y sus variantes), con el 3D flotando por encima de sus bordes; pasa sola cada 5 s. */
 function Carrusel({ alTocar }: { alTocar: (b: Banner) => void }) {
   const { width } = useWindowDimensions();
   const ancho = width - 32;
@@ -260,7 +289,7 @@ function Carrusel({ alTocar }: { alTocar: (b: Banner) => void }) {
         lista.current?.scrollToOffset({ offset: siguiente * (ancho + 12), animated: true });
         return siguiente;
       });
-    }, 4500);
+    }, 5000);
     return () => clearInterval(t);
   }, [ancho]);
   return (
@@ -274,31 +303,26 @@ function Carrusel({ alTocar }: { alTocar: (b: Banner) => void }) {
         showsHorizontalScrollIndicator={false}
         keyExtractor={(b) => b.titulo}
         removeClippedSubviews={false}
-        contentContainerStyle={{ paddingTop: 26 }}
-        style={{ marginTop: -26 }}
+        contentContainerStyle={{ paddingTop: 30 }}
+        style={{ marginTop: -30 }}
         ItemSeparatorComponent={() => <View style={{ width: 12 }} />}
         onMomentumScrollEnd={(ev) => setActual(Math.round(ev.nativeEvent.contentOffset.x / (ancho + 12)))}
         renderItem={({ item }) => (
-          <Tocable hundir={0.98} onPress={() => alTocar(item)} style={{ width: ancho, height: 170 }} accessibilityRole="button" accessibilityLabel={item.titulo.replace('\n', ' ')}>
+          <Tocable hundir={0.98} onPress={() => alTocar(item)} style={{ width: ancho, height: 184 }} accessibilityRole="button" accessibilityLabel={item.titulo.replace('\n', ' ')}>
             <LinearGradient colors={item.fondo} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={e.banner}>
               <View style={e.textoBanner}>
                 <Texto style={e.tituloBanner}>{item.titulo}</Texto>
-                <Texto v="gris" style={{ color: COLOR.texto2 }}>
-                  {item.detalle}
-                </Texto>
+                <Texto style={{ color: COLOR.bosqueMedio, fontSize: 13 }}>{item.detalle}</Texto>
                 <View style={e.botonBanner}>
-                  <Texto style={{ color: COLOR.verde, fontFamily: FUENTE.fuerte, fontSize: 13 }}>Ver productos</Texto>
-                  <Icono nombre="arrow-forward" tamano={14} color={COLOR.verde} />
+                  <Texto style={{ color: '#fff', fontFamily: FUENTE.fuerte, fontSize: 13 }}>{item.boton}</Texto>
+                  <Icono nombre="arrow-forward" tamano={14} color={COLOR.lima} />
                 </View>
               </View>
             </LinearGradient>
-            {/* El 3D va afuera del degradado para poder salirse por arriba */}
-            <Flotar alto={7} style={e.objetoBanner}>
+            {/* El 3D va afuera del degradado para poder salirse por arriba y por la derecha */}
+            <Flotar alto={8} style={e.objetoBanner}>
               <Image source={item.imagen} style={{ width: '100%', height: '100%' }} contentFit="contain" transition={250} />
             </Flotar>
-            <View style={e.insigniaBanner}>
-              <Texto style={[e.textoPorcentaje, { color: COLOR.lima }]}>%</Texto>
-            </View>
           </Tocable>
         )}
       />
@@ -327,37 +351,39 @@ export function AvisoSinSenal() {
 
 const e = StyleSheet.create({
   pantalla: { flex: 1, backgroundColor: COLOR.fondo },
-  cabecera: { backgroundColor: COLOR.superficie, paddingHorizontal: 16, paddingBottom: 14, gap: 12, borderBottomLeftRadius: 26, borderBottomRightRadius: 26, ...SOMBRA },
+  franja: { position: 'absolute', top: 0, left: 0, right: 0, backgroundColor: COLOR.bosque },
+  cabecera: { paddingHorizontal: 16, paddingBottom: 18, gap: 14, borderBottomLeftRadius: 30, borderBottomRightRadius: 30 },
   filaCabecera: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  direccion: { flexDirection: 'row', alignItems: 'center', gap: 6, maxWidth: 170 },
+  direccion: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  pin: { width: 38, height: 38, borderRadius: 19, backgroundColor: COLOR.lima, alignItems: 'center', justifyContent: 'center' },
   filaChica: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  campana: { width: 42, height: 42, borderRadius: 21, backgroundColor: COLOR.mentaClara, alignItems: 'center', justifyContent: 'center' },
-  buscador: { flexDirection: 'row', alignItems: 'center', height: 54, borderRadius: 18, backgroundColor: COLOR.superficie, borderWidth: 2, borderColor: COLOR.menta, paddingLeft: 14, paddingRight: 6 },
+  campana: { width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center' },
+  buscador: { flexDirection: 'row', alignItems: 'center', height: 54, borderRadius: 27, backgroundColor: COLOR.superficie, paddingLeft: 18, paddingRight: 6 },
   buscadorTexto: { flexDirection: 'row', alignItems: 'center', gap: 10, height: 50 },
-  camara: { width: 42, height: 42, borderRadius: 14, backgroundColor: COLOR.mentaClara, alignItems: 'center', justifyContent: 'center' },
+  camara: { width: 44, height: 44, borderRadius: 22, backgroundColor: COLOR.lima, alignItems: 'center', justifyContent: 'center' },
   cuerpo: { padding: 16, gap: 22 },
-  banner: { flex: 1, borderRadius: 26, overflow: 'hidden' },
-  textoBanner: { flex: 1, justifyContent: 'center', paddingHorizontal: 18, gap: 4, maxWidth: '58%' },
-  tituloBanner: { fontFamily: FUENTE.negra, fontSize: 22, lineHeight: 26, color: COLOR.texto, letterSpacing: -0.4 },
-  botonBanner: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', backgroundColor: COLOR.lima, paddingHorizontal: 14, height: 34, borderRadius: 17, marginTop: 8 },
-  objetoBanner: { position: 'absolute', right: -4, top: -24, width: '50%', height: 196 },
-  insigniaBanner: { position: 'absolute', right: 14, top: -6, width: 38, height: 38, borderRadius: 19, backgroundColor: COLOR.verde, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: '#fff' },
-  textoPorcentaje: { fontFamily: FUENTE.negra, fontSize: 16, color: COLOR.verde },
+  banner: { flex: 1, borderRadius: 28, overflow: 'hidden' },
+  textoBanner: { flex: 1, justifyContent: 'center', paddingHorizontal: 20, gap: 4, maxWidth: '58%' },
+  tituloBanner: { fontFamily: FUENTE.negra, fontSize: 23, lineHeight: 27, color: COLOR.bosque, letterSpacing: -0.5 },
+  botonBanner: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', backgroundColor: COLOR.bosque, paddingHorizontal: 14, height: 36, borderRadius: 18, marginTop: 10 },
+  objetoBanner: { position: 'absolute', right: -10, top: -30, width: '54%', height: 214 },
   puntos: { flexDirection: 'row', justifyContent: 'center', gap: 6 },
-  punto: { width: 7, height: 7, borderRadius: 4, backgroundColor: COLOR.mentaMedia },
-  puntoActivo: { width: 24, backgroundColor: COLOR.verde },
-  filaRubros: { gap: 12, paddingRight: 16 },
-  rubro: { width: 72, alignItems: 'center', gap: 6 },
-  cuadroRubro: { width: 68, height: 68, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  imagenRubro: { width: 56, height: 56 },
-  textoRubro: { fontFamily: FUENTE.semi, fontSize: 12, color: COLOR.texto2 },
+  punto: { width: 7, height: 7, borderRadius: 4, backgroundColor: COLOR.borde },
+  puntoActivo: { width: 24, backgroundColor: COLOR.bosque },
+  filaRubros: { gap: 12, paddingRight: 16, paddingBottom: 8 },
+  rubro: { width: 92, height: 112, borderRadius: 22, backgroundColor: COLOR.superficie, alignItems: 'center', justifyContent: 'center', gap: 4, ...SOMBRA },
+  imagenRubro: { width: 68, height: 68 },
+  textoRubro: { fontFamily: FUENTE.fuerte, fontSize: 12.5, color: COLOR.texto },
+  otraVez: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 24, backgroundColor: COLOR.superficie, ...SOMBRA },
+  flecha: { width: 40, height: 40, borderRadius: 20, backgroundColor: COLOR.lima, alignItems: 'center', justifyContent: 'center' },
   filaOfertas: { gap: 12, paddingRight: 16, paddingTop: 4, paddingBottom: 8 },
-  oferta: { width: 168, gap: 4, padding: 10, borderRadius: 22, backgroundColor: COLOR.superficie, ...SOMBRA },
-  fotoOferta: { height: 120, borderRadius: 18, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
-  imagenOferta: { width: 104, height: 104 },
-  porcentaje: { position: 'absolute', top: 8, left: 8, width: 30, height: 30, borderRadius: 15, backgroundColor: COLOR.lima, alignItems: 'center', justifyContent: 'center' },
+  oferta: { width: 168, gap: 4, padding: 10, borderRadius: 24, backgroundColor: COLOR.superficie, ...SOMBRA },
+  fotoOferta: { height: 122, borderRadius: 18, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
+  imagenOferta: { width: 106, height: 106 },
+  rebaja: { position: 'absolute', top: 8, left: 8, paddingHorizontal: 9, height: 26, borderRadius: 13, backgroundColor: COLOR.ambar, alignItems: 'center', justifyContent: 'center' },
+  textoRebaja: { fontFamily: FUENTE.negra, fontSize: 12, color: COLOR.bosque },
   pie: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 6, marginTop: 'auto' },
-  porCaja: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 10, marginBottom: 10, borderRadius: 20, backgroundColor: COLOR.superficie, ...SOMBRA },
+  porCaja: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 10, marginBottom: 10, borderRadius: 22, backgroundColor: COLOR.superficie, ...SOMBRA },
   miniatura: { width: 64, height: 64, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   vendedor: { width: 176, gap: 6, padding: 12, borderRadius: 22, backgroundColor: COLOR.superficie, ...SOMBRA },
   sinSenal: { flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: 16, marginTop: 12, padding: 12, borderRadius: 18, backgroundColor: COLOR.ambarSuave },

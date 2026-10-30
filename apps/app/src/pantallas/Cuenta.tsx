@@ -34,7 +34,7 @@ export function Cuenta({ navigation }: PantallaDePestana<'Cuenta'>) {
     <SafeAreaView style={e.pantalla} edges={['top']}>
       <ScrollView contentContainerStyle={e.contenido}>
         <Aparecer>
-          <LinearGradient colors={[COLOR.verde, '#1E7A62']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={e.perfil}>
+          <LinearGradient colors={[COLOR.bosque, COLOR.bosqueMedio]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={e.perfil}>
             <Iniciales nombre={nombre} tamano={60} />
             <View style={{ flex: 1, gap: 2 }}>
               <Texto v="t2" style={{ color: '#fff' }}>
