@@ -25,5 +25,5 @@ Modelo propio de visión para buscar por foto (requisitos «IA local en móvil»
 ## Sigue
 1. Fotos (20 por producto) y entrenamiento en Colab → reemplazar el modelo vacío.
 2. Pantalla de Tableros en Inteligencia y su entrada en el menú del Shell.
-4. CU-13 de punta a punta, seguridad del MCP y evaluación de las 20 preguntas.
-5. ICONIX de CU-13, CU-14 y la IA de CU-05.
+3. CU-13 de punta a punta, seguridad del MCP y evaluación de las 20 preguntas.
+4. ICONIX de CU-13, CU-14 y la IA de CU-05.
