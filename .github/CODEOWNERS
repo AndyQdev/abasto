@@ -1,23 +1,24 @@
 # Gana la última línea que coincide: lo general va arriba y lo específico abajo.
+# Reparto del 29/10: Andrés lleva todo lo comercial y Jhoel toda la IA.
 # Falta el usuario de GitHub de Jhoel: reemplaza @usuario-jhoel cuando lo tengas.
-*                           @AndyQdev @usuario-jhoel
+*                           @AndyQdev
 contracts/                  @AndyQdev @usuario-jhoel
-packages/                   @AndyQdev @usuario-jhoel
+packages/                   @AndyQdev
 infra/                      @AndyQdev
 .github/                    @AndyQdev
 services/pedidos/           @AndyQdev
 services/cobros/            @AndyQdev
 services/conecta/           @AndyQdev
+services/catalogo/          @AndyQdev
+apps/app/                   @AndyQdev
 apps/superadmin/            @AndyQdev
-services/catalogo/          @usuario-jhoel
+apps/panel-shell/           @AndyQdev
+apps/panel-gestion/         @AndyQdev
+# La IA es de Jhoel
+apps/app/src/ia/            @usuario-jhoel
+apps/app/assets/modelos/    @usuario-jhoel
+apps/panel-inteligencia/    @usuario-jhoel
 services/asistente/         @usuario-jhoel
 ml/                         @usuario-jhoel
-apps/panel-shell/           @usuario-jhoel
-apps/panel-gestion/         @usuario-jhoel
-apps/panel-inteligencia/    @usuario-jhoel
-apps/app/                   @AndyQdev
-# Dentro de Gestión, Pedidos y Cuentas por cobrar son de Andrés
-apps/panel-gestion/src/app/vistas/pedidos*     @AndyQdev
-apps/panel-gestion/src/app/vistas/cuentas*     @AndyQdev
 docs/equipo/andres.md       @AndyQdev
 docs/equipo/jhoel.md        @usuario-jhoel

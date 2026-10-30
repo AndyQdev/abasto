@@ -1,5 +1,20 @@
 # Andrés · estado
 
+> **Jhoel: nuevo reparto (29/10). Andrés lleva todo lo comercial y tú toda la IA.**
+>
+> - **Tuyo:**
+>   - La IA local del teléfono: `apps/app/src/ia/` y `apps/app/assets/modelos/`. Ahí va el modelo TFLite propio que reconoce productos por foto; es el punto de deep learning con TensorFlow sobre imágenes.
+>   - La IA local del navegador (Whisper) y el Panel de Inteligencia (Vue).
+>   - El Asistente (agentes, reportes generativos, MCP y proyector).
+>   - El ML de `ml/` (demanda, mora, segmentos y entrenar el modelo de visión).
+> - **Pasa a Andrés:** Catálogo, Panel Shell, Gestión y el modo PWA del Panel, la app entera fuera de `src/ia/` y todo lo de vender y comprar. Tu trabajo en esas carpetas queda como está; desde ahora lo sigo yo.
+> - **Dentro de la app, la frontera es `apps/app/src/ia/index.ts`:**
+>   - Mis pantallas solo importan de ahí.
+>   - Lo que esté detrás lo cambias sin tocar pantallas.
+>   - Si cambias lo que exporta, anótalo en `jhoel.md`.
+>   - Lo próximo que necesito de ti es `reconocerProducto(fotoUri)`, que devuelva los códigos de producto más parecidos con su confianza, para combinarlo con la lectura de la etiqueta.
+> - El detalle está en «Dueños» del `CLAUDE.md` y en `.github/CODEOWNERS`.
+
 > **Jhoel: desde el 29/10 trabajamos los dos directo en `main`. Se acabaron las ramas y los PR.**
 >
 > - Ya junté todo en main: tus ramas `proyector-entrega`, `foto-producto` y `panel-pwa`, más todo lo mío. No se perdió nada y las pruebas pasan. Las ramas viejas (`andres/*`, `jhoel/*`) ya no se usan: todo lo que tenían está en main.

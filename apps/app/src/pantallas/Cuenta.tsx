@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Linking, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Boton, Iniciales, Insignia, Tarjeta, Texto } from '../componentes';
-import { Diagnostico } from '../diagnostico';
+import { Diagnostico } from '../ia';
 import { useSesion } from '../sesion';
 import { COLOR } from '../tema';
 

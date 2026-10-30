@@ -19,12 +19,18 @@ Tareas: Trello https://trello.com/b/ABo8gFFG/abasto · Código: GitHub, los dos 
 
 ## Dueños
 
-| Andrés | Jhoel |
+**Reparto del 29/10: Andrés lleva todo lo comercial y Jhoel toda la IA.**
+
+| Andrés · lo comercial | Jhoel · la IA |
 |---|---|
-| infra, Router, Pedidos, Cobros, Conecta, n8n | Catálogo (y verificación y red privada), Asistente, ML |
-| **App de clientes (`apps/app`)**, Superadmin | Panel Shell, Gestión base, Inteligencia (Vue) |
-| Módulos Pedidos, Compras y Cuentas por cobrar dentro de Gestión | Modelos de la app (TFLite) |
-| Lógica de compra compartida (`packages/comercio`) | |
+| **App de clientes** (`apps/app`): pantallas, UIX, lógica, sesión y modo sin señal | **IA local en el teléfono**: `apps/app/src/ia/` (modelo TFLite propio para reconocer productos por foto, ML Kit, lectura de precios) |
+| Lógica de compra compartida (`packages/comercio`) | **IA local en el navegador**: voz con Whisper en Inteligencia |
+| Panel web: Shell, Gestión (Angular) y el modo PWA | Panel de **Inteligencia** (Vue): reportes generativos y agentes |
+| Superadmin (alta y aprobación de mayoristas, tracción) | **Asistente**: agentes, reportes generativos, MCP y proyector de reportes |
+| Catálogo (productos, mayoristas, registro, verificación y red privada) | **ML** en `ml/`: demanda, mora, segmentos y el entrenamiento del modelo de visión (TensorFlow → TFLite) |
+| Pedidos, Cobros, Conecta, n8n, infra, Router, Keycloak y CI | |
+
+Dentro de la app, las pantallas solo usan la IA a través de `apps/app/src/ia/index.ts`. Jhoel cambia lo que hay detrás sin tocar pantallas. Si necesita cambiar lo que exporta, lo anota en su archivo de estado.
 
 El detalle está en `.github/CODEOWNERS`. Si tu cambio toca una carpeta del otro, avísale en tu archivo de estado de `docs/equipo/` en el mismo commit y dile qué cambiaste.
 Antes de cambiar algo en `contracts/`, escríbelo en tu archivo de estado y haz push.

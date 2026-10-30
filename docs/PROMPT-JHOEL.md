@@ -1,6 +1,6 @@
 # Prompt para el Claude de Jhoel
 
-> **29/10: cambió el flujo.** Lee primero el aviso de `docs/equipo/andres.md`. Ya no hay web de Mercado ni app Campo: hay una sola app de clientes (`apps/app`, Expo) y la gestión se hace en el Panel web.
+> **29/10: cambió el flujo.** Lee primero el aviso de `docs/equipo/andres.md`. Ya no hay web de Mercado ni app Campo: hay una sola app de clientes (`apps/app`, Expo) y la gestión se hace en el Panel web. **Reparto nuevo:** Andrés lleva todo lo comercial y yo, Jhoel, toda la IA: `apps/app/src/ia/` (IA local del teléfono y el modelo TFLite), Inteligencia (Vue, con Whisper en el navegador), Asistente y `ml/`.
 
 ## Antes (10 minutos, a mano)
 
@@ -20,7 +20,7 @@ Este repo ya tiene la base de todo el sistema funcionando y con pruebas. Háblam
 Las tareas están en Trello (https://trello.com/b/ABo8gFFG/abasto). Cuando empiece una, te pego el texto de su tarjeta.
 
 1. Lee CLAUDE.md, README.md, docs/arquitectura.md, docs/equipo/andres.md, docs/equipo/jhoel.md y contracts/asyncapi.yaml.
-   Después lee el CLAUDE.md de cada carpeta que es mía: services/catalogo, services/asistente, ml, apps/panel-shell, apps/panel-gestion, apps/panel-inteligencia y apps/campo.
+   Después lee el CLAUDE.md de cada carpeta que es mía: services/asistente, ml, apps/panel-inteligencia y apps/app (solo la carpeta src/ia es mía).
 2. Pon el entorno en marcha y no sigas hasta que esté en verde:
    - pnpm verificar (si falta algo, dime cómo instalarlo en mi máquina)
    - pnpm install
