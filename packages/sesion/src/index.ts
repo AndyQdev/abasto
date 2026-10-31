@@ -115,3 +115,15 @@ export const APPS = {
   panel: 'http://localhost:5170/',
   superadmin: 'http://localhost:5174/',
 } as const;
+
+export type AppWeb = keyof typeof APPS;
+
+/**
+ * A qué app web va cada cuenta según sus roles: el mayorista al Panel y el admin al Superadmin.
+ * Devuelve null si la cuenta se queda donde está (le toca esa app, o no le toca ninguna web: es solo tienda).
+ */
+export function appQueLeToca(roles: string[], actual: AppWeb): AppWeb | null {
+  if (actual === 'superadmin' && !roles.includes('admin') && roles.includes('mayorista')) return 'panel';
+  if (actual === 'panel' && !roles.includes('mayorista') && roles.includes('admin')) return 'superadmin';
+  return null;
+}

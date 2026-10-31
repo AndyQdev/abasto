@@ -31,6 +31,9 @@ export function App({ usuario }: { usuario: Usuario }) {
           )}
           .
         </p>
+        <button className="boton-secundario" onClick={() => void sesion.cerrar()}>
+          Cerrar sesión y entrar con otra cuenta
+        </button>
       </div>
     );
   }
@@ -61,6 +64,7 @@ export function App({ usuario }: { usuario: Usuario }) {
         <div className="pie">
           <strong>{usuario.nombre}</strong>
           <small>Equipo interno de Abasto</small>
+          {usuario.roles.includes('mayorista') && <a href={APPS.panel}>Ir al Panel Mayorista</a>}
           <button className="boton-secundario" onClick={() => void sesion.cerrar()}>
             Cerrar sesión
           </button>
