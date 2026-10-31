@@ -85,7 +85,15 @@ export function crearSesion({ clientId, emisor = EMISOR }: OpcionesDeSesion): Se
         actual = aUsuario(u);
         return actual;
       }
-      const u = await vigente();
+      let u = await vigente();
+      // Cada app guarda su copia de la sesión. Si se cerró sesión en otra app y se entró con otra cuenta, esta copia
+      // ya no vale: se confirma con Keycloak (el refresh token de una sesión cerrada se rechaza) y si no, a entrar de nuevo
+      if (u && navigator.onLine) {
+        u = await gestor.signinSilent().catch(async () => {
+          await gestor.removeUser();
+          return null;
+        });
+      }
       // Sin señal no se puede ir a Keycloak: el Panel (PWA) sigue con la última sesión y sus datos guardados
       if (u && (!u.expired || !navigator.onLine)) {
         actual = aUsuario(u);

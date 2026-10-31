@@ -10,6 +10,7 @@ const rutaActual = () => window.location.pathname.replace(/^\//, '') || 'traccio
 
 export function App({ usuario }: { usuario: Usuario }) {
   const [ruta, setRuta] = useState(rutaActual);
+  const [appsAbierto, setAppsAbierto] = useState(false);
   const modulo = MODULOS.find((m) => m.ruta === ruta) ?? MODULOS[0];
 
   useEffect(() => {
@@ -64,12 +65,32 @@ export function App({ usuario }: { usuario: Usuario }) {
         <div className="pie">
           <strong>{usuario.nombre}</strong>
           <small>Equipo interno de Abasto</small>
-          {usuario.roles.includes('mayorista') && <a href={APPS.panel}>Ir al Panel Mayorista</a>}
-          <button className="boton-secundario" onClick={() => void sesion.cerrar()}>
-            Cerrar sesión
-          </button>
         </div>
       </aside>
+      <div className="contenido">
+        {/* Igual que en el Panel: cambiar de app con la misma sesión y salir */}
+        <header className="superior">
+          <span />
+          <div className="acciones">
+            <div className="apps">
+              <button className="boton-secundario" onClick={() => setAppsAbierto((v) => !v)} aria-expanded={appsAbierto}>
+                Apps
+              </button>
+              {appsAbierto && (
+                <div className="menu carta" role="menu">
+                  <p className="titulo-seccion">Ya iniciaste sesión: cambia de app sin volver a entrar</p>
+                  {usuario.roles.includes('mayorista') && (
+                    <a href={APPS.panel} role="menuitem">Panel Mayorista</a>
+                  )}
+                </div>
+              )}
+            </div>
+            <span className="usuario">{usuario.nombre}</span>
+            <button className="boton-secundario" onClick={() => void sesion.cerrar()}>
+              Salir
+            </button>
+          </div>
+        </header>
       <main>
         {modulo.ruta === 'traccion' && <Traccion />}
         {modulo.ruta === 'sistema' && <Sistema />}
@@ -88,6 +109,7 @@ export function App({ usuario }: { usuario: Usuario }) {
           </>
         )}
       </main>
+      </div>
     </div>
   );
 }

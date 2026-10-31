@@ -41,6 +41,43 @@
   display: grid;
   gap: 0.5rem;
 }
+/* Barra superior igual a la del Panel (apps/panel-shell/src/panel.css) */
+.contenido {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.superior {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 2rem 0;
+}
+.superior .acciones {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.superior .usuario {
+  font-weight: 600;
+}
+.apps {
+  position: relative;
+}
+.apps .menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  display: grid;
+  gap: 0.5rem;
+  width: 280px;
+  z-index: 10;
+}
+.apps .menu a {
+  color: hsl(var(--texto));
+  font-weight: 600;
+}
 main {
   padding: 1.5rem 2rem;
   min-width: 0;
