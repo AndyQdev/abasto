@@ -2,7 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { APPS, type Sesion, type Usuario } from '@abasto/sesion';
 import { Microfrontend } from './Microfrontend';
 import { MODULOS, moduloDe } from './navegacion';
+import { ROUTER_URL } from './offline/config';
 import { useSinSenal } from './offline/useSinSenal';
+import { avisoDeVerificacion, MI_ORGANIZACION, type MiOrganizacion } from './verificacion';
 
 const rutaActual = () => window.location.pathname.replace(/^\//, '') || 'inicio';
 
@@ -41,6 +43,30 @@ export function App({ sesion, usuario }: { sesion: Sesion; usuario: Usuario }) {
   const token = useCallback(() => sesion.token(), [sesion]);
   const conexion = useSinSenal(token, setAviso);
   const esMayorista = usuario.roles.includes('mayorista');
+  const [organizacion, setOrganizacion] = useState<MiOrganizacion | null>(null);
+
+  // CU-01: el mayorista recién registrado ve si está en revisión o por qué lo rechazaron
+  useEffect(() => {
+    if (!esMayorista) return;
+    let vigente = true;
+    void (async () => {
+      try {
+        const r = await fetch(ROUTER_URL, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', authorization: `Bearer ${await sesion.token()}` },
+          body: JSON.stringify({ query: MI_ORGANIZACION }),
+        });
+        const cuerpo = (await r.json()) as { data?: { miOrganizacion: MiOrganizacion } };
+        if (vigente && cuerpo.data) setOrganizacion(cuerpo.data.miOrganizacion);
+      } catch {
+        // Sin señal no se muestra el aviso: no es motivo para frenar el Panel
+      }
+    })();
+    return () => {
+      vigente = false;
+    };
+  }, [esMayorista, sesion]);
+  const verificacion = avisoDeVerificacion(organizacion);
 
   return (
     <div className="panel">
@@ -102,6 +128,13 @@ export function App({ sesion, usuario }: { sesion: Sesion; usuario: Usuario }) {
           <div className={`sin-senal ${conexion.enLinea ? 'enviando' : ''}`} role="status">
             {conexion.enLinea ? 'Volvió la señal' : 'Sin conexión: ves los últimos datos guardados'}
             {conexion.pendientes > 0 && ` · ${conexion.pendientes} cambios esperando para enviarse`}
+          </div>
+        )}
+
+        {verificacion && (
+          <div className={`verificacion ${verificacion.tono}`} role="status">
+            <strong>{verificacion.titulo}</strong>
+            <span>{verificacion.detalle}</span>
           </div>
         )}
 

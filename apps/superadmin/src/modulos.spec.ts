@@ -3,12 +3,12 @@ import { MODULOS } from './modulos';
 import { SERVICIOS } from './servicios';
 
 describe('Superadmin', () => {
-  it('empieza por Tracción y tiene los módulos de la maqueta salvo Inicio', () => {
+  it('empieza por Tracción y Mayoristas (CU-01) y tiene los módulos de la maqueta salvo Inicio', () => {
     expect(MODULOS.map((m) => m.titulo)).toEqual([
       'Tracción',
+      'Mayoristas',
       'Sistema',
       'Auditoría',
-      'Mayoristas',
       'Tiendas',
       'Usuarios',
       'Reclamos',

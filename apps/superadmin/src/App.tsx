@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { APPS, type Usuario } from '@abasto/sesion';
 import { MODULOS } from './modulos';
 import { Auditoria } from './pantallas/Auditoria';
+import { Mayoristas } from './pantallas/Mayoristas';
 import { Sistema } from './pantallas/Sistema';
 import { Traccion } from './pantallas/Traccion';
 import { sesion } from './servicios';
@@ -70,6 +71,7 @@ export function App({ usuario }: { usuario: Usuario }) {
         {modulo.ruta === 'traccion' && <Traccion />}
         {modulo.ruta === 'sistema' && <Sistema />}
         {modulo.ruta === 'auditoria' && <Auditoria />}
+        {modulo.ruta === 'mayoristas' && <Mayoristas />}
         {modulo.fase && (
           <>
             <div className="cabecera">

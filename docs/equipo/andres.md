@@ -25,7 +25,7 @@
 Actualizado: 31/10/2026 · en main (los dos trabajamos ahí)
 
 ## Estoy en
-La app de clientes en el emulador Android. Después: registro de mayoristas y aprobación en el Superadmin (CU-01), y registro de tiendas desde la app (CU-15).
+La app de clientes en el emulador Android. Después: registro de tiendas desde la app (CU-15) y el cobro contra entrega (CU-09).
 
 ## Terminé
 - Infra, Pedidos (saga, outbox, inbox, plazos), Conecta, n8n, CI y e2e.
@@ -42,7 +42,8 @@ La app de clientes en el emulador Android. Después: registro de mayoristas y ap
   - Usuario ventas@abasto.bo (org abasto).
 - App (31/10): elegir la dirección en Google Maps (pin fijo, calle al mover), la dirección viaja en el pedido (Pedidos, Seguimiento y Panel) y Finalizar en tres pasos. El carrito viejo se pone al día con el catálogo.
   **Jhoel:** la app suma react-native-maps (nativo): `npm install` en `apps/app`, tu clave de Maps en `apps/app/.env.local` (`EXPO_PUBLIC_GOOGLE_MAPS_API_KEY`) y `npx expo run:android` una vez.
-- e2e: 14 pruebas en verde.
+- CU-01 (31/10): registro público de mayoristas en el Panel (`/registro`), aviso «en revisión» o el motivo del rechazo en el Panel, y el módulo Mayoristas del Superadmin para verificar o rechazar. e2e `registro-mayorista.spec.ts`.
+- e2e: 15 pruebas en verde.
 
 ## Cambié en contratos
 - Cobros: cobroDePedido, pagarQrDePrueba, CobroQr y Pedido.cobro.
@@ -55,7 +56,6 @@ La app de clientes en el emulador Android. Después: registro de mayoristas y ap
 - Jhoel: `reconocerProducto(fotoUri)` en `apps/app/src/ia` con el modelo TFLite entrenado con las fotos del catálogo.
 
 ## Sigue
-- CU-01: registro de mayoristas y aprobación en el Superadmin.
 - CU-15: registro de tiendas desde la app.
 - Registrar el cobro de los pedidos contra entrega y las cuentas por cobrar (CU-09).
 - Investigar de dónde y cómo cargar el catálogo real.
