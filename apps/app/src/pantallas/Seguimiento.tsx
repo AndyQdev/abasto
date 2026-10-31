@@ -24,6 +24,7 @@ import { graphql } from '../api';
 import { Boton, colorDeClase, Falla, Foto, Icono, Iniciales, Insignia, Tarjeta, Texto, Vacio } from '../componentes';
 import { useEstado } from '../estado';
 import type { PantallaDePila } from '../navegacion';
+import { MapaChico } from '../Mapa';
 import { COLOR } from '../tema';
 
 const PAGO = { QR: 'Pago por QR', CREDITO: 'Crédito', CONTRA_ENTREGA: 'Contra entrega' } as const;
@@ -116,6 +117,22 @@ export function Seguimiento({ route, navigation }: PantallaDePila<'Seguimiento'>
             <Texto v="gris">{cuantos(pedido.lineas.length)}</Texto>
           </View>
         </Tarjeta>
+
+        {pedido.entrega && (
+          <Tarjeta style={{ gap: 10 }}>
+            {pedido.entrega.latitud !== null && pedido.entrega.longitud !== null && (
+              <MapaChico punto={{ latitud: pedido.entrega.latitud, longitud: pedido.entrega.longitud }} alto={120} />
+            )}
+            <View style={e.fila}>
+              <Icono nombre="location" color={COLOR.bosque} />
+              <View style={{ flex: 1 }}>
+                <Texto v="chico">Entregar en</Texto>
+                <Texto v="fuerte">{pedido.entrega.texto}</Texto>
+                {!!pedido.entrega.referencia && <Texto v="gris">{pedido.entrega.referencia}</Texto>}
+              </View>
+            </View>
+          </Tarjeta>
+        )}
 
         {error && <Falla texto={error} />}
         {porPagar(pedido) && <Boton texto={`Pagar con QR · ${pedido.total.texto}`} icono="qr-code-outline" alTocar={() => setVerQr(true)} />}

@@ -274,3 +274,28 @@ export function buscarPorTextoLeido(productos: Producto[], textoLeido: string, m
     .slice(0, maximo)
     .map((x) => x.p);
 }
+
+/**
+ * Pone al día el carrito guardado en el teléfono con el catálogo que acaba de llegar (31/10: un carrito
+ * viejo pedía «Aceite por DOCENA» cuando ya solo se vendía por unidad o caja, y la reserva lo rechazaba).
+ * - Lo que ya no se vende, o ya no se vende en esa presentación, sale del carrito y se avisa.
+ * - Lo demás toma el nombre, las unidades y el precio de hoy.
+ * Con el catálogo vacío (sin señal y sin nada guardado) no se toca nada.
+ */
+export function conciliarCarrito(carrito: ItemDeCarrito[], productos: Producto[]): { carrito: ItemDeCarrito[]; quitados: string[]; cambio: boolean } {
+  if (!productos.length || !carrito.length) return { carrito, quitados: [], cambio: false };
+  const porId = new Map(productos.map((p) => [p.id, p]));
+  const quitados: string[] = [];
+  const nuevo: ItemDeCarrito[] = [];
+  for (const item of carrito) {
+    const p = porId.get(item.productoId);
+    const escala = p && disponible(p) ? escalasConPrecio(p).find((e) => e.presentacion === item.presentacion) : undefined;
+    if (!p || !escala) {
+      quitados.push(p?.nombre ?? item.nombre);
+      continue;
+    }
+    nuevo.push({ ...itemDeCarrito(p, escala, item.cantidad) });
+  }
+  const cambio = quitados.length > 0 || JSON.stringify(nuevo) !== JSON.stringify(carrito);
+  return { carrito: cambio ? nuevo : carrito, quitados, cambio };
+}

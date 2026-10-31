@@ -40,6 +40,8 @@ La app de clientes en el emulador Android. Después: registro de mayoristas y ap
   - Panel: Compras (lista por puesto con margen) y Preparar/Despachar/Entregar en Pedidos.
   - Superadmin: Tracción.
   - Usuario ventas@abasto.bo (org abasto).
+- App (31/10): elegir la dirección en Google Maps (pin fijo, calle al mover), la dirección viaja en el pedido (Pedidos, Seguimiento y Panel) y Finalizar en tres pasos. El carrito viejo se pone al día con el catálogo.
+  **Jhoel:** la app suma react-native-maps (nativo): `npm install` en `apps/app`, tu clave de Maps en `apps/app/.env.local` (`EXPO_PUBLIC_GOOGLE_MAPS_API_KEY`) y `npx expo run:android` una vez.
 - e2e: 14 pruebas en verde.
 
 ## Cambié en contratos
@@ -47,6 +49,7 @@ La app de clientes en el emulador Android. Después: registro de mayoristas y ap
 - Catálogo: Producto.abastecimiento/entregaHoras/costoUnitario/proveedor, Mayorista.deLaCasa e inputs de crear/editar.
 - Pedidos: MetodoPago.CONTRA_ENTREGA, listaDeCompras, avanzarEntrega y traccion.
 - AsyncAPI: contra_entrega y pedido.en_preparacion | despachado | entregado. OpenAPI de Conecta: CONTRA_ENTREGA.
+- 31/10 · Pedidos: `CrearPedidoEntrada.entrega: DireccionEntrada` (opcional) y `Pedido.entrega: DireccionDeEntrega`; migración V3. OpenAPI de Conecta: `DatosPedido.entrega`.
 
 ## Necesito del otro
 - Jhoel: `reconocerProducto(fotoUri)` en `apps/app/src/ia` con el modelo TFLite entrenado con las fotos del catálogo.

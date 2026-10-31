@@ -21,9 +21,18 @@ public class Pedido {
     private List<LineaDePedido> lineas;
     private EstadoPedido estado;
     private String motivoRechazo;
+    /** A dónde se lleva. Null en los pedidos que llegan sin dirección (e-commerce, n8n) o de antes del 31/10. */
+    private final DireccionDeEntrega entrega;
 
     public Pedido(UUID id, String codigo, UUID clave, String tiendaId, String mayoristaId, MetodoPago metodoPago,
                   List<LineaDePedido> lineas, EstadoPedido estado, String motivoRechazo, Instant creadoEn) {
+        this(id, codigo, clave, tiendaId, mayoristaId, metodoPago, lineas, estado, motivoRechazo, creadoEn, null);
+    }
+
+    public Pedido(UUID id, String codigo, UUID clave, String tiendaId, String mayoristaId, MetodoPago metodoPago,
+                  List<LineaDePedido> lineas, EstadoPedido estado, String motivoRechazo, Instant creadoEn,
+                  DireccionDeEntrega entrega) {
+        this.entrega = entrega;
         this.id = id;
         this.codigo = codigo;
         this.clave = clave;
@@ -38,6 +47,11 @@ public class Pedido {
 
     public static Pedido nuevo(String codigo, UUID clave, String tiendaId, String mayoristaId, MetodoPago metodoPago,
                                List<LineaDePedido> lineas, Instant ahora) {
+        return nuevo(codigo, clave, tiendaId, mayoristaId, metodoPago, lineas, ahora, null);
+    }
+
+    public static Pedido nuevo(String codigo, UUID clave, String tiendaId, String mayoristaId, MetodoPago metodoPago,
+                               List<LineaDePedido> lineas, Instant ahora, DireccionDeEntrega entrega) {
         if (lineas == null || lineas.isEmpty()) {
             throw new ErrorDeDominio("PEDIDO_VACIO", "El pedido tiene que tener al menos un producto");
         }
@@ -45,7 +59,7 @@ public class Pedido {
             throw new ErrorDeDominio("PEDIDO_A_SI_MISMO", "Una empresa no puede hacerse un pedido a sí misma");
         }
         return new Pedido(UUID.randomUUID(), codigo, clave, tiendaId, mayoristaId, metodoPago, lineas,
-                EstadoPedido.PENDIENTE, null, ahora);
+                EstadoPedido.PENDIENTE, null, ahora, entrega);
     }
 
     /** Paso 2 de la saga: Catálogo reservó el stock y devolvió el precio por volumen de cada línea. */
@@ -127,4 +141,5 @@ public class Pedido {
     public List<LineaDePedido> lineas() { return lineas; }
     public EstadoPedido estado() { return estado; }
     public String motivoRechazo() { return motivoRechazo; }
+    public DireccionDeEntrega entrega() { return entrega; }
 }

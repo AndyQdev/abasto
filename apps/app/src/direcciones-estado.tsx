@@ -27,9 +27,24 @@ export async function ubicacionActual(): Promise<PuntoActual> {
     throw new ErrorDeUbicacion('No pudimos encontrar tu ubicación. Revisa que el GPS esté prendido o escríbela a mano.');
   }
   const { latitude: latitud, longitude: longitud } = posicion.coords;
-  // El nombre de la calle viene de internet: si tarda, se sigue con la ubicación y la calle se escribe
-  const lugares = (await conLimite(Location.reverseGeocodeAsync({ latitude: latitud, longitude: longitud }), 6_000)) ?? [];
-  return { latitud, longitud, ...textoDeGeocodigo(lugares[0] ?? {}) };
+  return { latitud, longitud, ...(await calleDe({ latitud, longitud })) };
+}
+
+/**
+ * El nombre de la calle de un punto del mapa. Viene de internet: si tarda o falla, «Mi ubicación»
+ * y la calle se escribe a mano.
+ */
+export async function calleDe(p: { latitud: number; longitud: number }): Promise<{ calle: string; zona: string }> {
+  const lugares = (await conLimite(Location.reverseGeocodeAsync({ latitude: p.latitud, longitude: p.longitud }), 6_000)) ?? [];
+  return textoDeGeocodigo(lugares[0] ?? {});
+}
+
+/** Dónde está el teléfono sin pedir permiso ni esperar el GPS (para abrir el mapa ahí). Null si no se sabe. */
+export async function ultimaUbicacion(): Promise<{ latitud: number; longitud: number } | null> {
+  const permiso = await Location.getForegroundPermissionsAsync().catch(() => null);
+  if (permiso?.status !== 'granted') return null;
+  const p = await Location.getLastKnownPositionAsync().catch(() => null);
+  return p ? { latitud: p.coords.latitude, longitud: p.coords.longitude } : null;
 }
 
 /** La promesa, o null si falla o tarda más de `ms`. */

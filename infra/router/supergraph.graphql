@@ -82,6 +82,11 @@ input CrearPedidoEntrada
   mayoristaId: ID!
   metodoPago: MetodoPago!
   lineas: [LineaEntrada!]!
+
+  """
+  A dónde llevarlo. La app la manda siempre; el e-commerce y n8n pueden no tenerla.
+  """
+  entrega: DireccionEntrada
 }
 
 """Lo que envía el Panel cuando el mayorista crea un producto a mano."""
@@ -125,6 +130,35 @@ type Dinero
   centavos: Int!
   moneda: String!
   texto: String!
+}
+
+"""A dónde lleva el mayorista el pedido."""
+type DireccionDeEntrega
+  @join__type(graph: PEDIDOS)
+{
+  calle: String!
+  zona: String!
+  referencia: String!
+  latitud: Float
+  longitud: Float
+
+  """Calle y zona en una línea"""
+  texto: String!
+}
+
+input DireccionEntrada
+  @join__type(graph: PEDIDOS)
+{
+  """Calle y número, por ejemplo «Av. Banzer 123»"""
+  calle: String!
+  zona: String
+
+  """Cómo encontrarla: «portón negro, al lado de la farmacia»"""
+  referencia: String
+
+  """El punto que la tienda marcó en el mapa (los dos o ninguno)"""
+  latitud: Float
+  longitud: Float
 }
 
 """Edición de un producto por el mayorista: solo cambia lo que envía."""
@@ -523,6 +557,11 @@ type Pedido
   total: Dinero! @join__field(graph: PEDIDOS)
   creadoEn: String! @join__field(graph: PEDIDOS)
   motivoRechazo: String @join__field(graph: PEDIDOS)
+
+  """
+  Null en los pedidos sin dirección (e-commerce, n8n o anteriores al 31/10)
+  """
+  entrega: DireccionDeEntrega @join__field(graph: PEDIDOS)
 }
 
 """Un precio al público tomado de un supermercado, con dónde y cuándo"""

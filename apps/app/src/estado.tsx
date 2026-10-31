@@ -2,6 +2,7 @@ import {
   agregar,
   cantidadDe,
   CONSULTA_CATALOGO,
+  conciliarCarrito,
   conRelacion,
   escalaPorDefecto,
   itemDeCarrito,
@@ -50,6 +51,7 @@ export function ProveedorDeEstado({ children }: { children: ReactNode }) {
   const [carrito, setCarrito] = useState<ItemDeCarrito[]>([]);
   const [aviso, setAviso] = useState<string | null>(null);
   const reloj = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const avisarRef = useRef<(texto: string) => void>(() => undefined);
 
   useEffect(() => NetInfo.addEventListener((e) => setEnLinea(e.isConnected !== false && e.isInternetReachable !== false)), []);
 
@@ -68,6 +70,14 @@ export function ProveedorDeEstado({ children }: { children: ReactNode }) {
       setCatalogo(nuevo);
       void guardado.escribir('catalogo', nuevo);
       setError(null);
+      // El carrito guardado puede tener productos o presentaciones que ya no se venden: se pone al día
+      setCarrito((c) => {
+        const r = conciliarCarrito(c, nuevo.productos);
+        if (!r.cambio) return c;
+        void guardado.escribir('carrito', r.carrito);
+        if (r.quitados.length) setTimeout(() => avisarRef.current(`Sacamos del carrito lo que ya no se vende así: ${r.quitados.join(', ')}`), 0);
+        return r.carrito;
+      });
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -88,6 +98,7 @@ export function ProveedorDeEstado({ children }: { children: ReactNode }) {
     clearTimeout(reloj.current);
     reloj.current = setTimeout(() => setAviso(null), 2500);
   }, []);
+  avisarRef.current = avisar;
 
   const cambiarCarrito = useCallback((c: ItemDeCarrito[]) => {
     setCarrito(c);
