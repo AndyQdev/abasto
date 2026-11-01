@@ -87,6 +87,7 @@ final readonly class MongoProductoRepositorio implements ProductoRepositorio
                     'donde' => $producto->precioEnSuper->donde,
                     'fecha' => $producto->precioEnSuper->fecha,
                 ],
+                'precio_por_confirmar' => $producto->precioPorConfirmar,
             ],
             '$setOnInsert' => ['stock' => $producto->stock],
         ], ['upsert' => true]);
@@ -177,6 +178,7 @@ final readonly class MongoProductoRepositorio implements ProductoRepositorio
             marca: isset($doc['marca']) ? (string) $doc['marca'] : null,
             marcaBoliviana: (bool) ($doc['marca_boliviana'] ?? false),
             precioEnSuper: self::referencia($doc['precio_en_super'] ?? null),
+            precioPorConfirmar: (bool) ($doc['precio_por_confirmar'] ?? false),
         );
     }
 

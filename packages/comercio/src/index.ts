@@ -6,3 +6,4 @@ export * from './carrito';
 export * from './catalogo';
 export * from './pedidos';
 export * from './vitrinas';
+export * from './negocios';

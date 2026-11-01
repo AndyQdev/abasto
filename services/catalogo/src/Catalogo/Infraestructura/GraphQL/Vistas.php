@@ -66,6 +66,7 @@ final class Vistas
                 'donde' => $p->precioEnSuper->donde,
                 'fecha' => $p->precioEnSuper->fecha,
             ],
+            'precioPorConfirmar' => $p->precioPorConfirmar,
         ];
     }
 

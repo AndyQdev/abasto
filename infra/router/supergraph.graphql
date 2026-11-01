@@ -634,6 +634,9 @@ type Producto
   Lo que cuesta una unidad al público en un supermercado, para comparar. Null si no se tomó
   """
   precioEnSuper: PrecioDeReferencia @join__field(graph: CATALOGO)
+
+  """El precio es de demostración: todavía no se cotizó en el mercado"""
+  precioPorConfirmar: Boolean! @join__field(graph: CATALOGO)
 }
 
 type Query

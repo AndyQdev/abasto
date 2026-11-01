@@ -107,6 +107,41 @@
       "tema": "A white candle, a box of matches and a pack of batteries, plain packaging without writing. Inanimate objects: no faces, no eyes. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
     },
     {
+      "nombre": "rubro-harinas",
+      "tipo": "objeto",
+      "lado": 512,
+      "uso": "Rubro Harinas y panificación (01/11)",
+      "tema": "A small group of baking supplies: a big white flour sack tied at the top, a small pile of flour with a wooden scoop and a golden bread loaf, plain packaging without writing. Inanimate objects: no faces, no eyes. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
+    },
+    {
+      "nombre": "rubro-aceites",
+      "tipo": "objeto",
+      "lado": 512,
+      "uso": "Rubro Aceites y grasas (01/11)",
+      "tema": "A small group of cooking fats: a big golden cooking-oil jug with a handle and a white plastic bucket of vegetable shortening with a lid, plain packaging without writing. Inanimate objects: no faces, no eyes. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
+    },
+    {
+      "nombre": "rubro-condimentos",
+      "tipo": "objeto",
+      "lado": 512,
+      "uso": "Rubro Condimentos (01/11)",
+      "tema": "A small group of spices: three small open burlap pouches with red chili powder, brown cumin and green oregano, and a white salt shaker, no writing. Inanimate objects: no faces, no eyes. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
+    },
+    {
+      "nombre": "rubro-verduras",
+      "tipo": "objeto",
+      "lado": 512,
+      "uso": "Rubro Verduras secas (01/11)",
+      "tema": "A small group of market vegetables: a few brown potatoes, a red onion, a white onion and a garlic bulb next to a small woven mesh sack, no writing. Inanimate objects: no faces, no eyes. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
+    },
+    {
+      "nombre": "rubro-descartables",
+      "tipo": "objeto",
+      "lado": 512,
+      "uso": "Rubro Descartables (01/11)",
+      "tema": "A small group of disposables for take-away food: a white foam food container with its lid half open, a stack of paper cups and a few folded napkins, no writing. Inanimate objects: no faces, no eyes. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
+    },
+    {
       "nombre": "vacio-carrito",
       "tipo": "objeto",
       "lado": 768,

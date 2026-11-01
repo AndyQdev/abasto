@@ -22,7 +22,7 @@
 >
 > Tus tareas están en Trello, en la tarjeta «LEER PRIMERO · Reparto nuevo» y en las que tienen tu nombre. El prompt para tu Claude está en `docs/PROMPT-JHOEL.md`.
 
-Actualizado: 31/10/2026 · en main (los dos trabajamos ahí)
+Actualizado: 01/11/2026 · en main (los dos trabajamos ahí)
 
 ## Estoy en
 La app de clientes en el emulador Android. Después: registro de tiendas desde la app (CU-15) y el cobro contra entrega (CU-09).
@@ -43,6 +43,8 @@ La app de clientes en el emulador Android. Después: registro de tiendas desde l
 - App (31/10): elegir la dirección en Google Maps (pin fijo, calle al mover), la dirección viaja en el pedido (Pedidos, Seguimiento y Panel) y Finalizar en tres pasos. El carrito viejo se pone al día con el catálogo.
   **Jhoel:** la app suma react-native-maps (nativo): `npm install` en `apps/app`, tu clave de Maps en `apps/app/.env.local` (`EXPO_PUBLIC_GOOGLE_MAPS_API_KEY`) y `npx expo run:android` una vez.
 - CU-01 (31/10): registro público de mayoristas en el Panel (`/registro`), aviso «en revisión» o el motivo del rechazo en el Panel, y el módulo Mayoristas del Superadmin para verificar o rechazar. e2e `registro-mayorista.spec.ts`.
+- Nicho nuevo (01/11): tiendas de barrio y negocios que cocinan. El Inicio cambia según el negocio (tienda, salteñería-panadería, pensión-restaurante), con «Tu pedido de la semana» y «No vuelvas a ir al mercado». Catálogo: 22 productos del nicho en presentación de mercado (quintal, arroba, balde, maple), rubros nuevos (Harinas y panificación, Aceites y grasas, Granos y cereales, Condimentos, Huevos y lácteos, Verduras secas, Descartables) y `Producto.precioPorConfirmar` para los precios de demostración. **Falta cotizarlos en el mercado.**
+  **Jhoel:** `pnpm semilla` (o `catalogo:semilla-abasto`) para ver los 49 productos.
 - e2e: 15 pruebas en verde.
 
 ## Cambié en contratos
@@ -50,6 +52,7 @@ La app de clientes en el emulador Android. Después: registro de tiendas desde l
 - Catálogo: Producto.abastecimiento/entregaHoras/costoUnitario/proveedor, Mayorista.deLaCasa e inputs de crear/editar.
 - Pedidos: MetodoPago.CONTRA_ENTREGA, listaDeCompras, avanzarEntrega y traccion.
 - AsyncAPI: contra_entrega y pedido.en_preparacion | despachado | entregado. OpenAPI de Conecta: CONTRA_ENTREGA.
+- 01/11 · Catálogo: `Producto.precioPorConfirmar: Boolean!` (precio de demostración). Subgrafo y supergrafo regenerados.
 - 31/10 · Pedidos: `CrearPedidoEntrada.entrega: DireccionEntrada` (opcional) y `Pedido.entrega: DireccionDeEntrega`; migración V3. OpenAPI de Conecta: `DatosPedido.entrega`.
 
 ## Necesito del otro

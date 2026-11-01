@@ -89,6 +89,19 @@ export function Producto({ navigation, route }: PantallaDePila<'Producto'>) {
               </View>
             )}
 
+            {/* Nicho de cocina (01/11): el precio es de demostración hasta que Abasto lo cotice en el mercado */}
+            {p.precioPorConfirmar && (
+              <View style={[e.super, { backgroundColor: COLOR.ambarSuave, borderColor: COLOR.ambar }]}>
+                <View style={e.filaSuper}>
+                  <Icono nombre="information-circle" tamano={18} color={COLOR.ambarTexto} />
+                  <Texto style={{ flex: 1, color: COLOR.ambarTexto }}>
+                    <Texto style={[e.fuerteSuper, { color: COLOR.ambarTexto }]}>Precio por confirmar.</Texto> Es de referencia: lo estamos cotizando en el mercado esta
+                    semana.
+                  </Texto>
+                </View>
+              </View>
+            )}
+
             {/* El ancla: lo que cuesta en el súper y lo que le queda a la tienda si lo revende a ese precio */}
             {alSuper && alSuper.gananciaPorUnidad > 0 && escala && (
               <View style={e.super}>

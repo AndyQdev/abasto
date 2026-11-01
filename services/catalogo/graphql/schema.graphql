@@ -147,6 +147,8 @@ type Producto @key(fields: "id") {
   marcaBoliviana: Boolean!
   "Lo que cuesta una unidad al público en un supermercado, para comparar. Null si no se tomó"
   precioEnSuper: PrecioDeReferencia
+  "El precio es de demostración: todavía no se cotizó en el mercado"
+  precioPorConfirmar: Boolean!
 }
 
 "Un precio al público tomado de un supermercado, con dónde y cuándo"

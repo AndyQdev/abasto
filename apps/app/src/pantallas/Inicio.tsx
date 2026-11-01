@@ -1,5 +1,5 @@
 import { useEspacioBarra } from '../BarraInferior';
-import { rubros, separarContenido, tinte, vitrinas, type ClaveDeVitrina, type Producto, type TarjetaDeVitrina, type Vitrina } from '@abasto/comercio';
+import { MIS_COMPRAS, pedidoDeLaSemana, rubrosDelNegocio, seccionesDelNegocio, separarContenido, tinte, type ClaveDeVitrina, type Pedido, type Producto, type TarjetaDeVitrina, type Vitrina } from '@abasto/comercio';
 import { useIsFocused } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
@@ -7,10 +7,13 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, RefreshControl, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Aparecer, Esqueleto, Tocable } from '../animacion';
+import { graphql } from '../api';
 import { Falla, Icono, Texto, type NombreDeIcono } from '../componentes';
 import { useDirecciones } from '../direcciones-estado';
 import { useEstado } from '../estado';
 import { CabeceraInicio } from '../CabeceraInicio';
+import { guardado } from '../guardado';
+import { ChipsDeNegocio, ElegirNegocio, PedidoDeLaSemanaCarta, SinIrAlMercado, useNegocio } from '../NegocioInicio';
 import { HojaDeDirecciones } from '../HojaDeDirecciones';
 import { fotoDe, ILUSTRACION, imagenDeRubro, rubroCorto } from '../ilustraciones';
 import type { PantallaDePestana } from '../navegacion';
@@ -26,15 +29,29 @@ const ESTILO: Record<ClaveDeVitrina, { icono: NombreDeIcono; etiqueta: [string, 
   probar: { icono: 'bag-handle', etiqueta: [COLOR.bosque, COLOR.lima] },
   volumen: { icono: 'cube', etiqueta: [COLOR.ambar, COLOR.bosque] },
   deAqui: { icono: 'flag', etiqueta: ['#FFFFFF', COLOR.bosque] },
+  repone: { icono: 'repeat', etiqueta: [COLOR.bosque, COLOR.lima] },
+  salteneria: { icono: 'flame', etiqueta: [COLOR.bosque, COLOR.lima] },
+  panaderia: { icono: 'pizza', etiqueta: [COLOR.bosque, COLOR.lima] },
+  pension: { icono: 'restaurant', etiqueta: [COLOR.bosque, COLOR.lima] },
+  descartables: { icono: 'bag-handle', etiqueta: [COLOR.bosque, COLOR.lima] },
 };
+/** La etiqueta de un precio de demostración va en ámbar, para que se vea antes de pedir */
+const POR_CONFIRMAR: [string, string] = [COLOR.ambar, COLOR.bosque];
 
 /**
+ * 01/11: el Inicio depende del negocio del cliente (tienda, salteñería-panadería o pensión-restaurante): sus rubros,
+ * sus secciones («Para tu salteñería»), «Tu pedido de la semana» y la promesa «No vuelvas a ir al mercado».
+ * La lógica está en `negocios.ts` de packages/comercio y las piezas en `src/NegocioInicio.tsx`.
+ *
  * Inicio de ABASTO (31/10): lo primero que se ve son los productos y sus precios. Encabezado compacto, rubros y
  * las vitrinas en carrusel (como Alibaba): cada una agrupa por un motivo para comprar (más barato que en el súper,
  * gana revendiendo, pruébalo con poco, más llevas más ahorras, marcas de aquí). La lógica está en `vitrinas()`.
  */
 export function Inicio({ navigation }: PantallaDePestana<'Inicio'>) {
-  const { catalogo, enLinea, agregarRapido } = useEstado();
+  const { catalogo, enLinea, agregarRapido, agregarAlCarrito, avisar } = useEstado();
+  const negocio = useNegocio();
+  const tipo = negocio.tipo ?? 'tienda';
+  const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const { elegida, porConfirmar } = useDirecciones();
   const [hoja, setHoja] = useState(false);
   const arriba = useSafeAreaInsets().top;
@@ -51,8 +68,31 @@ export function Inicio({ navigation }: PantallaDePestana<'Inicio'>) {
     }
   }, [porConfirmar]);
 
-  const estantes = vitrinas(catalogo.productos);
-  const losRubros = rubros(catalogo.productos);
+  // Los pedidos guardados en el teléfono y, con señal, los del servidor: de ahí sale «Tu pedido de la semana»
+  useEffect(() => {
+    if (!enFoco) return;
+    void guardado.leer<Pedido[]>('pedidos').then((p) => p && setPedidos(p));
+    if (!enLinea) return;
+    graphql<{ misCompras: Pedido[] }>(MIS_COMPRAS)
+      .then((d) => {
+        setPedidos(d.misCompras);
+        void guardado.escribir('pedidos', d.misCompras);
+      })
+      .catch(() => {
+        /* sin sesión o sin servidor: queda lo guardado */
+      });
+  }, [enFoco, enLinea]);
+
+  const estantes = seccionesDelNegocio(tipo, catalogo.productos);
+  const losRubros = rubrosDelNegocio(tipo, catalogo.productos);
+  const semana = pedidoDeLaSemana(pedidos, catalogo.productos);
+  const horas = Math.max(24, ...catalogo.productos.filter((p) => p.mayorista.deLaCasa).map((p) => p.entregaHoras ?? 24));
+  const repetir = () => {
+    if (!semana) return;
+    semana.items.forEach(agregarAlCarrito);
+    avisar(`Agregamos ${semana.items.length} ${semana.items.length === 1 ? 'producto' : 'productos'} de tu pedido ${semana.codigo}`);
+    navigation.navigate('Carrito');
+  };
   const cargandoPrimeraVez = catalogo.cargando && !catalogo.productos.length;
   const anchoRubro = (width - 32 - 10 * 3) / 4;
   const abrir = (p: Producto) => navigation.navigate('Producto', { id: p.id });
@@ -79,6 +119,10 @@ export function Inicio({ navigation }: PantallaDePestana<'Inicio'>) {
         <View style={e.cuerpo}>
           {catalogo.error && !estantes.length && <Falla texto={catalogo.error} />}
 
+          {negocio.leido && (
+            <Aparecer orden={1}>{negocio.tipo ? <ChipsDeNegocio tipo={negocio.tipo} alElegir={negocio.elegir} /> : <ElegirNegocio alElegir={negocio.elegir} />}</Aparecer>
+          )}
+
           <Aparecer orden={2}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={e.filaRubros}>
               {cargandoPrimeraVez
@@ -101,6 +145,16 @@ export function Inicio({ navigation }: PantallaDePestana<'Inicio'>) {
               ))}
             </View>
           )}
+
+          {semana && (
+            <Aparecer orden={3}>
+              <PedidoDeLaSemanaCarta pedido={semana} alRepetir={repetir} />
+            </Aparecer>
+          )}
+
+          <Aparecer orden={3}>
+            <SinIrAlMercado horas={horas} />
+          </Aparecer>
 
           {estantes.map((v, i) => (
             <Aparecer key={v.clave} orden={3 + i}>
@@ -158,7 +212,7 @@ function Estante({ vitrina: v, alAbrir, alAgregar, alVerTodo }: { vitrina: Vitri
 function TarjetaDeEstante({ clave, tarjeta: t, alAbrir, alAgregar }: { clave: ClaveDeVitrina; tarjeta: TarjetaDeVitrina; alAbrir: () => void; alAgregar: (p: Producto) => void }) {
   const p = t.producto;
   const { nombre, contenido } = separarContenido(p.nombre);
-  const [fondo, letra] = ESTILO[clave].etiqueta;
+  const [fondo, letra] = p.precioPorConfirmar ? POR_CONFIRMAR : ESTILO[clave].etiqueta;
   const foto: Origen = useRef(null);
   const volar = useVuelo();
   return (
