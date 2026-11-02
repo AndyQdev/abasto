@@ -4,7 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Animated, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { entrarConCodigo, ErrorDeAcceso, esCelular, formatoCelular, pedirCodigo, soloDigitos, type EnvioDeCodigo } from '../acceso';
-import { Aparecer, Tocable, useSacudida, vibrar } from '../animacion';
+import { Aparecer, HojaInferior, Tocable, useSacudida, vibrar } from '../animacion';
 import { Boton, Falla, Icono, Texto } from '../componentes';
 import { ILUSTRACION } from '../ilustraciones';
 import { useSesion } from '../sesion';
@@ -87,17 +87,25 @@ export function Acceso() {
   const abajo = useSafeAreaInsets().bottom;
   const portada = paso === 'telefono' ? ILUSTRACION.portadaBienvenida : paso === 'codigo' ? ILUSTRACION.portadaCodigo : ILUSTRACION.portadaNombre;
   const teclado = useTecladoAbierto();
-  // La escena ocupa la mitad de arriba; con el teclado abierto se achica para que el formulario quede a la vista
-  const altoPortada = Math.round(height * (teclado ? 0.22 : paso === 'telefono' ? 0.5 : paso === 'codigo' ? 0.52 : 0.62));
+  const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
+  const [paises, setPaises] = useState(false);
+  // Con el teclado abierto la pantalla baja lo justo para que el formulario quede encima: la escena no cambia de tamaño
+  useEffect(() => {
+    if (!teclado) return;
+    const t = setTimeout(() => scroll.current?.scrollToEnd({ animated: true }), 60);
+    return () => clearTimeout(t);
+  }, [teclado, paso]);
+  const altoPortada = Math.round(height * (paso === 'codigo' ? 0.52 : 0.62));
   const codigoListo = codigo.length === 6;
 
   return (
     <View style={e.pantalla}>
       <StatusBar style="dark" />
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" bounces={false} showsVerticalScrollIndicator={false}>
-          {/* Bienvenida: la imagen entera (trae el logo y el lema); con el teclado abierto, solo una franja de arriba */}
-          <View style={paso === 'telefono' && !teclado ? { aspectRatio: PROPORCION_BIENVENIDA } : { height: altoPortada }}>
+      {/* La app va de borde a borde: ni Android ni iPhone achican la ventana con el teclado, así que se deja el espacio */}
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
+        <ScrollView ref={scroll} contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" bounces={false} showsVerticalScrollIndicator={false}>
+          {/* Bienvenida: la imagen entera (trae el logo y el lema) */}
+          <View style={paso === 'telefono' ? { aspectRatio: PROPORCION_BIENVENIDA } : { height: altoPortada }}>
             <Image
               source={portada}
               style={StyleSheet.absoluteFill}
@@ -115,7 +123,7 @@ export function Acceso() {
           </View>
 
           <Aparecer orden={2} desde={60} style={{ flexGrow: 1 }}>
-            <View style={[e.tarjeta, paso === 'telefono' && !teclado ? e.tarjetaBajoElLema : e.tarjetaMontada, { paddingBottom: 24 + abajo }]}>
+            <View style={[e.tarjeta, paso === 'telefono' ? e.tarjetaBajoElLema : e.tarjetaMontada, { paddingBottom: 24 + abajo }]}>
               {paso === 'telefono' && (
                 <>
                   <View style={{ gap: 4 }}>
@@ -123,12 +131,13 @@ export function Acceso() {
                     <Texto v="gris">Te enviaremos un código por WhatsApp.</Texto>
                   </View>
                   <View style={[e.campoTelefono, esCelular(telefono) && { borderColor: COLOR.bosque, backgroundColor: COLOR.superficie }]}>
-                    <View style={e.prefijo}>
+                    <Pressable onPress={() => setPaises(true)} style={e.prefijo} accessibilityRole="button" accessibilityLabel="País: Bolivia, +591">
                       <BanderaDeBolivia />
                       <Texto v="fuerte" style={{ fontSize: 17 }}>
                         +591
                       </Texto>
-                    </View>
+                      <Icono nombre="chevron-down" tamano={14} color={COLOR.texto3} />
+                    </Pressable>
                     <TextInput
                       accessibilityLabel="Tu número de celular"
                       value={formatoCelular(telefono)}
@@ -243,11 +252,26 @@ export function Acceso() {
           </Aparecer>
         </ScrollView>
       </KeyboardAvoidingView>
+      <HojaInferior visible={paises} alCerrar={() => setPaises(false)}>
+        <View style={{ gap: 14 }}>
+          <Texto style={e.titulo}>Tu país</Texto>
+          <View style={e.pais}>
+            <BanderaDeBolivia />
+            <Texto v="fuerte" style={{ flex: 1, fontSize: 17 }}>
+              Bolivia
+            </Texto>
+            <Texto v="gris">+591</Texto>
+            <Icono nombre="checkmark-circle" tamano={22} color={COLOR.bosque} />
+          </View>
+          <Texto v="gris">Por ahora Abasto entrega solo en Bolivia. Usa tu celular de 8 dígitos (empieza con 6 o 7).</Texto>
+          <Boton tipo="oscuro" texto="Entendido" alTocar={() => setPaises(false)} />
+        </View>
+      </HojaInferior>
     </View>
   );
 }
 
-/** Si el teclado está abierto (la escena se achica mientras tanto) */
+/** Si el teclado está abierto (para bajar la pantalla lo justo) */
 function useTecladoAbierto() {
   const [abierto, setAbierto] = useState(false);
   useEffect(() => {
@@ -340,7 +364,8 @@ const e = StyleSheet.create({
     paddingRight: 14,
     height: 62,
   },
-  prefijo: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, height: '60%', borderRightWidth: 1.5, borderRightColor: COLOR.borde },
+  prefijo: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, height: '60%', borderRightWidth: 1.5, borderRightColor: COLOR.borde },
+  pais: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 18, backgroundColor: COLOR.limaSuave, borderWidth: 2, borderColor: COLOR.bosque },
   bandera: { width: 26, height: 18, borderRadius: 4, overflow: 'hidden' },
   entradaTelefono: { flex: 1, fontSize: 21, fontFamily: FUENTE.fuerte, color: COLOR.texto, letterSpacing: 1 },
   nota: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },

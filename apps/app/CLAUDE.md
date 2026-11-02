@@ -43,8 +43,9 @@ Correr:
   - Desde Git Bash, adb se cuelga: usarlo desde PowerShell.
 - iPhone sin build propia: **Expo Go** en el mismo wifi (probado el 01/11).
   1. Una vez por PC: `npx expo login` en una terminal normal (no con «!» de Claude, que no es interactiva), y en Expo Go la misma cuenta.
-  2. Metro en modo Expo Go apuntando a la IP de la PC (sin adb reverse): `REACT_NATIVE_PACKAGER_HOSTNAME`, `EXPO_PUBLIC_HOST_DE_LA_RED`, `EXPO_PUBLIC_KEYCLOAK_URL`, `EXPO_PUBLIC_ROUTER_URL` y `EXPO_PUBLIC_CONECTA_URL` con `http://<IP>:<puerto>`, y `npx expo start --go --lan --port 8090`. En Expo Go se abre `exp://<IP>:8090`.
+  2. `npm run iphone` (en `apps/app`): busca la IP de la PC en el wifi y arranca Metro en modo Expo Go. En Expo Go se abre `exp://<IP>:8090` (el script la muestra). La app saca esa misma IP de la dirección del bundle (`src/config.ts`), así que cambiar de wifi no rompe nada: se vuelve a correr. Antes de esto hay que apagar el Metro de Android (los dos usan el 8090).
   3. Keycloak firma siempre con localhost (`KC_HOSTNAME`), así que la sesión anda igual. Las fotos de Catálogo cambian localhost por la IP con `urlDeLaRed` (`src/config.ts`).
+  - Al cerrar sesión se borran del teléfono las direcciones, el carrito y los pedidos guardados (son de la persona); el tipo de negocio y «Mi negocio» van por usuario y están en la base de datos.
   4. En Expo Go no están ML Kit ni TFLite: `src/ia/index.ts` los carga al usarlos y avisa. Todo lo demás anda.
 - iPhone con todo lo nativo: build de desarrollo con EAS o una Mac.
 
