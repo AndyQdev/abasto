@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { vibrar } from './animacion';
 import { Icono, Texto, type NombreDeIcono } from './componentes';
 import { useEstado } from './estado';
+import { useNegocio } from './NegocioInicio';
 import type { Pestanas } from './navegacion';
 import { CABECERA, COLOR, FUENTE, SOMBRA } from './tema';
 
@@ -12,11 +13,19 @@ const ICONOS: Record<keyof Pestanas, [NombreDeIcono, NombreDeIcono]> = {
   Inicio: ['home', 'home-outline'],
   Buscar: ['search', 'search-outline'],
   Carrito: ['cart', 'cart-outline'],
+  MiNegocio: ['cube', 'cube-outline'],
   Pedidos: ['receipt', 'receipt-outline'],
   Cuenta: ['person', 'person-outline'],
 };
 
 const GRIS_VERDOSO = '#7D8F86';
+
+/** «Mi negocio» se llama como su tipo de cliente; en la barra va corto para que entren las seis pestañas */
+const MI_NEGOCIO = {
+  hogar: { etiqueta: 'Mi casa', iconos: ['basket', 'basket-outline'] },
+  tienda: { etiqueta: 'Mi tienda', iconos: ['storefront', 'storefront-outline'] },
+  productor: { etiqueta: 'Producción', iconos: ['restaurant', 'restaurant-outline'] },
+} as const satisfies Record<string, { etiqueta: string; iconos: [NombreDeIcono, NombreDeIcono] }>;
 
 /**
  * La barra de abajo de ABASTO: blanca y flotante por encima del contenido, la pestaña activa en una cápsula
@@ -26,6 +35,7 @@ const GRIS_VERDOSO = '#7D8F86';
 export function BarraInferior({ state, navigation }: BottomTabBarProps) {
   const abajo = useSafeAreaInsets().bottom;
   const { carrito } = useEstado();
+  const tipo = useNegocio().negocio?.tipo ?? 'tienda';
   const teclado = useTecladoAbierto();
   if (teclado) return null;
 
@@ -45,7 +55,14 @@ export function BarraInferior({ state, navigation }: BottomTabBarProps) {
           return nombre === 'Carrito' ? (
             <BotonCarrito key={ruta.key} activa={activa} cuantos={carrito.length} alTocar={ir} />
           ) : (
-            <Pestana key={ruta.key} nombre={nombre} activa={activa} alTocar={ir} />
+            <Pestana
+              key={ruta.key}
+              nombre={nombre}
+              etiqueta={nombre === 'MiNegocio' ? MI_NEGOCIO[tipo].etiqueta : nombre}
+              iconos={nombre === 'MiNegocio' ? MI_NEGOCIO[tipo].iconos : ICONOS[nombre]}
+              activa={activa}
+              alTocar={ir}
+            />
           );
         })}
       </View>
@@ -53,18 +70,31 @@ export function BarraInferior({ state, navigation }: BottomTabBarProps) {
   );
 }
 
-function Pestana({ nombre, activa, alTocar }: { nombre: keyof Pestanas; activa: boolean; alTocar: () => void }) {
+function Pestana({
+  etiqueta,
+  iconos,
+  activa,
+  alTocar,
+}: {
+  nombre: keyof Pestanas;
+  etiqueta: string;
+  iconos: readonly [NombreDeIcono, NombreDeIcono];
+  activa: boolean;
+  alTocar: () => void;
+}) {
   // La cápsula verde aparece con un resorte al elegir la pestaña
   const v = useRef(new Animated.Value(activa ? 1 : 0)).current;
   useEffect(() => {
     Animated.spring(v, { toValue: activa ? 1 : 0, useNativeDriver: true, speed: 18, bounciness: 9 }).start();
   }, [activa, v]);
-  const [lleno, vacio] = ICONOS[nombre];
+  const [lleno, vacio] = iconos;
   return (
-    <Pressable onPress={alTocar} style={e.pestana} accessibilityRole="tab" accessibilityState={{ selected: activa }} accessibilityLabel={nombre}>
+    <Pressable onPress={alTocar} style={e.pestana} accessibilityRole="tab" accessibilityState={{ selected: activa }} accessibilityLabel={etiqueta}>
       <Animated.View style={[StyleSheet.absoluteFill, e.capsula, { opacity: v, transform: [{ scale: v.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1] }) }] }]} />
       <Icono nombre={activa ? lleno : vacio} tamano={23} color={activa ? COLOR.lima : GRIS_VERDOSO} />
-      <Texto style={[e.texto, { color: activa ? '#FFFFFF' : GRIS_VERDOSO }]}>{nombre}</Texto>
+      <Texto style={[e.texto, { color: activa ? '#FFFFFF' : GRIS_VERDOSO, maxWidth: '90%' }]} lineas={1} ajustar>
+        {etiqueta}
+      </Texto>
     </Pressable>
   );
 }
@@ -142,9 +172,9 @@ const e = StyleSheet.create({
     shadowOffset: { width: 0, height: 10 },
     elevation: 12,
   },
-  pestana: { flex: 1, height: 54, alignItems: 'center', justifyContent: 'center', gap: 2, marginHorizontal: 2 },
+  pestana: { flex: 1, height: 54, alignItems: 'center', justifyContent: 'center', gap: 2, marginHorizontal: 1 },
   capsula: { borderRadius: 22, backgroundColor: CABECERA.medio },
-  texto: { fontFamily: FUENTE.semi, fontSize: 11.5 },
+  texto: { fontFamily: FUENTE.semi, fontSize: 11 },
   capsulaLima: { borderRadius: 22, backgroundColor: COLOR.limaMedia },
   cantidad: {
     position: 'absolute',

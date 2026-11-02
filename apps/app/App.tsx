@@ -9,6 +9,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
+import type { ReactNode } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Texto } from './src/componentes';
@@ -16,6 +17,7 @@ import { ProveedorDeEstado, useEstado } from './src/estado';
 import type { Pestanas, Pila } from './src/navegacion';
 import { BarraInferior } from './src/BarraInferior';
 import { ProveedorDeDirecciones, useDirecciones } from './src/direcciones-estado';
+import { ProveedorDeInventario } from './src/inventario';
 import { ProveedorDeNegocio, useNegocio } from './src/NegocioInicio';
 import { Acceso } from './src/pantallas/Acceso';
 import { BuscarPorFoto } from './src/pantallas/BuscarPorFoto';
@@ -24,6 +26,7 @@ import { Carrito } from './src/pantallas/Carrito';
 import { Cuenta } from './src/pantallas/Cuenta';
 import { Finalizar } from './src/pantallas/Finalizar';
 import { Inicio } from './src/pantallas/Inicio';
+import { MiNegocio } from './src/pantallas/MiNegocio';
 import { Negocio } from './src/pantallas/Negocio';
 import { Pedidos } from './src/pantallas/Pedidos';
 import { Producto } from './src/pantallas/Producto';
@@ -49,6 +52,7 @@ function PestanasDeAbajo() {
       <Tab.Screen name="Inicio" component={Inicio} />
       <Tab.Screen name="Buscar" component={Buscar} />
       <Tab.Screen name="Carrito" component={Carrito} />
+      <Tab.Screen name="MiNegocio" component={MiNegocio} />
       <Tab.Screen name="Pedidos" component={Pedidos} />
       <Tab.Screen name="Cuenta" component={Cuenta} />
     </Tab.Navigator>
@@ -92,6 +96,7 @@ function ConDireccion() {
   if (!lista.length) return <Ubicacion />;
   return (
     <ProveedorDeEstado>
+      <ConInventario>
       <ProveedorDeVuelo>
       <NavigationContainer theme={TEMA}>
         <Stack.Navigator screenOptions={{ headerTintColor: COLOR.texto, headerTitleStyle: { fontWeight: '800' }, headerShadowVisible: false, headerStyle: { backgroundColor: COLOR.fondo } }}>
@@ -108,7 +113,22 @@ function ConDireccion() {
       </NavigationContainer>
       <Aviso />
       </ProveedorDeVuelo>
+      </ConInventario>
     </ProveedorDeEstado>
+  );
+}
+
+/** El inventario de «Mi negocio» es de quien entró; avisa cuando entran compras nuevas */
+function ConInventario({ children }: { children: ReactNode }) {
+  const { usuario } = useSesion();
+  const { avisar } = useEstado();
+  return (
+    <ProveedorDeInventario
+      dueno={usuario?.id ?? 'sin-sesion'}
+      alEntrar={(n) => avisar(n === 1 ? 'Entró 1 producto a tu inventario' : `Entraron ${n} productos a tu inventario`)}
+    >
+      {children}
+    </ProveedorDeInventario>
   );
 }
 

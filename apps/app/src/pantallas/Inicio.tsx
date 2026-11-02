@@ -11,6 +11,7 @@ import { graphql } from '../api';
 import { Falla, Icono, Texto, type NombreDeIcono } from '../componentes';
 import { useDirecciones } from '../direcciones-estado';
 import { useEstado } from '../estado';
+import { useInventario } from '../inventario';
 import { CabeceraInicio } from '../CabeceraInicio';
 import { guardado } from '../guardado';
 import { PedidoDeLaSemanaCarta, SinIrAlMercado, useNegocio } from '../NegocioInicio';
@@ -56,6 +57,7 @@ export function Inicio({ navigation }: PantallaDePestana<'Inicio'>) {
   // Sin negocio no se llega aquí (el registro lo pide); la tienda queda por si acaso
   const negocio = useNegocio().negocio ?? { tipo: 'tienda' as const };
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
+  const { sincronizar } = useInventario();
   const { elegida, porConfirmar } = useDirecciones();
   const [hoja, setHoja] = useState(false);
   const arriba = useSafeAreaInsets().top;
@@ -81,11 +83,13 @@ export function Inicio({ navigation }: PantallaDePestana<'Inicio'>) {
       .then((d) => {
         setPedidos(d.misCompras);
         void guardado.escribir('pedidos', d.misCompras);
+        // Lo entregado entra solo al inventario de «Mi negocio»
+        void sincronizar(d.misCompras);
       })
       .catch(() => {
         /* sin sesión o sin servidor: queda lo guardado */
       });
-  }, [enFoco, enLinea]);
+  }, [enFoco, enLinea, sincronizar]);
 
   const estantes = seccionesDelNegocio(negocio, catalogo.productos);
   const losRubros = rubrosDelNegocio(negocio, catalogo.productos);

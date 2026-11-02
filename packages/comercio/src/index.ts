@@ -7,3 +7,4 @@ export * from './catalogo';
 export * from './pedidos';
 export * from './vitrinas';
 export * from './negocios';
+export * from './mi-negocio';

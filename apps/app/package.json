@@ -38,10 +38,12 @@
     "react-native-web": "^0.21.4"
   },
   "devDependencies": {
+    "@testing-library/react-native": "^14.1.0",
     "@types/jest": "^30.0.0",
     "@types/react": "~19.3.0",
     "jest": "^30.5.2",
     "jest-expo": "^58.0.11",
+    "test-renderer": "^1.3.1",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -55,6 +57,9 @@
   "description": "Abasto: la app de los clientes que compran al por mayor (tiendas y personas). Expo (React Native) para Android y iPhone, con búsqueda por foto, pedidos, pagos y seguimiento.",
   "jest": {
     "preset": "jest-expo",
+    "modulePaths": [
+      "<rootDir>/node_modules"
+    ],
     "testPathIgnorePatterns": [
       "/node_modules/",
       "/android/"

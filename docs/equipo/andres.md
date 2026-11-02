@@ -46,7 +46,7 @@ La app de clientes en el emulador Android. Después: registro de tiendas desde l
 - Nicho nuevo (01/11): tiendas de barrio y negocios que cocinan. El Inicio cambia según el negocio (tienda, salteñería-panadería, pensión-restaurante), con «Tu pedido de la semana» y «No vuelvas a ir al mercado». Catálogo: 22 productos del nicho en presentación de mercado (quintal, arroba, balde, maple), rubros nuevos (Harinas y panificación, Aceites y grasas, Granos y cereales, Condimentos, Huevos y lácteos, Verduras secas, Descartables) y `Producto.precioPorConfirmar` para los precios de demostración. **Falta cotizarlos en el mercado.**
   **Jhoel:** `pnpm semilla` (o `catalogo:semilla-abasto`) para ver los 49 productos.
 - App (01/11, pedido del usuario): «¿Qué negocio tienes?» pasó al registro (después del celular, antes de la dirección) y se cambia en Cuenta; el Inicio suma «También te puede servir» según el negocio; el banner del mercado quedó con poco texto y una ilustración 3D nueva.
-- Herramientas por tipo de cliente (01/11, pedido de Andrés): plan en `docs/plan-mi-negocio.md`. **Fase 1 hecha:** tres tipos (Hogar, Tienda, Productor con subtipo), registro obligatorio con ilustraciones 3D nuevas, Inicio de cada uno y cambio en Cuenta. Las fases 2 a 5 (inventario que se llena solo con las compras, caja, fiado, recetas y planificador) esperan su revisión.
+- Herramientas por tipo de cliente (01/11, pedido de Andrés): plan en `docs/plan-mi-negocio.md`. **Fase 1 hecha:** tres tipos (Hogar, Tienda, Productor con subtipo), registro obligatorio con ilustraciones 3D nuevas, Inicio de cada uno y cambio en Cuenta. **Fase 2 hecha (01/11):** la pestaña Mi casa / Mi tienda / Producción con el inventario que se llena solo con lo ENTREGADO (sin duplicar), lo de otros proveedores a mano, el ajuste por conteo y, para el productor, insumos y lo hecho separados. Motor en `packages/comercio/src/mi-negocio`, datos en SQLite del teléfono; e2e `mi-negocio.spec.ts`. Las fases 3 a 5 (caja, fiado, recetas, planificador, hogar y nube) esperan su revisión.
 - e2e: 15 pruebas en verde.
 
 ## Cambié en contratos
@@ -55,6 +55,7 @@ La app de clientes en el emulador Android. Después: registro de tiendas desde l
 - Pedidos: MetodoPago.CONTRA_ENTREGA, listaDeCompras, avanzarEntrega y traccion.
 - AsyncAPI: contra_entrega y pedido.en_preparacion | despachado | entregado. OpenAPI de Conecta: CONTRA_ENTREGA.
 - 01/11 · Catálogo: `Producto.precioPorConfirmar: Boolean!` (precio de demostración). Subgrafo y supergrafo regenerados.
+- 01/11 · Ningún contrato nuevo para «Mi negocio»: la app ahora pide también `subtotal { centavos }` en las líneas de `misCompras` (el campo ya existía en `Dinero`).
 - 31/10 · Pedidos: `CrearPedidoEntrada.entrega: DireccionEntrada` (opcional) y `Pedido.entrega: DireccionDeEntrega`; migración V3. OpenAPI de Conecta: `DatosPedido.entrega`.
 
 ## Necesito del otro

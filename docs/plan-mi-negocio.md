@@ -1,6 +1,6 @@
 # Plan · Herramientas gratis por tipo de cliente («Mi casa», «Mi tienda», «Mi producción»)
 
-Pedido de Andrés (01/11/2026, por la sesión de la junta). Estado: **Fase 1 hecha; las fases 2 a 5 esperan su revisión.**
+Pedido de Andrés (01/11/2026, por la sesión de la junta). Estado: **fases 1 y 2 hechas; las fases 3 a 5 esperan su revisión.**
 
 ## La idea
 
@@ -52,7 +52,7 @@ trazabilidad.
 
 | Tabla | Campos | De Solvexco |
 |---|---|---|
-| `articulo` | id, nombre, unidad (kg, u, L, maple…), clase (`INSUMO` · `PRODUCTO` · `REVENTA` · `DESPENSA`), producto_abasto_id?, codigo_barras?, precio_venta?, stock_minimo? | `producto` + `stock_minimo` |
+| `articulo` | id, nombre, detalle, rubro, medida (envase, cuánto trae y la unidad de base: «1 quintal = 46 kg»), clase (`COMPRADO` · `HECHO`), origen (`ABASTO` · `OTRO_PROVEEDOR`), producto_abasto_id?, proveedor?; más adelante codigo_barras?, precio_venta?, stock_minimo? | `producto` + `stock_minimo` |
 | `movimiento` | id, articulo_id, tipo (`ENTRADA` · `SALIDA` · `AJUSTE` · `CONSUMO` · `PRODUCCION` · `VENTA` · `MERMA`), cantidad, costo_unitario?, origen (`ABASTO` · `OTRO_PROVEEDOR` · `MANUAL` · `LOTE` · `VENTA`), clave_unica, fecha | `movimiento_inventario` (libro) |
 | `receta` | id, articulo_id (lo que se hace), rinde (ej. 100 salteñas), nota | `formula` + `formula_version` (una sola versión) |
 | `receta_item` | receta_id, articulo_id (insumo), cantidad, unidad | `formula_item` |
@@ -62,6 +62,8 @@ trazabilidad.
 | `fiado` | id, nombre, telefono? | `cuenta_por_cobrar` |
 | `fiado_movimiento` | fiado_id, tipo (`DEBE` · `PAGA`), monto, venta_id?, fecha | `pago_cliente` |
 | `cuenta` (hogar) | id, tipo (`INGRESO` · `GASTO`), monto, categoria, fecha, origen (`MANUAL` · `ABASTO`) | — |
+
+En la Fase 2 la clase quedó en dos (`COMPRADO` y `HECHO`) y cada tipo la nombra a su modo: «Tu despensa» (hogar), «Para vender» (tienda), «Insumos» y «Lo que haces» (productor). Así, si el cliente cambia de tipo, no hay que reclasificar nada.
 
 Reglas:
 - La existencia nunca se guarda: es la suma de los movimientos, como el kardex de Solvexco.
@@ -104,7 +106,7 @@ Una pestaña nueva en la barra de abajo, con el nombre del tipo. Todo con pocos 
 | Fase | Qué | Estimación | Riesgo para la demo |
 |---|---|---|---|
 | **1 · hecha** | Registro obligatorio con los 3 tipos (y el subtipo del productor), ilustraciones 3D nuevas, Inicio adaptado a hogar, tienda y productor, cambio en Cuenta y pruebas | 1 día | Ninguno: solo app y `packages/comercio` |
-| 2 | Motor en `packages/comercio/src/mi-negocio` (articulo, movimiento, existencias, compras de Abasto que entran solas) + almacén SQLite + la pestaña con el inventario de los tres tipos | 2 días | Bajo: no toca servicios |
+| **2 · hecha** | Motor en `packages/comercio/src/mi-negocio` (articulo, movimiento, existencias, compras de Abasto que entran solas) + almacén SQLite + la pestaña con el inventario de los tres tipos | 1 día | Ninguno: no toca servicios (e2e 16/16) |
 | 3 | Tienda: caja rápida, precio sugerido, stock bajo → pedir, cuaderno de fiado y el mes | 2–3 días | Bajo |
 | 4 | Productor: recetas, costo por unidad, planificador → «pedir lo que falta», lotes con merma, venta | 3 días | Bajo |
 | 5 | Hogar: ingresos y gastos, despensa con «se te acaba», ahorro frente al súper. Después, el respaldo en la nube (módulo `mi-negocio` en Cobros + subgrafo) y los avisos | 2 días + 3 días | Medio (toca un servicio): **después del 03/11** |

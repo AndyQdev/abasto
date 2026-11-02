@@ -23,6 +23,13 @@
       "tema": "A warm smiling young Bolivian mom with a dark ponytail and a lime-green apron, hugging a big kraft paper grocery bag overflowing with a rice pack, a golden cooking-oil bottle, a milk carton, a baguette and fresh tomatoes and lettuce; a happy little girl next to her holding a small basket with eggs. Three-quarter view, cozy family feeling. No purple, pink or magenta anywhere. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
     },
     {
+      "nombre": "inventario-vacio",
+      "tipo": "objeto",
+      "lado": 1024,
+      "uso": "Mi casa / Mi tienda / Mi producción: inventario vacío (se llena solo con las compras)",
+      "tema": "A big cute open kraft cardboard box with a forest-green Abasto-style stripe, and a lime-green clipboard with a checklist leaning on it; a small white flour sack, a carton of brown eggs and a golden cooking-oil bottle gently flying into the open box with soft lime motion swooshes, as if the groceries arrive by themselves. No purple, pink or magenta anywhere. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
+    },
+    {
       "nombre": "bienvenida",
       "tipo": "objeto",
       "lado": 1024,

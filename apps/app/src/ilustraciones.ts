@@ -28,6 +28,7 @@ export const ILUSTRACION = {
   negocioHogar: require('../assets/ilustraciones/negocio-hogar.webp'),
   negocioTienda: require('../assets/ilustraciones/negocio-tienda.webp'),
   negocioProductor: require('../assets/ilustraciones/negocio-productor.webp'),
+  inventarioVacio: require('../assets/ilustraciones/inventario-vacio.webp'),
 } satisfies Record<string, Recurso>;
 
 const PRESENTACIONES: Record<string, Recurso> = {
