@@ -20,7 +20,7 @@ import { useIsFocused } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
 import { Modal, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { graphql } from '../api';
@@ -30,7 +30,7 @@ import { Icono, Texto, type NombreDeIcono } from '../componentes';
 import { useEstado } from '../estado';
 import { guardado } from '../guardado';
 import { ahora, useInventario, type EstadoDeLaNube } from '../inventario';
-import { Caja } from '../mi-negocio/Caja';
+import { Caja, CarritoDeVenta, useVenta } from '../mi-negocio/Caja';
 import { Cuentas } from '../mi-negocio/Cuentas';
 import { ElMes } from '../mi-negocio/ElMes';
 import { Fiado } from '../mi-negocio/Fiado';
@@ -95,6 +95,9 @@ export function MiNegocio({ navigation }: PantallaDePestana<'MiNegocio'>) {
   // «Usar una receta lista» o «Arma tu primer estante»: las plantillas del registro, para quien las saltó
   const [plantilla, setPlantilla] = useState(false);
   const referencia = useMemo(() => preciosDeReferencia(catalogo.productos), [catalogo.productos]);
+  // La venta en curso: sigue aunque se cambie de sección; su carrito flota fuera de la lista
+  const venta = useVenta();
+  const carritoDeVenta = useRef<ComponentRef<typeof View>>(null);
 
   // Si cambia el tipo (desde Cuenta), se vuelve a su primera sección
   useEffect(() => {
@@ -226,7 +229,7 @@ export function MiNegocio({ navigation }: PantallaDePestana<'MiNegocio'>) {
         </View>
 
         {/* Lugar para que el botón flotante no tape lo último */}
-        <View style={[e.cuerpo, flotante && { paddingBottom: 90 }]}>
+        <View style={[e.cuerpo, (flotante || seccion === 'vender') && { paddingBottom: 90 }]}>
           {negocio.tipo === 'productor' && seccion === 'inventario' ? (
             <>
               <Alternador
@@ -254,7 +257,7 @@ export function MiNegocio({ navigation }: PantallaDePestana<'MiNegocio'>) {
           ) : (
             (seccion === 'inventario' || seccion === 'despensa') && inventarioVista
           )}
-          {seccion === 'vender' && <Caja negocio={negocio} datos={datos} imagenDe={(x) => imagenDeArticulo(x.articulo, productos)} alVendido={avisar} />}
+          {seccion === 'vender' && <Caja negocio={negocio} datos={datos} imagenDe={(x) => imagenDeArticulo(x.articulo, productos)} venta={venta} destino={carritoDeVenta} />}
           {seccion === 'fiado' && <Fiado datos={datos} nuevo={nuevo} />}
           {seccion === 'mes' && <ElMes datos={datos} nombreDe={nombreDe} nuevo={nuevo} />}
           {seccion === 'cuentas' && <Cuentas datos={datos} pedidos={pedidos} productos={catalogo.productos} />}
@@ -263,6 +266,17 @@ export function MiNegocio({ navigation }: PantallaDePestana<'MiNegocio'>) {
       </ScrollView>
 
       {flotante && <BotonFlotante texto={flotante.texto} icono={flotante.icono} abajo={espacio - 4} alTocar={flotante.alTocar} />}
+      {seccion === 'vender' && (
+        <CarritoDeVenta
+          negocio={negocio}
+          datos={datos}
+          imagenDe={(x) => imagenDeArticulo(x.articulo, productos)}
+          venta={venta}
+          abajo={espacio - 4}
+          destino={carritoDeVenta}
+          alVendido={avisar}
+        />
+      )}
 
       <Modal visible={plantilla} animationType="slide" onRequestClose={() => setPlantilla(false)}>
         {negocio.tipo === 'productor' && negocio.subtipo ? (

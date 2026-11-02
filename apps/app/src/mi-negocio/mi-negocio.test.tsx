@@ -11,12 +11,12 @@ import {
   type PedidoComprado,
 } from '@abasto/comercio';
 import { configure, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
-import type { ReactElement, ReactNode } from 'react';
+import { useRef, type ReactElement, type ReactNode } from 'react';
 import { Text } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AlmacenLocalEnMemoria } from '../almacen-local';
 import { ProveedorDeInventario, useInventario } from '../inventario';
-import { Caja } from './Caja';
+import { Caja, CarritoDeVenta, useVenta } from './Caja';
 import { Cuentas } from './Cuentas';
 import { Fiado } from './Fiado';
 import { HojaDeArticulo, HojaParaAgregar, VistaDeInventario } from './Inventario';
@@ -181,20 +181,36 @@ describe('inventario', () => {
   });
 });
 
+/** Como en «Mi negocio»: la venta arriba, la grilla en la lista y el carrito flotando aparte */
+function Vender({ datos, alVendido }: { datos: DatosDeNegocio; alVendido: (t: string) => void }) {
+  const venta = useVenta();
+  const destino = useRef(null);
+  return (
+    <>
+      <Caja negocio={TIENDA} datos={datos} imagenDe={() => 1} venta={venta} destino={destino} />
+      <CarritoDeVenta negocio={TIENDA} datos={datos} imagenDe={() => 1} venta={venta} abajo={0} destino={destino} alVendido={alVendido} />
+    </>
+  );
+}
+
 describe('vender y fiar', () => {
   it('la caja suma con cada toque, cobra y descuenta del inventario', async () => {
     const almacen = await almacenCon(conCompras());
     const alVendido = jest.fn();
     await render(
       <Con almacen={almacen}>
-        <ConDatos>{(d) => <Caja negocio={TIENDA} datos={d} imagenDe={() => 1} alVendido={alVendido} />}</ConDatos>
+        <ConDatos>{(d) => <Vender datos={d} alVendido={alVendido} />}</ConDatos>
       </Con>,
     );
     await fireEvent.press(await screen.findByRole('button', { name: 'Vender Coca-Cola' }));
     await fireEvent.press(screen.getByRole('button', { name: 'Vender Coca-Cola' }));
     await fireEvent.press(screen.getByRole('button', { name: 'Vender Coca-Cola' }));
-    // El subtotal de la línea y el total
-    expect(screen.getAllByText('Bs 39,00')).toHaveLength(2);
+    // El carrito flotante dice cuánto va; al tocarlo se abre la venta con la línea y el total
+    await fireEvent.press(screen.getByRole('button', { name: 'Ver tu venta: 3 por Bs 39,00' }));
+    expect(screen.getByText('Bs 13,00 c/u')).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Uno menos de Coca-Cola' }));
+    expect(screen.getByRole('button', { name: 'Ver tu venta: 2 por Bs 26,00' })).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Uno más de Coca-Cola' }));
     await fireEvent.press(screen.getByRole('button', { name: 'Cobrado' }));
     await waitFor(() => expect(alVendido).toHaveBeenCalledWith('Venta cobrada: Bs 39,00'));
     const datos = await almacen.leer();
@@ -209,7 +225,7 @@ describe('vender y fiar', () => {
         <ConDatos>
           {(d) => (
             <>
-              <Caja negocio={TIENDA} datos={d} imagenDe={() => 1} alVendido={jest.fn()} />
+              <Vender datos={d} alVendido={jest.fn()} />
               <Fiado datos={d} />
             </>
           )}
@@ -217,6 +233,7 @@ describe('vender y fiar', () => {
       </Con>,
     );
     await fireEvent.press(await screen.findByRole('button', { name: 'Vender Coca-Cola' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Ver tu venta: 1 por Bs 13,00' }));
     await fireEvent.press(screen.getByRole('button', { name: 'Fiado' }));
     await fireEvent.changeText(screen.getByLabelText('Alguien nuevo'), 'Don Pedro');
     await fireEvent.press(screen.getByRole('button', { name: 'Fiar a alguien nuevo' }));
