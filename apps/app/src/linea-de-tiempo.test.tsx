@@ -1,6 +1,7 @@
 import type { Pedido } from '@abasto/comercio';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
-import { LineaDeTiempo, PagoExitoso, ProgresoChico } from './linea-de-tiempo';
+import { PagoExitoso } from './festejos';
+import { LineaDeTiempo, ProgresoChico } from './linea-de-tiempo';
 
 jest.mock('@expo/vector-icons', () => ({ Ionicons: ({ name }: { name: string }) => jest.requireActual('react').createElement('Text', null, `[${name}]`) }));
 jest.mock('react-native-qrcode-svg', () => ({ __esModule: true, default: ({ value }: { value: string }) => jest.requireActual('react').createElement('Text', null, `QR:${value}`) }));
@@ -58,7 +59,7 @@ describe('la línea de tiempo del seguimiento (02/11)', () => {
     expect(screen.getByText('¡Pago recibido!')).toBeTruthy();
     expect(screen.getByText(/Pagaste Bs 232,80/)).toBeTruthy();
     await act(async () => {
-      jest.advanceTimersByTime(3000);
+      jest.advanceTimersByTime(3600);
     });
     expect(alCerrar).toHaveBeenCalled();
     jest.useRealTimers();

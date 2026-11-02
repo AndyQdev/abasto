@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Aparecer, Tocable } from '../animacion';
+import { Escena, escenaDelPedido } from '../escenas';
 import { graphql } from '../api';
 import { useEspacioBarra } from '../BarraInferior';
 import { bandeja } from '../bandeja-pedidos';
@@ -152,37 +153,48 @@ export function Pedidos({ navigation }: PantallaDePestana<'Pedidos'>) {
   );
 }
 
-/** Una compra en curso: qué pasa ahora (en grande), la barrita de pasos y, si falta pagar, el botón para pagar */
+/**
+ * Una compra en curso: arriba su escena animada (la moto yendo, el vendedor revisando…), después qué pasa ahora, la
+ * barrita de pasos y, si falta pagar, el botón para pagar.
+ */
 function CompraEnCurso({ pedido: p, vendedor, alAbrir }: { pedido: Pedido; vendedor: string; alAbrir: () => void }) {
   const titular = titularDelPedido(p);
   const pagar = porPagar(p);
+  const escena = escenaDelPedido(p);
   return (
     <Tocable onPress={alAbrir} style={[e.enCurso, pagar && e.enCursoPorPagar]} accessibilityRole="button" accessibilityLabel={`Compra ${p.codigo}: ${titular.titulo}`}>
-      <View style={e.entre}>
-        <View style={e.vivo}>
-          <View style={{ width: 10, height: 10, alignItems: 'center', justifyContent: 'center' }}>
-            <Pulso tamano={10} color={pagar ? COLOR.ambar : COLOR.lima} />
-            <View style={[e.puntoVivo, pagar && { backgroundColor: COLOR.ambar }]} />
+      {escena && (
+        <Escena clave={escena} alto={128}>
+          <View style={e.chipEscena}>
+            <View style={{ width: 10, height: 10, alignItems: 'center', justifyContent: 'center' }}>
+              <Pulso tamano={10} color={pagar ? COLOR.ambar : COLOR.lima} />
+              <View style={[e.puntoVivo, pagar && { backgroundColor: COLOR.ambar }]} />
+            </View>
+            <Texto style={e.textoVivo}>#{p.codigo}</Texto>
           </View>
-          <Texto style={e.textoVivo}>
-            {vendedor} · #{p.codigo}
-          </Texto>
-        </View>
-        <Texto v="fuerte">{p.total.centavos ? p.total.texto : '—'}</Texto>
-      </View>
-      <View style={{ gap: 2 }}>
-        <Texto style={e.titular}>{titular.titulo}</Texto>
-        <Texto v="chico">{titular.detalle}</Texto>
-      </View>
-      <ProgresoChico pedido={p} />
-      {pagar ? (
-        <Boton texto={`Pagar con QR · ${p.total.texto}`} icono="qr-code" alTocar={alAbrir} />
-      ) : (
-        <View style={[e.entre, { justifyContent: 'flex-end' }]}>
-          <Texto style={e.verMas}>Ver el seguimiento</Texto>
-          <Icono nombre="chevron-forward" tamano={16} color={COLOR.bosque} />
-        </View>
+        </Escena>
       )}
+      <View style={e.cuerpoEnCurso}>
+        <View style={e.entre}>
+          <Texto style={[e.textoVivo, { flex: 1 }]} lineas={1}>
+            {vendedor} · {cuantos(p.lineas.length)}
+          </Texto>
+          <Texto v="fuerte">{p.total.centavos ? p.total.texto : '—'}</Texto>
+        </View>
+        <View style={{ gap: 2 }}>
+          <Texto style={e.titular}>{titular.titulo}</Texto>
+          <Texto v="chico">{titular.detalle}</Texto>
+        </View>
+        <ProgresoChico pedido={p} />
+        {pagar ? (
+          <Boton texto={`Pagar con QR · ${p.total.texto}`} icono="qr-code" alTocar={alAbrir} />
+        ) : (
+          <View style={[e.entre, { justifyContent: 'flex-end' }]}>
+            <Texto style={e.verMas}>Ver el seguimiento</Texto>
+            <Icono nombre="chevron-forward" tamano={16} color={COLOR.bosque} />
+          </View>
+        )}
+      </View>
     </Tocable>
   );
 }
@@ -192,9 +204,10 @@ const e = StyleSheet.create({
   contenido: { padding: 16, gap: 12 },
   entre: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   enTelefono: { flexDirection: 'row', gap: 10, padding: 12, borderRadius: 18, backgroundColor: COLOR.ambarSuave },
-  enCurso: { gap: 12, padding: 16, borderRadius: 24, backgroundColor: COLOR.superficie, ...SOMBRA },
+  enCurso: { borderRadius: 24, backgroundColor: COLOR.superficie, overflow: 'hidden', ...SOMBRA },
+  cuerpoEnCurso: { gap: 12, padding: 16, paddingTop: 14 },
+  chipEscena: { position: 'absolute', top: 10, left: 10, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, height: 26, borderRadius: 13, backgroundColor: 'rgba(255,255,255,0.9)' },
   enCursoPorPagar: { borderWidth: 2, borderColor: COLOR.ambar },
-  vivo: { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
   puntoVivo: { width: 10, height: 10, borderRadius: 5, backgroundColor: COLOR.lima, borderWidth: 1, borderColor: COLOR.bosque },
   textoVivo: { fontFamily: FUENTE.fuerte, fontSize: 13, color: COLOR.texto2 },
   titular: { fontFamily: FUENTE.negra, fontSize: 19, color: COLOR.texto, letterSpacing: -0.4 },

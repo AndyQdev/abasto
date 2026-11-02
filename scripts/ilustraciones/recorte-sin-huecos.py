@@ -41,6 +41,46 @@ while cola:
         if 0 <= nx < w and 0 <= ny < h and not fondo[ny * w + nx] and magenta(px[nx, ny]):
             cola.append((nx, ny))
 
+
+# Los huecos encerrados (entre un brazo y el cuerpo, entre la moto y el piloto) solo se quitan si son magenta FUERTE:
+# la piel, la madera o una fruta nunca tienen el azul tan por encima del verde (02/11)
+def magenta_fuerte(c):
+    r, g, b = c
+    return r - g > 90 and b - g > 50 and r > 130
+
+
+for y in range(h):
+    for x in range(w):
+        if not fondo[y * w + x] and magenta_fuerte(px[x, y]):
+            fondo[y * w + x] = 1
+
+# Manchas sueltas (la sombra que queda flotando debajo): se borra todo lo que no sea la figura más grande
+visto = bytearray(w * h)
+piezas = []
+for inicio in range(w * h):
+    if fondo[inicio] or visto[inicio]:
+        continue
+    pieza = [inicio]
+    visto[inicio] = 1
+    k = 0
+    while k < len(pieza):
+        i = pieza[k]
+        k += 1
+        x, y = i % w, i // w
+        for nx, ny in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
+            j = ny * w + nx
+            if 0 <= nx < w and 0 <= ny < h and not fondo[j] and not visto[j]:
+                visto[j] = 1
+                pieza.append(j)
+    piezas.append(pieza)
+if piezas:
+    mayor = max(len(p) for p in piezas)
+    for p in piezas:
+        # Las monedas y el confeti sueltos se quedan; solo se van las manchas chiquitas
+        if len(p) < mayor * 0.004:
+            for i in p:
+                fondo[i] = 1
+
 alfa = Image.new('L', (w, h))
 alfa.putdata([0 if f else 255 for f in fondo])
 # Borde suave y sin halo magenta

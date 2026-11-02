@@ -10,7 +10,8 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 export type Pestanas = {
   Inicio: undefined;
   Carrito: undefined;
-  MiNegocio: undefined;
+  /** `recien`: lo que acaba de llegar (se resalta); `vez` para que el mismo pedido vuelva a resaltar */
+  MiNegocio: { recien?: string[]; vez?: number } | undefined;
   Pedidos: undefined;
   Cuenta: undefined;
 };

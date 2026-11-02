@@ -2,17 +2,14 @@
  * El seguimiento como experiencia (02/11, pedido de Andrés: «como PedidosYa pero con identidad propia»):
  * - `LineaDeTiempo`: los pasos de la saga arriba; el paso actual late con ondas (algo está pasando) y, si es el pago
  *   por QR, muestra el QR ahí mismo para pagar sin ir a otra pantalla.
- * - `PagoExitoso`: al pagar, un festejo a pantalla completa (insignia 3D, confeti y vibración) que se cierra solo.
+ * - El festejo del pago está en `festejos.tsx`.
  * - `ProgresoChico`: los mismos pasos en una barrita, para la tarjeta de Compras.
  */
 import { esPasoDePagoQr, porPagar, progresoDelPedido, tiempoRestante, type Paso, type Pedido } from '@abasto/comercio';
-import { Image } from 'expo-image';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Animated, Easing, Pressable, StyleSheet, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
-import { vibrar } from './animacion';
 import { Boton, Icono, Texto } from './componentes';
-import { ILUSTRACION } from './ilustraciones';
 import { COLOR, FUENTE } from './tema';
 
 /** Dos ondas que salen del punto una tras otra: «esto está en curso» */
@@ -64,22 +61,54 @@ const ICONO_DEL_PASO: Record<string, Parameters<typeof Icono>[0]['nombre']> = {
   Entregado: 'home',
 };
 
-/** Los pasos del pedido, de arriba abajo. El actual late; el pago por QR trae el QR para pagar ahí mismo. */
-export function LineaDeTiempo({ pedido, pagando, alPagar }: { pedido: Pedido; pagando: boolean; alPagar: () => void }) {
+/**
+ * Los pasos del pedido, de arriba abajo. El actual late; el pago por QR trae el QR para pagar ahí mismo.
+ * `compacta` (el seguimiento, 02/11: «que no ocupe tanto espacio»): los pasos ya hechos se juntan en un renglón que se
+ * abre al tocarlo.
+ */
+export function LineaDeTiempo({ pedido, pagando, alPagar, compacta = false }: { pedido: Pedido; pagando: boolean; alPagar: () => void; compacta?: boolean }) {
   const { pasos, actual } = progresoDelPedido(pedido);
+  const [verTodo, setVerTodo] = useState(false);
+  const fin = actual >= 0 ? actual : pasos.length - 1;
+  const hechosAlPrincipio = pasos.findIndex((x) => x.nodo !== 'hecho');
+  const juntar = compacta && !verTodo ? Math.min(fin, hechosAlPrincipio < 0 ? pasos.length - 1 : hechosAlPrincipio) : 0;
   return (
     <View accessibilityLabel="Línea de tiempo del pedido">
-      {pasos.map((paso, i) => (
-        <PasoDeLaLinea
-          key={paso.nombre}
-          paso={paso}
-          esActual={i === actual}
-          ultimo={i === pasos.length - 1}
-          qr={i === actual && esPasoDePagoQr(paso) && porPagar(pedido) && pedido.cobro ? pedido.cobro : null}
-          pagando={pagando}
-          alPagar={alPagar}
-        />
-      ))}
+      {juntar > 1 && (
+        <Pressable onPress={() => setVerTodo(true)} style={e.paso} accessibilityRole="button" accessibilityLabel={`${juntar} pasos listos. Toca para verlos`}>
+          <View style={{ alignItems: 'center', width: 36 }}>
+            <View style={[e.nodo, e.nodoHecho]}>
+              <Icono nombre="checkmark-done" tamano={17} color={COLOR.lima} />
+            </View>
+            <View style={[e.linea, e.lineaHecha]} />
+          </View>
+          <View style={{ flex: 1, paddingBottom: 14, gap: 2 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Texto style={[e.nombrePaso, { flex: 1 }]}>{juntar} pasos listos</Texto>
+              <Texto style={e.ver}>Ver</Texto>
+            </View>
+            <Texto v="chico" lineas={1}>
+              {pasos
+                .slice(0, juntar)
+                .map((x) => x.nombre)
+                .join(' · ')}
+            </Texto>
+          </View>
+        </Pressable>
+      )}
+      {pasos.map((paso, i) =>
+        juntar > 1 && i < juntar ? null : (
+          <PasoDeLaLinea
+            key={paso.nombre}
+            paso={paso}
+            esActual={i === actual}
+            ultimo={i === pasos.length - 1}
+            qr={i === actual && esPasoDePagoQr(paso) && porPagar(pedido) && pedido.cobro ? pedido.cobro : null}
+            pagando={pagando}
+            alPagar={alPagar}
+          />
+        ),
+      )}
     </View>
   );
 }
@@ -167,71 +196,6 @@ export function ProgresoChico({ pedido }: { pedido: Pedido }) {
   );
 }
 
-const CONFETI = Array.from({ length: 18 }, (_, i) => ({
-  angulo: (i / 18) * Math.PI * 2,
-  distancia: 120 + (i % 3) * 40,
-  color: [COLOR.lima, COLOR.ambar, '#FFFFFF'][i % 3],
-  lado: 8 + (i % 4) * 3,
-}));
-
-/** El festejo del pago: cubre toda la pantalla, la insignia salta, el confeti explota y se cierra solo */
-export function PagoExitoso({ visible, total, alCerrar }: { visible: boolean; total: string; alCerrar: () => void }) {
-  const entrada = useRef(new Animated.Value(0)).current;
-  const estallido = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    if (!visible) return undefined;
-    entrada.setValue(0);
-    estallido.setValue(0);
-    vibrar.exito();
-    Animated.parallel([
-      Animated.spring(entrada, { toValue: 1, useNativeDriver: true, speed: 9, bounciness: 14 }),
-      Animated.timing(estallido, { toValue: 1, duration: 1100, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-    ]).start();
-    const t = setTimeout(alCerrar, 2800);
-    return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible]);
-  return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={alCerrar} statusBarTranslucent>
-      <Pressable style={e.festejo} onPress={alCerrar} accessibilityRole="button" accessibilityLabel="Pago recibido. Toca para ver tu pedido">
-        <View style={e.centro}>
-          {CONFETI.map((c, i) => (
-            <Animated.View
-              key={i}
-              style={{
-                position: 'absolute',
-                width: c.lado,
-                height: c.lado,
-                borderRadius: c.lado / 2,
-                backgroundColor: c.color,
-                opacity: estallido.interpolate({ inputRange: [0, 0.15, 0.85, 1], outputRange: [0, 1, 1, 0] }),
-                transform: [
-                  { translateX: estallido.interpolate({ inputRange: [0, 1], outputRange: [0, Math.cos(c.angulo) * c.distancia] }) },
-                  { translateY: estallido.interpolate({ inputRange: [0, 1], outputRange: [0, Math.sin(c.angulo) * c.distancia] }) },
-                ],
-              }}
-            />
-          ))}
-          <Animated.View
-            style={{
-              transform: [
-                { scale: entrada.interpolate({ inputRange: [0, 1], outputRange: [0.3, 1] }) },
-                { rotate: entrada.interpolate({ inputRange: [0, 1], outputRange: ['-25deg', '0deg'] }) },
-              ],
-            }}
-          >
-            <Image source={ILUSTRACION.pagoExitoso} style={{ width: 230, height: 230 }} contentFit="contain" />
-          </Animated.View>
-        </View>
-        <Animated.View style={{ alignItems: 'center', gap: 6, opacity: entrada, transform: [{ translateY: entrada.interpolate({ inputRange: [0, 1], outputRange: [30, 0] }) }] }}>
-          <Texto style={e.tituloFestejo}>¡Pago recibido!</Texto>
-          <Texto style={e.detalleFestejo}>Pagaste {total}. Ya avisamos al vendedor para que prepare tu pedido.</Texto>
-        </Animated.View>
-      </Pressable>
-    </Modal>
-  );
-}
-
 const e = StyleSheet.create({
   paso: { flexDirection: 'row', gap: 12 },
   lugarNodo: { width: 34, height: 34, alignItems: 'center', justifyContent: 'center' },
@@ -241,6 +205,7 @@ const e = StyleSheet.create({
   nodoRojo: { backgroundColor: COLOR.rojo, borderColor: COLOR.rojo },
   linea: { width: 3, flex: 1, minHeight: 14, borderRadius: 2, backgroundColor: COLOR.borde, marginVertical: 2 },
   lineaHecha: { backgroundColor: COLOR.bosque },
+  ver: { fontFamily: FUENTE.fuerte, fontSize: 13, color: COLOR.bosque, marginTop: 6, textDecorationLine: 'underline' },
   nombrePaso: { fontFamily: FUENTE.fuerte, fontSize: 15, color: COLOR.texto, marginTop: 6 },
   nombrePendiente: { color: COLOR.texto3, fontFamily: FUENTE.semi },
   nombreActual: { fontFamily: FUENTE.negra, fontSize: 17, color: COLOR.bosque },
@@ -251,8 +216,4 @@ const e = StyleSheet.create({
   barrita: { flexDirection: 'row', alignItems: 'center' },
   puntito: { width: 10, height: 10, borderRadius: 5, backgroundColor: COLOR.borde },
   tramo: { flex: 1, height: 3, borderRadius: 2, backgroundColor: COLOR.borde, marginHorizontal: 2 },
-  festejo: { flex: 1, backgroundColor: 'rgba(24,45,37,0.96)', alignItems: 'center', justifyContent: 'center', gap: 24, padding: 28 },
-  centro: { alignItems: 'center', justifyContent: 'center', width: 300, height: 300 },
-  tituloFestejo: { fontFamily: FUENTE.negra, fontSize: 34, color: COLOR.lima, letterSpacing: -1 },
-  detalleFestejo: { fontFamily: FUENTE.semi, fontSize: 16, color: '#E4EFDF', textAlign: 'center', lineHeight: 22 },
 });

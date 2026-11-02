@@ -24,6 +24,12 @@ export const ILUSTRACION = {
   pedidoEnCamino: require('../assets/ilustraciones/banner-entrega.webp'),
   pedidoEntregado: require('../assets/ilustraciones/pedido-entregado.webp'),
   pagoExitoso: require('../assets/ilustraciones/pago-exitoso.webp'),
+  // Las escenas animadas de cada estado de la compra (02/11)
+  escenaPagar: require('../assets/ilustraciones/escena-pagar.webp'),
+  escenaRevisa: require('../assets/ilustraciones/escena-revisa.webp'),
+  escenaPrepara: require('../assets/ilustraciones/escena-prepara.webp'),
+  escenaCamino: require('../assets/ilustraciones/escena-camino.webp'),
+  estanteInventario: require('../assets/ilustraciones/estante-inventario.webp'),
   sinSenal: require('../assets/ilustraciones/sin-senal.webp'),
   comprarOtraVez: require('../assets/ilustraciones/comprar-otra-vez.webp'),
   cabeceraMercado: require('../assets/ilustraciones/cabecera-mercado.webp'),

@@ -22,9 +22,9 @@ import {
   type NegocioElegido,
 } from '@abasto/comercio';
 import { Image } from 'expo-image';
-import { useEffect, useMemo, useState } from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
-import { Aparecer, HojaInferior, Tocable } from '../animacion';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Animated, StyleSheet, TextInput, View } from 'react-native';
+import { Aparecer, HojaInferior, Tocable, vibrar } from '../animacion';
 import { Boton, Falla, Icono, Texto, type NombreDeIcono } from '../componentes';
 import { ILUSTRACION, type Imagen } from '../ilustraciones';
 import { ahora, useInventario } from '../inventario';
@@ -47,11 +47,21 @@ export interface PropsDeInventario {
   grupo?: GrupoDeInventario['clave'];
   /** Tienda: «Arma tu primer estante» con lo que más se repone (el del registro, si lo saltó) */
   alArmarEstante?: () => void;
+  /** Productos (id de Catálogo) que acaban de llegar con una compra: van arriba y resaltados (02/11) */
+  recien?: string[];
 }
 
 /** El inventario (o la despensa del hogar), agrupado como lo ve cada tipo. Sin estado propio: lo usan la pantalla y las pruebas */
-export function VistaDeInventario({ negocio, datos, cargando, imagenDe, alAbrir, alAgregar, alComprar, alPedir, grupo, alArmarEstante }: PropsDeInventario) {
-  const grupos = useMemo(() => inventarioDelNegocio(negocio, datos).filter((g) => !grupo || g.clave === grupo), [negocio, datos, grupo]);
+export function VistaDeInventario({ negocio, datos, cargando, imagenDe, alAbrir, alAgregar, alComprar, alPedir, grupo, alArmarEstante, recien = [] }: PropsDeInventario) {
+  const esRecien = (a: Articulo) => !!a.productoId && recien.includes(a.productoId);
+  const grupos = useMemo(
+    () =>
+      inventarioDelNegocio(negocio, datos)
+        .filter((g) => !grupo || g.clave === grupo)
+        // Lo que acaba de llegar, primero
+        .map((g) => (recien.length ? { ...g, lineas: [...g.lineas].sort((a, b) => Number(recien.includes(b.articulo.productoId ?? '')) - Number(recien.includes(a.articulo.productoId ?? ''))) } : g)),
+    [negocio, datos, grupo, recien],
+  );
   const sinNada = !cargando && grupos.every((g) => !g.lineas.length);
   const hoy = ahora();
 
@@ -107,7 +117,15 @@ export function VistaDeInventario({ negocio, datos, cargando, imagenDe, alAbrir,
         <Aparecer key={g.clave} orden={1 + i} style={{ gap: 10 }}>
           <CabezaDeSeccion icono={ICONO_DE_GRUPO[g.clave]} titulo={g.titulo} subtitulo={g.subtitulo} derecha={g.valorCentavos > 0 ? <Texto style={e.valorGrupo}>{bs(g.valorCentavos)}</Texto> : undefined} />
           {g.lineas.length ? (
-            g.lineas.map((l) => <FilaDeArticulo key={l.articulo.id} negocio={negocio} datos={datos} existencia={l} imagen={imagenDe(l.articulo)} alTocar={() => alAbrir(l)} />)
+            g.lineas.map((l, i) =>
+              esRecien(l.articulo) ? (
+                <RecienLlegado key={l.articulo.id} orden={i}>
+                  <FilaDeArticulo negocio={negocio} datos={datos} existencia={l} imagen={imagenDe(l.articulo)} alTocar={() => alAbrir(l)} />
+                </RecienLlegado>
+              ) : (
+                <FilaDeArticulo key={l.articulo.id} negocio={negocio} datos={datos} existencia={l} imagen={imagenDe(l.articulo)} alTocar={() => alAbrir(l)} />
+              ),
+            )
           ) : (
             <View style={ui.vacio}>
               <Icono nombre="time-outline" tamano={20} color={COLOR.texto3} />
@@ -119,6 +137,43 @@ export function VistaDeInventario({ negocio, datos, cargando, imagenDe, alAbrir,
         </Aparecer>
       ))}
     </View>
+  );
+}
+
+/** Lo que acaba de llegar: cae en su lugar con un rebote, se marca en lima y late un rato */
+function RecienLlegado({ children, orden }: { children: ReactNode; orden: number }) {
+  const cae = useRef(new Animated.Value(0)).current;
+  const late = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    vibrar.toque();
+    Animated.sequence([
+      Animated.delay(250 + orden * 160),
+      Animated.spring(cae, { toValue: 1, useNativeDriver: true, speed: 10, bounciness: 14 }),
+    ]).start();
+    const bucle = Animated.loop(
+      Animated.sequence([
+        Animated.timing(late, { toValue: 1, duration: 700, useNativeDriver: true }),
+        Animated.timing(late, { toValue: 0, duration: 700, useNativeDriver: true }),
+      ]),
+      { iterations: 5 },
+    );
+    bucle.start();
+    return () => bucle.stop();
+  }, [cae, late, orden]);
+  return (
+    <Animated.View
+      style={{
+        opacity: cae,
+        transform: [{ translateY: cae.interpolate({ inputRange: [0, 1], outputRange: [-40, 0] }) }, { scale: cae.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1] }) }],
+      }}
+    >
+      <Animated.View pointerEvents="none" style={[e.resplandor, { opacity: late.interpolate({ inputRange: [0, 1], outputRange: [0.35, 1] }) }]} />
+      {children}
+      <View pointerEvents="none" style={e.etiquetaRecien}>
+        <Icono nombre="sparkles" tamano={12} color={COLOR.bosque} />
+        <Texto style={e.textoRecien}>Recién llegó</Texto>
+      </View>
+    </Animated.View>
   );
 }
 
@@ -413,6 +468,9 @@ export function HojaParaAgregar({
 }
 
 const e = StyleSheet.create({
+  resplandor: { position: 'absolute', top: -3, left: -3, right: -3, bottom: -3, borderRadius: 24, borderWidth: 3, borderColor: COLOR.lima, backgroundColor: COLOR.limaSuave },
+  etiquetaRecien: { position: 'absolute', top: -9, right: 12, flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, height: 22, borderRadius: 11, backgroundColor: COLOR.lima, borderWidth: 1.5, borderColor: COLOR.bosque },
+  textoRecien: { fontFamily: FUENTE.negra, fontSize: 11, color: COLOR.bosque },
   vacio: { alignItems: 'center', gap: 8, padding: 20, borderRadius: 26, backgroundColor: COLOR.superficie, ...SOMBRA },
   imagenVacio: { width: 140, height: 140 },
   tituloVacio: { fontFamily: FUENTE.negra, fontSize: 20, color: COLOR.texto, letterSpacing: -0.4 },

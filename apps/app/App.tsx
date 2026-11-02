@@ -17,6 +17,7 @@ import { ProveedorDeEstado, useEstado } from './src/estado';
 import type { Pestanas, Pila } from './src/navegacion';
 import { BarraInferior } from './src/BarraInferior';
 import { ProveedorDeDirecciones, useDirecciones } from './src/direcciones-estado';
+import { VigiaDeEntregas } from './src/entregas';
 import { ProveedorDeInventario } from './src/inventario';
 import { ProveedorDeNegocio, useNegocio } from './src/NegocioInicio';
 import { Acceso } from './src/pantallas/Acceso';
@@ -122,6 +123,7 @@ function ConDireccion() {
         </Stack.Navigator>
       </NavigationContainer>
       <HojaDelCarrito />
+      <VigiaDeEntregas />
       <Aviso />
     </ProveedorDeVuelo>
   );

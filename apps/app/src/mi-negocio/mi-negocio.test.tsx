@@ -119,6 +119,17 @@ describe('inventario', () => {
     expect(alComprar).toHaveBeenCalled();
   });
 
+  it('lo que acaba de llegar con una compra sale arriba y marcado «Recién llegó» (02/11)', async () => {
+    await render(
+      <Con almacen={new AlmacenLocalEnMemoria()}>
+        <VistaDeInventario negocio={TIENDA} datos={conCompras()} cargando={false} imagenDe={() => 1} alAbrir={jest.fn()} alAgregar={jest.fn()} alComprar={jest.fn()} alPedir={jest.fn()} recien={['AB-030']} />
+      </Con>,
+    );
+    expect(screen.getAllByText('Recién llegó')).toHaveLength(1);
+    const filas = screen.getAllByRole('button').map((b) => b.props.accessibilityLabel as string | undefined).filter((x) => x && /: /.test(x));
+    expect(filas[0]).toMatch(/^Coca-Cola/);
+  });
+
   it('la tienda ve su mercadería con la unidad, el precio sugerido y lo que gana', async () => {
     await render(
       <Con almacen={new AlmacenLocalEnMemoria()}>

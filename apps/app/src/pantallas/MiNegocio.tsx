@@ -74,7 +74,7 @@ export const SECCIONES: Record<TipoDeNegocio, { clave: ClaveDeSeccion; texto: st
  * - Productor: lo mismo más Recetas (costo por unidad, planificador y tandas).
  * - Hogar: Cuentas del mes, Despensa (con «se te acaba») y Mi lista de la semana.
  */
-export function MiNegocio({ navigation }: PantallaDePestana<'MiNegocio'>) {
+export function MiNegocio({ navigation, route }: PantallaDePestana<'MiNegocio'>) {
   const negocio: NegocioElegido = useNegocio().negocio ?? { tipo: 'tienda' };
   const inventario = useInventario();
   const { datos, cargando, sincronizar, sincronizarAhora, agregarAMano } = inventario;
@@ -98,6 +98,20 @@ export function MiNegocio({ navigation }: PantallaDePestana<'MiNegocio'>) {
   // La venta en curso: sigue aunque se cambie de sección; su carrito flota fuera de la lista
   const venta = useVenta();
   const carritoDeVenta = useRef<ComponentRef<typeof View>>(null);
+
+  // Lo que acaba de llegar (viene del festejo de la entrega): se abre donde entró y se resalta un rato
+  const [recien, setRecien] = useState<string[]>([]);
+  const vez = route.params?.vez;
+  useEffect(() => {
+    const ids = route.params?.recien;
+    if (!vez || !ids?.length) return undefined;
+    setSeccion(negocio.tipo === 'hogar' ? 'despensa' : 'inventario');
+    if (negocio.tipo === 'productor') setVista('insumos');
+    setRecien(ids);
+    const t = setTimeout(() => setRecien([]), 12000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vez]);
 
   // Si cambia el tipo (desde Cuenta), se vuelve a su primera sección
   useEffect(() => {
@@ -181,6 +195,7 @@ export function MiNegocio({ navigation }: PantallaDePestana<'MiNegocio'>) {
       alPedir={alPedir}
       grupo={negocio.tipo === 'productor' ? 'insumos' : undefined}
       alArmarEstante={negocio.tipo === 'tienda' ? () => setPlantilla(true) : undefined}
+      recien={recien}
     />
   );
 

@@ -277,6 +277,41 @@
       "lado": 768,
       "uso": "Pago recibido: efecto a pantalla completa (02/11)",
       "tema": "A big glossy lime-green 3D badge with a thick deep forest-green check mark in the center, bursting with lime and amber confetti, small coins and sparkles flying out around it. Inanimate objects: no faces, no eyes. No purple, pink or magenta anywhere. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
+    },
+    {
+      "nombre": "escena-pagar",
+      "tipo": "objeto",
+      "lado": 768,
+      "uso": "Compras y Seguimiento: por pagar con QR, animada (02/11)",
+      "tema": "A chunky cute smartphone standing upright, its screen glowing lime-green and showing a big abstract square pattern made only of deep forest-green squares (like a QR code, no letters), with three shiny golden coins floating around it. Inanimate objects: no faces, no eyes. Solid, fully opaque colors everywhere, no white patches, no purple, pink or magenta anywhere. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
+    },
+    {
+      "nombre": "escena-revisa",
+      "tipo": "objeto",
+      "lado": 768,
+      "uso": "Compras y Seguimiento: el vendedor revisa el pedido, animada (02/11)",
+      "tema": "Waist-up view of a friendly Bolivian wholesale seller man with a mustache, wearing a lime-green shirt and a deep forest-green apron and cap, smiling while checking a forest-green clipboard with a pencil in his other hand, a small stack of kraft cardboard boxes beside him. Solid, fully opaque colors everywhere, no white patches, no purple, pink or magenta anywhere. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
+    },
+    {
+      "nombre": "escena-prepara",
+      "tipo": "objeto",
+      "lado": 768,
+      "uso": "Compras y Seguimiento: en preparación, animada (02/11)",
+      "tema": "A cheerful young Bolivian warehouse worker woman in a deep forest-green polo shirt and cap with lime-green details, packing groceries into an open kraft cardboard box: a white rice sack, a golden cooking-oil bottle and a bunch of bananas peeking out of the box. Three-quarter view, full body, slightly leaning over the box. Solid, fully opaque colors everywhere, no white patches, no purple, pink or magenta anywhere. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
+    },
+    {
+      "nombre": "escena-camino",
+      "tipo": "objeto",
+      "lado": 768,
+      "uso": "Compras y Seguimiento: en camino, moto animada (02/11)",
+      "tema": "Exact side view (profile) of a cheerful young Bolivian delivery rider riding a chunky lime-green scooter moving to the RIGHT, wearing a deep forest-green polo, a deep forest-green helmet with lime details, a big forest-green delivery box strapped on the back of the scooter, both wheels fully visible and round, the rider smiling and looking forward to the right. Solid, fully opaque colors everywhere, no white patches, no purple, pink or magenta anywhere. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
+    },
+    {
+      "nombre": "estante-inventario",
+      "tipo": "objeto",
+      "lado": 768,
+      "uso": "Entregado: el estante donde caen los productos (02/11)",
+      "tema": "A cute chunky wooden store shelf unit with two shelves, seen from the front, holding a few groceries: a white rice sack, golden cooking-oil bottles, a kraft cardboard box and colorful soda bottles; lime-green and deep forest-green painted trim on the wood. Inanimate objects: no faces, no eyes. Solid, fully opaque colors everywhere, no white patches, no purple, pink or magenta anywhere. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
     }
   ]
 }
