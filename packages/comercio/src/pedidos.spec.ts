@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { cambiarCantidad, type ItemDeCarrito } from './carrito';
-import { compensaciones, estadoVisible, filtrarPedidos, lineaDeTiempo, porPagar, tiempoRestante, type Pedido } from './pedidos';
+import { compensaciones, esPasoDePagoQr, estadoVisible, filtrarPedidos, lineaDeTiempo, pasoActual, porPagar, progresoDelPedido, terminado, tiempoRestante, titularDelPedido, type Pedido } from './pedidos';
 
 type Base = Pick<Pedido, 'estado' | 'metodoPago' | 'cobro' | 'total' | 'motivoRechazo'>;
 
@@ -118,5 +118,32 @@ describe('contra entrega', () => {
     const p = pedido({ estado: 'RECHAZADO', metodoPago: 'CONTRA_ENTREGA', motivoRechazo: 'No llego hoy' });
     expect(lineaDeTiempo(p).at(-1)).toEqual({ nombre: 'Confirmación del mayorista', detalle: 'No llego hoy', nodo: 'rojo' });
     expect(compensaciones(p)).toEqual(['Liberamos la reserva del stock', 'No se te cobró nada']);
+  });
+});
+
+describe('Compras: la línea de tiempo arriba (02/11)', () => {
+  it('el paso actual es el que está en proceso; si no hay, el que sigue', () => {
+    const pagar = pedido({ cobro: qr('PENDIENTE') });
+    const pasos = lineaDeTiempo(pagar);
+    expect(pasos[pasoActual(pasos)].nombre).toBe('Pago por QR');
+    expect(esPasoDePagoQr(pasos[pasoActual(pasos)])).toBe(true);
+    const confirmado = lineaDeTiempo(pedido({ estado: 'CONFIRMADO', cobro: qr('PAGADO') }));
+    expect(confirmado[pasoActual(confirmado)].nombre).toBe('En preparación');
+    expect(pasoActual(lineaDeTiempo(pedido({ estado: 'ENTREGADO', cobro: qr('PAGADO') })))).toBe(-1);
+    expect(pasoActual(lineaDeTiempo(pedido({ estado: 'RECHAZADO', motivoRechazo: 'Sin stock', total: { centavos: 0, texto: 'Bs 0,00' } })))).toBe(-1);
+  });
+
+  it('el titular dice qué pasa ahora y qué hacer', () => {
+    expect(titularDelPedido(pedido({ total: { centavos: 0, texto: 'Bs 0,00' } })).titulo).toBe('Reservando tu pedido');
+    expect(titularDelPedido(pedido({ cobro: qr('PENDIENTE') })).titulo).toBe('Paga para que lo preparemos');
+    expect(titularDelPedido(pedido({ estado: 'DESPACHADO', metodoPago: 'CONTRA_ENTREGA' })).detalle).toBe('Ten listos Bs 232,80 para pagar al recibir');
+    expect(titularDelPedido(pedido({ estado: 'RECHAZADO' })).titulo).toBe('Tu pedido no siguió');
+  });
+
+  it('el progreso cuenta los pasos hechos', () => {
+    const p = progresoDelPedido(pedido({ estado: 'EN_PREPARACION', cobro: qr('PAGADO') }));
+    expect(p.hechos).toBe(5);
+    expect(p.pasos[p.actual].nombre).toBe('En camino');
+    expect(terminado({ estado: 'ENTREGADO' })).toBe(true);
   });
 });

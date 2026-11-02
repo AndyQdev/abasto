@@ -23,6 +23,7 @@ export const ILUSTRACION = {
   // El repartidor del banner de entrega sirve también para «en camino»
   pedidoEnCamino: require('../assets/ilustraciones/banner-entrega.webp'),
   pedidoEntregado: require('../assets/ilustraciones/pedido-entregado.webp'),
+  pagoExitoso: require('../assets/ilustraciones/pago-exitoso.webp'),
   sinSenal: require('../assets/ilustraciones/sin-senal.webp'),
   comprarOtraVez: require('../assets/ilustraciones/comprar-otra-vez.webp'),
   cabeceraMercado: require('../assets/ilustraciones/cabecera-mercado.webp'),

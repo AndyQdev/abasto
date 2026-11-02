@@ -224,7 +224,8 @@ export function Falla({ texto }: { texto: string }) {
 export function Vacio({ titulo, detalle, imagen, children }: { titulo: string; detalle?: string; imagen?: number; children?: ReactNode }) {
   return (
     <Tarjeta style={{ alignItems: 'center', gap: 8, paddingVertical: imagen ? 18 : 28 }}>
-      {imagen !== undefined && <Image source={imagen} style={{ width: 220, height: 165, borderRadius: 20 }} contentFit="cover" transition={250} />}
+      {/* contain: la ilustración 3D entera, sin cortes; chica, para que no ocupe media pantalla sin hacer nada (02/11) */}
+      {imagen !== undefined && <Image source={imagen} style={{ width: 130, height: 130 }} contentFit="contain" transition={250} />}
       <Texto v="t3">{titulo}</Texto>
       {detalle && <Texto v="gris" style={{ textAlign: 'center' }}>{detalle}</Texto>}
       {children}

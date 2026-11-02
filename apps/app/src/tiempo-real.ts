@@ -8,7 +8,7 @@ import { tokenActual } from './sesion';
  * (`/v1/tiempo-real`, el mismo puerto 8084) y Conecta le avisa cuando cambia un pedido suyo. El aviso solo dice qué
  * pedido cambió; la pantalla lo vuelve a pedir por GraphQL con la sesión.
  *
- * - Una sola conexión para toda la app, abierta mientras alguna pantalla escucha (Mis pedidos, Seguimiento).
+ * - Una sola conexión para toda la app, abierta mientras alguna pantalla escucha (Compras, Seguimiento).
  * - Se presenta con `{"tipo":"hola","token":…}` (el token nunca va en la URL).
  * - Si se corta, vuelve a intentar cada vez más espaciado (1 s, 2 s, 4 s… hasta 30 s); sin señal no intenta.
  * - Al volver a conectarse avisa `alReconectar`, para que la pantalla pida todo una vez (por si se perdió algo).

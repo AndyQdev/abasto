@@ -114,7 +114,7 @@ function ConDireccion() {
           <Stack.Screen name="Buscar" component={Buscar} options={{ headerShown: false, animation: 'fade_from_bottom' }} />
           <Stack.Screen name="Vendedor" component={Vendedor} options={{ headerShown: false }} />
           <Stack.Screen name="Finalizar" component={Finalizar} options={{ title: 'Finalizar pedido' }} />
-          <Stack.Screen name="Seguimiento" component={Seguimiento} options={{ title: 'Pedido' }} />
+          <Stack.Screen name="Seguimiento" component={Seguimiento} options={{ headerShown: false }} />
           <Stack.Screen name="BuscarPorFoto" component={BuscarPorFoto} options={{ title: 'Buscar con una foto' }} />
           <Stack.Screen name="NuevaDireccion" options={{ headerShown: false, presentation: 'modal', animation: 'slide_from_bottom' }}>
             {({ navigation }) => <Ubicacion alTerminar={() => navigation.goBack()} alCerrar={() => navigation.goBack()} />}

@@ -266,7 +266,7 @@ export function HojaDeArticulo({
             <Texto v="t2" lineas={2}>
               {a.nombre}
             </Texto>
-            <Texto v="gris">{[a.detalle, a.origen === 'ABASTO' ? 'Entra solo con tus pedidos de Abasto' : (a.proveedor ?? 'Otro proveedor')].filter(Boolean).join(' · ')}</Texto>
+            <Texto v="gris">{[a.detalle, a.origen === 'ABASTO' ? 'Entra solo con tus compras en Abasto' : (a.proveedor ?? 'Otro proveedor')].filter(Boolean).join(' · ')}</Texto>
           </View>
         </View>
 
@@ -414,7 +414,7 @@ export function HojaParaAgregar({
 
 const e = StyleSheet.create({
   vacio: { alignItems: 'center', gap: 8, padding: 20, borderRadius: 26, backgroundColor: COLOR.superficie, ...SOMBRA },
-  imagenVacio: { width: 200, height: 200 },
+  imagenVacio: { width: 140, height: 140 },
   tituloVacio: { fontFamily: FUENTE.negra, fontSize: 20, color: COLOR.texto, letterSpacing: -0.4 },
   valorGrupo: { fontFamily: FUENTE.negra, fontSize: 15, color: COLOR.bosque },
   reponer: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 18, backgroundColor: COLOR.ambarSuave },

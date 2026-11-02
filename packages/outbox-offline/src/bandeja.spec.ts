@@ -44,6 +44,16 @@ describe('Bandeja offline', () => {
     expect(await bandeja.pendientes()).toEqual([]);
   });
 
+  it('después de mandarla se lee lo que respondió Conecta (el pedido creado)', async () => {
+    const conRed: Enviar = async (ops) => ops.map((o) => ({ clave: o.clave, estado: 'aplicada' as const, respuesta: { id: 'p-123' } }));
+    const bandeja = new Bandeja(new AlmacenEnMemoria(), conRed, { generarClave: claves, ahora: reloj });
+    const op = await bandeja.agregar('pedido.crear', pedido);
+    expect((await bandeja.operacion(op.clave))?.estado).toBe('pendiente');
+    await bandeja.sincronizar();
+    expect(await bandeja.operacion(op.clave)).toMatchObject({ estado: 'aplicada', respuesta: { id: 'p-123' } });
+    expect(await bandeja.operacion('otra')).toBeNull();
+  });
+
   it('una operación que Conecta ya tenía cuenta como aplicada', async () => {
     const repetida: Enviar = async (ops) => ops.map((o) => ({ clave: o.clave, estado: 'repetida' as const }));
     const almacen = new AlmacenEnMemoria();

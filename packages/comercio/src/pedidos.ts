@@ -183,3 +183,48 @@ export function fechaHora(iso: string) {
 }
 
 export const productos = (n: number) => `${n} ${n === 1 ? 'producto' : 'productos'}`;
+
+/**
+ * El paso en el que va el pedido (02/11, Compras): el que está en proceso o, si ninguno, el siguiente pendiente (lo que
+ * viene). -1 si ya terminó o no siguió. Es el que se anima en la línea de tiempo.
+ */
+export function pasoActual(pasos: Paso[]): number {
+  const enProceso = pasos.findIndex((x) => x.nodo === 'proc');
+  if (enProceso >= 0) return enProceso;
+  if (pasos.some((x) => x.nodo === 'rojo')) return -1;
+  return pasos.findIndex((x) => x.nodo === 'pend');
+}
+
+/** El pago por QR es el paso que muestra el QR ahí mismo */
+export const esPasoDePagoQr = (x: Paso) => x.nombre === 'Pago por QR';
+
+/** Ya no cambia: entregado, rechazado o cancelado */
+export const terminado = (p: Pick<Pedido, 'estado'>) => p.estado === 'ENTREGADO' || p.estado === 'RECHAZADO' || p.estado === 'CANCELADO';
+
+/** Lo que se lee arriba del seguimiento, en grande: qué pasa ahora y qué sigue */
+export function titularDelPedido(p: Pick<Pedido, 'estado' | 'metodoPago' | 'cobro' | 'total'>): { titulo: string; detalle: string } {
+  switch (p.estado) {
+    case 'PENDIENTE':
+      if (p.total.centavos === 0) return { titulo: 'Reservando tu pedido', detalle: p.metodoPago === 'QR' ? 'En un momento te mostramos el QR para pagar' : 'Apartamos lo que pediste' };
+      if (porPagar(p)) return { titulo: 'Paga para que lo preparemos', detalle: 'Escanea el QR con la app de tu banco' };
+      return { titulo: p.metodoPago === 'CREDITO' ? 'Autorizando tu crédito' : 'Procesando tu pedido', detalle: 'Es cuestión de segundos' };
+    case 'POR_CONFIRMAR':
+      return { titulo: 'El vendedor revisa tu pedido', detalle: 'Te avisamos apenas lo confirme' };
+    case 'CONFIRMADO':
+      return { titulo: '¡Confirmado!', detalle: 'Pronto empiezan a prepararlo' };
+    case 'EN_PREPARACION':
+      return { titulo: 'Estamos preparando tu pedido', detalle: 'Juntamos todo lo que pediste' };
+    case 'DESPACHADO':
+      return { titulo: 'Tu pedido va en camino', detalle: p.metodoPago === 'CONTRA_ENTREGA' ? `Ten listos ${p.total.texto} para pagar al recibir` : 'Llega a la dirección que elegiste' };
+    case 'ENTREGADO':
+      return { titulo: '¡Entregado!', detalle: 'Ya entró a tu inventario de «Mi negocio»' };
+    default:
+      return { titulo: 'Tu pedido no siguió', detalle: 'Mira abajo qué deshicimos por ti' };
+  }
+}
+
+/** Para la tarjeta de Compras: cuántos pasos van y cuál es el actual */
+export function progresoDelPedido(p: Pick<Pedido, 'estado' | 'metodoPago' | 'cobro' | 'total' | 'motivoRechazo'>) {
+  const pasos = lineaDeTiempo(p);
+  return { pasos, hechos: pasos.filter((x) => x.nodo === 'hecho').length, actual: pasoActual(pasos) };
+}

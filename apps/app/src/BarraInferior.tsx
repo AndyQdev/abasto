@@ -13,11 +13,14 @@ const ICONOS: Record<keyof Pestanas, [NombreDeIcono, NombreDeIcono]> = {
   Inicio: ['home', 'home-outline'],
   Carrito: ['cart', 'cart-outline'],
   MiNegocio: ['cube', 'cube-outline'],
-  Pedidos: ['receipt', 'receipt-outline'],
+  Pedidos: ['bag-handle', 'bag-handle-outline'],
   Cuenta: ['person', 'person-outline'],
 };
 
 const GRIS_VERDOSO = '#7D8F86';
+
+/** «Pedidos» se llama «Compras» (02/11, pedido de Andrés): así no se confunde con lo que el cliente vende en Mi negocio */
+const ETIQUETAS: Partial<Record<keyof Pestanas, string>> = { Pedidos: 'Compras' };
 
 /** «Mi negocio» se llama como su tipo de cliente; en la barra va corto para que entren las seis pestañas */
 const MI_NEGOCIO = {
@@ -57,7 +60,7 @@ export function BarraInferior({ state, navigation }: BottomTabBarProps) {
             <Pestana
               key={ruta.key}
               nombre={nombre}
-              etiqueta={nombre === 'MiNegocio' ? MI_NEGOCIO[tipo].etiqueta : nombre}
+              etiqueta={nombre === 'MiNegocio' ? MI_NEGOCIO[tipo].etiqueta : (ETIQUETAS[nombre] ?? nombre)}
               iconos={nombre === 'MiNegocio' ? MI_NEGOCIO[tipo].iconos : ICONOS[nombre]}
               activa={activa}
               alTocar={ir}

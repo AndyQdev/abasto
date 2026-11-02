@@ -609,7 +609,7 @@ function AsistenteDeReceta({ negocio, datos, receta, alCerrar }: { negocio: Nego
 
 const e = StyleSheet.create({
   bienvenida: { alignItems: 'center', gap: 10, padding: 20, borderRadius: 26, backgroundColor: COLOR.superficie, ...SOMBRA },
-  imagenBienvenida: { width: 170, height: 170 },
+  imagenBienvenida: { width: 130, height: 130 },
   tituloBienvenida: { fontFamily: FUENTE.negra, fontSize: 22, color: COLOR.texto, letterSpacing: -0.5 },
   comoFunciona: { flexDirection: 'row', gap: 8, alignSelf: 'stretch', marginVertical: 6 },
   pasoComo: { flex: 1, alignItems: 'center', gap: 6, padding: 10, borderRadius: 16, backgroundColor: COLOR.limaSuave },

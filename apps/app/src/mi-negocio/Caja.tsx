@@ -189,11 +189,16 @@ export function CarritoDeVenta({
   const antes = useRef(unidades);
   useEffect(() => {
     const subio = unidades > antes.current;
+    const primero = antes.current === 0 && unidades > 0;
     antes.current = unidades;
     if (unidades === 0) setAbierta(false);
     if (!subio) return undefined;
-    // Late cuando llega el producto que vuela (el vuelo dura ~0,7 s)
-    const t = setTimeout(latir, 650);
+    // Late cuando llega el producto que vuela (el vuelo dura ~0,7 s). Con el primero de la venta, la hoja se abre
+    // sola (pedido de Andrés, 02/11): los siguientes solo suman, para no tapar la grilla
+    const t = setTimeout(() => {
+      latir();
+      if (primero) setAbierta(true);
+    }, 650);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unidades]);
