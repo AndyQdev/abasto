@@ -13,7 +13,7 @@ import { useDirecciones } from '../direcciones-estado';
 import { useEstado } from '../estado';
 import { CabeceraInicio } from '../CabeceraInicio';
 import { guardado } from '../guardado';
-import { ChipsDeNegocio, ElegirNegocio, PedidoDeLaSemanaCarta, SinIrAlMercado, useNegocio } from '../NegocioInicio';
+import { PedidoDeLaSemanaCarta, SinIrAlMercado, useNegocio } from '../NegocioInicio';
 import { HojaDeDirecciones } from '../HojaDeDirecciones';
 import { fotoDe, ILUSTRACION, imagenDeRubro, rubroCorto } from '../ilustraciones';
 import type { PantallaDePestana } from '../navegacion';
@@ -34,13 +34,15 @@ const ESTILO: Record<ClaveDeVitrina, { icono: NombreDeIcono; etiqueta: [string, 
   panaderia: { icono: 'pizza', etiqueta: [COLOR.bosque, COLOR.lima] },
   pension: { icono: 'restaurant', etiqueta: [COLOR.bosque, COLOR.lima] },
   descartables: { icono: 'bag-handle', etiqueta: [COLOR.bosque, COLOR.lima] },
+  sugeridos: { icono: 'sparkles', etiqueta: [COLOR.bosque, COLOR.lima] },
 };
 /** La etiqueta de un precio de demostración va en ámbar, para que se vea antes de pedir */
 const POR_CONFIRMAR: [string, string] = [COLOR.ambar, COLOR.bosque];
 
 /**
- * 01/11: el Inicio depende del negocio del cliente (tienda, salteñería-panadería o pensión-restaurante): sus rubros,
- * sus secciones («Para tu salteñería»), «Tu pedido de la semana» y la promesa «No vuelvas a ir al mercado».
+ * 01/11: el Inicio depende del negocio del cliente (tienda, salteñería-panadería o pensión-restaurante), que se
+ * elige al registrarse (`pantallas/Negocio.tsx`) y se cambia en Cuenta: sus rubros, sus secciones («Para tu
+ * salteñería»), «También te puede servir», «Tu pedido de la semana» y la promesa «No vuelvas a ir al mercado».
  * La lógica está en `negocios.ts` de packages/comercio y las piezas en `src/NegocioInicio.tsx`.
  *
  * Inicio de ABASTO (31/10): lo primero que se ve son los productos y sus precios. Encabezado compacto, rubros y
@@ -118,10 +120,6 @@ export function Inicio({ navigation }: PantallaDePestana<'Inicio'>) {
 
         <View style={e.cuerpo}>
           {catalogo.error && !estantes.length && <Falla texto={catalogo.error} />}
-
-          {negocio.leido && (
-            <Aparecer orden={1}>{negocio.tipo ? <ChipsDeNegocio tipo={negocio.tipo} alElegir={negocio.elegir} /> : <ElegirNegocio alElegir={negocio.elegir} />}</Aparecer>
-          )}
 
           <Aparecer orden={2}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={e.filaRubros}>

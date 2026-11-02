@@ -12,7 +12,7 @@ import { bs } from './carrito';
 import { escalasConPrecio, preciosDeLaCasa, type Escala, type Producto } from './catalogo';
 
 /** Las de siempre y, desde el 01/11, las de cada negocio (`negocios.ts`) */
-export type ClaveDeVitrina = 'super' | 'reventa' | 'probar' | 'volumen' | 'deAqui' | 'repone' | 'salteneria' | 'panaderia' | 'pension' | 'descartables';
+export type ClaveDeVitrina = 'super' | 'reventa' | 'probar' | 'volumen' | 'deAqui' | 'repone' | 'salteneria' | 'panaderia' | 'pension' | 'descartables' | 'sugeridos';
 
 export interface TarjetaDeVitrina {
   producto: Producto;

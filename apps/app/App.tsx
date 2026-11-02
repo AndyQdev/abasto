@@ -16,6 +16,7 @@ import { ProveedorDeEstado, useEstado } from './src/estado';
 import type { Pestanas, Pila } from './src/navegacion';
 import { BarraInferior } from './src/BarraInferior';
 import { ProveedorDeDirecciones, useDirecciones } from './src/direcciones-estado';
+import { ProveedorDeNegocio, useNegocio } from './src/NegocioInicio';
 import { Acceso } from './src/pantallas/Acceso';
 import { BuscarPorFoto } from './src/pantallas/BuscarPorFoto';
 import { Buscar } from './src/pantallas/Buscar';
@@ -23,6 +24,7 @@ import { Carrito } from './src/pantallas/Carrito';
 import { Cuenta } from './src/pantallas/Cuenta';
 import { Finalizar } from './src/pantallas/Finalizar';
 import { Inicio } from './src/pantallas/Inicio';
+import { Negocio } from './src/pantallas/Negocio';
 import { Pedidos } from './src/pantallas/Pedidos';
 import { Producto } from './src/pantallas/Producto';
 import { Seguimiento } from './src/pantallas/Seguimiento';
@@ -64,6 +66,18 @@ function Navegacion() {
   }
   // Como PedidosYa: sin sesión, celular y código; con sesión, nunca más se pide
   if (!usuario) return <Acceso />;
+  return (
+    <ProveedorDeNegocio>
+      <ConNegocio />
+    </ProveedorDeNegocio>
+  );
+}
+
+/** Registro (01/11): después del celular, una sola vez, qué negocio tiene. Después, la dirección. */
+function ConNegocio() {
+  const { tipo, leido } = useNegocio();
+  if (!leido) return <View style={e.centro} />;
+  if (!tipo) return <Negocio />;
   return (
     <ProveedorDeDirecciones>
       <ConDireccion />

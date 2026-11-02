@@ -24,6 +24,7 @@ export const ILUSTRACION = {
   sinSenal: require('../assets/ilustraciones/sin-senal.webp'),
   comprarOtraVez: require('../assets/ilustraciones/comprar-otra-vez.webp'),
   cabeceraMercado: require('../assets/ilustraciones/cabecera-mercado.webp'),
+  bannerMercado: require('../assets/ilustraciones/banner-mercado.webp'),
 } satisfies Record<string, Recurso>;
 
 const PRESENTACIONES: Record<string, Recurso> = {

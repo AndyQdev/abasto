@@ -32,6 +32,8 @@ export interface Negocio {
   secciones: Seccion[];
   /** Las vitrinas de siempre que le sirven (sin «súper»: dejó de ser la promesa) */
   vitrinas: ClaveDeVitrina[];
+  /** El subtítulo de «También te puede servir»: lo demás de sus rubros que no salió en sus secciones */
+  sugeridos: string;
 }
 
 const COCINA = ['Harinas y panificación', 'Aceites y grasas', 'Granos y cereales', 'Condimentos', 'Huevos y lácteos', 'Verduras secas', 'Descartables'];
@@ -52,6 +54,7 @@ export const NEGOCIOS: Record<TipoDeNegocio, Negocio> = {
       },
     ],
     vitrinas: ['reventa', 'volumen', 'deAqui'],
+    sugeridos: 'Más para los estantes de tu tienda',
   },
   masas: {
     tipo: 'masas',
@@ -74,6 +77,7 @@ export const NEGOCIOS: Record<TipoDeNegocio, Negocio> = {
       },
     ],
     vitrinas: ['volumen'],
+    sugeridos: 'Más cosas que se usan en una salteñería o panadería',
   },
   cocina: {
     tipo: 'cocina',
@@ -96,6 +100,7 @@ export const NEGOCIOS: Record<TipoDeNegocio, Negocio> = {
       },
     ],
     vitrinas: ['volumen'],
+    sugeridos: 'Más para la cocina de tu negocio',
   },
 };
 
@@ -138,8 +143,9 @@ function tarjeta(p: Producto): TarjetaDeVitrina | null {
 }
 
 /**
- * Las secciones del Inicio de este negocio: primero las suyas («Para tu salteñería»), después las vitrinas de
- * siempre que le sirven, calculadas solo con sus rubros (a una pensión no se le ofrece shampoo).
+ * Las secciones del Inicio de este negocio: primero las suyas («Para tu salteñería»), después «También te puede
+ * servir» (lo demás de sus rubros, en el orden en que los busca) y al final las vitrinas de siempre que le sirven,
+ * calculadas solo con sus rubros (a una pensión no se le ofrece shampoo).
  */
 export function seccionesDelNegocio(tipo: TipoDeNegocio, productos: Producto[], maximo = 10): Vitrina[] {
   const negocio = NEGOCIOS[tipo];
@@ -156,9 +162,22 @@ export function seccionesDelNegocio(tipo: TipoDeNegocio, productos: Producto[], 
     const tarjetas = elegidos.map(tarjeta).filter((t): t is TarjetaDeVitrina => t !== null);
     return { clave: s.clave, titulo: s.titulo, subtitulo: s.subtitulo, tarjetas: tarjetas.slice(0, maximo) };
   });
+  const yaSalieron = new Set(propias.flatMap((v) => v.tarjetas.map((t) => t.producto.id)));
+  const otros = casa
+    .filter((p) => negocio.rubros.includes(p.rubro) && !yaSalieron.has(p.id))
+    .sort((a, b) => negocio.rubros.indexOf(a.rubro) - negocio.rubros.indexOf(b.rubro));
+  const sugeridos: Vitrina = {
+    clave: 'sugeridos',
+    titulo: 'También te puede servir',
+    subtitulo: negocio.sugeridos,
+    tarjetas: otros
+      .map(tarjeta)
+      .filter((t): t is TarjetaDeVitrina => t !== null)
+      .slice(0, maximo),
+  };
   const suyos = productos.filter((p) => negocio.rubros.includes(p.rubro));
   const deSiempre = vitrinas(suyos, maximo).filter((v) => negocio.vitrinas.includes(v.clave));
-  return [...propias.filter((v) => v.tarjetas.length > 0), ...deSiempre];
+  return [...propias, sugeridos].filter((v) => v.tarjetas.length > 0).concat(deSiempre);
 }
 
 function precioDeLaChica(p: Producto) {

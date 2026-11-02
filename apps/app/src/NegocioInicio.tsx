@@ -1,21 +1,37 @@
 import { NEGOCIOS, TIPOS_DE_NEGOCIO, esTipoDeNegocio, type PedidoDeLaSemana, type TipoDeNegocio } from '@abasto/comercio';
 import { Image } from 'expo-image';
-import { useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Tocable } from './animacion';
+import { Flotar, Tocable } from './animacion';
 import { Boton, Icono, Texto, type NombreDeIcono } from './componentes';
 import { guardado } from './guardado';
-import { ILUSTRACION } from './ilustraciones';
+import { ILUSTRACION, imagenDeRubro } from './ilustraciones';
 import { COLOR, FUENTE, SOMBRA } from './tema';
 
 /**
- * El Inicio según el negocio (01/11): el cliente elige si es tienda, salteñería-panadería o pensión-restaurante y
- * la app le muestra primero lo suyo. La elección se guarda en el teléfono y se cambia con los chips de arriba.
+ * El negocio del cliente (01/11): tienda, salteñería-panadería o pensión-restaurante. Se pregunta una sola vez, al
+ * registrarse (`pantallas/Negocio.tsx`), y se cambia en Cuenta. El Inicio lo usa para mostrar primero lo suyo.
+ * Se guarda en el teléfono.
  */
-const ICONO: Record<TipoDeNegocio, NombreDeIcono> = { tienda: 'storefront', masas: 'pizza', cocina: 'restaurant' };
+export const ICONO_DE_NEGOCIO: Record<TipoDeNegocio, NombreDeIcono> = { tienda: 'storefront', masas: 'pizza', cocina: 'restaurant' };
 
-/** El negocio guardado; `leido` evita mostrar la pregunta un instante a quien ya eligió */
-export function useNegocio() {
+/** La ilustración 3D de cada negocio, para la pantalla de elegir */
+export const IMAGEN_DE_NEGOCIO: Record<TipoDeNegocio, number> = {
+  tienda: ILUSTRACION.bannerAbarrotes,
+  masas: imagenDeRubro('Harinas y panificación'),
+  cocina: imagenDeRubro('Aceites y grasas'),
+};
+
+interface EstadoDeNegocio {
+  tipo: TipoDeNegocio | null;
+  /** false mientras se lee del teléfono: evita mostrar la pregunta un instante a quien ya eligió */
+  leido: boolean;
+  elegir: (t: TipoDeNegocio) => void;
+}
+
+const Contexto = createContext<EstadoDeNegocio | null>(null);
+
+export function ProveedorDeNegocio({ children }: { children: ReactNode }) {
   const [tipo, setTipo] = useState<TipoDeNegocio | null>(null);
   const [leido, setLeido] = useState(false);
   useEffect(() => {
@@ -28,51 +44,32 @@ export function useNegocio() {
     setTipo(t);
     void guardado.escribir('negocio', t);
   };
-  return { tipo, leido, elegir };
+  return <Contexto.Provider value={{ tipo, leido, elegir }}>{children}</Contexto.Provider>;
 }
 
-/** La primera vez: «¿Qué negocio tienes?» con las tres opciones grandes */
-export function ElegirNegocio({ alElegir }: { alElegir: (t: TipoDeNegocio) => void }) {
-  return (
-    <View style={e.carta}>
-      <View style={{ gap: 2 }}>
-        <Texto style={e.pregunta}>¿Qué negocio tienes?</Texto>
-        <Texto v="gris">Te mostramos primero lo que usas cada semana.</Texto>
-      </View>
-      {TIPOS_DE_NEGOCIO.map((t) => (
-        <Tocable key={t} onPress={() => alElegir(t)} style={e.opcion} accessibilityRole="button" accessibilityLabel={NEGOCIOS[t].nombre}>
-          <View style={e.iconoOpcion}>
-            <Icono nombre={ICONO[t]} tamano={22} color={COLOR.bosque} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Texto v="fuerte">{NEGOCIOS[t].nombre}</Texto>
-            <Texto v="chico" lineas={1}>
-              {NEGOCIOS[t].ejemplo}
-            </Texto>
-          </View>
-          <Icono nombre="chevron-forward" tamano={18} color={COLOR.texto3} />
-        </Tocable>
-      ))}
-    </View>
-  );
+export function useNegocio() {
+  const c = useContext(Contexto);
+  if (!c) throw new Error('useNegocio va dentro de ProveedorDeNegocio');
+  return c;
 }
 
-/** Después de elegir: tres chips para cambiar de negocio sin salir del Inicio */
-export function ChipsDeNegocio({ tipo, alElegir }: { tipo: TipoDeNegocio; alElegir: (t: TipoDeNegocio) => void }) {
+/** En Cuenta: tres chips para cambiar de negocio */
+export function ChipsDeNegocio({ tipo, alElegir }: { tipo: TipoDeNegocio | null; alElegir: (t: TipoDeNegocio) => void }) {
   return (
-    <View style={e.chips} accessibilityRole="tablist">
+    <View style={e.chips} accessibilityRole="radiogroup">
       {TIPOS_DE_NEGOCIO.map((t) => {
         const activo = t === tipo;
         return (
           <Tocable
             key={t}
             onPress={() => alElegir(t)}
+            exterior={{ flex: 1 }}
             style={[e.chip, activo && e.chipActivo]}
-            accessibilityRole="tab"
+            accessibilityRole="radio"
             accessibilityState={{ selected: activo }}
             accessibilityLabel={NEGOCIOS[t].nombre}
           >
-            <Icono nombre={ICONO[t]} tamano={16} color={activo ? COLOR.lima : COLOR.bosque} />
+            <Icono nombre={ICONO_DE_NEGOCIO[t]} tamano={16} color={activo ? COLOR.lima : COLOR.bosque} />
             <Texto style={[e.textoChip, activo && { color: COLOR.lima }]} lineas={1}>
               {NEGOCIOS[t].corto}
             </Texto>
@@ -83,16 +80,27 @@ export function ChipsDeNegocio({ tipo, alElegir }: { tipo: TipoDeNegocio; alEleg
   );
 }
 
-/** La promesa nueva de Abasto, en lugar de «más barato que el súper» */
+/**
+ * La promesa de Abasto: la imagen manda (la moto llena del mercado, que sobresale) y el texto es corto.
+ */
 export function SinIrAlMercado({ horas }: { horas: number }) {
-  const cuando = horas <= 24 ? 'te llega mañana' : `te llega en ${horas} h`;
+  const cuando = horas <= 24 ? 'Llega mañana' : `Llega en ${horas} h`;
   return (
-    <View style={e.mercado}>
-      <View style={{ flex: 1, gap: 4 }}>
+    <View style={e.mercado} accessibilityRole="summary" accessibilityLabel={`No vuelvas a ir al mercado. Pides hoy, ${cuando.toLowerCase()}.`}>
+      <View style={e.textosMercado}>
         <Texto style={e.tituloMercado}>No vuelvas a ir al mercado</Texto>
-        <Texto style={e.textoMercado}>Compramos por ti en Los Pozos y La Ramada y te lo llevamos. Pides hoy, {cuando} a tu puerta.</Texto>
+        <View style={e.pildora}>
+          <Icono nombre="time" tamano={14} color={COLOR.bosque} />
+          <Texto style={e.textoPildora} lineas={1}>
+            {cuando}
+          </Texto>
+        </View>
       </View>
-      <Image source={ILUSTRACION.bannerEntrega} style={e.imagenMercado} contentFit="contain" />
+      <View style={e.lugarImagen} pointerEvents="none">
+        <Flotar alto={5}>
+          <Image source={ILUSTRACION.bannerMercado} style={e.imagenMercado} contentFit="contain" accessibilityIgnoresInvertColors />
+        </Flotar>
+      </View>
     </View>
   );
 }
@@ -112,11 +120,7 @@ export function PedidoDeLaSemanaCarta({ pedido, alRepetir }: { pedido: PedidoDeL
           </Texto>
         </View>
       </View>
-      {pedido.faltan.length > 0 && (
-        <Texto v="chico">
-          Ya no vendemos: {pedido.faltan.join(', ')}.
-        </Texto>
-      )}
+      {pedido.faltan.length > 0 && <Texto v="chico">Ya no vendemos: {pedido.faltan.join(', ')}.</Texto>}
       <Boton texto="Pedir lo mismo" icono="repeat" alTocar={alRepetir} />
     </View>
   );
@@ -125,14 +129,16 @@ export function PedidoDeLaSemanaCarta({ pedido, alRepetir }: { pedido: PedidoDeL
 const e = StyleSheet.create({
   carta: { gap: 12, padding: 16, borderRadius: 24, backgroundColor: COLOR.superficie, ...SOMBRA },
   pregunta: { fontFamily: FUENTE.negra, fontSize: 19, color: COLOR.texto, letterSpacing: -0.5 },
-  opcion: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 18, backgroundColor: COLOR.tenue, borderWidth: 1, borderColor: COLOR.borde },
-  iconoOpcion: { width: 44, height: 44, borderRadius: 14, backgroundColor: COLOR.lima, alignItems: 'center', justifyContent: 'center' },
   chips: { flexDirection: 'row', gap: 8 },
-  chip: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, height: 40, borderRadius: 20, backgroundColor: COLOR.superficie, borderWidth: 1, borderColor: COLOR.borde },
+  chip: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, height: 42, borderRadius: 21, backgroundColor: COLOR.superficie, borderWidth: 1, borderColor: COLOR.borde },
   chipActivo: { backgroundColor: COLOR.bosque, borderColor: COLOR.bosque },
   textoChip: { fontFamily: FUENTE.fuerte, fontSize: 13, color: COLOR.bosque },
-  mercado: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 16, paddingVertical: 14, borderRadius: 24, backgroundColor: COLOR.bosque, overflow: 'hidden' },
-  tituloMercado: { fontFamily: FUENTE.negra, fontSize: 18, color: COLOR.lima, letterSpacing: -0.4 },
-  textoMercado: { fontFamily: FUENTE.semi, fontSize: 13, lineHeight: 18, color: '#FFFFFF' },
-  imagenMercado: { width: 104, height: 92, marginRight: -6 },
+  // La moto sobresale por arriba (dentro del espacio entre secciones) y por la derecha
+  mercado: { height: 136, borderRadius: 26, backgroundColor: COLOR.bosque, justifyContent: 'center' },
+  textosMercado: { width: '54%', paddingLeft: 18, gap: 10 },
+  tituloMercado: { fontFamily: FUENTE.negra, fontSize: 21, lineHeight: 24, color: COLOR.lima, letterSpacing: -0.6 },
+  pildora: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, height: 28, borderRadius: 14, backgroundColor: COLOR.lima },
+  textoPildora: { fontFamily: FUENTE.fuerte, fontSize: 12.5, color: COLOR.bosque },
+  lugarImagen: { position: 'absolute', right: -8, bottom: 0 },
+  imagenMercado: { width: 190, height: 160 },
 });

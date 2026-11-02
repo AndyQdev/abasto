@@ -44,6 +44,13 @@
       "tema": "Colorful detergent bottles in lime, white and blue, a bleach jug, soap bars, a sponge and a small bucket overflowing with soft soap bubbles. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
     },
     {
+      "nombre": "banner-mercado",
+      "tipo": "objeto",
+      "lado": 1024,
+      "uso": "Inicio: «No vuelvas a ir al mercado» (la imagen manda, sobresale del banner)",
+      "tema": "A cute rounded lime-green three-wheeled cargo motorbike (mototaxi style) with a big open cargo bed overflowing with fresh market goods: a big white flour sack tied with string, a burlap sack of potatoes, a mesh bag of golden-yellow onions, a tray of brown eggs, a golden cooking-oil jug and a bunch of green herbs on top. A happy rider in a deep forest-green polo and helmet, side three-quarter view, dynamic and generous, the cargo is the hero. No purple, pink or magenta anywhere. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
+    },
+    {
       "nombre": "banner-entrega",
       "tipo": "objeto",
       "lado": 768,

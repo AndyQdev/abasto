@@ -78,6 +78,15 @@ describe('secciones según el negocio', () => {
     expect(claves).not.toContain('super');
   });
 
+  it('«También te puede servir» sugiere lo demás de sus rubros, sin repetir lo de sus secciones', () => {
+    const ids = seccion('masas', 'sugeridos')!.tarjetas.map((t) => t.producto.id);
+    expect(ids).toEqual(['X-1', 'AB-119']);
+    expect(seccion('masas', 'sugeridos')!.subtitulo).toContain('salteñería');
+    // A una tienda sí se le sugiere higiene; a una pensión nunca
+    expect(seccion('tienda', 'sugeridos')!.tarjetas.map((t) => t.producto.id)).toContain('AB-032');
+    expect(seccionesDelNegocio('cocina', todos).flatMap((s) => s.tarjetas.map((t) => t.producto.id))).not.toContain('AB-032');
+  });
+
   it('una sección sin productos no se muestra', () => {
     expect(seccionesDelNegocio('cocina', [shampoo]).map((s) => s.clave)).toEqual([]);
   });
