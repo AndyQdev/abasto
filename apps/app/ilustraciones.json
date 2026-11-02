@@ -218,8 +218,8 @@
       "nombre": "pedido-entregado",
       "tipo": "objeto",
       "lado": 768,
-      "uso": "Seguimiento: entregado",
-      "tema": "A smiling store owner woman holding a stack of kraft cardboard boxes next to a delivery rider in a deep forest-green polo giving a thumbs up, small lime confetti around. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
+      "uso": "Seguimiento y Compras: entregado (02/11 regenerada sin blancos)",
+      "tema": "A smiling store owner woman in a lime-green shirt and a deep forest-green apron (no white clothing) holding a stack of kraft cardboard boxes, next to a delivery rider in a deep forest-green polo and cap giving a thumbs up. Solid, fully opaque colors everywhere, no white patches, no purple, pink or magenta anywhere. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
     },
     {
       "nombre": "sin-senal",
@@ -270,6 +270,13 @@
       "lado": 512,
       "uso": "Rubro Carnes (02/11)",
       "tema": "A small wooden board with grilled meats: a juicy brown grilled steak, a golden roasted chicken and grilled chorizo sausages, with a sprig of green parsley. No purple, pink or magenta anywhere. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
+    },
+    {
+      "nombre": "pago-exitoso",
+      "tipo": "objeto",
+      "lado": 768,
+      "uso": "Pago recibido: efecto a pantalla completa (02/11)",
+      "tema": "A big glossy lime-green 3D badge with a thick deep forest-green check mark in the center, bursting with lime and amber confetti, small coins and sparkles flying out around it. Inanimate objects: no faces, no eyes. No purple, pink or magenta anywhere. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
     }
   ]
 }
