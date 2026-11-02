@@ -9,6 +9,7 @@ import {
   itemsParaPedir,
   leerCantidad,
   medidaDeContenido,
+  numeroBonito,
   nombreDe,
   plantillasDe,
   primeraReceta,
@@ -387,7 +388,10 @@ function RecetasListas({
 /** «1 arroba · 11,5 kg», «2 u. · 2 kg», «1 docena»: lo que va al carrito, con su unidad */
 function cuantoPedir(i: ItemDeCarrito, p: Producto | undefined) {
   if (i.presentacion !== 'UNIDAD') return cantidadDe(i.presentacion, i.cantidad);
-  return textoDeCantidad(i.cantidad, medidaDeContenido(separarContenido(p?.nombre ?? i.nombre).contenido));
+  const m = medidaDeContenido(separarContenido(p?.nombre ?? i.nombre).contenido);
+  // «Charque · 1 kg» × 2 → «2 kg» (no «2 u. · 2 kg»)
+  if (m.envase === 'unidad' && m.porEnvase === 1 && m.unidad !== 'u.') return `${numeroBonito(i.cantidad)} ${m.unidad}`;
+  return textoDeCantidad(i.cantidad, m);
 }
 
 const GANANCIAS = [
