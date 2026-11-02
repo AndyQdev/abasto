@@ -133,7 +133,7 @@ export function ProveedorDeSesion({ children }: { children: ReactNode }) {
         const refresco = tokensRef.current?.refresco;
         // Lo que es de la persona y vive en el teléfono sin dueño: si entra otra cuenta, empieza de cero.
         // «Mi negocio» y el tipo de negocio van por usuario (y están en la base de datos): no se tocan.
-        await Promise.all(['direcciones', 'direccion-elegida', 'carrito', 'pedidos'].map((k) => guardado.borrar(k)));
+        await Promise.all(['direcciones', 'direccion-elegida', 'carrito', 'pedidos', 'busquedas'].map((k) => guardado.borrar(k)));
         await guardar(null);
         if (refresco) await cerrarEnKeycloak(refresco);
       },

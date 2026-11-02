@@ -14,7 +14,7 @@ import { useVuelo, type Origen } from '../vuelo';
 
 /** Ficha del producto: el 3D grande sobre lima pálido, el precio claro y las presentaciones fáciles de comparar. */
 export function Producto({ navigation, route }: PantallaDePila<'Producto'>) {
-  const { catalogo, enLinea, agregarAlCarrito, pedirSerCliente } = useEstado();
+  const { catalogo, enLinea, agregarAlCarrito, pedirSerCliente, carrito, abrirCarrito } = useEstado();
   const p = catalogo.productos.find((x) => x.id === route.params.id);
   const [presentacion, setPresentacion] = useState(p ? (escalaPorDefecto(p)?.presentacion ?? null) : null);
   const [cantidad, setCantidad] = useState(1);
@@ -53,7 +53,18 @@ export function Producto({ navigation, route }: PantallaDePila<'Producto'>) {
             <Tocable onPress={() => navigation.goBack()} style={e.botonRedondo} accessibilityRole="button" accessibilityLabel="Volver">
               <Icono nombre="arrow-back" color={COLOR.bosque} />
             </Tocable>
-            <Insignia texto={stock.texto} color={colorDeClase(stock.clase)} />
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <Insignia texto={stock.texto} color={colorDeClase(stock.clase)} />
+              {/* Lo que ya llevas, sin salir del producto */}
+              <Tocable onPress={abrirCarrito} style={e.botonRedondo} accessibilityRole="button" accessibilityLabel={`Ver tu carrito: ${carrito.length} productos`}>
+                <Icono nombre="cart" color={COLOR.bosque} />
+                {carrito.length > 0 && (
+                  <View style={e.cuantos}>
+                    <Texto style={e.textoCuantos}>{carrito.length > 99 ? '99+' : carrito.length}</Texto>
+                  </View>
+                )}
+              </Tocable>
+            </View>
           </View>
           <Aparecer desde={20}>
             <Flotar alto={10} duracion={3200}>
@@ -222,7 +233,7 @@ export function Producto({ navigation, route }: PantallaDePila<'Producto'>) {
                 deshabilitado={!sePuede}
                 alTocar={() => {
                   volar(foto, fotoDe(p));
-                  agregarAlCarrito(itemDeCarrito(p, escala, cantidad));
+                  agregarAlCarrito(itemDeCarrito(p, escala, cantidad), { abrir: true });
                   setCantidad(1);
                 }}
               />
@@ -246,6 +257,8 @@ const e = StyleSheet.create({
   vitrina: { paddingHorizontal: 16, paddingBottom: 46, alignItems: 'center' },
   barraArriba: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', alignSelf: 'stretch' },
   botonRedondo: { width: 44, height: 44, borderRadius: 22, backgroundColor: COLOR.superficie, alignItems: 'center', justifyContent: 'center', ...SOMBRA },
+  cuantos: { position: 'absolute', top: -4, right: -4, minWidth: 20, height: 20, paddingHorizontal: 5, borderRadius: 10, backgroundColor: COLOR.lima, borderWidth: 2, borderColor: COLOR.superficie, alignItems: 'center', justifyContent: 'center' },
+  textoCuantos: { fontFamily: FUENTE.negra, fontSize: 11, color: COLOR.bosque },
   imagen: { width: 260, height: 260 },
   // La foto real lleva su fondo blanco: va en una tarjeta redonda para que no quede un cuadrado suelto
   conFoto: { borderRadius: 32, backgroundColor: '#FFFFFF' },

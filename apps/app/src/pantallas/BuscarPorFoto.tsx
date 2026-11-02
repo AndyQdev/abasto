@@ -3,7 +3,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Boton, BotonMas, Falla, Foto, Icono, SinPrecio, Tarjeta, Texto, Vacio } from '../componentes';
+import { Boton, Falla, Foto, Icono, SinPrecio, Tarjeta, Texto, Vacio } from '../componentes';
+import { BotonAgregar } from '../BotonAgregar';
 import { useEstado } from '../estado';
 import { leerTexto, productosPorFoto, reconocerProducto } from '../ia';
 import type { PantallaDePila } from '../navegacion';
@@ -106,7 +107,7 @@ export function BuscarPorFoto({ navigation }: PantallaDePila<'BuscarPorFoto'>) {
                     <SinPrecio />
                   )}
                 </View>
-                <BotonMas producto={p} alAgregar={agregarRapido} />
+                <BotonAgregar producto={p} alAgregar={agregarRapido} oscuro={false} />
               </Tarjeta>
             </Pressable>
           );

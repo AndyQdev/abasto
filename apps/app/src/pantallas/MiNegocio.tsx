@@ -124,7 +124,7 @@ export function MiNegocio({ navigation }: PantallaDePestana<'MiNegocio'>) {
       avisar(noSeVenden.length ? `Ya no vendemos: ${noSeVenden.join(', ')}` : 'No hay nada para pedir');
       return;
     }
-    items.forEach(agregarAlCarrito);
+    items.forEach((i) => agregarAlCarrito(i));
     avisar(`Agregamos ${items.length} ${items.length === 1 ? 'producto' : 'productos'} al carrito${noSeVenden.length ? ` (ya no vendemos: ${noSeVenden.join(', ')})` : ''}`);
     navigation.navigate('Carrito');
   };

@@ -1,6 +1,5 @@
 import {
   agregar,
-  cantidadDe,
   CONSULTA_CATALOGO,
   conciliarCarrito,
   conRelacion,
@@ -32,7 +31,11 @@ interface Estado {
   pedirSerCliente: (mayoristaId: string) => Promise<string | null>;
   carrito: ItemDeCarrito[];
   cambiarCarrito: (c: ItemDeCarrito[]) => void;
-  agregarAlCarrito: (item: ItemDeCarrito) => void;
+  /** Agrega al carrito. Con `abrir`, muestra la hoja del carrito con lo agregado resaltado (desde la ficha) */
+  agregarAlCarrito: (item: ItemDeCarrito, opciones?: { abrir?: boolean }) => void;
+  hojaCarrito: { visible: boolean; resaltado: string | null };
+  abrirCarrito: () => void;
+  cerrarCarrito: () => void;
   /** Agrega la escala por defecto (una docena) desde una lista */
   agregarRapido: (p: Producto) => void;
   aviso: string | null;
@@ -50,6 +53,7 @@ export function ProveedorDeEstado({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [carrito, setCarrito] = useState<ItemDeCarrito[]>([]);
   const [aviso, setAviso] = useState<string | null>(null);
+  const [hojaCarrito, setHojaCarrito] = useState<{ visible: boolean; resaltado: string | null }>({ visible: false, resaltado: null });
   const reloj = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const avisarRef = useRef<(texto: string) => void>(() => undefined);
 
@@ -105,17 +109,17 @@ export function ProveedorDeEstado({ children }: { children: ReactNode }) {
     void guardado.escribir('carrito', c);
   }, []);
 
-  const agregarAlCarrito = useCallback(
-    (item: ItemDeCarrito) => {
-      setCarrito((c) => {
-        const nuevo = agregar(c, item);
-        void guardado.escribir('carrito', nuevo);
-        return nuevo;
-      });
-      avisar(`Agregaste ${cantidadDe(item.presentacion, item.cantidad)} de ${item.nombre}`);
-    },
-    [avisar],
-  );
+  // Ya no hay mensaje al agregar (02/11, pedido del usuario): el «+» se anima y la ficha abre la hoja del carrito
+  const agregarAlCarrito = useCallback((item: ItemDeCarrito, opciones?: { abrir?: boolean }) => {
+    setCarrito((c) => {
+      const nuevo = agregar(c, item);
+      void guardado.escribir('carrito', nuevo);
+      return nuevo;
+    });
+    if (opciones?.abrir) setHojaCarrito({ visible: true, resaltado: `${item.productoId}-${item.presentacion}` });
+  }, []);
+  const abrirCarrito = useCallback(() => setHojaCarrito({ visible: true, resaltado: null }), []);
+  const cerrarCarrito = useCallback(() => setHojaCarrito((h) => ({ ...h, visible: false })), []);
 
   const cambiarRelacion = useCallback((mayoristaId: string, relacion: EstadoRelacion) => {
     setCatalogo((d) => {
@@ -150,10 +154,13 @@ export function ProveedorDeEstado({ children }: { children: ReactNode }) {
         const escala = escalaPorDefecto(p);
         if (escala) agregarAlCarrito(itemDeCarrito(p, escala));
       },
+      hojaCarrito,
+      abrirCarrito,
+      cerrarCarrito,
       aviso,
       avisar,
     }),
-    [enLinea, catalogo, cargando, error, recargar, cambiarRelacion, carrito, cambiarCarrito, agregarAlCarrito, aviso, avisar],
+    [enLinea, catalogo, cargando, error, recargar, cambiarRelacion, carrito, cambiarCarrito, agregarAlCarrito, hojaCarrito, abrirCarrito, cerrarCarrito, aviso, avisar],
   );
 
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>;

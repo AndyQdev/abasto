@@ -1,11 +1,15 @@
 import { useEspacioBarra } from '../BarraInferior';
-import { bs, cambiarCantidad, nombreDe, porMayorista, productos as cuantosProductos, quitar, tinte, totalDe, unidadesDe } from '@abasto/comercio';
+import { bs, cambiarCantidad, nombreDe, pedidoDeLaSemana, porMayorista, productos as cuantosProductos, quitar, tinte, totalDe, unidadesDe, type Pedido } from '@abasto/comercio';
+import { useIsFocused } from '@react-navigation/native';
+import { useEffect, useState } from 'react';
 import { Image } from 'expo-image';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Aparecer, Tocable, vibrar } from '../animacion';
 import { Boton, Icono, Insignia, Texto, Vacio } from '../componentes';
 import { useEstado } from '../estado';
+import { guardado } from '../guardado';
+import { PedidoDeLaSemanaCarta } from '../NegocioInicio';
 import { fotoDe, ILUSTRACION } from '../ilustraciones';
 import type { PantallaDePestana } from '../navegacion';
 import { COLOR, FUENTE, SOMBRA, TINTES } from '../tema';
@@ -13,7 +17,14 @@ import { COLOR, FUENTE, SOMBRA, TINTES } from '../tema';
 /** El carrito vive en el teléfono y se cambia sin señal. Sale un pedido por mayorista. */
 export function Carrito({ navigation }: PantallaDePestana<'Carrito'>) {
   const espacio = useEspacioBarra();
-  const { carrito, cambiarCarrito, enLinea, catalogo } = useEstado();
+  const { carrito, cambiarCarrito, enLinea, catalogo, agregarAlCarrito, avisar } = useEstado();
+  // «Tu pedido de la semana» (02/11, pedido del usuario: aquí y no en el Inicio): con el carrito vacío, repetir el último
+  const enFoco = useIsFocused();
+  const [pedidos, setPedidos] = useState<Pedido[]>([]);
+  useEffect(() => {
+    if (enFoco) void guardado.leer<Pedido[]>('pedidos').then((p) => setPedidos(p ?? []));
+  }, [enFoco]);
+  const semana = carrito.length ? null : pedidoDeLaSemana(pedidos, catalogo.productos);
   const grupos = porMayorista(carrito);
   const total = grupos.reduce((s, g) => s + g.totalEstimadoCentavos, 0);
   const unidades = carrito.reduce((s, i) => s + unidadesDe(i), 0);
@@ -31,6 +42,18 @@ export function Carrito({ navigation }: PantallaDePestana<'Carrito'>) {
           )}
         </View>
         {!enLinea && <Insignia texto="Puedes cambiar tu carrito sin señal" color="ambar" />}
+
+        {semana && (
+          <Aparecer>
+            <PedidoDeLaSemanaCarta
+              pedido={semana}
+              alRepetir={() => {
+                semana.items.forEach((i) => agregarAlCarrito(i));
+                avisar(`Agregamos ${semana.items.length} ${semana.items.length === 1 ? 'producto' : 'productos'} de tu pedido ${semana.codigo}`);
+              }}
+            />
+          </Aparecer>
+        )}
 
         {!carrito.length && (
           <Vacio imagen={ILUSTRACION.vacioCarrito} titulo="Tu carrito está vacío" detalle="Busca productos y agrégalos por docena, caja o fardo.">

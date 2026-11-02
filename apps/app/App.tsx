@@ -35,6 +35,8 @@ import { Ubicacion } from './src/pantallas/Ubicacion';
 import { Vendedor } from './src/pantallas/Vendedor';
 import { ProveedorDeSesion, useSesion } from './src/sesion';
 import { ProveedorDeVuelo } from './src/vuelo';
+import { HojaDelCarrito } from './src/HojaDelCarrito';
+import { navegacion } from './src/navegar';
 import { COLOR } from './src/tema';
 
 /**
@@ -97,7 +99,7 @@ function ConDireccion() {
     <ProveedorDeEstado>
       <ConInventario>
       <ProveedorDeVuelo>
-      <NavigationContainer theme={TEMA}>
+      <NavigationContainer theme={TEMA} ref={navegacion}>
         <Stack.Navigator screenOptions={{ headerTintColor: COLOR.texto, headerTitleStyle: { fontWeight: '800' }, headerShadowVisible: false, headerStyle: { backgroundColor: COLOR.fondo } }}>
           <Stack.Screen name="Pestanas" component={PestanasDeAbajo} options={{ headerShown: false }} />
           <Stack.Screen name="Producto" component={Producto} options={{ headerShown: false }} />
@@ -111,6 +113,7 @@ function ConDireccion() {
           </Stack.Screen>
         </Stack.Navigator>
       </NavigationContainer>
+      <HojaDelCarrito />
       <Aviso />
       </ProveedorDeVuelo>
       </ConInventario>

@@ -1,5 +1,5 @@
 import { useEspacioBarra } from '../BarraInferior';
-import { MIS_COMPRAS, pedidoDeLaSemana, rubrosDelNegocio, seccionesDelNegocio, separarContenido, tinte, type ClaveDeVitrina, type Pedido, type Producto, type TarjetaDeVitrina, type Vitrina } from '@abasto/comercio';
+import { MIS_COMPRAS, rubrosDelNegocio, seccionesDelNegocio, separarContenido, tinte, type ClaveDeVitrina, type Pedido, type Producto, type TarjetaDeVitrina, type Vitrina } from '@abasto/comercio';
 import { useIsFocused } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
@@ -14,7 +14,8 @@ import { useEstado } from '../estado';
 import { useInventario } from '../inventario';
 import { CabeceraInicio } from '../CabeceraInicio';
 import { guardado } from '../guardado';
-import { PedidoDeLaSemanaCarta, SinIrAlMercado, useNegocio } from '../NegocioInicio';
+import { SinIrAlMercado, useNegocio } from '../NegocioInicio';
+import { BotonAgregar } from '../BotonAgregar';
 import { HojaDeDirecciones } from '../HojaDeDirecciones';
 import { fotoDe, ILUSTRACION, imagenDeRubro, rubroCorto } from '../ilustraciones';
 import type { PantallaDePestana } from '../navegacion';
@@ -53,7 +54,7 @@ const POR_CONFIRMAR: [string, string] = [COLOR.ambar, COLOR.bosque];
  * gana revendiendo, pruébalo con poco, más llevas más ahorras, marcas de aquí). La lógica está en `vitrinas()`.
  */
 export function Inicio({ navigation }: PantallaDePestana<'Inicio'>) {
-  const { catalogo, enLinea, agregarRapido, agregarAlCarrito, avisar } = useEstado();
+  const { catalogo, enLinea, agregarRapido } = useEstado();
   // Sin negocio no se llega aquí (el registro lo pide); la tienda queda por si acaso
   const negocio = useNegocio().negocio ?? { tipo: 'tienda' as const };
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
@@ -74,7 +75,8 @@ export function Inicio({ navigation }: PantallaDePestana<'Inicio'>) {
     }
   }, [porConfirmar]);
 
-  // Los pedidos guardados en el teléfono y, con señal, los del servidor: de ahí sale «Tu pedido de la semana»
+  // Con señal se leen los pedidos: lo entregado entra solo al inventario de «Mi negocio».
+  // «Tu pedido de la semana» se muestra en el Carrito (02/11, pedido del usuario), no aquí
   useEffect(() => {
     if (!enFoco) return;
     void guardado.leer<Pedido[]>('pedidos').then((p) => p && setPedidos(p));
@@ -93,14 +95,7 @@ export function Inicio({ navigation }: PantallaDePestana<'Inicio'>) {
 
   const estantes = seccionesDelNegocio(negocio, catalogo.productos);
   const losRubros = rubrosDelNegocio(negocio, catalogo.productos);
-  const semana = pedidoDeLaSemana(pedidos, catalogo.productos);
   const horas = Math.max(24, ...catalogo.productos.filter((p) => p.mayorista.deLaCasa).map((p) => p.entregaHoras ?? 24));
-  const repetir = () => {
-    if (!semana) return;
-    semana.items.forEach(agregarAlCarrito);
-    avisar(`Agregamos ${semana.items.length} ${semana.items.length === 1 ? 'producto' : 'productos'} de tu pedido ${semana.codigo}`);
-    navigation.navigate('Carrito');
-  };
   const cargandoPrimeraVez = catalogo.cargando && !catalogo.productos.length;
   const anchoRubro = (width - 32 - 10 * 3) / 4;
   const abrir = (p: Producto) => navigation.navigate('Producto', { id: p.id });
@@ -148,12 +143,6 @@ export function Inicio({ navigation }: PantallaDePestana<'Inicio'>) {
                 <Esqueleto key={i} alto={250} ancho={ANCHO_TARJETA} radio={20} />
               ))}
             </View>
-          )}
-
-          {semana && (
-            <Aparecer orden={3}>
-              <PedidoDeLaSemanaCarta pedido={semana} alRepetir={repetir} />
-            </Aparecer>
           )}
 
           <Aparecer orden={3}>
@@ -228,18 +217,14 @@ function TarjetaDeEstante({ clave, tarjeta: t, alAbrir, alAgregar }: { clave: Cl
             {clave === 'deAqui' ? `🇧🇴 ${t.gancho}` : t.gancho}
           </Texto>
         </View>
-        <Tocable
-          onPress={() => {
-            volar(foto, fotoDe(p));
-            alAgregar(p);
+        <BotonAgregar
+          producto={p}
+          estilo={e.lugarMas}
+          alAgregar={(x) => {
+            volar(foto, fotoDe(x));
+            alAgregar(x);
           }}
-          exterior={e.lugarMas}
-          style={e.mas}
-          accessibilityRole="button"
-          accessibilityLabel={`Agregar ${p.nombre} al carrito`}
-        >
-          <Icono nombre="add" tamano={20} color={COLOR.lima} />
-        </Tocable>
+        />
       </View>
       <View style={{ paddingHorizontal: 4, gap: 1 }}>
         <Texto lineas={2} style={e.nombre}>

@@ -1,7 +1,8 @@
 import { bs, escalaPorDefecto, filtrar, nombreCorto } from '@abasto/comercio';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Boton, BotonMas, Foto, Icono, Iniciales, Insignia, PedirSerCliente, Tarjeta, Texto, Vacio } from '../componentes';
+import { Boton, Foto, Icono, Iniciales, Insignia, PedirSerCliente, Tarjeta, Texto, Vacio } from '../componentes';
+import { BotonAgregar } from '../BotonAgregar';
 import { useEstado } from '../estado';
 import type { PantallaDePila } from '../navegacion';
 import { COLOR } from '../tema';
@@ -88,7 +89,7 @@ export function Vendedor({ navigation, route }: PantallaDePila<'Vendedor'>) {
                     <Texto v="gris">Precio para clientes</Texto>
                   )}
                 </Pressable>
-                <BotonMas producto={p} alAgregar={agregarRapido} />
+                <BotonAgregar producto={p} alAgregar={agregarRapido} oscuro={false} />
               </Tarjeta>
             </View>
           );
