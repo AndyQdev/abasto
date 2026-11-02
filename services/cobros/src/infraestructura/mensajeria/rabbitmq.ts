@@ -7,12 +7,12 @@ import { PrismaServicio } from '../persistencia/prisma.servicio.js';
 const COLA = 'cobros.comandos';
 const EVENTOS = 'abasto.eventos';
 const URL = () => process.env.RABBITMQ_URL ?? 'amqp://abasto:abasto@localhost:5680';
-const apagado = () => process.env.MENSAJERIA === 'apagada';
+export const apagado = () => process.env.MENSAJERIA === 'apagada';
 
-type Conexion = Awaited<ReturnType<typeof amqp.connect>>;
+export type Conexion = Awaited<ReturnType<typeof amqp.connect>>;
 
 /** Conecta con reintento cada 5 s: si RabbitMQ no está, el servicio sigue respondiendo GraphQL. */
-async function conectarConReintento(log: Logger, alConectar: (c: Conexion) => Promise<void>, apagando: () => boolean) {
+export async function conectarConReintento(log: Logger, alConectar: (c: Conexion) => Promise<void>, apagando: () => boolean) {
   try {
     const conexion = await amqp.connect(URL());
     conexion.on('close', () => !apagando() && setTimeout(() => void conectarConReintento(log, alConectar, apagando), 5000));

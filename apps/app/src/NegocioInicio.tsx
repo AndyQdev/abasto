@@ -3,16 +3,20 @@ import {
   SUBTIPOS_DE_PRODUCTOR,
   TIPOS,
   TIPOS_DE_NEGOCIO,
+  ELEGIR_TIPO_DE_NEGOCIO,
+  MI_TIPO_DE_NEGOCIO,
   leerNegocio,
+  type RespuestaTipoDeNegocio,
   type NegocioElegido,
   type PedidoDeLaSemana,
   type SubtipoProductor,
   type TipoDeNegocio,
 } from '@abasto/comercio';
 import { Image } from 'expo-image';
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Flotar, Tocable } from './animacion';
+import { graphql } from './api';
 import { Boton, Icono, Texto, type NombreDeIcono } from './componentes';
 import { guardado } from './guardado';
 import { ILUSTRACION } from './ilustraciones';
@@ -42,20 +46,86 @@ interface EstadoDeNegocio {
 
 const Contexto = createContext<EstadoDeNegocio | null>(null);
 
-export function ProveedorDeNegocio({ children }: { children: ReactNode }) {
+/**
+ * El tipo de negocio vive en la base de datos (Catálogo, `organizaciones.negocio`): se lee al entrar, así un celular
+ * nuevo no vuelve a preguntar. El teléfono guarda una copia por usuario para abrir sin señal; si se eligió sin señal,
+ * queda marcado y se sube la próxima vez.
+ */
+export function ProveedorDeNegocio({ children, dueno, servidor = graphql }: { children: ReactNode; dueno: string; servidor?: typeof graphql }) {
   const [negocio, setNegocio] = useState<NegocioElegido | null>(null);
   const [leido, setLeido] = useState(false);
+  const clave = `negocio:${dueno}`;
+  const marca = `negocio-por-subir:${dueno}`;
+
+  const subir = useCallback(
+    async (n: NegocioElegido) => {
+      try {
+        await servidor(ELEGIR_TIPO_DE_NEGOCIO, { tipo: n.tipo, subtipo: n.subtipo ?? null });
+        await guardado.borrar(marca);
+      } catch {
+        await guardado.escribir(marca, true);
+      }
+    },
+    [servidor, marca],
+  );
+
   useEffect(() => {
-    void guardado.leer<unknown>('negocio').then((v) => {
-      setNegocio(leerNegocio(v));
+    let vivo = true;
+    void (async () => {
+      // Lo guardado por usuario; los teléfonos de antes del 01/11 lo tenían sin usuario
+      const local = leerNegocio((await guardado.leer<unknown>(clave)) ?? (await guardado.leer<unknown>('negocio')));
+      const porSubir = (await guardado.leer<boolean>(marca)) === true;
+      if (vivo && local) {
+        setNegocio(local);
+        setLeido(true);
+      }
+      let delServidor: NegocioElegido | null = null;
+      let respondio = false;
+      try {
+        const r = await conLimite(servidor<RespuestaTipoDeNegocio>(MI_TIPO_DE_NEGOCIO), 6000);
+        delServidor = leerNegocio(r.miTipoDeNegocio);
+        respondio = true;
+      } catch {
+        // Sin señal: queda lo del teléfono
+      }
+      if (!vivo) return;
+      if (local && (porSubir || (respondio && !delServidor))) {
+        // Se eligió sin señal o es de antes de guardarse en la cuenta: se sube
+        void subir(local);
+      } else if (delServidor) {
+        setNegocio(delServidor);
+        void guardado.escribir(clave, delServidor);
+      }
       setLeido(true);
-    });
-  }, []);
+    })();
+    return () => {
+      vivo = false;
+    };
+  }, [clave, marca, servidor, subir]);
+
   const elegir = (n: NegocioElegido) => {
     setNegocio(n);
-    void guardado.escribir('negocio', n);
+    void guardado.escribir(clave, n);
+    void subir(n);
   };
   return <Contexto.Provider value={{ negocio, leido, elegir }}>{children}</Contexto.Provider>;
+}
+
+/** Espera la respuesta hasta un límite: sin señal, la app no se queda esperando para abrir */
+function conLimite<T>(promesa: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolver, rechazar) => {
+    const t = setTimeout(() => rechazar(new Error('sin respuesta')), ms);
+    promesa.then(
+      (v) => {
+        clearTimeout(t);
+        resolver(v);
+      },
+      (e: unknown) => {
+        clearTimeout(t);
+        rechazar(e);
+      },
+    );
+  });
 }
 
 export function useNegocio() {

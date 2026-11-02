@@ -136,3 +136,66 @@ it('un distribuidor que también compra no ve sus propios productos en Mercado',
     expect($productos)->not->toBeEmpty()
         ->and(array_unique(array_map(fn ($p) => $p['mayorista']['id'], $productos)))->not->toContain('lp');
 });
+
+// ------------------------------------------------------------------ tipo de negocio del cliente (docs/plan-mi-negocio.md)
+
+const ELEGIR_NEGOCIO = 'mutation($t: String!, $s: String) { elegirTipoDeNegocio(tipo: $t, subtipo: $s) { tipo subtipo elegidoEn } }';
+
+it('un cliente que todavía no eligió no tiene tipo de negocio', function () {
+    comoEmpresa('dr');
+
+    expect(graphql('{ miTipoDeNegocio { tipo } }')['data']['miTipoDeNegocio'])->toBeNull();
+});
+
+it('el cliente elige su tipo de negocio, queda en Mongo y se lee en otra consulta (otro celular)', function () {
+    comoEmpresa('dr');
+    $elegido = graphql(ELEGIR_NEGOCIO, ['t' => 'productor', 's' => 'salteneria'])['data']['elegirTipoDeNegocio'];
+
+    expect($elegido['tipo'])->toBe('productor')->and($elegido['subtipo'])->toBe('salteneria')->and($elegido['elegidoEn'])->not->toBeEmpty();
+
+    $guardado = (array) DB::connection('mongodb')->getCollection('organizaciones')->findOne(['_id' => 'dr'])['negocio'];
+    expect($guardado['tipo'])->toBe('productor')->and($guardado['subtipo'])->toBe('salteneria');
+
+    $leido = graphql('{ miTipoDeNegocio { tipo subtipo } miOrganizacion { negocio { tipo subtipo } } }')['data'];
+    expect($leido['miTipoDeNegocio'])->toBe(['tipo' => 'productor', 'subtipo' => 'salteneria'])
+        ->and($leido['miOrganizacion']['negocio'])->toBe(['tipo' => 'productor', 'subtipo' => 'salteneria']);
+});
+
+it('el cliente cambia su tipo de negocio', function () {
+    comoEmpresa('dr');
+    graphql(ELEGIR_NEGOCIO, ['t' => 'productor', 's' => 'pension']);
+    graphql(ELEGIR_NEGOCIO, ['t' => 'hogar']);
+
+    expect(graphql('{ miTipoDeNegocio { tipo subtipo } }')['data']['miTipoDeNegocio'])->toBe(['tipo' => 'hogar', 'subtipo' => null]);
+});
+
+it('si la regla no se cumple, responde el código y no guarda', function () {
+    comoEmpresa('dr');
+    $r = graphql(ELEGIR_NEGOCIO, ['t' => 'productor']);
+
+    expect($r['errors'][0]['extensions']['code'])->toBe('FALTA_SUBTIPO')
+        ->and(graphql('{ miTipoDeNegocio { tipo } }')['data']['miTipoDeNegocio'])->toBeNull();
+});
+
+it('un mayorista no puede elegir tipo de negocio', function () {
+    comoEmpresa('lp', ['mayorista']);
+
+    expect(graphql(ELEGIR_NEGOCIO, ['t' => 'tienda'])['errors'][0]['extensions']['code'])->toBe('NEGOCIO_SOLO_CLIENTES');
+});
+
+it('sin sesión no se puede elegir ni leer el tipo de negocio', function () {
+    expect(graphql(ELEGIR_NEGOCIO, ['t' => 'hogar'])['errors'][0]['message'])->toBe('Falta la sesión')
+        ->and(graphql('{ miTipoDeNegocio { tipo } }')['errors'][0]['message'])->toBe('Falta la sesión');
+});
+
+it('la entidad Tienda trae su tipo de negocio para Pedidos y Cobros', function () {
+    comoEmpresa('dr');
+    graphql(ELEGIR_NEGOCIO, ['t' => 'tienda']);
+    comoEmpresa('lp', ['mayorista']);
+    $r = graphql('query($r: [_Any!]!) { _entities(representations: $r) { ... on Tienda { nombre negocio { tipo } } } }', [
+        'r' => [['__typename' => 'Tienda', 'id' => 'dr'], ['__typename' => 'Tienda', 'id' => 'sj']],
+    ]);
+
+    expect($r['data']['_entities'][0]['negocio'])->toBe(['tipo' => 'tienda'])
+        ->and($r['data']['_entities'][1]['negocio'])->toBeNull();
+});

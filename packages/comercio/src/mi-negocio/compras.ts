@@ -6,9 +6,11 @@
 import { separarContenido } from '../catalogo';
 import type { Pedido } from '../pedidos';
 import { medidaDeContenido } from './medidas';
-import type { Articulo, DatosDeNegocio, Movimiento } from './motor';
+import { gastoDeCompra } from './hogar';
+import type { Anotacion, Articulo, Movimiento } from './modelo';
+import type { Libro } from './motor';
 
-export type PedidoComprado = Pick<Pedido, 'id' | 'codigo' | 'estado' | 'lineas'>;
+export type PedidoComprado = Pick<Pedido, 'id' | 'codigo' | 'estado' | 'lineas'> & { total?: { centavos: number }; creadoEn?: string };
 
 export const claveDeCompra = (pedidoId: string, productoId: string, presentacion: string) => `pedido:${pedidoId}:${productoId}:${presentacion}`;
 export const idDeArticuloDeAbasto = (productoId: string) => `abasto:${productoId}`;
@@ -24,14 +26,24 @@ export function centavosDeTexto(texto: string | null | undefined): number | null
  * Los artículos nuevos y las entradas que faltan registrar, a partir de los pedidos. Solo cuentan los ENTREGADOS
  * y solo lo que todavía no entró (por la clave única).
  */
-export function comprasQueEntran(pedidos: PedidoComprado[], ya: DatosDeNegocio, ahora: string): DatosDeNegocio {
+/** Lo que entra por los pedidos entregados: artículos nuevos, sus entradas y el gasto de cada pedido */
+export type ComprasNuevas = Libro & { anotaciones: Anotacion[] };
+
+export function comprasQueEntran(pedidos: PedidoComprado[], ya: Libro & { anotaciones?: Anotacion[] }, ahora: string): ComprasNuevas {
   const claves = new Set(ya.movimientos.map((m) => m.claveUnica));
   const articulos = new Map(ya.articulos.map((a) => [a.id, a]));
   const nuevos: Articulo[] = [];
   const movimientos: Movimiento[] = [];
+  const gastos = new Set((ya.anotaciones ?? []).map((a) => a.claveUnica));
+  const anotaciones: Anotacion[] = [];
 
   for (const pedido of pedidos) {
     if (pedido.estado !== 'ENTREGADO') continue;
+    const gasto = gastoDeCompra(pedido, ahora);
+    if (gasto && !gastos.has(gasto.claveUnica)) {
+      gastos.add(gasto.claveUnica);
+      anotaciones.push(gasto);
+    }
     for (const l of pedido.lineas) {
       const clave = claveDeCompra(pedido.id, l.producto.id, l.presentacion);
       if (claves.has(clave) || l.unidades <= 0) continue;
@@ -50,7 +62,11 @@ export function comprasQueEntran(pedidos: PedidoComprado[], ya: DatosDeNegocio, 
           origen: 'ABASTO',
           productoId: l.producto.id,
           proveedor: null,
+          precioVentaCentavos: null,
+          stockMinimo: null,
           creadoEn: ahora,
+          actualizadoEn: ahora,
+          eliminado: false,
         };
         articulos.set(id, articulo);
         nuevos.push(articulo);
@@ -69,5 +85,5 @@ export function comprasQueEntran(pedidos: PedidoComprado[], ya: DatosDeNegocio, 
       });
     }
   }
-  return { articulos: nuevos, movimientos };
+  return { articulos: nuevos, movimientos, anotaciones };
 }

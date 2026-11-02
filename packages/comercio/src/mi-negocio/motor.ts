@@ -8,53 +8,12 @@
 import { bs } from '../carrito';
 import type { NegocioElegido } from '../negocios';
 import { textoDeCantidad, type Medida } from './medidas';
+import type { Articulo, ClaseDeArticulo, DatosDeNegocio, Movimiento } from './modelo';
 
-/** COMPRADO: lo que se compra (insumo, mercadería o despensa). HECHO: lo que hace el productor (Fase 4) */
-export type ClaseDeArticulo = 'COMPRADO' | 'HECHO';
-export type OrigenDeArticulo = 'ABASTO' | 'OTRO_PROVEEDOR';
+export type { Articulo, ClaseDeArticulo, DatosDeNegocio, Movimiento, OrigenDeArticulo, OrigenDeMovimiento, TipoDeMovimiento } from './modelo';
 
-export interface Articulo {
-  id: string;
-  nombre: string;
-  /** El contenido del nombre del producto («quintal 46 kg»), si lo tiene */
-  detalle: string | null;
-  rubro: string | null;
-  medida: Medida;
-  clase: ClaseDeArticulo;
-  origen: OrigenDeArticulo;
-  /** El producto del catálogo de Abasto, para volver a pedirlo */
-  productoId: string | null;
-  /** El proveedor, si se agregó a mano */
-  proveedor: string | null;
-  creadoEn: string;
-}
-
-/**
- * ENTRADA suma (compra), SALIDA resta y AJUSTE corrige lo contado (con signo). CONSUMO, PRODUCCION, VENTA y MERMA llegan
- * con las fases 3 y 4 y ya cuentan en las existencias.
- */
-export type TipoDeMovimiento = 'ENTRADA' | 'SALIDA' | 'AJUSTE' | 'CONSUMO' | 'PRODUCCION' | 'VENTA' | 'MERMA';
-export type OrigenDeMovimiento = 'ABASTO' | 'OTRO_PROVEEDOR' | 'MANUAL';
-
-export interface Movimiento {
-  id: string;
-  articuloId: string;
-  tipo: TipoDeMovimiento;
-  /** En envases del artículo y con signo: + entra, − sale */
-  cantidad: number;
-  /** Lo que costó cada envase, si se sabe */
-  costoUnitarioCentavos: number | null;
-  origen: OrigenDeMovimiento;
-  /** «pedido:<id>:<producto>:<presentación>» para las compras de Abasto; un id para lo manual */
-  claveUnica: string;
-  fecha: string;
-  nota: string | null;
-}
-
-export interface DatosDeNegocio {
-  articulos: Articulo[];
-  movimientos: Movimiento[];
-}
+/** Lo que necesitan las existencias: los artículos y su libro de movimientos */
+export type Libro = Pick<DatosDeNegocio, 'articulos' | 'movimientos'>;
 
 export interface Existencia {
   articulo: Articulo;
@@ -69,17 +28,17 @@ export interface Existencia {
   agotado: boolean;
 }
 
-/** Las existencias de todos los artículos, sumando sus movimientos */
-export function existencias({ articulos, movimientos }: DatosDeNegocio): Existencia[] {
+/** Las existencias de los artículos vigentes (no eliminados), sumando sus movimientos */
+export function existencias({ articulos, movimientos }: Libro): Existencia[] {
   const porArticulo = new Map<string, Movimiento[]>();
   for (const m of movimientos) porArticulo.set(m.articuloId, [...(porArticulo.get(m.articuloId) ?? []), m]);
-  return articulos.map((a) => {
+  return articulos.filter((a) => !a.eliminado).map((a) => {
     const suyos = porArticulo.get(a.id) ?? [];
     const cantidad = redondear(suyos.reduce((s, m) => s + m.cantidad, 0));
-    const conCosto = suyos.filter((m) => m.tipo === 'ENTRADA' && m.costoUnitarioCentavos !== null && m.cantidad > 0);
+    const conCosto = suyos.filter((m) => (m.tipo === 'ENTRADA' || m.tipo === 'PRODUCCION') && m.costoUnitarioCentavos !== null && m.cantidad > 0);
     const unidades = conCosto.reduce((s, m) => s + m.cantidad, 0);
     const costoPromedioCentavos = unidades > 0 ? Math.round(conCosto.reduce((s, m) => s + m.cantidad * m.costoUnitarioCentavos!, 0) / unidades) : null;
-    const entradas = suyos.filter((m) => m.tipo === 'ENTRADA').map((m) => m.fecha);
+    const entradas = suyos.filter((m) => m.tipo === 'ENTRADA' || m.tipo === 'PRODUCCION').map((m) => m.fecha);
     return {
       articulo: a,
       cantidad,
@@ -92,7 +51,8 @@ export function existencias({ articulos, movimientos }: DatosDeNegocio): Existen
   });
 }
 
-const redondear = (n: number) => Math.round(n * 1000) / 1000;
+/** 6 decimales: 10 kg de un quintal de 46 kg son 0,217391 quintales; con menos se pierde precisión */
+const redondear = (n: number) => Math.round(n * 1e6) / 1e6;
 
 export class ErrorDeInventario extends Error {}
 
@@ -114,7 +74,11 @@ export function articuloAMano(
     origen: 'OTRO_PROVEEDOR',
     productoId: null,
     proveedor: entrada.proveedor?.trim() || null,
+    precioVentaCentavos: null,
+    stockMinimo: null,
     creadoEn: ahora,
+    actualizadoEn: ahora,
+    eliminado: false,
   };
 }
 
@@ -155,7 +119,7 @@ const HECHOS: Record<string, string> = { salteneria: 'tus salteñas, listas para
  * «Lo que haces», separados desde ya (lo hecho se llena con los lotes de la Fase 4).
  * Dentro de cada grupo: lo que hay primero (por rubro y nombre) y lo agotado al final.
  */
-export function inventarioDelNegocio(negocio: NegocioElegido, datos: DatosDeNegocio): GrupoDeInventario[] {
+export function inventarioDelNegocio(negocio: NegocioElegido, datos: Libro): GrupoDeInventario[] {
   const todas = existencias(datos);
   const comprados = ordenar(todas.filter((e) => e.articulo.clase === 'COMPRADO'));
   const hechos = ordenar(todas.filter((e) => e.articulo.clase === 'HECHO'));
@@ -176,7 +140,7 @@ export function inventarioDelNegocio(negocio: NegocioElegido, datos: DatosDeNego
   const loHecho = HECHOS[negocio.subtipo ?? ''] ?? 'lo que haces, listo para vender';
   return [
     grupo('insumos', 'Insumos', 'Lo que compras para cocinar', 'Cuando te llegue tu primer pedido, los insumos entran aquí solos.', comprados),
-    grupo('hechos', 'Lo que haces', 'Tu producto terminado', `Aquí vas a ver ${loHecho}. Muy pronto podrás registrar cada tanda.`, hechos),
+    grupo('hechos', 'Lo que haces', 'Tu producto terminado', `Aquí vas a ver ${loHecho}. Se suman solas cuando registras una tanda en «Recetas».`, hechos),
   ];
 }
 
@@ -195,6 +159,6 @@ export function resumenDelInventario(negocio: NegocioElegido, grupos: GrupoDeInv
   const valor = grupos.reduce((s, g) => s + g.valorCentavos, 0);
   const cuantos = `${lineas.length} ${lineas.length === 1 ? 'producto' : 'productos'}`;
   if (!lineas.length) return null;
-  const en = negocio.tipo === 'hogar' ? 'en tu despensa' : negocio.tipo === 'tienda' ? 'en mercadería' : 'en insumos';
+  const en = negocio.tipo === 'hogar' ? 'en tu despensa' : negocio.tipo === 'tienda' ? 'en mercadería' : 'en tu inventario';
   return valor > 0 ? `${cuantos} · ${bs(valor)} ${en}` : `${cuantos} ${en}`;
 }

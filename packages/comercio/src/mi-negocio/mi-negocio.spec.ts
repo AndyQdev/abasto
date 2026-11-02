@@ -2,10 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { AlmacenEnMemoria, sincronizarCompras } from './almacen';
 import { centavosDeTexto, claveDeCompra, comprasQueEntran, type PedidoComprado } from './compras';
 import { equivalencia, leerCantidad, MEDIDAS_A_MANO, medidaDeContenido, textoDeCantidad } from './medidas';
-import { ajusteAMano, articuloAMano, entradaAMano, ErrorDeInventario, existencias, inventarioDelNegocio, resumenDelInventario, type DatosDeNegocio } from './motor';
+import { datosVacios } from './modelo';
+import { ajusteAMano, articuloAMano, entradaAMano, ErrorDeInventario, existencias, inventarioDelNegocio, resumenDelInventario } from './motor';
 
 const AHORA = '2026-11-01T12:00:00.000Z';
-const vacio = (): DatosDeNegocio => ({ articulos: [], movimientos: [] });
+const vacio = datosVacios;
 
 function linea(id: string, nombre: string, rubro: string, unidades: number, centavos: number, presentacion = 'UNIDAD') {
   return { presentacion, cantidad: unidades, unidades, producto: { id, nombre, rubro }, subtotal: { texto: '', centavos } };

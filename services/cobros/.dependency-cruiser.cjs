@@ -1,6 +1,6 @@
 /**
  * Reglas de DDD que se prueban en cada PR (`pnpm arquitectura`).
- * dominio ← aplicacion ← infraestructura / interfaz. Nunca al revés.
+ * dominio ← aplicacion ← infraestructura / interfaz. Nunca al revés. Vale igual para el módulo src/mi-negocio.
  */
 module.exports = {
   forbidden: [
@@ -8,23 +8,23 @@ module.exports = {
       name: 'dominio-puro',
       comment: 'El dominio no conoce Nest, Prisma, GraphQL ni las otras capas.',
       severity: 'error',
-      from: { path: '^src/dominio' },
+      from: { path: '^src/(mi-negocio/)?dominio' },
       to: {
-        path: ['^src/(aplicacion|infraestructura|interfaz)', 'node_modules/(@nestjs|@prisma|prisma|graphql|express|jose)'],
+        path: ['^src/(mi-negocio/)?(aplicacion|infraestructura|interfaz)', 'node_modules/(@nestjs|@prisma|prisma|graphql|express|jose)'],
       },
     },
     {
       name: 'aplicacion-sin-detalles',
       comment: 'Los casos de uso no conocen Nest ni cómo se guarda o se expone nada.',
       severity: 'error',
-      from: { path: '^src/aplicacion' },
-      to: { path: ['^src/(infraestructura|interfaz)', 'node_modules/(@nestjs|@prisma|prisma|graphql|express)'] },
+      from: { path: '^src/(mi-negocio/)?aplicacion' },
+      to: { path: ['^src/(mi-negocio/)?(infraestructura|interfaz)', 'node_modules/(@nestjs|@prisma|prisma|graphql|express)'] },
     },
     {
       name: 'infraestructura-no-usa-interfaz',
       severity: 'error',
-      from: { path: '^src/infraestructura' },
-      to: { path: '^src/interfaz' },
+      from: { path: '^src/(mi-negocio/)?infraestructura' },
+      to: { path: '^src/(mi-negocio/)?interfaz' },
     },
     {
       name: 'sin-ciclos',

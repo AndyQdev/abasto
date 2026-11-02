@@ -56,6 +56,14 @@ operations:
     action: receive
     channel: { $ref: '#/channels/eventos' }
     summary: Cola asistente.proyector (todos los eventos) → base reportes.
+  cobrosRegistraMiNegocio:
+    action: receive
+    channel: { $ref: '#/channels/eventos' }
+    summary: >-
+      Cola cobros.mi-negocio (solo pedido.entregado) → esquema negocio de Cobros. Con las líneas del pedido arma el
+      inventario de «Mi negocio» del cliente (tiendaId): un artículo abasto:<productoId> y una ENTRADA con la clave
+      pedido:<pedidoId>:<productoId>:<presentacion> por línea, y un GASTO pedido:<pedidoId> por el total. Repetido no
+      duplica. El nombre y el rubro se los pide a Catálogo (_entities) con la cuenta de servicio cobros-servicio.
 
 components:
   schemas:
@@ -87,6 +95,21 @@ components:
         mayoristaId: { type: string }
         metodoPago: { type: string, enum: [qr, credito, contra_entrega] }
         totalCentavos: { type: integer }
+        lineas:
+          type: array
+          description: >-
+            Desde el 01/11 (cambio aditivo): las líneas del pedido. Las usa Cobros con pedido.entregado para
+            «Mi negocio». Los eventos de antes no la traen.
+          items: { $ref: '#/components/schemas/LineaEntregada' }
+    LineaEntregada:
+      type: object
+      required: [productoId, presentacion, cantidad, unidades, subtotalCentavos]
+      properties:
+        productoId: { type: string }
+        presentacion: { type: string, enum: [UNIDAD, CUARTA, DOCENA, CAJA, FARDO] }
+        cantidad: { type: integer, minimum: 1, description: En la presentación (2 docenas) }
+        unidades: { type: integer, description: Unidades en total (24) }
+        subtotalCentavos: { type: integer, description: Lo que se pagó por la línea }
 
   messages:
     catalogoReservarStock:
@@ -175,7 +198,9 @@ components:
         allOf: [{ $ref: '#/components/schemas/Sobre' }, { properties: { datos: { $ref: '#/components/schemas/DatosPedido' } } }]
     pedidoEnEntrega:
       name: pedido.en_preparacion | pedido.despachado | pedido.entregado
-      summary: El mayorista avanzó la entrega (avanzarEntrega). Lo proyecta Asistente y Conecta lo manda por webhook.
+      summary: >-
+        El mayorista avanzó la entrega (avanzarEntrega). Lo proyecta Asistente y Conecta lo manda por webhook.
+        pedido.entregado además lo consume Cobros (cola cobros.mi-negocio) para el inventario de «Mi negocio».
       payload:
         allOf: [{ $ref: '#/components/schemas/Sobre' }, { properties: { datos: { $ref: '#/components/schemas/DatosPedido' } } }]
     productoStockCambiado:

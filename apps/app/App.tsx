@@ -70,7 +70,7 @@ function Navegacion() {
   // Como PedidosYa: sin sesión, celular y código; con sesión, nunca más se pide
   if (!usuario) return <Acceso />;
   return (
-    <ProveedorDeNegocio>
+    <ProveedorDeNegocio dueno={usuario.id}>
       <ConNegocio />
     </ProveedorDeNegocio>
   );
@@ -121,10 +121,11 @@ function ConDireccion() {
 /** El inventario de «Mi negocio» es de quien entró; avisa cuando entran compras nuevas */
 function ConInventario({ children }: { children: ReactNode }) {
   const { usuario } = useSesion();
-  const { avisar } = useEstado();
+  const { avisar, enLinea } = useEstado();
   return (
     <ProveedorDeInventario
       dueno={usuario?.id ?? 'sin-sesion'}
+      enLinea={enLinea}
       alEntrar={(n) => avisar(n === 1 ? 'Entró 1 producto a tu inventario' : `Entraron ${n} productos a tu inventario`)}
     >
       {children}

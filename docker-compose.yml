@@ -197,6 +197,10 @@ services:
       # En la demo la tienda «paga» el QR con un botón; con un banco real se apaga
       QR_DE_PRUEBA: ${QR_DE_PRUEBA:-si}
       QR_VIGENCIA_MINUTOS: ${QR_VIGENCIA_MINUTOS:-30}
+      # «Mi negocio»: al entregarse un pedido, Cobros pide el nombre de los productos a Catálogo con su cuenta de servicio
+      CATALOGO_URL: http://catalogo:8082/graphql
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_COBROS_SECRETO: ${KEYCLOAK_COBROS_SECRETO:-cobros-servicio-local}
     ports: ["8083:8083"]
     depends_on:
       postgres: { condition: service_healthy }

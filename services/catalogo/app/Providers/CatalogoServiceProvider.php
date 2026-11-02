@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use Catalogo\Aplicacion\ElegirTipoDeNegocio;
 use Catalogo\Aplicacion\EntrarConTelefono;
 use Catalogo\Aplicacion\RegistrarOrganizacion;
 use Catalogo\Dominio\Puertos\AlmacenDeFotos;
@@ -68,6 +69,7 @@ final class CatalogoServiceProvider extends ServiceProvider
             $app->make(OrganizacionRepositorio::class),
             $app->make(CuentasDeAcceso::class),
         ));
+        $this->app->singleton(ElegirTipoDeNegocio::class, fn ($app) => ElegirTipoDeNegocio::conReloj($app->make(OrganizacionRepositorio::class)));
         $this->app->singleton(RegistrarOrganizacion::class, fn ($app) => RegistrarOrganizacion::conReloj(
             $app->make(OrganizacionRepositorio::class),
             $app->make(CuentasDeAcceso::class),

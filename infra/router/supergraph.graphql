@@ -32,6 +32,70 @@ enum Abastecimiento
   BAJO_PEDIDO @join__enumValue(graph: CATALOGO)
 }
 
+type AnotacionDeNegocio
+  @join__type(graph: COBROS)
+{
+  id: ID!
+  tipo: TipoDeAnotacion!
+  montoCentavos: Int!
+  categoria: String!
+  nota: String
+  origen: OrigenDeAnotacion!
+  claveUnica: String!
+  fecha: String!
+}
+
+input AnotacionDeNegocioEntrada
+  @join__type(graph: COBROS)
+{
+  id: ID!
+  tipo: TipoDeAnotacion!
+  montoCentavos: Int!
+  categoria: String!
+  nota: String
+  origen: OrigenDeAnotacion!
+  claveUnica: String!
+  fecha: String!
+}
+
+type ArticuloDeNegocio
+  @join__type(graph: COBROS)
+{
+  id: ID!
+  nombre: String!
+  detalle: String
+  rubro: String
+  medida: MedidaDeNegocio!
+  clase: ClaseDeArticulo!
+  origen: OrigenDeArticulo!
+  productoId: String
+  proveedor: String
+  precioVentaCentavos: Int
+  stockMinimo: Float
+  creadoEn: String!
+  actualizadoEn: String!
+  eliminado: Boolean!
+}
+
+input ArticuloDeNegocioEntrada
+  @join__type(graph: COBROS)
+{
+  id: ID!
+  nombre: String!
+  detalle: String
+  rubro: String
+  medida: MedidaDeNegocioEntrada!
+  clase: ClaseDeArticulo!
+  origen: OrigenDeArticulo!
+  productoId: String
+  proveedor: String
+  precioVentaCentavos: Int
+  stockMinimo: Float
+  creadoEn: String!
+  actualizadoEn: String!
+  eliminado: Boolean!
+}
+
 type AutorizacionDeCredito
   @join__type(graph: COBROS)
 {
@@ -50,6 +114,20 @@ input AutorizarCreditoEntrada
   centavos: Int!
 }
 
+input CambiosDeNegocioEntrada
+  @join__type(graph: COBROS)
+{
+  articulos: [ArticuloDeNegocioEntrada!]
+  movimientos: [MovimientoDeNegocioEntrada!]
+  ventas: [VentaDeNegocioEntrada!]
+  clientes: [ClienteDeFiadoEntrada!]
+  fiados: [MovimientoDeFiadoEntrada!]
+  recetas: [RecetaDeNegocioEntrada!]
+  tandas: [TandaDeNegocioEntrada!]
+  anotaciones: [AnotacionDeNegocioEntrada!]
+  lista: [ItemDeListaFijaEntrada!]
+}
+
 input CargarProductoEntrada
   @join__type(graph: CATALOGO)
 {
@@ -60,6 +138,35 @@ input CargarProductoEntrada
   presentacion: Presentacion!
   unidades: Int!
   precioUnitarioCentavos: Int!
+}
+
+enum ClaseDeArticulo
+  @join__type(graph: COBROS)
+{
+  COMPRADO @join__enumValue(graph: COBROS)
+  HECHO @join__enumValue(graph: COBROS)
+}
+
+type ClienteDeFiado
+  @join__type(graph: COBROS)
+{
+  id: ID!
+  nombre: String!
+  telefono: String
+  creadoEn: String!
+  actualizadoEn: String!
+  eliminado: Boolean!
+}
+
+input ClienteDeFiadoEntrada
+  @join__type(graph: COBROS)
+{
+  id: ID!
+  nombre: String!
+  telefono: String
+  creadoEn: String!
+  actualizadoEn: String!
+  eliminado: Boolean!
 }
 
 type CobroQr
@@ -279,6 +386,49 @@ enum EstadoRelacion
   RECHAZADA @join__enumValue(graph: CATALOGO)
 }
 
+enum FormaDeCobro
+  @join__type(graph: COBROS)
+{
+  CONTADO @join__enumValue(graph: COBROS)
+  FIADO @join__enumValue(graph: COBROS)
+}
+
+type InsumoDeReceta
+  @join__type(graph: COBROS)
+{
+  articuloId: String!
+  cantidad: Float!
+}
+
+input InsumoDeRecetaEntrada
+  @join__type(graph: COBROS)
+{
+  articuloId: String!
+  cantidad: Float!
+}
+
+type ItemDeListaFija
+  @join__type(graph: COBROS)
+{
+  id: ID!
+  productoId: String!
+  presentacion: String!
+  cantidad: Float!
+  actualizadoEn: String!
+  eliminado: Boolean!
+}
+
+input ItemDeListaFijaEntrada
+  @join__type(graph: COBROS)
+{
+  id: ID!
+  productoId: String!
+  presentacion: String!
+  cantidad: Float!
+  actualizadoEn: String!
+  eliminado: Boolean!
+}
+
 scalar join__DirectiveArguments
 
 scalar join__FieldSet
@@ -326,6 +476,24 @@ type LineaDePedido
   unidades: Int!
   precioUnitario: Dinero
   subtotal: Dinero!
+}
+
+type LineaDeVentaDeNegocio
+  @join__type(graph: COBROS)
+{
+  articuloId: String!
+  cantidad: Float!
+  precioUnitarioCentavos: Int!
+  costoUnitarioCentavos: Int
+}
+
+input LineaDeVentaDeNegocioEntrada
+  @join__type(graph: COBROS)
+{
+  articuloId: String!
+  cantidad: Float!
+  precioUnitarioCentavos: Int!
+  costoUnitarioCentavos: Int
 }
 
 """El precio no viaja desde la app: lo fija Catálogo al reservar."""
@@ -380,6 +548,23 @@ type Mayorista
   deLaCasa: Boolean! @join__field(graph: CATALOGO)
 }
 
+"""En qué se cuenta: 1 quintal = 46 kg; porEnvase es null si no se sabe"""
+type MedidaDeNegocio
+  @join__type(graph: COBROS)
+{
+  envase: String!
+  porEnvase: Float
+  unidad: String!
+}
+
+input MedidaDeNegocioEntrada
+  @join__type(graph: COBROS)
+{
+  envase: String!
+  porEnvase: Float
+  unidad: String!
+}
+
 enum MetodoPago
   @join__type(graph: PEDIDOS)
 {
@@ -390,6 +575,23 @@ enum MetodoPago
   Paga al recibir (efectivo o QR): la saga no cobra antes de que el mayorista confirme
   """
   CONTRA_ENTREGA @join__enumValue(graph: PEDIDOS)
+}
+
+type MiNegocio
+  @join__type(graph: COBROS)
+{
+  articulos: [ArticuloDeNegocio!]!
+  movimientos: [MovimientoDeNegocio!]!
+  ventas: [VentaDeNegocio!]!
+  clientes: [ClienteDeFiado!]!
+  fiados: [MovimientoDeFiado!]!
+  recetas: [RecetaDeNegocio!]!
+  tandas: [TandaDeNegocio!]!
+  anotaciones: [AnotacionDeNegocio!]!
+  lista: [ItemDeListaFija!]!
+
+  """La marca para la próxima bajada: miNegocio(desde: hasta)"""
+  hasta: String!
 }
 
 type MiOrganizacion
@@ -404,6 +606,69 @@ type MiOrganizacion
   """PENDIENTE, VERIFICADO o RECHAZADO"""
   estadoVerificacion: String!
   motivoRechazo: String
+
+  """
+  Solo clientes de la app: para qué compra. Null en los mayoristas y en quien no eligió.
+  """
+  negocio: NegocioDelCliente
+}
+
+type MovimientoDeFiado
+  @join__type(graph: COBROS)
+{
+  id: ID!
+  clienteId: String!
+  tipo: TipoDeFiado!
+  montoCentavos: Int!
+  ventaId: String
+  fecha: String!
+  nota: String
+}
+
+input MovimientoDeFiadoEntrada
+  @join__type(graph: COBROS)
+{
+  id: ID!
+  clienteId: String!
+  tipo: TipoDeFiado!
+  montoCentavos: Int!
+  ventaId: String
+  fecha: String!
+  nota: String
+}
+
+type MovimientoDeNegocio
+  @join__type(graph: COBROS)
+{
+  id: ID!
+  articuloId: String!
+  tipo: TipoDeMovimiento!
+
+  """En envases del artículo y con signo: + entra, − sale"""
+  cantidad: Float!
+  costoUnitarioCentavos: Int
+  origen: OrigenDeMovimiento!
+  claveUnica: String!
+  fecha: String!
+  nota: String
+  ventaId: String
+  tandaId: String
+}
+
+input MovimientoDeNegocioEntrada
+  @join__type(graph: COBROS)
+{
+  id: ID!
+  articuloId: String!
+  tipo: TipoDeMovimiento!
+  cantidad: Float!
+  costoUnitarioCentavos: Int
+  origen: OrigenDeMovimiento!
+  claveUnica: String!
+  fecha: String!
+  nota: String
+  ventaId: String
+  tandaId: String
 }
 
 type Mutation
@@ -420,6 +685,11 @@ type Mutation
   Público. Con el código correcto entra; la primera vez pide el nombre (error NECESITA_NOMBRE) y crea la cuenta.
   """
   entrarConCodigo(telefono: String!, codigo: String!, nombre: String): SesionDeCliente! @join__field(graph: CATALOGO)
+
+  """
+  App de clientes: elige o cambia para qué compra. tipo: hogar, tienda o productor; subtipo (solo productor): salteneria, panaderia o pension.
+  """
+  elegirTipoDeNegocio(tipo: String!, subtipo: String): NegocioDelCliente! @join__field(graph: CATALOGO)
 
   """
   Público. Un mayorista se registra (CU-01) y queda PENDIENTE hasta que Abasto lo verifica.
@@ -474,6 +744,12 @@ type Mutation
   pagarQrDePrueba(pedidoId: ID!): CobroQr! @join__field(graph: COBROS)
 
   """
+  El teléfono sube lo que hizo (sin señal o con señal). Todo o nada, y repetirlo no duplica: lo que solo se agrega
+  entra una vez y lo editable gana si su actualizadoEn es igual o más nuevo.
+  """
+  sincronizarMiNegocio(cambios: CambiosDeNegocioEntrada!): ResultadoDeSincronizacion! @join__field(graph: COBROS)
+
+  """
   Paso 1 de la saga de compra. La clave la genera la app una sola vez:
   repetir la mutación con la misma clave devuelve el mismo pedido.
   """
@@ -489,6 +765,22 @@ type Mutation
   Después de confirmar, de a un paso: CONFIRMADO → EN_PREPARACION → DESPACHADO → ENTREGADO.
   """
   avanzarEntrega(id: ID!): Pedido! @join__field(graph: PEDIDOS)
+}
+
+"""
+Para qué compra el cliente de la app (docs/plan-mi-negocio.md). Queda en su organización: se lee en cualquier celular.
+"""
+type NegocioDelCliente
+  @join__type(graph: CATALOGO)
+{
+  """hogar, tienda o productor"""
+  tipo: String!
+
+  """Solo productor: salteneria, panaderia o pension"""
+  subtipo: String
+
+  """Cuándo lo eligió o lo cambió (ISO 8601)"""
+  elegidoEn: String!
 }
 
 """Allows ordering a list of records."""
@@ -532,6 +824,30 @@ enum OrderByRelationWithColumnAggregateFunction
 
   """Amount of items."""
   COUNT @join__enumValue(graph: CATALOGO)
+}
+
+enum OrigenDeAnotacion
+  @join__type(graph: COBROS)
+{
+  MANUAL @join__enumValue(graph: COBROS)
+  ABASTO @join__enumValue(graph: COBROS)
+}
+
+enum OrigenDeArticulo
+  @join__type(graph: COBROS)
+{
+  ABASTO @join__enumValue(graph: COBROS)
+  OTRO_PROVEEDOR @join__enumValue(graph: COBROS)
+}
+
+enum OrigenDeMovimiento
+  @join__type(graph: COBROS)
+{
+  ABASTO @join__enumValue(graph: COBROS)
+  OTRO_PROVEEDOR @join__enumValue(graph: COBROS)
+  MANUAL @join__enumValue(graph: COBROS)
+  VENTA @join__enumValue(graph: COBROS)
+  TANDA @join__enumValue(graph: COBROS)
 }
 
 """El pedido es de Pedidos; Cobros le agrega su cobro (federación)."""
@@ -663,6 +979,11 @@ type Query
   miOrganizacion: MiOrganizacion! @join__field(graph: CATALOGO)
 
   """
+  App de clientes: para qué compra (hogar, tienda o productor). Null si todavía no eligió.
+  """
+  miTipoDeNegocio: NegocioDelCliente @join__field(graph: CATALOGO)
+
+  """
   Solo admin (Superadmin): mayoristas en ese estado, los registrados más recientemente primero.
   """
   mayoristasPorVerificar(estado: String = "PENDIENTE"): [SolicitudDeMayorista!]! @join__field(graph: CATALOGO)
@@ -674,6 +995,12 @@ type Query
   El cobro por QR de un pedido. Solo lo ven la tienda que compra y el mayorista que vende.
   """
   cobroDePedido(pedidoId: ID!): CobroQr @join__field(graph: COBROS)
+
+  """
+  «Mi negocio» del cliente con sesión (docs/plan-mi-negocio.md): todo (desde vacío, por ejemplo un celular nuevo)
+  o lo recibido después de la marca `desde`, que es el `hasta` de la bajada anterior.
+  """
+  miNegocio(desde: String): MiNegocio! @join__field(graph: COBROS)
 
   """Lo que compró la empresa de la sesión (Mercado)."""
   misCompras(estado: EstadoPedido): [Pedido!]! @join__field(graph: PEDIDOS)
@@ -699,6 +1026,30 @@ type Query
   traccion(mayoristaId: ID, semanas: Int = 8): Traccion! @join__field(graph: PEDIDOS)
 }
 
+type RecetaDeNegocio
+  @join__type(graph: COBROS)
+{
+  id: ID!
+  articuloId: String!
+  nombre: String!
+  rinde: Float!
+  insumos: [InsumoDeReceta!]!
+  actualizadoEn: String!
+  eliminado: Boolean!
+}
+
+input RecetaDeNegocioEntrada
+  @join__type(graph: COBROS)
+{
+  id: ID!
+  articuloId: String!
+  nombre: String!
+  rinde: Float!
+  insumos: [InsumoDeRecetaEntrada!]!
+  actualizadoEn: String!
+  eliminado: Boolean!
+}
+
 input RegistrarMayoristaEntrada
   @join__type(graph: CATALOGO)
 {
@@ -718,6 +1069,13 @@ type RelacionComercial
   mayorista: Mayorista!
   estado: EstadoRelacion!
   lista: ListaDePrecios
+}
+
+type ResultadoDeSincronizacion
+  @join__type(graph: COBROS)
+{
+  recibidos: Int!
+  hasta: String!
 }
 
 type SemanaDeVentas
@@ -775,6 +1133,30 @@ enum SortOrder
   DESC @join__enumValue(graph: CATALOGO)
 }
 
+type TandaDeNegocio
+  @join__type(graph: COBROS)
+{
+  id: ID!
+  recetaId: String!
+  articuloId: String!
+  planificado: Float!
+  obtenido: Float!
+  costoTotalCentavos: Int!
+  fecha: String!
+}
+
+input TandaDeNegocioEntrada
+  @join__type(graph: COBROS)
+{
+  id: ID!
+  recetaId: String!
+  articuloId: String!
+  planificado: Float!
+  obtenido: Float!
+  costoTotalCentavos: Int!
+  fecha: String!
+}
+
 """La tienda es de Catálogo; aquí solo se referencia."""
 type Tienda
   @join__type(graph: CATALOGO, key: "id")
@@ -784,6 +1166,11 @@ type Tienda
   id: ID!
   nombre: String! @join__field(graph: CATALOGO)
   ciudad: String! @join__field(graph: CATALOGO)
+
+  """
+  Para qué compra (hogar, tienda o productor). Null si todavía no eligió.
+  """
+  negocio: NegocioDelCliente @join__field(graph: CATALOGO)
 }
 
 type TiendaCompradora
@@ -792,6 +1179,32 @@ type TiendaCompradora
   tienda: Tienda!
   pedidos: Int!
   ventas: Dinero!
+}
+
+enum TipoDeAnotacion
+  @join__type(graph: COBROS)
+{
+  INGRESO @join__enumValue(graph: COBROS)
+  GASTO @join__enumValue(graph: COBROS)
+}
+
+enum TipoDeFiado
+  @join__type(graph: COBROS)
+{
+  DEBE @join__enumValue(graph: COBROS)
+  PAGA @join__enumValue(graph: COBROS)
+}
+
+enum TipoDeMovimiento
+  @join__type(graph: COBROS)
+{
+  ENTRADA @join__enumValue(graph: COBROS)
+  SALIDA @join__enumValue(graph: COBROS)
+  AJUSTE @join__enumValue(graph: COBROS)
+  CONSUMO @join__enumValue(graph: COBROS)
+  PRODUCCION @join__enumValue(graph: COBROS)
+  VENTA @join__enumValue(graph: COBROS)
+  MERMA @join__enumValue(graph: COBROS)
 }
 
 """
@@ -829,4 +1242,30 @@ enum Trashed
 
   """Only return non-trashed results."""
   WITHOUT @join__enumValue(graph: CATALOGO)
+}
+
+type VentaDeNegocio
+  @join__type(graph: COBROS)
+{
+  id: ID!
+  fecha: String!
+  lineas: [LineaDeVentaDeNegocio!]!
+  totalCentavos: Int!
+  costoCentavos: Int!
+  forma: FormaDeCobro!
+  clienteId: String
+  anulada: Boolean!
+}
+
+input VentaDeNegocioEntrada
+  @join__type(graph: COBROS)
+{
+  id: ID!
+  fecha: String!
+  lineas: [LineaDeVentaDeNegocioEntrada!]!
+  totalCentavos: Int!
+  costoCentavos: Int!
+  forma: FormaDeCobro!
+  clienteId: String
+  anulada: Boolean!
 }

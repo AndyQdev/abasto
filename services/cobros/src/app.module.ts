@@ -23,11 +23,12 @@ import {
 import { ConsumidorDeComandos, PublicadorOutbox, RevisorDeQrs } from './infraestructura/mensajeria/rabbitmq.js';
 import { CobroQrPrisma, MensajesProcesadosPrisma, OutboxPrisma } from './infraestructura/persistencia/cobro-qr.prisma.js';
 import { LineaDeCreditoPrisma } from './infraestructura/persistencia/linea-de-credito.prisma.js';
-import { PrismaServicio } from './infraestructura/persistencia/prisma.servicio.js';
+import { PersistenciaModule } from './infraestructura/persistencia/persistencia.module.js';
 import { AutenticacionGuard } from './infraestructura/seguridad/autenticacion.guard.js';
 import { CobroResolver, PedidoConCobroResolver } from './interfaz/graphql/cobro.resolver.js';
 import { CreditoResolver } from './interfaz/graphql/credito.resolver.js';
 import { SaludController } from './interfaz/http/salud.controller.js';
+import { MiNegocioModule } from './mi-negocio/mi-negocio.module.js';
 
 /** Los casos de uso no conocen Nest: se arman aquí con su repositorio. */
 const casoDeUso = <T>(Clase: new (repo: LineaDeCreditoRepositorio) => T) => ({
@@ -43,6 +44,8 @@ const vigenciaMinutos = Number(process.env.QR_VIGENCIA_MINUTOS ?? 30);
 
 @Module({
   imports: [
+    PersistenciaModule,
+    MiNegocioModule,
     GraphQLModule.forRoot<ApolloFederationDriverConfig>({
       driver: ApolloFederationDriver,
       typePaths: [join(process.cwd(), 'schema.graphql')],
@@ -54,7 +57,6 @@ const vigenciaMinutos = Number(process.env.QR_VIGENCIA_MINUTOS ?? 30);
   ],
   controllers: [SaludController],
   providers: [
-    PrismaServicio,
     { provide: LINEA_DE_CREDITO_REPOSITORIO, useClass: LineaDeCreditoPrisma },
     { provide: COBRO_QR_REPOSITORIO, useClass: CobroQrPrisma },
     { provide: OUTBOX, useClass: OutboxPrisma },

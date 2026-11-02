@@ -7,10 +7,13 @@
  * 2. catalogo-cuentas: cuenta de servicio con la que Catálogo crea usuarios y abre la sesión
  *    de quien entra con su celular.
  * 3. El apellido es opcional: un cliente que se llama «Rosa» entra sin inventar un apellido.
+ * 4. cobros-servicio: cuenta de servicio con la que Cobros le pide a Catálogo el nombre de los productos de un pedido
+ *    entregado (para «Mi negocio» del cliente). Solo client credentials y audiencia abasto-api; sin roles.
  */
 const BASE = process.env.KEYCLOAK_URL ?? 'http://localhost:8180';
 const REALM = 'abasto';
 const SECRETO = process.env.KEYCLOAK_CUENTAS_SECRETO ?? 'catalogo-cuentas-local';
+const SECRETO_COBROS = process.env.KEYCLOAK_COBROS_SECRETO ?? 'cobros-servicio-local';
 
 async function json(r) {
   const texto = await r.text();
@@ -92,6 +95,33 @@ if (apellido?.required) {
   delete apellido.required;
   await json(await admin('/users/profile', { method: 'PUT', body: JSON.stringify(perfil) }));
   console.log('Keycloak: el apellido ya no es obligatorio');
+}
+
+// 5. Cuenta de servicio de Cobros («Mi negocio»: nombre y rubro de lo entregado)
+if (!(await cliente('cobros-servicio'))) {
+  await json(
+    await admin('/clients', {
+      method: 'POST',
+      body: JSON.stringify({
+        clientId: 'cobros-servicio',
+        name: 'Cobros · leer productos para Mi negocio',
+        publicClient: false,
+        secret: SECRETO_COBROS,
+        serviceAccountsEnabled: true,
+        standardFlowEnabled: false,
+        directAccessGrantsEnabled: false,
+        protocolMappers: [
+          {
+            name: 'audiencia-api',
+            protocol: 'openid-connect',
+            protocolMapper: 'oidc-audience-mapper',
+            config: { 'included.custom.audience': 'abasto-api', 'access.token.claim': 'true', 'id.token.claim': 'false', 'introspection.token.claim': 'true' },
+          },
+        ],
+      }),
+    }),
+  );
+  console.log('Keycloak: creado cobros-servicio');
 }
 
 console.log('Keycloak al día');

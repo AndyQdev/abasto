@@ -17,6 +17,8 @@ type Query {
   misSolicitudes: [RelacionComercial!]! @field(resolver: "Catalogo\\Infraestructura\\GraphQL\\Resolutores@misSolicitudes")
   "La empresa de la sesión, con su verificación (el Panel muestra «en revisión» o el motivo del rechazo)."
   miOrganizacion: MiOrganizacion! @field(resolver: "Catalogo\\Infraestructura\\GraphQL\\Resolutores@miOrganizacion")
+  "App de clientes: para qué compra (hogar, tienda o productor). Null si todavía no eligió."
+  miTipoDeNegocio: NegocioDelCliente @field(resolver: "Catalogo\\Infraestructura\\GraphQL\\Resolutores@miTipoDeNegocio")
   "Solo admin (Superadmin): mayoristas en ese estado, los registrados más recientemente primero."
   mayoristasPorVerificar(estado: String = "PENDIENTE"): [SolicitudDeMayorista!]!
     @field(resolver: "Catalogo\\Infraestructura\\GraphQL\\Resolutores@mayoristasPorVerificar")
@@ -28,6 +30,9 @@ type Mutation {
   "Público. Con el código correcto entra; la primera vez pide el nombre (error NECESITA_NOMBRE) y crea la cuenta."
   entrarConCodigo(telefono: String!, codigo: String!, nombre: String): SesionDeCliente!
     @field(resolver: "Catalogo\\Infraestructura\\GraphQL\\Resolutores@entrarConCodigo")
+  "App de clientes: elige o cambia para qué compra. tipo: hogar, tienda o productor; subtipo (solo productor): salteneria, panaderia o pension."
+  elegirTipoDeNegocio(tipo: String!, subtipo: String): NegocioDelCliente!
+    @field(resolver: "Catalogo\\Infraestructura\\GraphQL\\Resolutores@elegirTipoDeNegocio")
   "Público. Un mayorista se registra (CU-01) y queda PENDIENTE hasta que Abasto lo verifica."
   registrarMayorista(entrada: RegistrarMayoristaEntrada!): SolicitudDeMayorista!
     @field(resolver: "Catalogo\\Infraestructura\\GraphQL\\Resolutores@registrarMayorista")
@@ -215,6 +220,18 @@ type MiOrganizacion {
   "PENDIENTE, VERIFICADO o RECHAZADO"
   estadoVerificacion: String!
   motivoRechazo: String
+  "Solo clientes de la app: para qué compra. Null en los mayoristas y en quien no eligió."
+  negocio: NegocioDelCliente
+}
+
+"Para qué compra el cliente de la app (docs/plan-mi-negocio.md). Queda en su organización: se lee en cualquier celular."
+type NegocioDelCliente {
+  "hogar, tienda o productor"
+  tipo: String!
+  "Solo productor: salteneria, panaderia o pension"
+  subtipo: String
+  "Cuándo lo eligió o lo cambió (ISO 8601)"
+  elegidoEn: String!
 }
 
 "Un mayorista tal como lo revisa Abasto en el Superadmin."
@@ -247,6 +264,8 @@ type Tienda @key(fields: "id") {
   id: ID!
   nombre: String!
   ciudad: String!
+  "Para qué compra (hogar, tienda o productor). Null si todavía no eligió."
+  negocio: NegocioDelCliente
 }
 
 type RelacionComercial {
