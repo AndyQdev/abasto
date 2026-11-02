@@ -9,3 +9,10 @@ export const URLS = {
 };
 
 export const CLIENTE_KEYCLOAK = 'abasto-app';
+
+/**
+ * Un teléfono en el mismo wifi sin `adb reverse` (el iPhone con Expo Go) llega a la computadora por su IP:
+ * `EXPO_PUBLIC_HOST_DE_LA_RED=192.168.0.4`. Catálogo arma las fotos con localhost, así que se cambia aquí.
+ */
+const HOST_DE_LA_RED = process.env.EXPO_PUBLIC_HOST_DE_LA_RED;
+export const urlDeLaRed = (url: string) => (HOST_DE_LA_RED ? url.replace(/\/\/(localhost|127\.0\.0\.1):/, `//${HOST_DE_LA_RED}:`) : url);

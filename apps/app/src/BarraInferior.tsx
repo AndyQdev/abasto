@@ -11,7 +11,6 @@ import { CABECERA, COLOR, FUENTE, SOMBRA } from './tema';
 
 const ICONOS: Record<keyof Pestanas, [NombreDeIcono, NombreDeIcono]> = {
   Inicio: ['home', 'home-outline'],
-  Buscar: ['search', 'search-outline'],
   Carrito: ['cart', 'cart-outline'],
   MiNegocio: ['cube', 'cube-outline'],
   Pedidos: ['receipt', 'receipt-outline'],
@@ -100,7 +99,7 @@ function Pestana({
 }
 
 function BotonCarrito({ activa, cuantos, alTocar }: { activa: boolean; cuantos: number; alTocar: () => void }) {
-  // La cápsula pasa de lima a bosque al elegirla; el número salta cuando se agrega algo
+  // Como las demás pestañas (01/11, pedido del usuario: sin fondo lima); el número salta cuando se agrega algo
   const v = useRef(new Animated.Value(activa ? 1 : 0)).current;
   const salto = useRef(new Animated.Value(1)).current;
   const antes = useRef(cuantos);
@@ -118,17 +117,16 @@ function BotonCarrito({ activa, cuantos, alTocar }: { activa: boolean; cuantos: 
   }, [cuantos, salto]);
   return (
     <Pressable onPress={alTocar} style={e.pestana} accessibilityRole="tab" accessibilityState={{ selected: activa }} accessibilityLabel={`Carrito, ${cuantos} productos`}>
-      <View style={[StyleSheet.absoluteFill, e.capsulaLima]} />
       <Animated.View style={[StyleSheet.absoluteFill, e.capsula, { opacity: v, transform: [{ scale: v.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1] }) }] }]} />
       <View>
-        <Icono nombre="cart" tamano={23} color={activa ? COLOR.lima : CABECERA.medio} />
+        <Icono nombre={activa ? 'cart' : 'cart-outline'} tamano={23} color={activa ? COLOR.lima : GRIS_VERDOSO} />
         {cuantos > 0 && (
           <Animated.View style={[e.cantidad, { transform: [{ scale: salto }] }]}>
             <Texto style={e.numero}>{cuantos > 99 ? '99+' : cuantos}</Texto>
           </Animated.View>
         )}
       </View>
-      <Texto style={[e.texto, { color: activa ? '#FFFFFF' : CABECERA.medio, fontFamily: FUENTE.fuerte }]}>Carrito</Texto>
+      <Texto style={[e.texto, { color: activa ? '#FFFFFF' : GRIS_VERDOSO }]}>Carrito</Texto>
     </Pressable>
   );
 }
@@ -175,7 +173,6 @@ const e = StyleSheet.create({
   pestana: { flex: 1, height: 54, alignItems: 'center', justifyContent: 'center', gap: 2, marginHorizontal: 1 },
   capsula: { borderRadius: 22, backgroundColor: CABECERA.medio },
   texto: { fontFamily: FUENTE.semi, fontSize: 11 },
-  capsulaLima: { borderRadius: 22, backgroundColor: COLOR.limaMedia },
   cantidad: {
     position: 'absolute',
     top: -7,

@@ -1,18 +1,20 @@
-import { useEspacioBarra } from '../BarraInferior';
 import { filtrar, filtrarMayoristas, nombreCorto, opcionesDeCompra, ordenarMayoristas, rubros, textoDeStock, type Producto } from '@abasto/comercio';
 import { useEffect, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, TextInput, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BotonMas, Chip, Foto, Icono, Iniciales, Insignia, SinPrecio, Tarjeta, Texto, Vacio, Boton } from '../componentes';
 import { useEstado } from '../estado';
-import type { PantallaDePestana } from '../navegacion';
+import type { PantallaDePila } from '../navegacion';
 import { COLOR } from '../tema';
 
 const fecha = (iso: string) => new Date(iso).toLocaleDateString('es-BO', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
-/** Busca sobre el catálogo guardado en el teléfono: anda igual sin señal. Nunca se ordena por precio. */
-export function Buscar({ navigation, route }: PantallaDePestana<'Buscar'>) {
-  const espacio = useEspacioBarra();
+/**
+ * Busca sobre el catálogo guardado en el teléfono: anda igual sin señal. Nunca se ordena por precio.
+ * Desde el 01/11 se abre encima de las pestañas (desde el buscador del Inicio), con su botón para volver.
+ */
+export function Buscar({ navigation, route }: PantallaDePila<'Buscar'>) {
+  const espacio = useSafeAreaInsets().bottom + 24;
   const { catalogo, enLinea, agregarRapido } = useEstado();
   const [texto, setTexto] = useState('');
   const [rubro, setRubro] = useState<string | null>(route.params?.rubro ?? null);
@@ -31,6 +33,9 @@ export function Buscar({ navigation, route }: PantallaDePestana<'Buscar'>) {
   const cabecera = (
     <View style={{ gap: 12 }}>
       <View style={e.filaBuscador}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Volver" onPress={() => navigation.goBack()} style={e.volver}>
+          <Icono nombre="arrow-back" color={COLOR.bosque} tamano={22} />
+        </Pressable>
         <View style={e.caja}>
           <Icono nombre="search" color={COLOR.texto3} />
           <TextInput
@@ -167,6 +172,7 @@ function Resultado({ producto: p, alAbrir, alVendedor, alAgregar }: { producto: 
 
 const e = StyleSheet.create({
   pantalla: { flex: 1, backgroundColor: COLOR.fondo },
+  volver: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: COLOR.superficie },
   contenido: { padding: 16, gap: 10, paddingBottom: 32 },
   filaBuscador: { flexDirection: 'row', gap: 8, alignItems: 'center' },
   caja: { flex: 1, flexDirection: 'row', alignItems: 'center', height: 48, borderRadius: 15, borderWidth: 1, borderColor: COLOR.borde, backgroundColor: COLOR.superficie, paddingLeft: 12 },

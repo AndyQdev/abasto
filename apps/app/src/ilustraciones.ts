@@ -1,3 +1,5 @@
+import { urlDeLaRed } from './config';
+
 /**
  * Las ilustraciones «Gibby» de la app (3D tipo película animada, con la paleta de Abasto).
  * Se generan una sola vez con `scripts/ilustraciones` (ver apps/app/ilustraciones.json); la app nunca llama a Gemini.
@@ -68,7 +70,7 @@ export function imagenDeRubro(rubro: string): Recurso {
 
 /** La foto real del producto; si todavía no tiene, la ilustración de su rubro. */
 export function fotoDe(producto: { rubro: string; foto?: string | null }): Imagen {
-  return producto.foto ? { uri: producto.foto } : imagenDeRubro(producto.rubro);
+  return producto.foto ? { uri: urlDeLaRed(producto.foto) } : imagenDeRubro(producto.rubro);
 }
 
 /** Nombre corto del rubro para las tarjetas («Higiene y cuidado personal» → «Higiene»). */

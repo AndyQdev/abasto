@@ -50,7 +50,6 @@ function PestanasDeAbajo() {
   return (
     <Tab.Navigator screenOptions={{ headerShown: false }} tabBar={(props) => <BarraInferior {...props} />}>
       <Tab.Screen name="Inicio" component={Inicio} />
-      <Tab.Screen name="Buscar" component={Buscar} />
       <Tab.Screen name="Carrito" component={Carrito} />
       <Tab.Screen name="MiNegocio" component={MiNegocio} />
       <Tab.Screen name="Pedidos" component={Pedidos} />
@@ -102,6 +101,7 @@ function ConDireccion() {
         <Stack.Navigator screenOptions={{ headerTintColor: COLOR.texto, headerTitleStyle: { fontWeight: '800' }, headerShadowVisible: false, headerStyle: { backgroundColor: COLOR.fondo } }}>
           <Stack.Screen name="Pestanas" component={PestanasDeAbajo} options={{ headerShown: false }} />
           <Stack.Screen name="Producto" component={Producto} options={{ headerShown: false }} />
+          <Stack.Screen name="Buscar" component={Buscar} options={{ headerShown: false, animation: 'fade_from_bottom' }} />
           <Stack.Screen name="Vendedor" component={Vendedor} options={{ headerShown: false }} />
           <Stack.Screen name="Finalizar" component={Finalizar} options={{ title: 'Finalizar pedido' }} />
           <Stack.Screen name="Seguimiento" component={Seguimiento} options={{ title: 'Pedido' }} />

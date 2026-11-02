@@ -1,6 +1,12 @@
 # Andrés · estado
 
-> **Jhoel, empieza aquí (29/10). Reemplaza a los avisos anteriores.**
+> **Jhoel, empieza aquí (01/11): enfoque nuevo de la app.** Pega en tu Claude el prompt «Retomar (01/11)» de `docs/PROMPT-JHOEL.md`. En corto:
+> - Clientes en tres tipos: Hogar, Tienda y Productor (salteñería, panadería o pensión). Se elige al registrarse y cambia el Inicio.
+> - «Mi negocio» (Mi casa / Mi tienda / Producción): inventario que se llena solo con lo que se compra en Abasto. Siguen la caja, el fiado, las recetas, el planificador y las cuentas, todo respaldado en la base de datos del servidor. El plan está en `docs/plan-mi-negocio.md`.
+> - Toqué solo `apps/app/src/ia/index.ts`: ML Kit y TFLite se cargan al usarlos, para que la app abra en Expo Go (iPhone). En Android no cambia nada.
+> - La barra de abajo quedó en Inicio, Carrito, Mi negocio, Pedidos y Cuenta. Buscar se abre desde el buscador del Inicio.
+>
+> **Aviso anterior (29/10), sigue vigente en lo que no cambió arriba:**
 >
 > 1. **Git:** los dos trabajamos directo en `main`, sin ramas ni PR. Para bajar todo: `git switch main && git pull --rebase origin main`, después `pnpm install`. Si te queda algo sin subir en otra rama, haz commit allí, `git switch main`, `git merge <tu-rama>` y push. Reglas en «Git en main» del `CLAUDE.md`.
 > 2. **Reparto: Andrés lleva lo comercial y tú toda la IA.** Tuyo:

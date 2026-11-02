@@ -3,12 +3,12 @@ import type { CompositeScreenProps, NavigatorScreenParams } from '@react-navigat
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 /**
- * Las pestañas de abajo: Inicio, Buscar, Carrito, «Mi negocio» (se llama Mi casa, Mi tienda o Producción según el tipo
- * de cliente; Fase 2 de docs/plan-mi-negocio.md), Pedidos y Cuenta.
+ * Las pestañas de abajo: Inicio, Carrito, «Mi negocio» (se llama Mi casa, Mi tienda o Producción según el tipo de
+ * cliente; docs/plan-mi-negocio.md), Pedidos y Cuenta. Buscar se abre desde el buscador del Inicio (01/11, pedido del
+ * usuario: la barra queda con lo que se usa todos los días).
  */
 export type Pestanas = {
   Inicio: undefined;
-  Buscar: { rubro?: string | null; modo?: 'productos' | 'vendedores' } | undefined;
   Carrito: undefined;
   MiNegocio: undefined;
   Pedidos: undefined;
@@ -18,6 +18,7 @@ export type Pestanas = {
 /** Lo que se abre encima de las pestañas. */
 export type Pila = {
   Pestanas: NavigatorScreenParams<Pestanas>;
+  Buscar: { rubro?: string | null; modo?: 'productos' | 'vendedores' } | undefined;
   Producto: { id: string };
   Vendedor: { id: string };
   Finalizar: undefined;

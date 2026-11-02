@@ -85,7 +85,7 @@ export function BuscarPorFoto({ navigation }: PantallaDePila<'BuscarPorFoto'>) {
 
         {resultados && !resultados.length && (
           <Vacio titulo="No encontramos ese producto" detalle="Prueba con otra foto donde se lea bien el nombre, o búscalo escribiendo.">
-            <Boton tipo="chico" texto="Buscar escribiendo" alTocar={() => navigation.navigate('Pestanas', { screen: 'Buscar' })} />
+            <Boton tipo="chico" texto="Buscar escribiendo" alTocar={() => navigation.navigate('Buscar')} />
           </Vacio>
         )}
 
