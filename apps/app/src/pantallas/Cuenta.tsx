@@ -61,6 +61,14 @@ export function Cuenta({ navigation }: PantallaDePestana<'Cuenta'>) {
           <CambiarNegocio />
         </Aparecer>
 
+        <Aparecer orden={1}>
+          <Tarjeta style={{ gap: 8 }}>
+            <Texto v="t3">IA en tu teléfono</Texto>
+            <Texto v="gris">Arma tu compra con tus palabras, una receta o una foto, sin internet.</Texto>
+            <Boton tipo="secundario" texto="Elegir el modelo" icono="hardware-chip-outline" alTocar={() => navigation.navigate('IaLocal')} />
+          </Tarjeta>
+        </Aparecer>
+
         <Aparecer orden={1} style={{ gap: 10 }}>
           <View style={e.cabeza}>
             <Texto v="t3">Mis direcciones</Texto>

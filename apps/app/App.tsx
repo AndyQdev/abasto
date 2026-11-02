@@ -14,6 +14,7 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Texto } from './src/componentes';
 import { ProveedorDeEstado, useEstado } from './src/estado';
+import { PantallaAsistente, PantallaIaLocal, ProveedorDeIaLocal } from './src/ia';
 import type { Pestanas, Pila } from './src/navegacion';
 import { BarraInferior } from './src/BarraInferior';
 import { ProveedorDeDirecciones, useDirecciones } from './src/direcciones-estado';
@@ -98,6 +99,7 @@ function ConDireccion() {
     <ProveedorDeEstado>
       <ConInventario>
       <ProveedorDeVuelo>
+      <ProveedorDeIaLocal>
       <NavigationContainer theme={TEMA}>
         <Stack.Navigator screenOptions={{ headerTintColor: COLOR.texto, headerTitleStyle: { fontWeight: '800' }, headerShadowVisible: false, headerStyle: { backgroundColor: COLOR.fondo } }}>
           <Stack.Screen name="Pestanas" component={PestanasDeAbajo} options={{ headerShown: false }} />
@@ -106,12 +108,15 @@ function ConDireccion() {
           <Stack.Screen name="Finalizar" component={Finalizar} options={{ title: 'Finalizar pedido' }} />
           <Stack.Screen name="Seguimiento" component={Seguimiento} options={{ title: 'Pedido' }} />
           <Stack.Screen name="BuscarPorFoto" component={BuscarPorFoto} options={{ title: 'Buscar con una foto' }} />
+          <Stack.Screen name="Asistente" component={PantallaAsistente} options={{ title: 'Pídelo con tus palabras' }} />
+          <Stack.Screen name="IaLocal" component={PantallaIaLocal} options={{ title: 'IA en tu teléfono' }} />
           <Stack.Screen name="NuevaDireccion" options={{ headerShown: false, presentation: 'modal', animation: 'slide_from_bottom' }}>
             {({ navigation }) => <Ubicacion alTerminar={() => navigation.goBack()} alCerrar={() => navigation.goBack()} />}
           </Stack.Screen>
         </Stack.Navigator>
       </NavigationContainer>
       <Aviso />
+      </ProveedorDeIaLocal>
       </ProveedorDeVuelo>
       </ConInventario>
     </ProveedorDeEstado>

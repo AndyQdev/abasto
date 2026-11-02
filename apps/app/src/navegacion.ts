@@ -23,6 +23,9 @@ export type Pila = {
   Finalizar: undefined;
   Seguimiento: { id: string };
   BuscarPorFoto: undefined;
+  /** IA local (src/ia, Jhoel): asistente de compra y elegir el modelo del teléfono */
+  Asistente: undefined;
+  IaLocal: undefined;
   NuevaDireccion: undefined;
 };
 

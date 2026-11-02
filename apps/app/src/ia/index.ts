@@ -8,3 +8,8 @@ export { Diagnostico } from './diagnostico';
 export { leerPrecio, enBolivianos } from './precio';
 export { reconocerProducto } from './reconocer';
 export { combinarConTexto, productosPorFoto, type Reconocido } from './parecido';
+// Asistente de compra con modelos de lenguaje locales (llama.rn) según el teléfono
+export { ProveedorDeIaLocal, useIaLocal } from './local/estado';
+export { PantallaAsistente, PantallaIaLocal } from './vistas/Pantallas';
+export { AsistenteDeCompra } from './vistas/AsistenteDeCompra';
+export { proponerCompra, type Propuesta } from './entender/asistente';

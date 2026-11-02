@@ -1,0 +1,116 @@
+{
+  "version": 1,
+  "nota": "Cada modelo sirve para texto y fotos (GGUF + proyector de visión) y corre con llama.rn. Las rutas van fijadas al commit de Hugging Face; para usar un espejo propio, EXPO_PUBLIC_IA_MODELOS_URL reemplaza a https://huggingface.co con la misma estructura de carpetas.",
+  "modelos": [
+    {
+      "id": "lfm2.5-vl-450m",
+      "nombre": "LFM2.5-VL 450M",
+      "familia": "Liquid AI",
+      "nivel": "basico",
+      "ramMinimaMb": 2500,
+      "contexto": 4096,
+      "tareas": ["texto", "vision"],
+      "licencia": "LFM Open License v1.0",
+      "archivos": {
+        "modelo": {
+          "ruta": "LiquidAI/LFM2.5-VL-450M-GGUF/resolve/1abed04b6fe71314d8c446a1371c03d7c332266d/LFM2.5-VL-450M-Q4_K_M.gguf",
+          "bytes": 229313568,
+          "sha256": "1093f1331319199bbcacdbd7ecc9aa6e5678db6b55073948d0f508be90c8ab68"
+        },
+        "proyector": {
+          "ruta": "LiquidAI/LFM2.5-VL-450M-GGUF/resolve/1abed04b6fe71314d8c446a1371c03d7c332266d/mmproj-LFM2.5-VL-450m-Q8_0.gguf",
+          "bytes": 102815168,
+          "sha256": "ebfc428baa37efad8bae93864f914b2634a09009f91ad59f974fe1a1565d8561"
+        }
+      }
+    },
+    {
+      "id": "qwen3.5-0.8b",
+      "nombre": "Qwen3.5 0.8B",
+      "familia": "Qwen",
+      "nivel": "medio",
+      "ramMinimaMb": 3500,
+      "contexto": 4096,
+      "tareas": ["texto", "vision"],
+      "licencia": "Apache-2.0",
+      "archivos": {
+        "modelo": {
+          "ruta": "unsloth/Qwen3.5-0.8B-GGUF/resolve/6ab461498e2023f6e3c1baea90a8f0fe38ab64d0/Qwen3.5-0.8B-Q4_K_M.gguf",
+          "bytes": 532517120,
+          "sha256": "bd258782e35f7f458f8aced1adc053e6e92e89bc735ba3be89d38a06121dc517"
+        },
+        "proyector": {
+          "ruta": "unsloth/Qwen3.5-0.8B-GGUF/resolve/6ab461498e2023f6e3c1baea90a8f0fe38ab64d0/mmproj-F16.gguf",
+          "bytes": 204987232,
+          "sha256": "56e4c6cfe73b0c82e3e82bc518d7591997e61d81f723fc41a586f4fa69ea2453"
+        }
+      }
+    },
+    {
+      "id": "qwen3.5-2b",
+      "nombre": "Qwen3.5 2B",
+      "familia": "Qwen",
+      "nivel": "alto",
+      "ramMinimaMb": 6000,
+      "contexto": 4096,
+      "tareas": ["texto", "vision"],
+      "licencia": "Apache-2.0",
+      "archivos": {
+        "modelo": {
+          "ruta": "unsloth/Qwen3.5-2B-GGUF/resolve/f6d5376be1edb4d416d56da11e5397a961aca8ae/Qwen3.5-2B-Q4_K_M.gguf",
+          "bytes": 1280835840,
+          "sha256": "aaf42c8b7c3cab2bf3d69c355048d4a0ee9973d48f16c731c0520ee914699223"
+        },
+        "proyector": {
+          "ruta": "unsloth/Qwen3.5-2B-GGUF/resolve/f6d5376be1edb4d416d56da11e5397a961aca8ae/mmproj-F16.gguf",
+          "bytes": 668227264,
+          "sha256": "7035e9cb8d7c6a9681d07eef9a364783e86ea4cd73faab2eabb4f43a101830c7"
+        }
+      }
+    },
+    {
+      "id": "gemma-4-e2b",
+      "nombre": "Gemma 4 E2B",
+      "familia": "Gemma",
+      "nivel": "maximo",
+      "ramMinimaMb": 8000,
+      "contexto": 4096,
+      "tareas": ["texto", "vision"],
+      "licencia": "Apache-2.0",
+      "archivos": {
+        "modelo": {
+          "ruta": "unsloth/gemma-4-E2B-it-GGUF/resolve/0314792d7f1f7e229411f620751375812bb9faf2/gemma-4-E2B-it-Q4_K_M.gguf",
+          "bytes": 3106738272,
+          "sha256": "740185b21d22ceb83a11c3aa62ad5842ef32c70f6096d756bbee85a1e4ec34b8"
+        },
+        "proyector": {
+          "ruta": "unsloth/gemma-4-E2B-it-GGUF/resolve/0314792d7f1f7e229411f620751375812bb9faf2/mmproj-F16.gguf",
+          "bytes": 985654080,
+          "sha256": "140be8d7849741f88c50757d529b84373ee8e27052cc2236855b537f4a8215fa"
+        }
+      }
+    },
+    {
+      "id": "gemma-4-e4b",
+      "nombre": "Gemma 4 E4B",
+      "familia": "Gemma",
+      "nivel": "maximo",
+      "ramMinimaMb": 12000,
+      "contexto": 4096,
+      "tareas": ["texto", "vision"],
+      "licencia": "Apache-2.0",
+      "archivos": {
+        "modelo": {
+          "ruta": "unsloth/gemma-4-E4B-it-GGUF/resolve/bfc15c382204943c3a8fff0c750b94ae2364d7a3/gemma-4-E4B-it-Q4_K_M.gguf",
+          "bytes": 4977171584,
+          "sha256": "85a896a047553e842f25297ee5b031d64ff30147d9c4af17b1e4b394cd1fab87"
+        },
+        "proyector": {
+          "ruta": "unsloth/gemma-4-E4B-it-GGUF/resolve/bfc15c382204943c3a8fff0c750b94ae2364d7a3/mmproj-F16.gguf",
+          "bytes": 990372672,
+          "sha256": "ddf46c21d7078e95338cfc22306b19b276a29a5ad089023449dd54d4b6170a51"
+        }
+      }
+    }
+  ]
+}
