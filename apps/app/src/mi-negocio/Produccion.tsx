@@ -31,7 +31,7 @@ import { Boton, Falla, Icono, Texto } from '../componentes';
 import { ILUSTRACION } from '../ilustraciones';
 import { ahora, nuevoId, useInventario } from '../inventario';
 import { COLOR, FUENTE, SOMBRA } from '../tema';
-import { Campo, ContenidoDeHoja, Contador, Opciones, Pasos, bsEnCampo, leerBs, ui } from './ui';
+import { Campo, ContenidoDeHoja, Contador, DosBotones, Opciones, Pasos, bsEnCampo, leerBs, ui } from './ui';
 
 /**
  * «Mi producción» rediseñada (02/11, pedido del usuario: «súper entendible, cada paso»). Lo que hace el productor y su
@@ -182,7 +182,19 @@ export function Produccion({
           setCreando(r);
         }}
       />
-      <AsistenteDeReceta negocio={negocio} datos={datos} receta={creando} alCerrar={() => setCreando(null)} />
+      <AsistenteDeReceta
+        negocio={negocio}
+        datos={datos}
+        receta={creando}
+        alCerrar={() => setCreando(null)}
+        alUsarPlantilla={
+          alUsarPlantilla &&
+          (() => {
+            setCreando(null);
+            alUsarPlantilla();
+          })
+        }
+      />
     </View>
   );
 }
@@ -255,9 +267,51 @@ function HojaDeTanda({
     }
   };
 
+  // Los botones de cada paso van fijos abajo: no hace falta bajar para verlos
+  const pieDeTanda =
+    paso === 0 ? (
+      <>
+        {pedibles.length > 0 && (
+          <Boton texto={`Pedir lo que falta a Abasto (${pedibles.length})`} icono="cart" alTocar={() => alPedir(pedibles.map((i) => ({ productoId: i.articulo.productoId!, envases: i.falta })))} />
+        )}
+        <Boton
+          tipo="oscuro"
+          texto={plan?.alcanza ? 'Ya las hice' : 'Te faltan insumos'}
+          icono="arrow-forward"
+          deshabilitado={!plan?.alcanza}
+          alTocar={() => {
+            setSalieron(cuantas);
+            setPaso(1);
+          }}
+        />
+      </>
+    ) : paso === 1 ? (
+      <>
+        {error && <Falla texto={error} />}
+        <DosBotones
+          izquierda={<Boton tipo="secundario" texto="Atrás" alTocar={() => setPaso(0)} />}
+          derecha={<Boton tipo="oscuro" texto="Guardar tanda" icono="checkmark" alTocar={() => void guardar()} />}
+        />
+      </>
+    ) : (
+      <DosBotones
+        izquierda={<Boton tipo="secundario" texto="Cerrar" alTocar={alCerrar} />}
+        derecha={
+          <Boton
+            texto="Vender ahora"
+            icono="cash"
+            alTocar={() => {
+              alCerrar();
+              alVender();
+            }}
+          />
+        }
+      />
+    );
+
   return (
     <HojaInferior visible alCerrar={alCerrar}>
-      <ContenidoDeHoja gap={16}>
+      <ContenidoDeHoja gap={16} pie={pieDeTanda}>
         <View style={{ gap: 2 }}>
           <Texto v="chico">Hacer una tanda</Texto>
           <Texto v="t2">{r.nombre}</Texto>
@@ -294,19 +348,6 @@ function HojaDeTanda({
                 </Texto>
               </View>
             )}
-            {pedibles.length > 0 && (
-              <Boton texto={`Pedir lo que falta a Abasto (${pedibles.length})`} icono="cart" alTocar={() => alPedir(pedibles.map((i) => ({ productoId: i.articulo.productoId!, envases: i.falta })))} />
-            )}
-            <Boton
-              tipo="oscuro"
-              texto={plan?.alcanza ? 'Ya las hice' : 'Te faltan insumos'}
-              icono="arrow-forward"
-              deshabilitado={!plan?.alcanza}
-              alTocar={() => {
-                setSalieron(cuantas);
-                setPaso(1);
-              }}
-            />
           </>
         )}
 
@@ -321,15 +362,6 @@ function HojaDeTanda({
                 <Texto style={{ flex: 1, color: COLOR.ambarTexto }}>Merma: {numeroBonito(cuantas - salieron)} {lo.plural}</Texto>
               </View>
             )}
-            {error && <Falla texto={error} />}
-            <View style={{ flexDirection: 'row', gap: 8 }}>
-              <View style={{ flex: 1 }}>
-                <Boton tipo="secundario" texto="Atrás" alTocar={() => setPaso(0)} />
-              </View>
-              <View style={{ flex: 1.4 }}>
-                <Boton tipo="oscuro" texto="Guardar tanda" icono="checkmark" alTocar={() => void guardar()} />
-              </View>
-            </View>
           </>
         )}
 
@@ -346,21 +378,6 @@ function HojaDeTanda({
               <Texto v="fuerte" style={{ textAlign: 'center' }}>
                 Te costó {bs(hecha.costo)} · {bs(Math.round(hecha.costo / hecha.obtenido))} {lo.una}
               </Texto>
-            </View>
-            <View style={{ flexDirection: 'row', gap: 8 }}>
-              <View style={{ flex: 1 }}>
-                <Boton tipo="secundario" texto="Cerrar" alTocar={alCerrar} />
-              </View>
-              <View style={{ flex: 1.3 }}>
-                <Boton
-                  texto="Vender ahora"
-                  icono="cash"
-                  alTocar={() => {
-                    alCerrar();
-                    alVender();
-                  }}
-                />
-              </View>
             </View>
           </>
         )}
@@ -408,7 +425,18 @@ function HojaDeReceta({
 
   return (
     <HojaInferior visible alCerrar={alCerrar}>
-      <ContenidoDeHoja gap={14}>
+      <ContenidoDeHoja
+        gap={14}
+        pie={
+          <>
+            {error && <Falla texto={error} />}
+            <DosBotones
+              izquierda={<Boton tipo="secundario" texto="Editar receta" icono="create" alTocar={() => alEditar(r)} />}
+              derecha={<Boton tipo="oscuro" texto="Guardar precio" icono="pricetag" alTocar={() => void guardarPrecio()} />}
+            />
+          </>
+        }
+      >
         <View style={{ gap: 2 }}>
           <Texto v="chico">Receta</Texto>
           <Texto v="t2">{r.nombre}</Texto>
@@ -434,30 +462,34 @@ function HojaDeReceta({
         </View>
         <Campo etiqueta={`¿A cuánto vendes ${lo.una}? (Bs)`} valor={precio} alCambiar={setPrecio} teclado="decimal-pad" ejemplo={bsEnCampo(sugerido)} />
         <Texto v="chico">Sugerido: {bs(sugerido)} (tu costo + {Math.round(margenDe(negocio) * 100)} %). Si lo dejas vacío, se usa el sugerido.</Texto>
-        {error && <Falla texto={error} />}
-        <Boton tipo="oscuro" texto="Guardar precio" icono="pricetag" alTocar={() => void guardarPrecio()} />
-        <View style={{ flexDirection: 'row', gap: 8 }}>
-          <View style={{ flex: 1 }}>
-            <Boton tipo="secundario" texto="Editar receta" icono="create" alTocar={() => alEditar(r)} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Boton
-              tipo="chico"
-              texto="Borrar receta"
-              alTocar={() => {
-                void aplicar({ recetas: [{ ...r, eliminado: true, actualizadoEn: ahora() }] });
-                alCerrar();
-              }}
-            />
-          </View>
-        </View>
+        <Boton
+          tipo="chico"
+          texto="Borrar receta"
+          alTocar={() => {
+            void aplicar({ recetas: [{ ...r, eliminado: true, actualizadoEn: ahora() }] });
+            alCerrar();
+          }}
+        />
       </ContenidoDeHoja>
     </HojaInferior>
   );
 }
 
 /** Nueva receta (o editar una), en tres pasos */
-function AsistenteDeReceta({ negocio, datos, receta, alCerrar }: { negocio: NegocioElegido; datos: DatosDeNegocio; receta: Receta | 'nueva' | null; alCerrar: () => void }) {
+function AsistenteDeReceta({
+  negocio,
+  datos,
+  receta,
+  alCerrar,
+  alUsarPlantilla,
+}: {
+  negocio: NegocioElegido;
+  datos: DatosDeNegocio;
+  receta: Receta | 'nueva' | null;
+  alCerrar: () => void;
+  /** Elegir una de las recetas listas de su área (con sus ingredientes y cantidades) en vez de escribirla */
+  alUsarPlantilla?: () => void;
+}) {
   const { aplicar } = useInventario();
   const editando = receta && receta !== 'nueva' ? receta : null;
   const [paso, setPaso] = useState(0);
@@ -504,7 +536,24 @@ function AsistenteDeReceta({ negocio, datos, receta, alCerrar }: { negocio: Nego
 
   return (
     <HojaInferior visible={!!receta} alCerrar={alCerrar}>
-      <ContenidoDeHoja gap={16}>
+      <ContenidoDeHoja
+        gap={16}
+        pie={
+          <>
+            {error && <Falla texto={error} />}
+            <DosBotones
+              izquierda={paso > 0 ? <Boton tipo="secundario" texto="Atrás" alTocar={() => setPaso(paso - 1)} /> : undefined}
+              derecha={
+                paso < 2 ? (
+                  <Boton tipo="oscuro" texto="Siguiente" icono="arrow-forward" alTocar={siguiente} />
+                ) : (
+                  <Boton tipo="oscuro" texto="Guardar receta" icono="checkmark" deshabilitado={!elegidos.length} alTocar={() => void guardar()} />
+                )
+              }
+            />
+          </>
+        }
+      >
         <View style={{ gap: 2 }}>
           <Texto v="chico">{editando ? 'Editar receta' : 'Nueva receta'}</Texto>
           <Texto v="t2">{nombre.trim() || 'Tu receta'}</Texto>
@@ -513,6 +562,27 @@ function AsistenteDeReceta({ negocio, datos, receta, alCerrar }: { negocio: Nego
 
         {paso === 0 && (
           <>
+            {!editando && alUsarPlantilla && plantillasDe(negocio.subtipo ?? 'salteneria').length > 0 && (
+              <>
+                <Tocable onPress={alUsarPlantilla} style={e.plantillas} accessibilityRole="button" accessibilityLabel="Escoger una receta lista">
+                  <View style={e.iconoPlantillas}>
+                    <Icono nombre="sparkles" tamano={22} color={COLOR.bosque} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Texto style={e.tituloPlantillas}>Escoger una receta lista</Texto>
+                    <Texto style={e.textoPlantillas}>
+                      {plantillasDe(negocio.subtipo ?? 'salteneria').length} recetas de tu rubro, ya con sus ingredientes. Solo ajustas.
+                    </Texto>
+                  </View>
+                  <Icono nombre="chevron-forward" tamano={20} color={COLOR.lima} />
+                </Tocable>
+                <View style={e.separador}>
+                  <View style={e.raya} />
+                  <Texto v="chico">o escribe la tuya</Texto>
+                  <View style={e.raya} />
+                </View>
+              </>
+            )}
             <Texto style={e.pregunta}>¿Qué haces?</Texto>
             <Campo etiqueta="Nombre" valor={nombre} alCambiar={setNombre} ejemplo={(SUGERENCIAS[negocio.subtipo ?? 'salteneria'] ?? [])[0]} mayusculas />
             <Opciones opciones={(SUGERENCIAS[negocio.subtipo ?? 'salteneria'] ?? []).map((s) => ({ clave: s, texto: s }))} elegida={nombre} alElegir={setNombre} />
@@ -591,23 +661,18 @@ function AsistenteDeReceta({ negocio, datos, receta, alCerrar }: { negocio: Nego
           </>
         )}
 
-        {error && <Falla texto={error} />}
-        <View style={{ flexDirection: 'row', gap: 8 }}>
-          {paso > 0 && (
-            <View style={{ flex: 1 }}>
-              <Boton tipo="secundario" texto="Atrás" alTocar={() => setPaso(paso - 1)} />
-            </View>
-          )}
-          <View style={{ flex: 1.4 }}>
-            {paso < 2 ? <Boton tipo="oscuro" texto="Siguiente" icono="arrow-forward" alTocar={siguiente} /> : <Boton tipo="oscuro" texto="Guardar receta" icono="checkmark" deshabilitado={!elegidos.length} alTocar={() => void guardar()} />}
-          </View>
-        </View>
       </ContenidoDeHoja>
     </HojaInferior>
   );
 }
 
 const e = StyleSheet.create({
+  plantillas: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 20, backgroundColor: COLOR.bosque, ...SOMBRA },
+  iconoPlantillas: { width: 44, height: 44, borderRadius: 14, backgroundColor: COLOR.lima, alignItems: 'center', justifyContent: 'center' },
+  tituloPlantillas: { fontFamily: FUENTE.negra, fontSize: 16.5, color: '#fff', letterSpacing: -0.3 },
+  textoPlantillas: { fontFamily: FUENTE.semi, fontSize: 12.5, color: '#CFE3D6' },
+  separador: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  raya: { flex: 1, height: 1, backgroundColor: COLOR.borde },
   bienvenida: { alignItems: 'center', gap: 10, padding: 20, borderRadius: 26, backgroundColor: COLOR.superficie, ...SOMBRA },
   imagenBienvenida: { width: 130, height: 130 },
   tituloBienvenida: { fontFamily: FUENTE.negra, fontSize: 22, color: COLOR.texto, letterSpacing: -0.5 },

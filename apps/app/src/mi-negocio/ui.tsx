@@ -53,14 +53,33 @@ export function useTeclado() {
   return alto;
 }
 
-export function ContenidoDeHoja({ children, gap = 12 }: { children: ReactNode; gap?: number }) {
+/**
+ * El contenido de una hoja: lo de arriba se desliza y `pie` (los botones) queda fijo abajo, siempre a la vista
+ * (02/11, pedido de Andrés: «la mayoría no hace scroll y se asustan de no ver el botón»).
+ */
+export function ContenidoDeHoja({ children, pie, gap = 12 }: { children: ReactNode; pie?: ReactNode; gap?: number }) {
   const teclado = useTeclado();
   const { height } = useWindowDimensions();
   return (
-    <View style={{ paddingBottom: teclado }}>
-      <ScrollView keyboardShouldPersistTaps="handled" style={{ maxHeight: Math.min(660, height - teclado - 120) }} contentContainerStyle={{ gap }}>
+    <View style={{ paddingBottom: teclado, flexShrink: 1 }}>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        style={{ flexGrow: 0, flexShrink: 1, maxHeight: Math.min(660, height - teclado - 120) }}
+        contentContainerStyle={{ gap, paddingBottom: pie ? 6 : 0 }}
+      >
         {children}
       </ScrollView>
+      {pie && <View style={ui.pieDeHoja}>{pie}</View>}
+    </View>
+  );
+}
+
+/** Dos botones lado a lado en el pie: el secundario a la izquierda y el principal, más ancho, a la derecha */
+export function DosBotones({ izquierda, derecha }: { izquierda?: ReactNode; derecha: ReactNode }) {
+  return (
+    <View style={{ flexDirection: 'row', gap: 8 }}>
+      {izquierda && <View style={{ flex: 1 }}>{izquierda}</View>}
+      <View style={{ flex: 1.4 }}>{derecha}</View>
     </View>
   );
 }
@@ -196,6 +215,7 @@ export function Opciones<T extends string>({ opciones, elegida, alElegir }: { op
 }
 
 export const ui = StyleSheet.create({
+  pieDeHoja: { gap: 8, paddingTop: 12, marginHorizontal: -20, paddingHorizontal: 20, borderTopWidth: 1, borderTopColor: COLOR.borde, backgroundColor: COLOR.superficie },
   campo: { height: 50, paddingHorizontal: 14, borderRadius: 14, borderWidth: 1.5, borderColor: COLOR.borde, backgroundColor: COLOR.superficie, fontFamily: FUENTE.semi, fontSize: 16, color: COLOR.texto },
   segmentos: { gap: 8, paddingHorizontal: 16, paddingVertical: 4 },
   segmento: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, height: 40, borderRadius: 20, backgroundColor: COLOR.superficie, borderWidth: 1, borderColor: COLOR.borde },

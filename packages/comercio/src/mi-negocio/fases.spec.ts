@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Producto } from '../catalogo';
 import { comprasQueEntran, type PedidoComprado } from './compras';
-import { anotarFiado, clienteDeFiado, saldosDeFiado, totalFiado } from './fiado';
+import { anotarFiado, buscarClientes, clienteDeFiado, clienteParaVenta, saldosDeFiado, totalFiado } from './fiado';
 import { ahorroFrenteAlSuper, anotacion, cuentasDelMes, itemDeLista, listaVigente, seTeAcaba } from './hogar';
 import { MEDIDAS_A_MANO } from './medidas';
 import { cuantosCambios, datosVacios, fusionar, type DatosDeNegocio } from './modelo';
@@ -108,6 +108,27 @@ describe('tienda: precio, poco stock y caja', () => {
 });
 
 describe('fiado y el mes', () => {
+  it('el cliente de la venta: se busca al escribir y nunca se repite (mismo nombre o mismo celular)', () => {
+    const d = conCompras();
+    const coca = d.articulos.find((a) => a.productoId === 'AB-030')!;
+    const primera = clienteParaVenta(d, 'Andrés Quispe', null, HOY, 'c-1');
+    expect(primera).toMatchObject({ guardar: true, cliente: { nombre: 'Andrés Quispe', telefono: null } });
+    const venta = registrarVenta(d, [{ articuloId: coca.id, cantidad: 1, precioUnitarioCentavos: 1300 }], { forma: 'CONTADO', cliente: primera.cliente }, HOY, 'v-1');
+    expect(venta.venta).toMatchObject({ forma: 'CONTADO', clienteId: 'c-1' });
+    expect(venta.fiado).toBeNull();
+    const con = { ...d, clientes: [primera.cliente, clienteDeFiado('Ana María', '70000001', HOY, 'c-2')], ventas: [venta.venta] };
+    // Al escribir las primeras letras ya aparece (sin tildes ni mayúsculas); el que más compra va primero
+    expect(buscarClientes(con, 'an').map((c) => c.id)).toEqual(['c-1', 'c-2']);
+    expect(buscarClientes(con, 'andres qu').map((c) => c.id)).toEqual(['c-1']);
+    expect(buscarClientes(con, '7000').map((c) => c.id)).toEqual(['c-2']);
+    expect(buscarClientes(con, '  ')).toEqual([]);
+    // Escribir el mismo nombre otra vez no crea otro; si ahora trae el celular, se le suma
+    expect(clienteParaVenta(con, '  andres   QUISPE ', null, HOY, 'c-9')).toEqual({ cliente: primera.cliente, guardar: false });
+    expect(clienteParaVenta(con, 'Andres Quispe', '7 111-2222', HOY, 'c-9')).toMatchObject({ guardar: true, cliente: { id: 'c-1', telefono: '71112222' } });
+    // El mismo celular es la misma persona aunque escriba el nombre distinto
+    expect(clienteParaVenta(con, 'Anita', '70000001', HOY, 'c-9').cliente.id).toBe('c-2');
+  });
+
   it('una venta fiada queda en el cuaderno; los pagos la bajan', () => {
     const d = conCompras();
     const coca = d.articulos.find((a) => a.productoId === 'AB-030')!;

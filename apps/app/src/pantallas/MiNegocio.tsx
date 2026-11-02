@@ -297,6 +297,7 @@ export function MiNegocio({ navigation, route }: PantallaDePestana<'MiNegocio'>)
         {negocio.tipo === 'productor' && negocio.subtipo ? (
           <PrimeraReceta
             area={negocio.subtipo}
+            yaTengo={datos.recetas.filter((r) => !r.eliminado).map((r) => r.nombre)}
             productos={catalogo.productos}
             libro={datos}
             aplicar={inventario.aplicar}

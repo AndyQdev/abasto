@@ -1,6 +1,8 @@
 import {
   bs,
-  clienteDeFiado,
+  buscarClientes,
+  clienteExistente,
+  clienteParaVenta,
   existencias,
   precioDeVenta,
   registrarVenta,
@@ -185,6 +187,7 @@ export function CarritoDeVenta({
   const [abierta, setAbierta] = useState(false);
   const [fiando, setFiando] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [cliente, setCliente] = useState<DatosDeCliente>(SIN_CLIENTE);
   const [latido, latir] = useLatido();
   const antes = useRef(unidades);
   useEffect(() => {
@@ -203,19 +206,36 @@ export function CarritoDeVenta({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unidades]);
 
-  const cobrar = async (cliente?: ClienteDeFiado, clienteNuevo?: boolean) => {
+  /** El cliente escrito en la venta (opcional): el elegido de la lista, o uno nuevo con lo escrito */
+  const clienteDeLaVenta = () => {
+    if (cliente.elegido) return { cliente: cliente.elegido, guardar: false };
+    if (cliente.nombre.trim().length < 2) return null;
+    return clienteParaVenta(datos, cliente.nombre, cliente.telefono || null, ahora(), nuevoId());
+  };
+
+  const cobrar = async (forma: 'CONTADO' | 'FIADO', aQuien?: { cliente: ClienteDeFiado; guardar: boolean } | null) => {
     const items: ItemDeVenta[] = lineas.map((x) => ({ articuloId: x.articulo.id, cantidad: venta.ticket.get(x.articulo.id) ?? 0, precioUnitarioCentavos: precioDe(x) }));
     try {
-      const r = registrarVenta(datos, items, cliente ? { forma: 'FIADO', cliente } : { forma: 'CONTADO' }, ahora(), nuevoId());
-      await aplicar({ ventas: [r.venta], movimientos: r.movimientos, fiados: r.fiado ? [r.fiado] : [], clientes: clienteNuevo && cliente ? [cliente] : [] });
+      const c = aQuien?.cliente ?? null;
+      const r = registrarVenta(datos, items, { forma, cliente: c }, ahora(), nuevoId());
+      await aplicar({ ventas: [r.venta], movimientos: r.movimientos, fiados: r.fiado ? [r.fiado] : [], clientes: aQuien?.guardar && c ? [c] : [] });
       venta.vaciar();
       setFiando(false);
       setAbierta(false);
       setError(null);
-      alVendido(cliente ? `Fiado a ${cliente.nombre}: ${bs(r.venta.totalCentavos)}` : `Venta cobrada: ${bs(r.venta.totalCentavos)}`);
+      setCliente(SIN_CLIENTE);
+      const monto = bs(r.venta.totalCentavos);
+      alVendido(forma === 'FIADO' && c ? `Fiado a ${c.nombre}: ${monto}` : c ? `Venta a ${c.nombre}: ${monto}` : `Venta cobrada: ${monto}`);
     } catch (x) {
       setError(x instanceof Error ? x.message : 'No se pudo registrar la venta');
     }
+  };
+
+  const fiar = () => {
+    // Si ya escribió a quién, se le fía directo; si no, se pregunta
+    const aQuien = clienteDeLaVenta();
+    if (aQuien) void cobrar('FIADO', aQuien);
+    else setFiando(true);
   };
 
   return (
@@ -241,7 +261,26 @@ export function CarritoDeVenta({
       </View>
 
       <HojaInferior visible={abierta && !fiando && lineas.length > 0} alCerrar={() => setAbierta(false)}>
-        <ContenidoDeHoja>
+        <ContenidoDeHoja
+          pie={
+            <>
+              <View style={e.totalFila}>
+                <Texto v="fuerte">Total</Texto>
+                <Texto style={e.total}>{bs(total)}</Texto>
+              </View>
+              <CampoDeCliente datos={datos} valor={cliente} alCambiar={setCliente} />
+              {error && <Falla texto={error} />}
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <View style={{ flex: 1.3 }}>
+                  <Boton tipo="oscuro" texto="Cobrado" icono="checkmark" alTocar={() => void cobrar('CONTADO', clienteDeLaVenta())} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Boton tipo="secundario" texto="Fiado" icono="book" alTocar={fiar} />
+                </View>
+              </View>
+            </>
+          }
+        >
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <Texto v="t2" style={{ flex: 1 }}>
               Tu venta
@@ -274,23 +313,97 @@ export function CarritoDeVenta({
               </View>
             );
           })}
-          <View style={e.totalFila}>
-            <Texto v="fuerte">Total</Texto>
-            <Texto style={e.total}>{bs(total)}</Texto>
-          </View>
-          {error && <Falla texto={error} />}
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <View style={{ flex: 1 }}>
-              <Boton tipo="oscuro" texto="Cobrado" icono="checkmark" alTocar={() => void cobrar()} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Boton tipo="secundario" texto="Fiado" icono="book" alTocar={() => setFiando(true)} />
-            </View>
-          </View>
         </ContenidoDeHoja>
       </HojaInferior>
-      <HojaDeFiar visible={fiando} datos={datos} total={total} alCerrar={() => setFiando(false)} alElegir={(c, nuevo) => void cobrar(c, nuevo)} />
+      <HojaDeFiar visible={fiando} datos={datos} total={total} alCerrar={() => setFiando(false)} alElegir={(c, guardar) => void cobrar('FIADO', { cliente: c, guardar })} />
     </>
+  );
+}
+
+/** Lo que se escribió del cliente de la venta: el elegido de la lista, o un nombre (y celular) nuevo */
+interface DatosDeCliente {
+  elegido: ClienteDeFiado | null;
+  nombre: string;
+  telefono: string;
+}
+const SIN_CLIENTE: DatosDeCliente = { elegido: null, nombre: '', telefono: '' };
+
+/**
+ * «¿A quién le vendes?» (opcional, 02/11, pedido de Andrés): un solo campo con buscador. Al escribir aparecen los que
+ * ya le compraron; se toca uno y queda elegido. Si es alguien nuevo, se escribe su nombre (y el celular, si quiere) y
+ * queda guardado para la próxima. Nada de formularios: sin nombre, la venta va sin cliente.
+ */
+function CampoDeCliente({ datos, valor, alCambiar }: { datos: DatosDeNegocio; valor: DatosDeCliente; alCambiar: (v: DatosDeCliente) => void }) {
+  const sugeridos = useMemo(() => buscarClientes(datos, valor.nombre, 4), [datos, valor.nombre]);
+  if (valor.elegido) {
+    const c = valor.elegido;
+    return (
+      <View style={e.clienteElegido}>
+        <View style={e.inicialCliente}>
+          <Texto style={e.textoInicial}>{c.nombre.slice(0, 1).toUpperCase()}</Texto>
+        </View>
+        <View style={{ flex: 1 }}>
+          <Texto v="fuerte" lineas={1}>
+            {c.nombre}
+          </Texto>
+          <Texto v="chico">{c.telefono ? 'Ya te compró · Cel. ' + c.telefono : 'Ya te compró'}</Texto>
+        </View>
+        <Tocable onPress={() => alCambiar(SIN_CLIENTE)} style={e.quitarCliente} accessibilityRole="button" accessibilityLabel={'Quitar a ' + c.nombre + ' de la venta'}>
+          <Icono nombre="close" tamano={18} color={COLOR.bosque} />
+        </Tocable>
+      </View>
+    );
+  }
+  const escrito = valor.nombre.trim();
+  // «Cliente nuevo» solo si no es nadie de la lista: con «andr» y Andrés en la lista, primero se ofrece Andrés; con nombre
+  // y apellido escritos («Ana Pérez») ya puede ser alguien nuevo aunque haya otra Ana
+  const esNuevo = escrito.length >= 2 && !clienteExistente(datos, escrito) && (sugeridos.length === 0 || escrito.includes(' '));
+  return (
+    <View style={{ gap: 6 }}>
+      <View style={e.buscadorCliente}>
+        <Icono nombre="person" tamano={18} color={COLOR.texto3} />
+        <TextInput
+          accessibilityLabel="Cliente (opcional)"
+          value={valor.nombre}
+          onChangeText={(t) => alCambiar({ ...valor, nombre: t })}
+          placeholder="¿A quién le vendes? (opcional)"
+          placeholderTextColor={COLOR.texto3}
+          autoCapitalize="words"
+          style={e.entradaBuscar}
+        />
+        {valor.nombre.length > 0 && (
+          <Tocable onPress={() => alCambiar(SIN_CLIENTE)} accessibilityRole="button" accessibilityLabel="Borrar el cliente">
+            <Icono nombre="close-circle" tamano={18} color={COLOR.texto3} />
+          </Tocable>
+        )}
+      </View>
+      {sugeridos.map((c) => (
+        <Tocable key={c.id} onPress={() => alCambiar({ elegido: c, nombre: c.nombre, telefono: '' })} style={e.sugerido} accessibilityRole="button" accessibilityLabel={'Vender a ' + c.nombre}>
+          <Icono nombre="person-circle" tamano={26} color={COLOR.bosque} />
+          <Texto v="fuerte" style={{ flex: 1 }} lineas={1}>
+            {c.nombre}
+          </Texto>
+          {c.telefono && <Texto v="chico">{c.telefono}</Texto>}
+          <Icono nombre="checkmark-circle-outline" tamano={20} color={COLOR.bosque} />
+        </Tocable>
+      ))}
+      {esNuevo && (
+        <View style={e.nuevoCliente}>
+          <Texto v="chico" style={{ flex: 1 }} lineas={2}>
+            Cliente nuevo: lo guardamos para la próxima
+          </Texto>
+          <TextInput
+            accessibilityLabel="Celular del cliente (opcional)"
+            value={valor.telefono}
+            onChangeText={(t) => alCambiar({ ...valor, telefono: t })}
+            placeholder="Su celular"
+            placeholderTextColor={COLOR.texto3}
+            keyboardType="phone-pad"
+            style={e.entradaCelular}
+          />
+        </View>
+      )}
+    </View>
   );
 }
 
@@ -301,7 +414,9 @@ function HojaDeFiar({ visible, datos, total, alCerrar, alElegir }: { visible: bo
   const saldos = saldosDeFiado(datos);
   const nuevo = () => {
     try {
-      alElegir(clienteDeFiado(nombre, null, ahora(), nuevoId()), true);
+      // Si ya estaba anotado con ese nombre, es la misma persona
+      const r = clienteParaVenta(datos, nombre, null, ahora(), nuevoId());
+      alElegir(r.cliente, r.guardar);
       setNombre('');
     } catch (x) {
       setError(x instanceof Error ? x.message : 'Revisa el nombre');
@@ -309,7 +424,15 @@ function HojaDeFiar({ visible, datos, total, alCerrar, alElegir }: { visible: bo
   };
   return (
     <HojaInferior visible={visible} alCerrar={alCerrar}>
-      <ContenidoDeHoja>
+      <ContenidoDeHoja
+        pie={
+          <>
+            <Campo etiqueta="Alguien nuevo" valor={nombre} alCambiar={setNombre} ejemplo="Doña Carmen" mayusculas />
+            {error && <Falla texto={error} />}
+            <Boton tipo="oscuro" texto="Fiar a alguien nuevo" icono="person-add" deshabilitado={nombre.trim().length < 2} alTocar={nuevo} />
+          </>
+        }
+      >
         <View style={{ gap: 2 }}>
           <Texto v="t2">¿A quién le fías?</Texto>
           <Texto v="gris">{bs(total)} quedan anotados en su cuaderno.</Texto>
@@ -324,9 +447,6 @@ function HojaDeFiar({ visible, datos, total, alCerrar, alElegir }: { visible: bo
             <Icono nombre="chevron-forward" tamano={18} color={COLOR.texto3} />
           </Tocable>
         ))}
-        <Campo etiqueta="Alguien nuevo" valor={nombre} alCambiar={setNombre} ejemplo="Doña Carmen" mayusculas />
-        {error && <Falla texto={error} />}
-        <Boton tipo="oscuro" texto="Fiar a alguien nuevo" icono="person-add" deshabilitado={nombre.trim().length < 2} alTocar={nuevo} />
       </ContenidoDeHoja>
     </HojaInferior>
   );
@@ -349,6 +469,14 @@ const e = StyleSheet.create({
   subtotal: { minWidth: 76, textAlign: 'right', fontFamily: FUENTE.fuerte, color: COLOR.texto },
   totalFila: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: COLOR.borde, paddingTop: 10 },
   total: { fontFamily: FUENTE.negra, fontSize: 26, color: COLOR.bosque, letterSpacing: -0.6 },
+  buscadorCliente: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, height: 48, borderRadius: 16, backgroundColor: COLOR.tenue, borderWidth: 1.5, borderColor: COLOR.borde },
+  sugerido: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, paddingHorizontal: 10, borderRadius: 14, backgroundColor: COLOR.limaSuave },
+  nuevoCliente: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  entradaCelular: { width: 150, height: 42, paddingHorizontal: 12, borderRadius: 12, borderWidth: 1.5, borderColor: COLOR.borde, backgroundColor: COLOR.superficie, fontFamily: FUENTE.semi, fontSize: 15, color: COLOR.texto },
+  clienteElegido: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, borderRadius: 16, backgroundColor: COLOR.limaSuave, borderWidth: 1.5, borderColor: COLOR.bosque },
+  inicialCliente: { width: 38, height: 38, borderRadius: 19, backgroundColor: COLOR.bosque, alignItems: 'center', justifyContent: 'center' },
+  textoInicial: { fontFamily: FUENTE.negra, fontSize: 16, color: COLOR.lima },
+  quitarCliente: { width: 34, height: 34, borderRadius: 17, backgroundColor: COLOR.superficie, alignItems: 'center', justifyContent: 'center' },
   lugarCarrito: { position: 'absolute', left: 16, right: 16 },
   carrito: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, paddingLeft: 10, paddingRight: 14, borderRadius: 26, backgroundColor: COLOR.bosque, ...SOMBRA },
   iconoCarrito: { width: 44, height: 44, borderRadius: 22, backgroundColor: COLOR.lima, alignItems: 'center', justifyContent: 'center' },

@@ -179,12 +179,13 @@ describe('inventario', () => {
       </Con>,
     );
     expect(screen.getByText(/Sugerido: Bs 342,00/)).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Guardar' }));
+    expect(await screen.findByText('No cambió nada')).toBeTruthy();
+    // Un solo «Guardar», fijo abajo, guarda lo contado y el precio juntos
     await fireEvent.press(screen.getByRole('button', { name: 'Uno menos' }));
-    await fireEvent.press(screen.getByRole('button', { name: 'Guardar lo que tengo' }));
-    expect(await screen.findByText('Guardamos lo que tienes')).toBeTruthy();
     await fireEvent.changeText(screen.getByLabelText('Bs por quintal'), '350');
-    await fireEvent.press(screen.getByRole('button', { name: 'Guardar precio' }));
-    expect(await screen.findByText('Guardamos el precio')).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Guardar' }));
+    expect(await screen.findByText('Guardamos el precio y lo que tienes')).toBeTruthy();
     const datos = await almacen.leer();
     expect(existencias(datos).find((x) => x.articulo.id === harina.articulo.id)).toMatchObject({ cantidad: 1, articulo: expect.objectContaining({ precioVentaCentavos: 35000 }) });
     // Las dos cosas quedan en la cola para subir a la cuenta
@@ -229,6 +230,35 @@ describe('vender y fiar', () => {
     expect(existencias(datos).find((x) => x.articulo.productoId === 'AB-030')!.texto).toBe('9 u. · 18 L');
   });
 
+  it('la venta puede llevar cliente (opcional): se guarda la primera vez y la próxima sale al escribir', async () => {
+    const almacen = await almacenCon(conCompras());
+    const alVendido = jest.fn();
+    await render(
+      <Con almacen={almacen}>
+        <ConDatos>{(d) => <Vender datos={d} alVendido={alVendido} />}</ConDatos>
+      </Con>,
+    );
+    await fireEvent.press(await screen.findByRole('button', { name: 'Vender Coca-Cola' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Ver tu venta: 1 por Bs 13,00' }));
+    await fireEvent.changeText(screen.getByLabelText('Cliente (opcional)'), 'Andrés Quispe');
+    expect(screen.getByText('Cliente nuevo: lo guardamos para la próxima')).toBeTruthy();
+    await fireEvent.changeText(screen.getByLabelText('Celular del cliente (opcional)'), '71234567');
+    await fireEvent.press(screen.getByRole('button', { name: 'Cobrado' }));
+    await waitFor(() => expect(alVendido).toHaveBeenCalledWith('Venta a Andrés Quispe: Bs 13,00'));
+
+    // La segunda vez: con escribir «andr» ya aparece, se toca y la venta va a la misma persona (no se repite)
+    await fireEvent.press(await screen.findByRole('button', { name: 'Vender Coca-Cola' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Ver tu venta: 1 por Bs 13,00' }));
+    await fireEvent.changeText(screen.getByLabelText('Cliente (opcional)'), 'andr');
+    await fireEvent.press(await screen.findByRole('button', { name: 'Vender a Andrés Quispe' }));
+    expect(screen.getByText('Ya te compró · Cel. 71234567')).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Cobrado' }));
+    await waitFor(() => expect(alVendido).toHaveBeenLastCalledWith('Venta a Andrés Quispe: Bs 13,00'));
+    const datos = await almacen.leer();
+    expect(datos.clientes).toEqual([expect.objectContaining({ nombre: 'Andrés Quispe', telefono: '71234567' })]);
+    expect(datos.ventas.map((v) => v.clienteId)).toEqual([datos.clientes[0].id, datos.clientes[0].id]);
+  });
+
   it('una venta fiada a alguien nuevo queda en su cuaderno; después paga una parte', async () => {
     const almacen = await almacenCon(conCompras());
     await render(
@@ -258,6 +288,18 @@ describe('vender y fiar', () => {
 });
 
 describe('producción (receta, tanda y venta, paso a paso)', () => {
+  it('«Nueva receta» ofrece escoger una receta lista aunque ya tenga recetas', async () => {
+    const almacen = await almacenCon(conCompras());
+    const alUsarPlantilla = jest.fn();
+    await render(
+      <Con almacen={almacen}>
+        <ConDatos>{(d) => <Produccion negocio={SALTENERIA} datos={d} nuevo={1} alPedir={jest.fn()} alVender={jest.fn()} alUsarPlantilla={alUsarPlantilla} />}</ConDatos>
+      </Con>,
+    );
+    await fireEvent.press(await screen.findByRole('button', { name: 'Escoger una receta lista' }));
+    expect(alUsarPlantilla).toHaveBeenCalled();
+  });
+
   it('sin recetas invita a agregar la primera; el asistente la arma con el costo en vivo', async () => {
     const almacen = await almacenCon(conCompras());
     const alPedir = jest.fn();

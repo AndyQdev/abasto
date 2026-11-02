@@ -29,7 +29,7 @@ import { Boton, Falla, Icono, Texto, type NombreDeIcono } from '../componentes';
 import { ILUSTRACION, type Imagen } from '../ilustraciones';
 import { ahora, useInventario } from '../inventario';
 import { COLOR, FUENTE, SOMBRA, TINTES } from '../tema';
-import { Campo, CabezaDeSeccion, ContenidoDeHoja, enCampo, bsEnCampo, fecha, Listo, Opciones, leerBs, ui } from './ui';
+import { Campo, CabezaDeSeccion, ContenidoDeHoja, DosBotones, enCampo, bsEnCampo, fecha, Listo, Opciones, leerBs, ui } from './ui';
 
 const ICONO_DE_GRUPO: Record<GrupoDeInventario['clave'], NombreDeIcono> = { despensa: 'basket', para_vender: 'storefront', insumos: 'flask', hechos: 'restaurant' };
 
@@ -284,33 +284,60 @@ export function HojaDeArticulo({
     setListo(texto);
   };
 
-  const guardarConteo = async () => {
-    if (Number.isNaN(valorContado)) return setError('Escribe cuánto tienes, por ejemplo 2 o 1,5');
-    hecho((await ajustar(x, valorContado)) ? 'Guardamos lo que tienes' : 'No cambió nada');
-  };
-  const guardarCompra = async () => {
-    const n = leerCantidad(compra);
-    const c = costo.trim() ? leerBs(costo) : null;
-    if (Number.isNaN(n) || n <= 0) return setError('Escribe cuánto compraste');
-    if (c !== null && Number.isNaN(c)) return setError('Revisa el precio');
-    await sumar(a, n, c);
-    setCompra('');
-    setCosto('');
-    hecho('Sumamos tu compra');
-  };
-  const guardarPrecio = async () => {
+  /**
+   * Un solo «Guardar», fijo abajo (02/11, pedido de Andrés: que el botón se vea sin bajar): guarda lo que cambió de
+   * las tres cosas (el precio y el aviso, lo contado y la compra a otro proveedor) y dice qué guardó.
+   */
+  const guardar = async () => {
+    setError(null);
     const p = precio.trim() ? leerBs(precio) : null;
     const m = minimo.trim() ? leerCantidad(minimo) : null;
-    if (p !== null && Number.isNaN(p)) return setError('Revisa el precio, por ejemplo 13,50');
-    if (m !== null && Number.isNaN(m)) return setError('Revisa la cantidad para avisar');
-    const t = ahora();
-    await aplicar({ articulos: [conMinimo(conPrecio(a, p, t), m, t)] });
-    hecho('Guardamos el precio');
+    const precioCambio = vende && (p !== (a.precioVentaCentavos ?? null) || m !== (a.stockMinimo ?? null));
+    const contoCambio = contada.trim() !== '' && valorContado !== Math.max(x.cantidad, 0);
+    const n = compra.trim() ? leerCantidad(compra) : 0;
+    const c = costo.trim() ? leerBs(costo) : null;
+    if (precioCambio && p !== null && Number.isNaN(p)) return setError('Revisa el precio, por ejemplo 13,50');
+    if (precioCambio && m !== null && Number.isNaN(m)) return setError('Revisa la cantidad para avisar');
+    if (contoCambio && Number.isNaN(valorContado)) return setError('Escribe cuánto tienes, por ejemplo 2 o 1,5');
+    if (compra.trim() && (Number.isNaN(n) || n <= 0)) return setError('Escribe cuánto compraste');
+    if (c !== null && Number.isNaN(c)) return setError('Revisa el precio de la compra');
+    const que: string[] = [];
+    if (precioCambio) {
+      const t = ahora();
+      await aplicar({ articulos: [conMinimo(conPrecio(a, p, t), m, t)] });
+      que.push('el precio');
+    }
+    let ahoraHay = Math.max(x.cantidad, 0);
+    if (contoCambio && (await ajustar(x, valorContado))) {
+      ahoraHay = valorContado;
+      que.push('lo que tienes');
+    }
+    if (n > 0) {
+      await sumar(a, n, c);
+      ahoraHay += n;
+      setCompra('');
+      setCosto('');
+      que.push('tu compra');
+    }
+    setContada(enCampo(ahoraHay));
+    hecho(que.length ? `Guardamos ${que.length === 1 ? que[0] : `${que.slice(0, -1).join(', ')} y ${que[que.length - 1]}`}` : 'No cambió nada');
   };
 
   return (
     <HojaInferior visible alCerrar={alCerrar}>
-      <ContenidoDeHoja gap={14}>
+      <ContenidoDeHoja
+        gap={14}
+        pie={
+          <>
+            {error && <Falla texto={error} />}
+            {listo && <Listo texto={listo} />}
+            <DosBotones
+              izquierda={a.productoId ? <Boton tipo="secundario" texto="Volver a pedir" icono="repeat" alTocar={() => alPedir(a.productoId!)} /> : undefined}
+              derecha={<Boton tipo="oscuro" texto="Guardar" icono="checkmark" alTocar={() => void guardar()} />}
+            />
+          </>
+        }
+      >
         <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
           {imagen !== null && (
             <View style={[ui.foto, { width: 64, height: 64 }]}>
@@ -350,7 +377,6 @@ export function HojaDeArticulo({
                 Sugerido: {bs(sugerido.centavos)} (tu costo + {Math.round(margenDe(negocio) * 100)} %). Si lo dejas vacío, se usa el sugerido.
               </Texto>
             )}
-            <Boton tipo="secundario" texto="Guardar precio" icono="pricetag" alTocar={() => void guardarPrecio()} />
           </View>
         )}
 
@@ -377,7 +403,6 @@ export function HojaDeArticulo({
               <Icono nombre="add" tamano={22} color={COLOR.bosque} />
             </Tocable>
           </View>
-          <Boton tipo="oscuro" texto="Guardar lo que tengo" icono="checkmark" alTocar={() => void guardarConteo()} />
         </View>
 
         {a.origen === 'OTRO_PROVEEDOR' && a.clase === 'COMPRADO' && (
@@ -387,13 +412,9 @@ export function HojaDeArticulo({
               <Campo etiqueta={`¿Cuántos ${envases(2)}?`} valor={compra} alCambiar={setCompra} teclado="decimal-pad" estilo={{ flex: 1 }} />
               <Campo etiqueta={`Bs por ${porEnvase}`} valor={costo} alCambiar={setCosto} teclado="decimal-pad" estilo={{ flex: 1 }} />
             </View>
-            <Boton tipo="secundario" texto="Sumar compra" icono="add" alTocar={() => void guardarCompra()} />
           </View>
         )}
 
-        {error && <Falla texto={error} />}
-        {listo && <Listo texto={listo} />}
-        {a.productoId && <Boton tipo="secundario" texto="Volver a pedir" icono="repeat" alTocar={() => alPedir(a.productoId!)} />}
       </ContenidoDeHoja>
     </HojaInferior>
   );
@@ -444,7 +465,14 @@ export function HojaParaAgregar({
 
   return (
     <HojaInferior visible={visible} alCerrar={alCerrar}>
-      <ContenidoDeHoja>
+      <ContenidoDeHoja
+        pie={
+          <>
+            {error && <Falla texto={error} />}
+            <Boton texto="Agregar" icono="add" cargando={ocupado} alTocar={() => void agregar()} />
+          </>
+        }
+      >
         <View style={{ gap: 2 }}>
           <Texto v="t2">Agregar a mano</Texto>
           <Texto v="gris">Lo que compras a otro proveedor. Lo de Abasto entra solo.</Texto>
@@ -460,8 +488,6 @@ export function HojaParaAgregar({
           <Campo etiqueta={`Bs por ${envase} (opcional)`} valor={precio} alCambiar={setPrecio} teclado="decimal-pad" ejemplo="0,00" estilo={{ flex: 1 }} />
         </View>
         <Campo etiqueta="¿A quién? (opcional)" valor={proveedor} alCambiar={setProveedor} ejemplo="Feria, otro mayorista…" mayusculas />
-        {error && <Falla texto={error} />}
-        <Boton texto="Agregar" icono="add" cargando={ocupado} alTocar={() => void agregar()} />
       </ContenidoDeHoja>
     </HojaInferior>
   );

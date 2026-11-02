@@ -93,22 +93,27 @@ function HojaDeCliente({ saldo: s, alCerrar, alAnotar }: { saldo: SaldoDeFiado |
 
   return (
     <HojaInferior visible alCerrar={alCerrar}>
-      <ContenidoDeHoja>
+      <ContenidoDeHoja
+        pie={
+          <>
+            {error && <Falla texto={error} />}
+            {listo && <Listo texto={listo} />}
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <View style={{ flex: 1 }}>
+                <Boton texto="Pagó" icono="checkmark" alTocar={() => void anotar('PAGA')} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Boton tipo="secundario" texto="Debe más" icono="add" alTocar={() => void anotar('DEBE')} />
+              </View>
+            </View>
+          </>
+        }
+      >
         <View style={{ gap: 2 }}>
           <Texto v="t2">{s.cliente.nombre}</Texto>
           <Texto v="gris">{s.saldoCentavos > 0 ? `Te debe ${bs(s.saldoCentavos)}` : 'Está al día'}</Texto>
         </View>
         <Campo etiqueta="Monto (Bs)" valor={monto} alCambiar={setMonto} teclado="decimal-pad" ejemplo="0,00" />
-        {error && <Falla texto={error} />}
-        {listo && <Listo texto={listo} />}
-        <View style={{ flexDirection: 'row', gap: 8 }}>
-          <View style={{ flex: 1 }}>
-            <Boton texto="Pagó" icono="checkmark" alTocar={() => void anotar('PAGA')} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Boton tipo="secundario" texto="Debe más" icono="add" alTocar={() => void anotar('DEBE')} />
-          </View>
-        </View>
         {s.cliente.telefono && s.saldoCentavos > 0 && (
           <Boton
             tipo="secundario"
@@ -153,13 +158,18 @@ function HojaDeClienteNuevo({ visible, alCerrar, alGuardar }: { visible: boolean
   };
   return (
     <HojaInferior visible={visible} alCerrar={alCerrar}>
-      <ContenidoDeHoja>
+      <ContenidoDeHoja
+        pie={
+          <>
+            {error && <Falla texto={error} />}
+            <Boton tipo="oscuro" texto="Guardar" icono="checkmark" alTocar={() => void guardar()} />
+          </>
+        }
+      >
         <Texto v="t2">Anotar a alguien</Texto>
         <Campo etiqueta="Nombre" valor={nombre} alCambiar={setNombre} ejemplo="Don Pedro" mayusculas />
         <Campo etiqueta="Celular (opcional, para recordarle)" valor={telefono} alCambiar={setTelefono} teclado="phone-pad" ejemplo="71234567" />
         <Campo etiqueta="Lo que ya te debe (opcional, Bs)" valor={debe} alCambiar={setDebe} teclado="decimal-pad" ejemplo="0,00" />
-        {error && <Falla texto={error} />}
-        <Boton tipo="oscuro" texto="Guardar" icono="checkmark" alTocar={() => void guardar()} />
       </ContenidoDeHoja>
     </HojaInferior>
   );

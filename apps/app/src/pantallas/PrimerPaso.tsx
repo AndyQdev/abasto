@@ -78,7 +78,21 @@ interface PropsDePaso {
 }
 
 /** «Arma tu primera receta»: elegir qué prepara, editar la lista ya llena y ver cuánto cuesta y qué falta */
-export function PrimeraReceta({ area, productos, libro, aplicar, alPedir, alTerminar }: PropsDePaso & { area: SubtipoProductor }) {
+export function PrimeraReceta({
+  area,
+  productos,
+  libro,
+  aplicar,
+  alPedir,
+  alTerminar,
+  yaTengo = [],
+}: PropsDePaso & {
+  area: SubtipoProductor;
+  /** Las recetas que ya tiene (desde «Mi negocio» › Nueva receta): se marcan «Ya la tienes» y el título cambia */
+  yaTengo?: string[];
+}) {
+  const otraMas = yaTengo.length > 0;
+  const tengo = new Set(yaTengo.map((n) => n.trim().toLowerCase()));
   const plantillas = plantillasDe(area);
   const varias = area === 'pension';
   const [elegidas, setElegidas] = useState<string[]>(plantillas.length === 1 ? [plantillas[0].clave] : []);
@@ -96,12 +110,12 @@ export function PrimeraReceta({ area, productos, libro, aplicar, alPedir, alTerm
   if (paso === 'elegir') {
     return (
       <Marco
-        titulo="Arma tu primera receta"
-        subtitulo={varias ? '¿Qué platos haces? Marca todos los que quieras' : '¿Qué preparas más?'}
+        titulo={otraMas ? 'Escoge una receta lista' : 'Arma tu primera receta'}
+        subtitulo={varias ? '¿Qué platos haces? Marca todos los que quieras' : otraMas ? 'Viene con sus ingredientes y cantidades: solo la ajustas' : '¿Qué preparas más?'}
         pie={
           <>
             <Boton tipo="oscuro" texto="Seguir" icono="arrow-forward" deshabilitado={!elegidas.length} alTocar={() => setPaso('editar')} />
-            <Boton tipo="secundario" texto="Lo hago después" alTocar={alTerminar} />
+            <Boton tipo="secundario" texto={otraMas ? 'Cancelar' : 'Lo hago después'} alTocar={alTerminar} />
           </>
         }
       >
@@ -121,7 +135,7 @@ export function PrimeraReceta({ area, productos, libro, aplicar, alPedir, alTerm
                 </View>
                 <View style={{ flex: 1 }}>
                   <Texto style={e.nombre}>{p.nombre}</Texto>
-                  <Texto v="chico">{textoDeRinde(p, p.rinde)}</Texto>
+                  <Texto v="chico">{tengo.has(p.nombre.trim().toLowerCase()) ? `Ya la tienes · ${textoDeRinde(p, p.rinde)}` : textoDeRinde(p, p.rinde)}</Texto>
                 </View>
                 <View style={[e.marca, activo && e.marcaActiva]}>{activo && <Icono nombre="checkmark" tamano={14} color={COLOR.lima} />}</View>
               </Tocable>
@@ -159,6 +173,7 @@ export function PrimeraReceta({ area, productos, libro, aplicar, alPedir, alTerm
         guardando={guardando}
         alGuardar={guardar}
         alSaltar={alTerminar}
+        textoSaltar={otraMas ? 'Cancelar' : 'Lo hago después'}
       />
     );
   }
@@ -175,6 +190,7 @@ function EditorDeReceta({
   guardando,
   alGuardar,
   alSaltar,
+  textoSaltar = 'Lo hago después',
 }: {
   plantilla: PlantillaDeReceta;
   productos: Producto[];
@@ -183,6 +199,7 @@ function EditorDeReceta({
   guardando: boolean;
   alGuardar: (rinde: number, insumos: InsumoElegido[]) => void;
   alSaltar: () => void;
+  textoSaltar?: string;
 }) {
   const [insumos, setInsumos] = useState<InsumoElegido[]>(() => insumosIniciales(plantilla, productos));
   const [textos, setTextos] = useState<string[]>(() => insumos.map((i) => enCampo(i.cantidad)));
@@ -225,7 +242,7 @@ function EditorDeReceta({
             deshabilitado={Number.isNaN(rindeN) || rindeN <= 0}
             alTocar={() => alGuardar(rindeN, insumos)}
           />
-          <Boton tipo="secundario" texto="Lo hago después" alTocar={alSaltar} />
+          <Boton tipo="secundario" texto={textoSaltar} alTocar={alSaltar} />
         </>
       }
     >

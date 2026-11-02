@@ -59,6 +59,7 @@ La app de clientes en el emulador Android. Después: registro de tiendas desde l
   **Jhoel:** la app suma `expo-audio` (nativo): `npm install` en `apps/app` y `npx expo run:android` una vez. Sin eso la app anda igual, solo que sin sonido.
 - App (02/11, tercer pedido): las escenas de Compras y del seguimiento pasan a **3D de verdad** (three.js + React Three Fiber sobre expo-gl, como el panel del taller): vendedor en su mostrador, cinta del depósito, moto por el barrio, QR en la tienda y entrega con confeti. Sin GL queda la escena ilustrada.
   **Jhoel:** la app suma `expo-gl`, `three` y `@react-three/fiber` (nativo): `npm install` en `apps/app` y `npx expo run:android` una vez.
+- App (02/11, cuarto pedido): en Vender se puede anotar el cliente (opcional, un campo con buscador: nombre y celular, nunca se repite); «Nueva receta» ofrece escoger una receta lista; los botones de todas las hojas de Mi negocio quedan fijos abajo.
 - e2e: 22 pruebas en verde (02/11).
 
 ## Cambié en contratos

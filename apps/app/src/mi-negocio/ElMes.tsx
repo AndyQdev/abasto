@@ -125,14 +125,19 @@ export function HojaDeAnotacion({
   };
   return (
     <HojaInferior visible={visible} alCerrar={alCerrar}>
-      <ContenidoDeHoja>
+      <ContenidoDeHoja
+        pie={
+          <>
+            {error && <Falla texto={error} />}
+            <Boton tipo="oscuro" texto="Anotar" icono="checkmark" alTocar={() => void guardar()} />
+          </>
+        }
+      >
         <Texto v="t2">{tipo === 'GASTO' ? 'Anotar un gasto' : 'Anotar un ingreso'}</Texto>
         <Campo etiqueta="Monto (Bs)" valor={monto} alCambiar={setMonto} teclado="decimal-pad" ejemplo="0,00" />
         <Texto v="fuerte">{tipo === 'GASTO' ? '¿En qué?' : '¿De dónde?'}</Texto>
         <Opciones opciones={categorias.map((c) => ({ clave: c, texto: c }))} elegida={categoria} alElegir={setCategoria} />
         <Campo etiqueta="Nota (opcional)" valor={nota} alCambiar={setNota} ejemplo={tipo === 'GASTO' ? 'Luz de noviembre' : 'Quincena'} mayusculas />
-        {error && <Falla texto={error} />}
-        <Boton tipo="oscuro" texto="Anotar" icono="checkmark" alTocar={() => void guardar()} />
       </ContenidoDeHoja>
     </HojaInferior>
   );
