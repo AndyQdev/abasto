@@ -36,6 +36,8 @@ final class Producto
         public bool $marcaBoliviana = false,
         /** Lo que cuesta al público en un supermercado, para comparar. Null si no se tomó */
         public ?PrecioDeReferencia $precioEnSuper = null,
+        /** El precio es de demostración: todavía no se cotizó en el mercado. La app lo avisa en la tarjeta */
+        public bool $precioPorConfirmar = false,
     ) {
         self::validarEscalas($escalas);
         self::validarCosto($costoUnitarioCentavos);

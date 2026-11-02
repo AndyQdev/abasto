@@ -78,6 +78,30 @@ input CrearPedidoEntrada {
   mayoristaId: ID!
   metodoPago: MetodoPago!
   lineas: [LineaEntrada!]!
+  "A dónde llevarlo. La app la manda siempre; el e-commerce y n8n pueden no tenerla."
+  entrega: DireccionEntrada
+}
+
+input DireccionEntrada {
+  "Calle y número, por ejemplo «Av. Banzer 123»"
+  calle: String!
+  zona: String
+  "Cómo encontrarla: «portón negro, al lado de la farmacia»"
+  referencia: String
+  "El punto que la tienda marcó en el mapa (los dos o ninguno)"
+  latitud: Float
+  longitud: Float
+}
+
+"A dónde lleva el mayorista el pedido."
+type DireccionDeEntrega {
+  calle: String!
+  zona: String!
+  referencia: String!
+  latitud: Float
+  longitud: Float
+  "Calle y zona en una línea"
+  texto: String!
 }
 
 "El precio no viaja desde la app: lo fija Catálogo al reservar."
@@ -101,6 +125,8 @@ type Pedido @key(fields: "id") {
   total: Dinero!
   creadoEn: String!
   motivoRechazo: String
+  "Null en los pedidos sin dirección (e-commerce, n8n o anteriores al 31/10)"
+  entrega: DireccionDeEntrega
 }
 
 type LineaDePedido {

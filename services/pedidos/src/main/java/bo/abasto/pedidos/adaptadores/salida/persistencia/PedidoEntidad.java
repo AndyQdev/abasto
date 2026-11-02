@@ -35,6 +35,16 @@ public class PedidoEntidad {
     String motivoRechazo;
     @Column(name = "creado_en")
     Instant creadoEn;
+    @Column(name = "entrega_calle")
+    String entregaCalle;
+    @Column(name = "entrega_zona")
+    String entregaZona;
+    @Column(name = "entrega_referencia")
+    String entregaReferencia;
+    @Column(name = "entrega_latitud")
+    Double entregaLatitud;
+    @Column(name = "entrega_longitud")
+    Double entregaLongitud;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "lineas_de_pedido", joinColumns = @JoinColumn(name = "pedido_id"))

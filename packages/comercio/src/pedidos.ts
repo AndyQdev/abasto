@@ -28,15 +28,28 @@ export interface Pedido {
     cantidad: number;
     unidades: number;
     producto: { id: string; nombre?: string | null; rubro?: string | null };
-    subtotal: { texto: string };
+    /** `centavos` desde el 01/11 (lo usa el inventario de «Mi negocio» para el costo) */
+    subtotal: { texto: string; centavos?: number };
   }[];
   cobro: { estado: EstadoCobroQr; codigo: string; venceEn: string; monto: { texto: string } } | null;
+  /** A dónde se lleva. Null en los pedidos sin dirección (e-commerce, n8n o anteriores al 31/10) */
+  entrega?: DireccionDeEntrega | null;
+}
+
+export interface DireccionDeEntrega {
+  calle: string;
+  zona: string;
+  referencia: string;
+  latitud: number | null;
+  longitud: number | null;
+  texto: string;
 }
 
 const CAMPOS = `id codigo estado metodoPago creadoEn motivoRechazo total { centavos texto }
   mayorista { id nombre }
-  lineas { presentacion cantidad unidades producto { id nombre rubro } subtotal { texto } }
-  cobro { estado codigo venceEn monto { texto } }`;
+  lineas { presentacion cantidad unidades producto { id nombre rubro } subtotal { centavos texto } }
+  cobro { estado codigo venceEn monto { texto } }
+  entrega { calle zona referencia latitud longitud texto }`;
 
 export const MIS_COMPRAS = `query MisCompras { misCompras { ${CAMPOS} } }`;
 export const UN_PEDIDO = `query Pedido($id: ID!) { pedido(id: $id) { ${CAMPOS} } }`;

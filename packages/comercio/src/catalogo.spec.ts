@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buscarPorTextoLeido,
   comprables,
+  conciliarCarrito,
   disponible,
   escalaPorDefecto,
   filtrar,
@@ -197,5 +198,52 @@ describe('primera vista: precios de la casa', () => {
     expect(separarContenido('Coca-Cola 2 L')).toEqual({ nombre: 'Coca-Cola', contenido: '2 L' });
     expect(separarContenido('Papel higiénico Elite · 4 rollos')).toEqual({ nombre: 'Papel higiénico Elite', contenido: '4 rollos' });
     expect(separarContenido('Velas')).toEqual({ nombre: 'Velas', contenido: null });
+  });
+});
+
+describe('conciliarCarrito', () => {
+  const aceite = producto({
+    id: 'AB-005',
+    nombre: 'Aceite Fino 900 ml',
+    escalas: [
+      { presentacion: 'UNIDAD', cantidad: 1, precioUnitario: dinero(1750) },
+      { presentacion: 'CAJA', cantidad: 12, precioUnitario: dinero(1670) },
+    ],
+  });
+  const viejo = (presentacion: 'DOCENA' | 'UNIDAD', cantidad = 2) => ({
+    productoId: 'AB-005',
+    nombre: 'Aceite vegetal 900 ml',
+    mayoristaId: 'lp',
+    mayoristaNombre: 'Distribuidora Los Pozos',
+    presentacion,
+    cantidad,
+    unidadesPorPresentacion: presentacion === 'DOCENA' ? 12 : 1,
+    precioUnitarioCentavos: 1420,
+  });
+
+  it('saca lo que ya no se vende en esa presentación y avisa con el nombre de hoy', () => {
+    const r = conciliarCarrito([viejo('DOCENA')], [aceite]);
+    expect(r.carrito).toEqual([]);
+    expect(r.quitados).toEqual(['Aceite Fino 900 ml']);
+    expect(r.cambio).toBe(true);
+  });
+
+  it('pone al día el nombre y el precio sin cambiar la cantidad', () => {
+    const r = conciliarCarrito([viejo('UNIDAD', 3)], [aceite]);
+    expect(r.carrito[0]).toMatchObject({ nombre: 'Aceite Fino 900 ml', cantidad: 3, precioUnitarioCentavos: 1750 });
+    expect(r.quitados).toEqual([]);
+  });
+
+  it('saca lo que desapareció o ya no está disponible', () => {
+    expect(conciliarCarrito([viejo('UNIDAD')], []).cambio).toBe(false);
+    expect(conciliarCarrito([viejo('UNIDAD')], [producto({ id: 'otro', nombre: 'Otro' })]).quitados).toEqual(['Aceite vegetal 900 ml']);
+    expect(conciliarCarrito([viejo('UNIDAD')], [{ ...aceite, estado: 'PAUSADO' }]).carrito).toEqual([]);
+  });
+
+  it('si ya está al día no cambia nada', () => {
+    const alDia = itemDeCarrito(aceite, aceite.escalas[0], 2);
+    const r = conciliarCarrito([alDia], [aceite]);
+    expect(r.cambio).toBe(false);
+    expect(r.carrito[0]).toBe(alDia);
   });
 });

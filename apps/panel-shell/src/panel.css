@@ -151,3 +151,41 @@ main {
   background: hsl(158 40% 92%);
   color: hsl(158 64% 22%);
 }
+
+/* CU-01 · aviso de verificación arriba del contenido */
+.verificacion { display: flex; flex-wrap: wrap; gap: 0.35rem 0.75rem; align-items: baseline; padding: 0.75rem 1.5rem; font-size: 0.875rem; }
+.verificacion.revision { background: hsl(var(--advertencia-suave)); color: hsl(var(--advertencia-suave-texto)); }
+.verificacion.rechazo { background: hsl(var(--error-suave)); color: hsl(var(--error-suave-texto)); }
+
+/* CU-01 · registro público de mayoristas (/registro) */
+.registro { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 480px); gap: 3rem; align-items: center; max-width: 1080px; margin: 0 auto; padding: 3rem 1.5rem; }
+.registro-intro .marca { display: flex; align-items: center; gap: 0.6rem; font-size: 1.1rem; margin-bottom: 2rem; }
+.registro-intro .logo { display: grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: var(--radio-sm); background: hsl(var(--primary)); color: hsl(var(--primary-texto)); font-family: var(--fuente-titulo); font-weight: 700; }
+.registro-intro h1 { font-family: var(--fuente-titulo); font-size: 2.6rem; line-height: 1.05; letter-spacing: -0.04em; margin: 0 0 1.5rem; }
+.registro-intro ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.85rem; font-size: 1rem; color: hsl(var(--texto-2)); }
+.registro-intro li { padding-left: 1.75rem; position: relative; }
+.registro-intro li::before { content: "✓"; position: absolute; left: 0; color: hsl(var(--primary)); font-weight: 700; }
+.registro-form { display: grid; gap: 0.9rem; }
+.registro-form .titulo-carta { font-size: 1.15rem; margin: 0 0 0.25rem; }
+.registro-form .fila { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
+.campo { display: grid; gap: 0.35rem; align-content: start; }
+.registro a { color: hsl(var(--primary)); font-weight: 600; }
+.registro a.boton-primario { color: hsl(var(--primary-texto)); }
+.campo > span { font-weight: 600; color: hsl(var(--texto-2)); }
+.campo .entrada { width: 100%; }
+.campo .entrada[aria-invalid="true"] { border-color: hsl(var(--error)); }
+.error-campo { color: hsl(var(--error-suave-texto)); }
+.registro-form .boton-primario { height: 2.9rem; font-size: 0.9375rem; border: 0; }
+.registro-form .boton-primario:disabled { opacity: 0.6; }
+.pie-form { text-align: center; margin: 0; }
+.registro .falla { background: hsl(var(--error-suave)); color: hsl(var(--error-suave-texto)); padding: 0.75rem; border-radius: var(--radio); margin: 0; }
+.registro-listo { grid-column: 1 / -1; max-width: 560px; margin: 0 auto; text-align: center; display: grid; gap: 0.9rem; justify-items: center; }
+.registro-listo .titulo-pantalla { margin: 0; font-size: 1.9rem; }
+.registro-listo p { margin: 0; font-size: 0.9375rem; }
+.sello { width: 3.5rem; height: 3.5rem; border-radius: 50%; display: grid; place-items: center; background: hsl(var(--exito-suave)); color: hsl(var(--exito-suave-texto)); font-size: 1.6rem; font-weight: 700; }
+.boton-enlace { display: inline-flex; align-items: center; text-decoration: none; height: 2.9rem; padding: 0 1.25rem; }
+@media (max-width: 860px) {
+  .registro { grid-template-columns: 1fr; gap: 1.5rem; padding: 1.5rem 1rem; }
+  .registro-intro h1 { font-size: 1.9rem; }
+  .registro-form .fila { grid-template-columns: 1fr; }
+}

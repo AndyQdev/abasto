@@ -46,6 +46,8 @@ export interface Producto {
   marcaBoliviana?: boolean;
   /** Lo que cuesta una unidad al público en un supermercado, con dónde y cuándo (aaaa-mm-dd) */
   precioEnSuper?: { precio: { centavos: number; texto: string }; donde: string; fecha: string } | null;
+  /** Precio de demostración: todavía no se cotizó en el mercado */
+  precioPorConfirmar?: boolean;
 }
 
 const CAMPOS_MAYORISTA = 'id nombre ciudad verificado relacion deLaCasa';
@@ -54,7 +56,7 @@ export const CONSULTA_CATALOGO = `
   query Catalogo {
     productos {
       id codigo nombre rubro descripcion stock estado precioVisible abastecimiento entregaHoras foto
-      marca marcaBoliviana precioEnSuper { precio { centavos texto } donde fecha }
+      marca marcaBoliviana precioPorConfirmar precioEnSuper { precio { centavos texto } donde fecha }
       mayorista { ${CAMPOS_MAYORISTA} }
       escalas { presentacion cantidad precioUnitario { centavos texto } }
     }
@@ -273,4 +275,29 @@ export function buscarPorTextoLeido(productos: Producto[], textoLeido: string, m
     .sort((a, b) => b.puntos - a.puntos || a.p.nombre.localeCompare(b.p.nombre, 'es'))
     .slice(0, maximo)
     .map((x) => x.p);
+}
+
+/**
+ * Pone al día el carrito guardado en el teléfono con el catálogo que acaba de llegar (31/10: un carrito
+ * viejo pedía «Aceite por DOCENA» cuando ya solo se vendía por unidad o caja, y la reserva lo rechazaba).
+ * - Lo que ya no se vende, o ya no se vende en esa presentación, sale del carrito y se avisa.
+ * - Lo demás toma el nombre, las unidades y el precio de hoy.
+ * Con el catálogo vacío (sin señal y sin nada guardado) no se toca nada.
+ */
+export function conciliarCarrito(carrito: ItemDeCarrito[], productos: Producto[]): { carrito: ItemDeCarrito[]; quitados: string[]; cambio: boolean } {
+  if (!productos.length || !carrito.length) return { carrito, quitados: [], cambio: false };
+  const porId = new Map(productos.map((p) => [p.id, p]));
+  const quitados: string[] = [];
+  const nuevo: ItemDeCarrito[] = [];
+  for (const item of carrito) {
+    const p = porId.get(item.productoId);
+    const escala = p && disponible(p) ? escalasConPrecio(p).find((e) => e.presentacion === item.presentacion) : undefined;
+    if (!p || !escala) {
+      quitados.push(p?.nombre ?? item.nombre);
+      continue;
+    }
+    nuevo.push({ ...itemDeCarrito(p, escala, item.cantidad) });
+  }
+  const cambio = quitados.length > 0 || JSON.stringify(nuevo) !== JSON.stringify(carrito);
+  return { carrito: cambio ? nuevo : carrito, quitados, cambio };
 }

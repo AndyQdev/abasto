@@ -49,7 +49,7 @@ public class PedidosServicio implements CrearPedido, DecidirPedido, ConsultarPed
                 .map(l -> LineaDePedido.sinPrecio(l.productoId(), l.presentacion(), l.cantidad()))
                 .toList();
         var pedido = Pedido.nuevo(pedidos.siguienteCodigo(), comando.clave(), comando.tiendaId(),
-                comando.mayoristaId(), comando.metodoPago(), lineas, reloj.instant());
+                comando.mayoristaId(), comando.metodoPago(), lineas, reloj.instant(), comando.entrega());
         var saga = SagaDeCompra.iniciar(pedido);
 
         pedidos.guardar(pedido);

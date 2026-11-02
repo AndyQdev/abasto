@@ -12,6 +12,8 @@ interface PedidoFila {
   creadoEn: string;
   total: { texto: string };
   tienda: { id: string; nombre?: string | null };
+  /** A dónde llevarlo (lo elige la tienda en el mapa de la app). Null en los pedidos sin dirección */
+  entrega: { texto: string; referencia: string; latitud: number | null; longitud: number | null } | null;
   lineas: { cantidad: number; unidades: number; presentacion: string; producto: { id: string; nombre?: string | null } }[];
 }
 
@@ -29,6 +31,7 @@ const MIS_VENTAS = `
       id codigo estado metodoPago creadoEn
       total { texto }
       tienda { id nombre }
+      entrega { texto referencia latitud longitud }
       lineas { cantidad unidades presentacion producto { id nombre } }
     }
   }`;
@@ -40,7 +43,7 @@ const MIS_VENTAS = `
 @Component({
   selector: 'abasto-vista-pedidos',
   encapsulation: ViewEncapsulation.ShadowDom,
-  styles: [ESTILOS_BASE, `.tienda strong { display: block; }`],
+  styles: [ESTILOS_BASE, `.tienda strong, .tienda .gris { display: block; } .tienda .mapa { font-size: 12.5px; font-weight: 600; }`],
   template: `
     @if (soloPorConfirmar) {
       <h3>Pedidos por confirmar</h3>
@@ -76,7 +79,16 @@ const MIS_VENTAS = `
             @for (p of pedidos(); track p.id) {
               <tr>
                 <td class="mono">{{ p.codigo }}<span class="gris">{{ p.creadoEn | slice: 0 : 10 }}</span></td>
-                <td class="tienda"><strong>{{ p.tienda.nombre ?? p.tienda.id }}</strong></td>
+                <td class="tienda">
+                  <strong>{{ p.tienda.nombre ?? p.tienda.id }}</strong>
+                  @if (p.entrega; as entrega) {
+                    <span class="gris">{{ entrega.texto }}</span>
+                    @if (entrega.referencia) { <span class="gris">{{ entrega.referencia }}</span> }
+                    @if (enMapa(entrega); as url) {
+                      <a class="mapa" [href]="url" target="_blank" rel="noopener">Ver en el mapa</a>
+                    }
+                  }
+                </td>
                 <td>
                   @for (l of p.lineas; track $index) {
                     <div>{{ l.producto.nombre ?? l.producto.id }}<span class="gris">{{ cantidad(l) }}</span></div>
@@ -122,6 +134,9 @@ export class VistaPedidos implements OnInit {
   }
 
   estado = (e: string) => ESTADOS_DE_PEDIDO[e] ?? { texto: e, clase: 'neutro' };
+  /** Google Maps en el punto que marcó la tienda (el repartidor lo abre en el celular) */
+  enMapa = (d: NonNullable<PedidoFila['entrega']>) =>
+    d.latitud !== null && d.longitud !== null ? `https://www.google.com/maps/search/?api=1&query=${d.latitud},${d.longitud}` : null;
   pago = (m: string) => ({ QR: 'QR', CREDITO: 'Crédito', CONTRA_ENTREGA: 'Contra entrega' })[m] ?? m;
   /** Lo que el mayorista hace después de confirmar, de a un paso hasta entregar */
   siguientePaso = (e: string) => SIGUIENTE_PASO[e] ?? null;

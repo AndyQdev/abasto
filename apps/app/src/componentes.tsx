@@ -14,12 +14,25 @@ export function Icono({ nombre, tamano = 20, color = COLOR.texto }: { nombre: No
 
 type Variante = 'titulo' | 't1' | 't2' | 't3' | 'normal' | 'gris' | 'chico' | 'precio' | 'fuerte';
 
-export function Texto({ v = 'normal', style, children, lineas }: { v?: Variante; style?: StyleProp<TextStyle>; children: ReactNode; lineas?: number }) {
+export function Texto({
+  v = 'normal',
+  style,
+  children,
+  lineas,
+  ajustar,
+}: {
+  v?: Variante;
+  style?: StyleProp<TextStyle>;
+  children: ReactNode;
+  lineas?: number;
+  /** Achica la letra (hasta 80 %) para que entre en sus líneas en vez de cortarse */
+  ajustar?: boolean;
+}) {
   // Plus Jakarta Sans: el grosor se elige por archivo; fontWeight se quita para que Android no lo engrose de nuevo
   const plano: TextStyle = StyleSheet.flatten([estilos[v], style]) ?? {};
   const { fontWeight, ...resto } = plano;
   return (
-    <Text numberOfLines={lineas} style={[resto, { fontFamily: resto.fontFamily ?? fuenteDe(fontWeight) }]}>
+    <Text numberOfLines={lineas} adjustsFontSizeToFit={ajustar} minimumFontScale={ajustar ? 0.8 : undefined} style={[resto, { fontFamily: resto.fontFamily ?? fuenteDe(fontWeight) }]}>
       {children}
     </Text>
   );

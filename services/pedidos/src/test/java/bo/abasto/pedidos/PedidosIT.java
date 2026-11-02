@@ -4,7 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import bo.abasto.pedidos.aplicacion.puertos.entrada.AvanzarSaga;
 import bo.abasto.pedidos.aplicacion.puertos.entrada.CrearPedido;
+import bo.abasto.pedidos.aplicacion.puertos.salida.PedidoRepositorio;
 import bo.abasto.pedidos.aplicacion.puertos.salida.SagaRepositorio;
+import bo.abasto.pedidos.dominio.DireccionDeEntrega;
 import bo.abasto.pedidos.dominio.MetodoPago;
 import bo.abasto.pedidos.dominio.Presentacion;
 import bo.abasto.pedidos.dominio.SagaDeCompra;
@@ -30,6 +32,7 @@ class PedidosIT {
     @Autowired CrearPedido crear;
     @Autowired AvanzarSaga saga;
     @Autowired SagaRepositorio sagas;
+    @Autowired PedidoRepositorio pedidos;
     @Autowired TransactionTemplate transaccion;
     @Autowired JdbcTemplate jdbc;
 
@@ -51,6 +54,21 @@ class PedidosIT {
         assertThat(segundo.id()).isEqualTo(primero.id());
         assertThat(jdbc.queryForObject("SELECT count(*) FROM pedidos WHERE clave = ?", Long.class, clave)).isEqualTo(1L);
         assertThat(primero.codigo()).startsWith("A-");
+    }
+
+    @Test
+    void la_direccion_de_entrega_se_guarda_con_el_pedido() {
+        var entrega = new DireccionDeEntrega("Av. Banzer 123", "Equipetrol", "Portón negro", -17.7626, -63.1812);
+        var c = comando(UUID.randomUUID());
+        var creado = transaccion.execute(s -> crear.ejecutar(new CrearPedido.Comando(c.clave(), c.tiendaId(),
+                c.mayoristaId(), c.metodoPago(), c.lineas(), entrega)));
+
+        var leido = pedidos.porId(creado.id()).orElseThrow();
+        assertThat(leido.entrega()).isEqualTo(entrega);
+        assertThat(leido.entrega().texto()).isEqualTo("Av. Banzer 123, Equipetrol");
+        // Sin dirección (e-commerce, n8n) también se puede
+        var sinDireccion = transaccion.execute(s -> crear.ejecutar(comando(UUID.randomUUID())));
+        assertThat(pedidos.porId(sinDireccion.id()).orElseThrow().entrega()).isNull();
     }
 
     @Test

@@ -24,6 +24,11 @@ export const ILUSTRACION = {
   sinSenal: require('../assets/ilustraciones/sin-senal.webp'),
   comprarOtraVez: require('../assets/ilustraciones/comprar-otra-vez.webp'),
   cabeceraMercado: require('../assets/ilustraciones/cabecera-mercado.webp'),
+  bannerMercado: require('../assets/ilustraciones/banner-mercado.webp'),
+  negocioHogar: require('../assets/ilustraciones/negocio-hogar.webp'),
+  negocioTienda: require('../assets/ilustraciones/negocio-tienda.webp'),
+  negocioProductor: require('../assets/ilustraciones/negocio-productor.webp'),
+  inventarioVacio: require('../assets/ilustraciones/inventario-vacio.webp'),
 } satisfies Record<string, Recurso>;
 
 const PRESENTACIONES: Record<string, Recurso> = {
@@ -46,6 +51,14 @@ const RUBROS: Record<string, Recurso> = {
   'Limpieza del hogar': require('../assets/ilustraciones/rubro-limpieza.webp'),
   'Lácteos': require('../assets/ilustraciones/rubro-lacteos.webp'),
   Varios: require('../assets/ilustraciones/rubro-varios.webp'),
+  // Rubros del que cocina (01/11)
+  'Harinas y panificación': require('../assets/ilustraciones/rubro-harinas.webp'),
+  'Aceites y grasas': require('../assets/ilustraciones/rubro-aceites.webp'),
+  'Granos y cereales': require('../assets/ilustraciones/rubro-abarrotes.webp'),
+  Condimentos: require('../assets/ilustraciones/rubro-condimentos.webp'),
+  'Huevos y lácteos': require('../assets/ilustraciones/rubro-lacteos.webp'),
+  'Verduras secas': require('../assets/ilustraciones/rubro-verduras.webp'),
+  Descartables: require('../assets/ilustraciones/rubro-descartables.webp'),
 };
 
 /** La imagen del rubro; si es un rubro nuevo, la de Varios. */
@@ -60,5 +73,16 @@ export function fotoDe(producto: { rubro: string; foto?: string | null }): Image
 
 /** Nombre corto del rubro para las tarjetas («Higiene y cuidado personal» → «Higiene»). */
 export function rubroCorto(rubro: string): string {
-  return { 'Higiene y cuidado personal': 'Higiene', 'Limpieza del hogar': 'Limpieza', 'Galletas y dulces': 'Dulces' }[rubro] ?? rubro;
+  return (
+    {
+      'Higiene y cuidado personal': 'Higiene',
+      'Limpieza del hogar': 'Limpieza',
+      'Galletas y dulces': 'Dulces',
+      'Harinas y panificación': 'Harinas',
+      'Aceites y grasas': 'Aceites',
+      'Granos y cereales': 'Granos',
+      'Huevos y lácteos': 'Huevos',
+      'Verduras secas': 'Verduras',
+    }[rubro] ?? rubro
+  );
 }

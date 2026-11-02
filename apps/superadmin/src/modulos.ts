@@ -9,14 +9,10 @@ export interface Modulo {
 export const MODULOS: Modulo[] = [
   // Primero: mientras Abasto vende por su cuenta, estos números son el argumento para sumar mayoristas
   { ruta: 'traccion', titulo: 'Tracción' },
+  // CU-01: los que se registran en el Panel esperan aquí la verificación
+  { ruta: 'mayoristas', titulo: 'Mayoristas' },
   { ruta: 'sistema', titulo: 'Sistema' },
   { ruta: 'auditoria', titulo: 'Auditoría' },
-  {
-    ruta: 'mayoristas',
-    titulo: 'Mayoristas',
-    fase: 'F5',
-    detalle: 'Mayoristas por verificar: NIT, documentos, representante. Aprobar, rechazar o pedir datos. Los datos son de Catálogo.',
-  },
   { ruta: 'tiendas', titulo: 'Tiendas', fase: 'F5', detalle: 'Tiendas por ciudad, tipo y estado; suspender una cuenta.' },
   {
     ruta: 'usuarios',

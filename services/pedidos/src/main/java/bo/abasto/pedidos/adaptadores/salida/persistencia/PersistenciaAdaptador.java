@@ -5,6 +5,7 @@ import bo.abasto.pedidos.aplicacion.puertos.salida.Outbox;
 import bo.abasto.pedidos.aplicacion.puertos.salida.PedidoRepositorio;
 import bo.abasto.pedidos.aplicacion.puertos.salida.SagaRepositorio;
 import bo.abasto.pedidos.dominio.Dinero;
+import bo.abasto.pedidos.dominio.DireccionDeEntrega;
 import bo.abasto.pedidos.dominio.EstadoPedido;
 import bo.abasto.pedidos.dominio.LineaDePedido;
 import bo.abasto.pedidos.dominio.Mensaje;
@@ -89,6 +90,12 @@ class PersistenciaAdaptador implements PedidoRepositorio, SagaRepositorio, Outbo
         e.estado = pedido.estado().name();
         e.motivoRechazo = pedido.motivoRechazo();
         e.creadoEn = pedido.creadoEn();
+        var entrega = pedido.entrega();
+        e.entregaCalle = entrega == null ? null : entrega.calle();
+        e.entregaZona = entrega == null ? null : entrega.zona();
+        e.entregaReferencia = entrega == null ? null : entrega.referencia();
+        e.entregaLatitud = entrega == null ? null : entrega.latitud();
+        e.entregaLongitud = entrega == null ? null : entrega.longitud();
         e.lineas.clear();
         for (var l : pedido.lineas()) {
             var fila = new PedidoEntidad.Linea();
@@ -113,7 +120,9 @@ class PersistenciaAdaptador implements PedidoRepositorio, SagaRepositorio, Outbo
                         l.precioUnitarioCentavos == null ? null : new Dinero(l.precioUnitarioCentavos)))
                 .toList();
         return new Pedido(e.id, e.codigo, e.clave, e.tiendaId, e.mayoristaId, MetodoPago.valueOf(e.metodoPago),
-                lineas, EstadoPedido.valueOf(e.estado), e.motivoRechazo, e.creadoEn);
+                lineas, EstadoPedido.valueOf(e.estado), e.motivoRechazo, e.creadoEn,
+                e.entregaCalle == null ? null
+                        : new DireccionDeEntrega(e.entregaCalle, e.entregaZona, e.entregaReferencia, e.entregaLatitud, e.entregaLongitud));
     }
 
     // ---------------------------------------------------------------- sagas

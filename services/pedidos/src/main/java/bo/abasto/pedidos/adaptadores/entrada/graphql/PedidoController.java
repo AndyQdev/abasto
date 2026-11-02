@@ -5,6 +5,7 @@ import bo.abasto.pedidos.aplicacion.puertos.entrada.CrearPedido;
 import bo.abasto.pedidos.aplicacion.puertos.entrada.DecidirPedido;
 import bo.abasto.pedidos.aplicacion.puertos.entrada.EntregarPedido;
 import bo.abasto.pedidos.dominio.Dinero;
+import bo.abasto.pedidos.dominio.DireccionDeEntrega;
 import bo.abasto.pedidos.dominio.EstadoPedido;
 import bo.abasto.pedidos.dominio.LineaDePedido;
 import bo.abasto.pedidos.dominio.ListaDeCompras;
@@ -49,11 +50,18 @@ class PedidoController {
 
     record PedidoVista(String id, String codigo, String clave, Referencia tienda, Referencia mayorista,
                        List<LineaVista> lineas, EstadoPedido estado, MetodoPago metodoPago, DineroVista total,
-                       String creadoEn, String motivoRechazo) {
+                       String creadoEn, String motivoRechazo, EntregaVista entrega) {
         static PedidoVista de(Pedido p) {
             return new PedidoVista(p.id().toString(), p.codigo(), p.clave().toString(), new Referencia(p.tiendaId()),
                     new Referencia(p.mayoristaId()), p.lineas().stream().map(LineaVista::de).toList(), p.estado(),
-                    p.metodoPago(), DineroVista.de(p.total()), p.creadoEn().toString(), p.motivoRechazo());
+                    p.metodoPago(), DineroVista.de(p.total()), p.creadoEn().toString(), p.motivoRechazo(),
+                    EntregaVista.de(p.entrega()));
+        }
+    }
+
+    record EntregaVista(String calle, String zona, String referencia, Double latitud, Double longitud, String texto) {
+        static EntregaVista de(DireccionDeEntrega d) {
+            return d == null ? null : new EntregaVista(d.calle(), d.zona(), d.referencia(), d.latitud(), d.longitud(), d.texto());
         }
     }
 
@@ -79,7 +87,14 @@ class PedidoController {
 
     record LineaEntrada(String productoId, Presentacion presentacion, int cantidad) {}
 
-    record CrearPedidoEntrada(UUID clave, String mayoristaId, MetodoPago metodoPago, List<LineaEntrada> lineas) {}
+    record DireccionEntrada(String calle, String zona, String referencia, Double latitud, Double longitud) {
+        DireccionDeEntrega aDominio() {
+            return new DireccionDeEntrega(calle, zona, referencia, latitud, longitud);
+        }
+    }
+
+    record CrearPedidoEntrada(UUID clave, String mayoristaId, MetodoPago metodoPago, List<LineaEntrada> lineas,
+                              DireccionEntrada entrega) {}
 
     private final CrearPedido crear;
     private final DecidirPedido decidir;
@@ -116,7 +131,8 @@ class PedidoController {
         var comando = new CrearPedido.Comando(entrada.clave(), org(jwt), entrada.mayoristaId(), entrada.metodoPago(),
                 entrada.lineas().stream()
                         .map(l -> new CrearPedido.Linea(l.productoId(), l.presentacion(), l.cantidad()))
-                        .toList());
+                        .toList(),
+                entrada.entrega() == null ? null : entrada.entrega().aDominio());
         return PedidoVista.de(transaccion.execute(s -> crear.ejecutar(comando)));
     }
 

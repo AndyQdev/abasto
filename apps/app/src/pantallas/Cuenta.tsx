@@ -8,6 +8,7 @@ import { Aparecer, Tocable } from '../animacion';
 import { Boton, Icono, Iniciales, Tarjeta, Texto } from '../componentes';
 import { iconoDeEtiqueta } from '../direcciones';
 import { useDirecciones } from '../direcciones-estado';
+import { CambiarNegocio } from '../NegocioInicio';
 import { Diagnostico } from '../ia';
 import type { PantallaDePestana } from '../navegacion';
 import { useSesion } from '../sesion';
@@ -50,6 +51,14 @@ export function Cuenta({ navigation }: PantallaDePestana<'Cuenta'>) {
               )}
             </View>
           </LinearGradient>
+        </Aparecer>
+
+        <Aparecer orden={1} style={{ gap: 10 }}>
+          <View style={{ gap: 2 }}>
+            <Texto v="t3">Para qué compras</Texto>
+            <Texto v="gris">El Inicio te muestra primero lo que usas.</Texto>
+          </View>
+          <CambiarNegocio />
         </Aparecer>
 
         <Aparecer orden={1} style={{ gap: 10 }}>

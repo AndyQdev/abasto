@@ -145,3 +145,27 @@ main {
 .barra-valor { font-size: 0.6875rem; color: hsl(var(--texto-2)); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .barra-etiqueta { font-size: 0.75rem; color: hsl(var(--texto-3)); }
 @media (max-width: 900px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Mayoristas (CU-01) */
+.intro { max-width: 720px; margin: -0.5rem 0 1rem; font-size: 0.875rem; }
+.pestanas { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+.pestanas .chip { border: 1px solid hsl(var(--borde)); background: hsl(var(--superficie)); display: inline-flex; align-items: center; gap: 0.4rem; }
+.pestanas .chip.activa { background: hsl(var(--tinta)); color: hsl(var(--tinta-texto)); border-color: transparent; }
+.contador { min-width: 1.25rem; height: 1.25rem; padding: 0 0.35rem; border-radius: 999px; background: hsl(var(--advertencia-suave)); color: hsl(var(--advertencia-suave-texto)); display: inline-grid; place-items: center; font-size: 0.6875rem; }
+.solicitud header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+.solicitud .titulo-carta { margin: 0 0 0.2rem; font-size: 1.05rem; }
+.datos { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.75rem 1.5rem; margin: 1rem 0; }
+.datos dt { font-size: 0.625rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: hsl(var(--texto-3)); }
+.datos dd { margin: 0.2rem 0 0; font-size: 0.875rem; overflow-wrap: anywhere; }
+.datos a { color: hsl(var(--primary)); font-weight: 600; }
+.solicitud .acciones { display: flex; justify-content: flex-end; gap: 0.5rem; }
+.motivo { background: hsl(var(--error-suave)); color: hsl(var(--error-suave-texto)); padding: 0.6rem 0.8rem; border-radius: var(--radio); }
+.rechazo { display: grid; gap: 0.6rem; border-top: 1px solid hsl(var(--borde)); padding-top: 1rem; }
+.rechazo label { font-weight: 600; }
+.motivos { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.motivos .chip { border: 1px solid hsl(var(--borde)); background: hsl(var(--superficie)); }
+.rechazo textarea { height: auto; padding: 0.6rem 0.875rem; resize: vertical; }
+.boton-peligro { height: var(--alto-control); padding: 0 1rem; border-radius: var(--radio-md); background: hsl(var(--error)); color: #fff; border: 0; font-weight: 600; }
+.boton-peligro:disabled, .boton-primario:disabled { opacity: 0.5; cursor: not-allowed; }
+.aviso { position: fixed; right: 1.5rem; bottom: 1.5rem; max-width: 420px; padding: 0.9rem 1.1rem; border-radius: var(--radio-md); background: hsl(var(--tinta)); color: hsl(var(--tinta-texto)); box-shadow: var(--sombra-modal); font-weight: 600; }
+@media (max-width: 900px) { .datos { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

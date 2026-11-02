@@ -2,6 +2,34 @@
   "estilo": "Gibby: 3D estilizado tipo película animada, con la paleta de ABASTO (lima, bosque y ámbar). Todas son objetos recortados para que sobresalgan de las tarjetas. El texto del estilo está en scripts/ilustraciones/generar.mjs.",
   "imagenes": [
     {
+      "nombre": "negocio-productor",
+      "tipo": "objeto",
+      "lado": 1024,
+      "uso": "Registro: tipo Productor (salteñería, panadería, pensión)",
+      "tema": "A cheerful baker woman in a forest-green apron and a white baker cap proudly holding a big wooden tray full of golden-brown Bolivian saltenas (oval baked empanadas with a braided seam on top), with a white flour sack, a few eggs and a wooden rolling pin next to her. Three-quarter view, warm and appetizing. No purple, pink or magenta anywhere. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
+    },
+    {
+      "nombre": "negocio-tienda",
+      "tipo": "objeto",
+      "lado": 1024,
+      "uso": "Registro: tipo Tienda (abarrotes que revende)",
+      "tema": "A tiny charming neighborhood corner store as a floating diorama: a forest-green and lime striped awning, a wooden counter with candy jars and a little cash box, shelves packed with rice sacks, golden oil bottles and colorful soda bottles; a friendly shopkeeper man in a forest-green polo behind the counter, smiling and waving. No purple, pink or magenta anywhere. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
+    },
+    {
+      "nombre": "negocio-hogar",
+      "tipo": "objeto",
+      "lado": 1024,
+      "uso": "Registro: tipo Hogar (la familia que compra al por mayor)",
+      "tema": "A warm smiling young Bolivian mom with a dark ponytail and a lime-green apron, hugging a big kraft paper grocery bag overflowing with a rice pack, a golden cooking-oil bottle, a milk carton, a baguette and fresh tomatoes and lettuce; a happy little girl next to her holding a small basket with eggs. Three-quarter view, cozy family feeling. No purple, pink or magenta anywhere. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
+    },
+    {
+      "nombre": "inventario-vacio",
+      "tipo": "objeto",
+      "lado": 1024,
+      "uso": "Mi casa / Mi tienda / Mi producción: inventario vacío (se llena solo con las compras)",
+      "tema": "A big cute open kraft cardboard box with a forest-green Abasto-style stripe, and a lime-green clipboard with a checklist leaning on it; a small white flour sack, a carton of brown eggs and a golden cooking-oil bottle gently flying into the open box with soft lime motion swooshes, as if the groceries arrive by themselves. No purple, pink or magenta anywhere. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
+    },
+    {
       "nombre": "bienvenida",
       "tipo": "objeto",
       "lado": 1024,
@@ -42,6 +70,13 @@
       "lado": 768,
       "uso": "Inicio: banner de limpieza",
       "tema": "Colorful detergent bottles in lime, white and blue, a bleach jug, soap bars, a sponge and a small bucket overflowing with soft soap bubbles. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
+    },
+    {
+      "nombre": "banner-mercado",
+      "tipo": "objeto",
+      "lado": 1024,
+      "uso": "Inicio: «No vuelvas a ir al mercado» (la imagen manda, sobresale del banner)",
+      "tema": "A cute rounded lime-green three-wheeled cargo motorbike (mototaxi style) with a big open cargo bed overflowing with fresh market goods: a big white flour sack tied with string, a burlap sack of potatoes, a mesh bag of golden-yellow onions, a tray of brown eggs, a golden cooking-oil jug and a bunch of green herbs on top. A happy rider in a deep forest-green polo and helmet, side three-quarter view, dynamic and generous, the cargo is the hero. No purple, pink or magenta anywhere. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
     },
     {
       "nombre": "banner-entrega",
@@ -105,6 +140,41 @@
       "lado": 512,
       "uso": "Rubro Varios",
       "tema": "A white candle, a box of matches and a pack of batteries, plain packaging without writing. Inanimate objects: no faces, no eyes. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
+    },
+    {
+      "nombre": "rubro-harinas",
+      "tipo": "objeto",
+      "lado": 512,
+      "uso": "Rubro Harinas y panificación (01/11)",
+      "tema": "A small group of baking supplies: a big white flour sack tied at the top, a small pile of flour with a wooden scoop and a golden bread loaf, plain packaging without writing. Inanimate objects: no faces, no eyes. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
+    },
+    {
+      "nombre": "rubro-aceites",
+      "tipo": "objeto",
+      "lado": 512,
+      "uso": "Rubro Aceites y grasas (01/11)",
+      "tema": "A small group of cooking fats: a big golden cooking-oil jug with a handle and a white plastic bucket of vegetable shortening with a lid, plain packaging without writing. Inanimate objects: no faces, no eyes. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
+    },
+    {
+      "nombre": "rubro-condimentos",
+      "tipo": "objeto",
+      "lado": 512,
+      "uso": "Rubro Condimentos (01/11)",
+      "tema": "A small group of spices: three small open burlap pouches with red chili powder, brown cumin and green oregano, and a white salt shaker, no writing. Inanimate objects: no faces, no eyes. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
+    },
+    {
+      "nombre": "rubro-verduras",
+      "tipo": "objeto",
+      "lado": 512,
+      "uso": "Rubro Verduras secas (01/11)",
+      "tema": "A small group of market vegetables: a few brown potatoes, a red onion, a white onion and a garlic bulb next to a small woven mesh sack, no writing. Inanimate objects: no faces, no eyes. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
+    },
+    {
+      "nombre": "rubro-descartables",
+      "tipo": "objeto",
+      "lado": 512,
+      "uso": "Rubro Descartables (01/11)",
+      "tema": "A small group of disposables for take-away food: a white foam food container with its lid half open, a stack of paper cups and a few folded napkins, no writing. Inanimate objects: no faces, no eyes. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
     },
     {
       "nombre": "vacio-carrito",
