@@ -8,7 +8,7 @@ import { Aparecer, Tocable } from '../animacion';
 import { Boton, Icono, Iniciales, Tarjeta, Texto } from '../componentes';
 import { iconoDeEtiqueta } from '../direcciones';
 import { useDirecciones } from '../direcciones-estado';
-import { ChipsDeNegocio, useNegocio } from '../NegocioInicio';
+import { CambiarNegocio } from '../NegocioInicio';
 import { Diagnostico } from '../ia';
 import type { PantallaDePestana } from '../navegacion';
 import { useSesion } from '../sesion';
@@ -21,7 +21,6 @@ export function Cuenta({ navigation }: PantallaDePestana<'Cuenta'>) {
   const espacio = useEspacioBarra();
   const { usuario, salir } = useSesion();
   const { lista, elegida, borrar } = useDirecciones();
-  const negocio = useNegocio();
   const [diagnostico, setDiagnostico] = useState(false);
   if (!usuario) return null;
   if (diagnostico) return <Diagnostico alCerrar={() => setDiagnostico(false)} />;
@@ -56,10 +55,10 @@ export function Cuenta({ navigation }: PantallaDePestana<'Cuenta'>) {
 
         <Aparecer orden={1} style={{ gap: 10 }}>
           <View style={{ gap: 2 }}>
-            <Texto v="t3">Tu negocio</Texto>
-            <Texto v="gris">El Inicio te muestra primero lo que usa tu negocio.</Texto>
+            <Texto v="t3">Para qué compras</Texto>
+            <Texto v="gris">El Inicio te muestra primero lo que usas.</Texto>
           </View>
-          <ChipsDeNegocio tipo={negocio.tipo} alElegir={negocio.elegir} />
+          <CambiarNegocio />
         </Aparecer>
 
         <Aparecer orden={1} style={{ gap: 10 }}>

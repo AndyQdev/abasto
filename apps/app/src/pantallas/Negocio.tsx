@@ -1,4 +1,4 @@
-import { NEGOCIOS, TIPOS_DE_NEGOCIO, type TipoDeNegocio } from '@abasto/comercio';
+import { TIPOS, TIPOS_DE_NEGOCIO, negocioCompleto, type NegocioElegido, type SubtipoProductor, type TipoDeNegocio } from '@abasto/comercio';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
@@ -6,21 +6,24 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Aparecer, Tocable } from '../animacion';
 import { Boton, Icono, Texto } from '../componentes';
-import { rubroCorto } from '../ilustraciones';
-import { IMAGEN_DE_NEGOCIO, useNegocio } from '../NegocioInicio';
+import { Chips, IMAGEN_DE_NEGOCIO, OPCIONES_DE_SUBTIPO, useNegocio } from '../NegocioInicio';
 import { useSesion } from '../sesion';
 import { COLOR, FUENTE, SOMBRA } from '../tema';
 
 /**
- * Registro, paso del negocio (01/11): se pregunta una sola vez, después de entrar con el celular y antes de la
- * dirección. Con lo que elige, el Inicio le muestra primero sus rubros, sus secciones y lo que le sugerimos.
- * Se cambia después en Cuenta.
+ * Registro, paso del tipo de cliente (01/11, obligatorio): después de entrar con el celular y antes de la dirección.
+ * Tres tarjetas grandes (Hogar, Tienda, Productor) con su ilustración 3D y lo que gana; el productor dice además
+ * qué hace (salteñería, panadería o pensión). Con eso cambian el Inicio y, desde la Fase 2, su pestaña
+ * («Mi casa», «Mi tienda», «Mi producción»). Se cambia después en Cuenta.
  */
 export function Negocio() {
   const { elegir } = useNegocio();
   const { usuario } = useSesion();
-  const [elegido, setElegido] = useState<TipoDeNegocio | null>(null);
+  const [tipo, setTipo] = useState<TipoDeNegocio | null>(null);
+  const [subtipo, setSubtipo] = useState<SubtipoProductor | null>(null);
   const nombre = usuario?.nombre?.split(' ')[0];
+  const elegido: Partial<NegocioElegido> | null = tipo && (tipo === 'productor' ? { tipo, subtipo: subtipo ?? undefined } : { tipo });
+  const listo = negocioCompleto(elegido);
 
   return (
     <View style={{ flex: 1 }}>
@@ -28,65 +31,80 @@ export function Negocio() {
       <View style={[e.burbuja, { width: 240, height: 240, top: -70, right: -70 }]} />
       <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
         <ScrollView contentContainerStyle={e.contenido} bounces={false}>
-          <Aparecer style={{ gap: 6 }}>
-            <Texto style={e.paso}>{nombre ? `¡Hola, ${nombre}!` : '¡Ya casi!'}</Texto>
-            <Texto style={e.pregunta}>¿Qué negocio tienes?</Texto>
-            <Texto v="gris">Te mostramos primero lo que usas cada semana.</Texto>
+          <Aparecer style={{ gap: 4 }}>
+            <Texto style={e.saludo}>{nombre ? `¡Hola, ${nombre}!` : '¡Ya casi!'}</Texto>
+            <Texto style={e.pregunta}>¿Para qué compras?</Texto>
+            <Texto v="gris">Así te armamos la app a tu medida. Lo cambias cuando quieras.</Texto>
           </Aparecer>
 
           {TIPOS_DE_NEGOCIO.map((t, i) => {
-            const activo = t === elegido;
-            const n = NEGOCIOS[t];
+            const activo = t === tipo;
+            const c = TIPOS[t];
             return (
               <Aparecer key={t} orden={1 + i}>
                 <Tocable
-                  onPress={() => setElegido(t)}
+                  hundir={0.98}
+                  onPress={() => setTipo(t)}
                   style={[e.opcion, activo && e.opcionActiva]}
                   accessibilityRole="radio"
                   accessibilityState={{ selected: activo }}
-                  accessibilityLabel={`${n.nombre}. ${n.ejemplo}`}
+                  accessibilityLabel={`${c.nombre}. ${c.gana}`}
                 >
-                  <View style={[e.fondoImagen, activo && { backgroundColor: COLOR.lima }]}>
-                    <Image source={IMAGEN_DE_NEGOCIO[t]} style={e.imagen} contentFit="contain" accessibilityIgnoresInvertColors />
-                  </View>
-                  <View style={{ flex: 1, gap: 3 }}>
-                    <Texto style={e.nombre}>{n.nombre}</Texto>
-                    <Texto v="chico" lineas={2}>
-                      {n.ejemplo}
-                    </Texto>
-                    {activo && (
-                      <Texto style={e.sugerimos} lineas={2}>
-                        Te sugerimos: {n.rubros.slice(0, 4).map(rubroCorto).join(' · ')}
+                  <View style={e.textos}>
+                    <View style={e.filaNombre}>
+                      <View style={[e.marca, activo && e.marcaActiva]}>{activo && <Icono nombre="checkmark" tamano={14} color={COLOR.lima} />}</View>
+                      <Texto style={e.nombre} lineas={1}>
+                        {c.nombre}
                       </Texto>
-                    )}
+                    </View>
+                    <Texto style={e.gana}>{c.gana}</Texto>
+                    <Texto v="chico" lineas={1}>
+                      {c.ejemplo}
+                    </Texto>
                   </View>
-                  <View style={[e.marca, activo && e.marcaActiva]}>{activo && <Icono nombre="checkmark" tamano={16} color={COLOR.lima} />}</View>
+                  {/* La ilustración sobresale por arriba de la tarjeta */}
+                  <Image source={IMAGEN_DE_NEGOCIO[t]} style={e.imagen} contentFit="contain" accessibilityIgnoresInvertColors />
                 </Tocable>
+                {activo && t === 'productor' && (
+                  <View style={e.subtipos}>
+                    <Texto v="fuerte">¿Qué haces?</Texto>
+                    <Chips opciones={OPCIONES_DE_SUBTIPO} elegido={subtipo} alElegir={setSubtipo} />
+                  </View>
+                )}
               </Aparecer>
             );
           })}
         </ScrollView>
         <View style={e.pie}>
-          <Boton texto="Continuar" icono="arrow-forward" deshabilitado={!elegido} alTocar={() => elegido && elegir(elegido)} />
+          <Boton
+            texto={tipo === 'productor' && !subtipo ? 'Elige qué haces' : 'Continuar'}
+            icono="arrow-forward"
+            deshabilitado={!listo}
+            alTocar={() => listo && elegir(elegido)}
+          />
         </View>
       </SafeAreaView>
     </View>
   );
 }
 
+const ALTO = 128;
+
 const e = StyleSheet.create({
-  contenido: { padding: 20, paddingTop: 28, gap: 14 },
+  contenido: { padding: 20, paddingTop: 24, gap: 14, paddingBottom: 24 },
   burbuja: { position: 'absolute', borderRadius: 999, backgroundColor: COLOR.lima, opacity: 0.35 },
-  paso: { fontFamily: FUENTE.fuerte, fontSize: 15, color: COLOR.bosqueMedio },
+  saludo: { fontFamily: FUENTE.fuerte, fontSize: 15, color: COLOR.bosqueMedio },
   pregunta: { fontFamily: FUENTE.negra, fontSize: 28, lineHeight: 32, color: COLOR.texto, letterSpacing: -0.8 },
-  opcion: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 12, borderRadius: 24, backgroundColor: COLOR.superficie, borderWidth: 2, borderColor: 'transparent', ...SOMBRA },
-  opcionActiva: { borderColor: COLOR.bosque },
-  fondoImagen: { width: 92, height: 92, borderRadius: 20, backgroundColor: COLOR.limaSuave, alignItems: 'center', justifyContent: 'center' },
-  // La ilustración sobresale un poco de su cuadro
-  imagen: { width: 108, height: 108 },
-  nombre: { fontFamily: FUENTE.negra, fontSize: 16.5, color: COLOR.texto, letterSpacing: -0.3 },
-  sugerimos: { fontFamily: FUENTE.fuerte, fontSize: 12, color: COLOR.limaTexto, marginTop: 2 },
-  marca: { width: 26, height: 26, borderRadius: 13, borderWidth: 2, borderColor: COLOR.borde, alignItems: 'center', justifyContent: 'center' },
+  // Margen arriba para que la ilustración que sobresale no choque con la tarjeta de arriba
+  opcion: { marginTop: 22, height: ALTO, borderRadius: 26, backgroundColor: COLOR.superficie, borderWidth: 2, borderColor: 'transparent', justifyContent: 'center', ...SOMBRA },
+  opcionActiva: { borderColor: COLOR.bosque, backgroundColor: COLOR.limaSuave },
+  textos: { width: '60%', paddingLeft: 16, gap: 4 },
+  filaNombre: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  nombre: { flex: 1, fontFamily: FUENTE.negra, fontSize: 18, color: COLOR.texto, letterSpacing: -0.4 },
+  gana: { fontFamily: FUENTE.fuerte, fontSize: 13, lineHeight: 17, color: COLOR.bosqueMedio },
+  marca: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: COLOR.borde, alignItems: 'center', justifyContent: 'center' },
   marcaActiva: { backgroundColor: COLOR.bosque, borderColor: COLOR.bosque },
+  imagen: { position: 'absolute', right: 4, bottom: 4, width: 138, height: ALTO + 18 },
+  subtipos: { gap: 8, marginTop: 10, padding: 12, borderRadius: 20, backgroundColor: COLOR.superficie, ...SOMBRA },
   pie: { paddingHorizontal: 20, paddingBottom: 12, paddingTop: 8 },
 });

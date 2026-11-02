@@ -1,7 +1,9 @@
 /**
- * El Inicio según el negocio del cliente (01/11, nicho nuevo de Abasto): tiendas de barrio y negocios que cocinan
- * (salteñerías, panaderías, pensiones, pollerías). La promesa ya no es «más barato que el súper» sino «no vuelvas a
- * ir al mercado»: cada negocio ve primero sus rubros y unas secciones con lo que usa todas las semanas.
+ * El Inicio según el tipo de cliente. Desde el 01/11 (pedido de Andrés, plan en `docs/plan-mi-negocio.md`) son tres:
+ * - **hogar**: la familia que compra al por mayor para su casa,
+ * - **tienda**: abarrotes que compra para revender,
+ * - **productor**: compra insumos y vende algo hecho, con subtipo salteñería, panadería o pensión.
+ * Se elige al registrarse (obligatorio) y se cambia en Cuenta. La promesa es «no vuelvas a ir al mercado».
  *
  * Las secciones se arman por palabra del nombre («harina», «manteca»…), no por código: cuando Abasto suma un
  * producto nuevo al catálogo, aparece solo en la sección que le toca. Solo entra lo que vende Abasto.
@@ -11,7 +13,64 @@ import { escalaPorDefecto, escalasConPrecio, itemDeCarrito, preciosDeLaCasa, rub
 import type { Pedido } from './pedidos';
 import { vitrinas, type ClaveDeVitrina, type TarjetaDeVitrina, type Vitrina } from './vitrinas';
 
-export type TipoDeNegocio = 'tienda' | 'masas' | 'cocina';
+export type TipoDeNegocio = 'hogar' | 'tienda' | 'productor';
+export type SubtipoProductor = 'salteneria' | 'panaderia' | 'pension';
+
+/** Lo que eligió el cliente: el tipo y, si es productor, qué hace */
+export interface NegocioElegido {
+  tipo: TipoDeNegocio;
+  subtipo?: SubtipoProductor;
+}
+
+/** Cómo se presenta cada tipo en el registro y en Cuenta */
+export interface TipoDeCliente {
+  tipo: TipoDeNegocio;
+  nombre: string;
+  /** Para el chip de Cuenta */
+  corto: string;
+  ejemplo: string;
+  /** La frase de lo que gana, en el registro */
+  gana: string;
+  /** El nombre de su pestaña («Mi casa»…), que llega en la Fase 2 */
+  pestana: string;
+}
+
+export const TIPOS: Record<TipoDeNegocio, TipoDeCliente> = {
+  hogar: {
+    tipo: 'hogar',
+    nombre: 'Mi hogar',
+    corto: 'Hogar',
+    ejemplo: 'Compro al por mayor para mi familia',
+    gana: 'Ahorra en la compra del mes y lleva la cuenta de tu casa',
+    pestana: 'Mi casa',
+  },
+  tienda: {
+    tipo: 'tienda',
+    nombre: 'Tienda de abarrotes',
+    corto: 'Tienda',
+    ejemplo: 'Tienda de barrio, minimarket',
+    gana: 'Repón sin ir al mercado y mira cuánto ganas',
+    pestana: 'Mi tienda',
+  },
+  productor: {
+    tipo: 'productor',
+    nombre: 'Productor',
+    corto: 'Productor',
+    ejemplo: 'Salteñería, panadería, pensión',
+    gana: 'Compra tus insumos y sabe cuánto te cuesta cada unidad',
+    pestana: 'Mi producción',
+  },
+};
+
+export const TIPOS_DE_NEGOCIO: TipoDeNegocio[] = ['hogar', 'tienda', 'productor'];
+
+export const SUBTIPOS: Record<SubtipoProductor, { nombre: string; ejemplo: string }> = {
+  salteneria: { nombre: 'Salteñería', ejemplo: 'Salteñas, empanadas' },
+  panaderia: { nombre: 'Panadería', ejemplo: 'Pan, repostería' },
+  pension: { nombre: 'Pensión', ejemplo: 'Pensión, pollería, restaurante, puesto' },
+};
+
+export const SUBTIPOS_DE_PRODUCTOR: SubtipoProductor[] = ['salteneria', 'panaderia', 'pension'];
 
 export interface Seccion {
   clave: ClaveDeVitrina;
@@ -21,29 +80,46 @@ export interface Seccion {
   palabras: string[];
 }
 
-export interface Negocio {
-  tipo: TipoDeNegocio;
-  nombre: string;
-  /** Para el chip: «Tienda», «Salteñería», «Pensión» */
-  corto: string;
-  ejemplo: string;
-  /** Los rubros en el orden en que los busca este negocio. Los demás no se le muestran */
+/** Lo que cambia el Inicio: sale del tipo y, para el productor, del subtipo */
+interface Perfil {
+  /** Los rubros en el orden en que los busca. Los demás no se le muestran */
   rubros: string[];
   secciones: Seccion[];
-  /** Las vitrinas de siempre que le sirven (sin «súper»: dejó de ser la promesa) */
+  /** Las vitrinas de siempre que le sirven, en ese orden */
   vitrinas: ClaveDeVitrina[];
   /** El subtítulo de «También te puede servir»: lo demás de sus rubros que no salió en sus secciones */
   sugeridos: string;
+  /** La familia compra el kilo o la arroba antes que el quintal; el negocio, al revés */
+  primeroLoChico?: boolean;
 }
+
+type ClaveDePerfil = 'hogar' | 'tienda' | SubtipoProductor;
 
 const COCINA = ['Harinas y panificación', 'Aceites y grasas', 'Granos y cereales', 'Condimentos', 'Huevos y lácteos', 'Verduras secas', 'Descartables'];
 
-export const NEGOCIOS: Record<TipoDeNegocio, Negocio> = {
+const PERFILES: Record<ClaveDePerfil, Perfil> = {
+  hogar: {
+    rubros: ['Granos y cereales', 'Aceites y grasas', 'Huevos y lácteos', 'Harinas y panificación', 'Verduras secas', 'Limpieza del hogar', 'Higiene y cuidado personal', 'Bebidas', 'Galletas y dulces', 'Condimentos'],
+    secciones: [
+      {
+        clave: 'despensa',
+        titulo: 'La despensa del mes',
+        subtitulo: 'Lo básico de la casa, al por mayor',
+        palabras: ['arroz', 'aceite', 'azucar', 'fideo', 'leche', 'huevo', 'papa', 'cebolla', 'harina', 'sal'],
+      },
+      {
+        clave: 'casa',
+        titulo: 'Limpieza de la casa',
+        subtitulo: 'Para todo el mes, sin cargar bolsas',
+        palabras: ['detergente', 'lavandina', 'limpia', 'papel', 'jabon', 'pasta', 'shampoo'],
+      },
+    ],
+    // A la familia sí le sirve compararse con el súper: ahí compra hoy
+    vitrinas: ['super', 'volumen', 'probar'],
+    sugeridos: 'Más para la casa',
+    primeroLoChico: true,
+  },
   tienda: {
-    tipo: 'tienda',
-    nombre: 'Tienda de abarrotes',
-    corto: 'Tienda',
-    ejemplo: 'Tienda de barrio, minimarket',
     rubros: ['Granos y cereales', 'Aceites y grasas', 'Harinas y panificación', 'Bebidas', 'Huevos y lácteos', 'Galletas y dulces', 'Limpieza del hogar', 'Higiene y cuidado personal', 'Condimentos', 'Descartables'],
     secciones: [
       {
@@ -56,11 +132,7 @@ export const NEGOCIOS: Record<TipoDeNegocio, Negocio> = {
     vitrinas: ['reventa', 'volumen', 'deAqui'],
     sugeridos: 'Más para los estantes de tu tienda',
   },
-  masas: {
-    tipo: 'masas',
-    nombre: 'Salteñería – panadería',
-    corto: 'Salteñería',
-    ejemplo: 'Salteñas, empanadas, pan, repostería',
+  salteneria: {
     rubros: COCINA,
     secciones: [
       {
@@ -69,6 +141,13 @@ export const NEGOCIOS: Record<TipoDeNegocio, Negocio> = {
         subtitulo: 'Masa y jigote: lo de cada semana',
         palabras: ['harina', 'manteca', 'aji', 'papa', 'huevo', 'azucar', 'aceite', 'cebolla', 'comino', 'pimienta', 'oregano'],
       },
+    ],
+    vitrinas: ['volumen'],
+    sugeridos: 'Más cosas que se usan en una salteñería',
+  },
+  panaderia: {
+    rubros: COCINA,
+    secciones: [
       {
         clave: 'panaderia',
         titulo: 'Para tu panadería',
@@ -77,13 +156,9 @@ export const NEGOCIOS: Record<TipoDeNegocio, Negocio> = {
       },
     ],
     vitrinas: ['volumen'],
-    sugeridos: 'Más cosas que se usan en una salteñería o panadería',
+    sugeridos: 'Más cosas que se usan en una panadería',
   },
-  cocina: {
-    tipo: 'cocina',
-    nombre: 'Comida – pensión – restaurante',
-    corto: 'Pensión',
-    ejemplo: 'Pensión, pollería, restaurante, puesto de comida',
+  pension: {
     rubros: COCINA,
     secciones: [
       {
@@ -104,10 +179,43 @@ export const NEGOCIOS: Record<TipoDeNegocio, Negocio> = {
   },
 };
 
-export const TIPOS_DE_NEGOCIO: TipoDeNegocio[] = ['tienda', 'masas', 'cocina'];
+function perfil(n: NegocioElegido): Perfil {
+  return PERFILES[n.tipo === 'productor' ? (n.subtipo ?? 'salteneria') : n.tipo];
+}
 
 export function esTipoDeNegocio(valor: unknown): valor is TipoDeNegocio {
   return typeof valor === 'string' && (TIPOS_DE_NEGOCIO as string[]).includes(valor);
+}
+
+export function esSubtipoProductor(valor: unknown): valor is SubtipoProductor {
+  return typeof valor === 'string' && (SUBTIPOS_DE_PRODUCTOR as string[]).includes(valor);
+}
+
+/** Si el cliente ya terminó de elegir: el productor tiene que decir qué hace */
+export function negocioCompleto(n: Partial<NegocioElegido> | null): n is NegocioElegido {
+  if (!n || !esTipoDeNegocio(n.tipo)) return false;
+  return n.tipo !== 'productor' || esSubtipoProductor(n.subtipo);
+}
+
+/**
+ * Lo guardado en el teléfono. Traduce lo de antes del 01/11 (un texto: «tienda», «masas» o «cocina») y descarta lo
+ * que no sirve, para que el registro vuelva a preguntar.
+ */
+export function leerNegocio(guardado: unknown): NegocioElegido | null {
+  if (guardado === 'tienda' || guardado === 'hogar') return { tipo: guardado };
+  if (guardado === 'masas') return { tipo: 'productor', subtipo: 'salteneria' };
+  if (guardado === 'cocina') return { tipo: 'productor', subtipo: 'pension' };
+  if (guardado && typeof guardado === 'object') {
+    const { tipo, subtipo } = guardado as Partial<NegocioElegido>;
+    const n = tipo === 'productor' ? { tipo, subtipo } : { tipo };
+    if (negocioCompleto(n)) return n;
+  }
+  return null;
+}
+
+/** El nombre corto para mostrar: «Hogar», «Tienda» o el subtipo del productor («Salteñería») */
+export function nombreDelNegocio(n: NegocioElegido) {
+  return n.tipo === 'productor' && n.subtipo ? SUBTIPOS[n.subtipo].nombre : TIPOS[n.tipo].corto;
 }
 
 const normalizar = (t: string) =>
@@ -123,13 +231,13 @@ function tienePalabra(nombre: string, palabra: string) {
     .some((w) => w === palabra || w === `${palabra}s` || w === `${palabra}es`);
 }
 
-/** Los rubros que se le muestran a este negocio, en su orden, y solo los que tienen productos */
-export function rubrosDelNegocio(tipo: TipoDeNegocio, productos: Producto[]) {
+/** Los rubros que se le muestran a este cliente, en su orden, y solo los que tienen productos */
+export function rubrosDelNegocio(n: NegocioElegido, productos: Producto[]) {
   const hay = new Set(rubros(productos));
-  return NEGOCIOS[tipo].rubros.filter((r) => hay.has(r));
+  return perfil(n).rubros.filter((r) => hay.has(r));
 }
 
-/** «Por confirmar» (el precio) manda: es de demostración y la tienda tiene que saberlo antes de pedir */
+/** «Por confirmar» (el precio) manda: es de demostración y el cliente tiene que saberlo antes de pedir */
 function tarjeta(p: Producto): TarjetaDeVitrina | null {
   const escala = escalaPorDefecto(p);
   if (!escala?.precioUnitario) return null;
@@ -143,20 +251,20 @@ function tarjeta(p: Producto): TarjetaDeVitrina | null {
 }
 
 /**
- * Las secciones del Inicio de este negocio: primero las suyas («Para tu salteñería»), después «También te puede
- * servir» (lo demás de sus rubros, en el orden en que los busca) y al final las vitrinas de siempre que le sirven,
- * calculadas solo con sus rubros (a una pensión no se le ofrece shampoo).
+ * Las secciones del Inicio de este cliente: primero las suyas («Para tu salteñería», «La despensa del mes»), después
+ * «También te puede servir» (lo demás de sus rubros, en el orden en que los busca) y al final las vitrinas de
+ * siempre que le sirven, calculadas solo con sus rubros (a una pensión no se le ofrece shampoo).
  */
-export function seccionesDelNegocio(tipo: TipoDeNegocio, productos: Producto[], maximo = 10): Vitrina[] {
-  const negocio = NEGOCIOS[tipo];
+export function seccionesDelNegocio(n: NegocioElegido, productos: Producto[], maximo = 10): Vitrina[] {
+  const p = perfil(n);
   const casa = preciosDeLaCasa(productos);
-  const propias = negocio.secciones.map((s) => {
+  const propias = p.secciones.map((s) => {
     const elegidos: Producto[] = [];
     for (const palabra of s.palabras) {
-      // Dentro de cada ingrediente, primero la presentación más grande (el quintal antes que el kilo)
+      // Dentro de cada palabra, primero la presentación más grande (el quintal antes que el kilo); en la casa, al revés
       const conPalabra = casa
-        .filter((p) => !elegidos.includes(p) && tienePalabra(p.nombre, palabra))
-        .sort((a, b) => precioDeLaChica(b) - precioDeLaChica(a));
+        .filter((x) => !elegidos.includes(x) && tienePalabra(x.nombre, palabra))
+        .sort((a, b) => (p.primeroLoChico ? -1 : 1) * (precioDeLaChica(b) - precioDeLaChica(a)));
       elegidos.push(...conPalabra);
     }
     const tarjetas = elegidos.map(tarjeta).filter((t): t is TarjetaDeVitrina => t !== null);
@@ -164,19 +272,21 @@ export function seccionesDelNegocio(tipo: TipoDeNegocio, productos: Producto[], 
   });
   const yaSalieron = new Set(propias.flatMap((v) => v.tarjetas.map((t) => t.producto.id)));
   const otros = casa
-    .filter((p) => negocio.rubros.includes(p.rubro) && !yaSalieron.has(p.id))
-    .sort((a, b) => negocio.rubros.indexOf(a.rubro) - negocio.rubros.indexOf(b.rubro));
+    .filter((x) => p.rubros.includes(x.rubro) && !yaSalieron.has(x.id))
+    .sort((a, b) => p.rubros.indexOf(a.rubro) - p.rubros.indexOf(b.rubro));
   const sugeridos: Vitrina = {
     clave: 'sugeridos',
     titulo: 'También te puede servir',
-    subtitulo: negocio.sugeridos,
+    subtitulo: p.sugeridos,
     tarjetas: otros
       .map(tarjeta)
       .filter((t): t is TarjetaDeVitrina => t !== null)
       .slice(0, maximo),
   };
-  const suyos = productos.filter((p) => negocio.rubros.includes(p.rubro));
-  const deSiempre = vitrinas(suyos, maximo).filter((v) => negocio.vitrinas.includes(v.clave));
+  const suyos = productos.filter((x) => p.rubros.includes(x.rubro));
+  const deSiempre = vitrinas(suyos, maximo)
+    .filter((v) => p.vitrinas.includes(v.clave))
+    .sort((a, b) => p.vitrinas.indexOf(a.clave) - p.vitrinas.indexOf(b.clave));
   return [...propias, sugeridos].filter((v) => v.tarjetas.length > 0).concat(deSiempre);
 }
 

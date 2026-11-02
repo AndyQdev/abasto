@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Mayorista, Producto } from './catalogo';
-import { esTipoDeNegocio, pedidoDeLaSemana, rubrosDelNegocio, seccionesDelNegocio } from './negocios';
+import { esTipoDeNegocio, leerNegocio, negocioCompleto, nombreDelNegocio, pedidoDeLaSemana, rubrosDelNegocio, seccionesDelNegocio, type NegocioElegido } from './negocios';
 
 const dinero = (centavos: number) => ({ centavos, texto: `Bs ${(centavos / 100).toFixed(2).replace('.', ',')}` });
 const abasto: Mayorista = { id: 'abasto', nombre: 'Abasto', ciudad: 'Santa Cruz', verificado: true, relacion: 'NINGUNA', deLaCasa: true };
@@ -34,61 +34,91 @@ const bolsas = producto('AB-119', 'Bolsas plásticas medianas · paquete de 100'
 const shampoo = producto('AB-032', 'Shampoo Sedal 340 ml', 'Higiene y cuidado personal', 2830);
 const arrozAjeno = producto('Z-1', 'Arroz de otro mayorista 1 kg', 'Granos y cereales', 100, { mayorista: afiliado });
 const pausado = producto('AB-200', 'Harina vieja · quintal', 'Harinas y panificación', 100, { estado: 'PAUSADO' });
-const todos = [harinaQuintal, harinaKilo, manteca, aji, sal, salsa, bolsas, shampoo, arrozAjeno, pausado];
+const detergente = producto('AB-040', 'Detergente Skip 700 g', 'Limpieza del hogar', 2500, { marca: 'Skip' });
+const arroz = producto('AB-001', 'Arroz Caisy Grano de Oro 1 kg', 'Granos y cereales', 1540, { marca: 'Caisy' });
+const todos = [harinaQuintal, harinaKilo, manteca, aji, sal, salsa, bolsas, shampoo, arrozAjeno, pausado, detergente, arroz];
+
+const HOGAR: NegocioElegido = { tipo: 'hogar' };
+const TIENDA: NegocioElegido = { tipo: 'tienda' };
+const SALTENERIA: NegocioElegido = { tipo: 'productor', subtipo: 'salteneria' };
+const PANADERIA: NegocioElegido = { tipo: 'productor', subtipo: 'panaderia' };
+const PENSION: NegocioElegido = { tipo: 'productor', subtipo: 'pension' };
 
 describe('rubros según el negocio', () => {
   it('a una salteñería no se le muestran Higiene ni Bebidas, y van en el orden del que cocina', () => {
-    expect(rubrosDelNegocio('masas', todos)).toEqual(['Harinas y panificación', 'Aceites y grasas', 'Granos y cereales', 'Condimentos', 'Descartables']);
+    expect(rubrosDelNegocio(SALTENERIA, todos)).toEqual(['Harinas y panificación', 'Aceites y grasas', 'Granos y cereales', 'Condimentos', 'Descartables']);
   });
 
   it('a una tienda sí le sale Higiene', () => {
-    expect(rubrosDelNegocio('tienda', todos)).toContain('Higiene y cuidado personal');
+    expect(rubrosDelNegocio(TIENDA, todos)).toContain('Higiene y cuidado personal');
+  });
+
+  it('el hogar ve primero lo de la despensa y también la limpieza, pero no los descartables', () => {
+    const r = rubrosDelNegocio(HOGAR, todos);
+    expect(r[0]).toBe('Granos y cereales');
+    expect(r).toContain('Limpieza del hogar');
+    expect(r).not.toContain('Descartables');
   });
 });
 
 describe('secciones según el negocio', () => {
-  const seccion = (tipo: Parameters<typeof seccionesDelNegocio>[0], clave: string) => seccionesDelNegocio(tipo, todos).find((s) => s.clave === clave);
+  const seccion = (n: NegocioElegido, clave: string) => seccionesDelNegocio(n, todos).find((s) => s.clave === clave);
 
   it('«Para tu salteñería» sigue el orden de los ingredientes y pone el quintal antes que el kilo', () => {
-    const ids = seccion('masas', 'salteneria')!.tarjetas.map((t) => t.producto.id);
+    const ids = seccion(SALTENERIA, 'salteneria')!.tarjetas.map((t) => t.producto.id);
     expect(ids.slice(0, 4)).toEqual(['AB-101', 'AB-004', 'AB-106', 'AB-111']);
   });
 
   it('el precio de demostración se avisa en la etiqueta de la tarjeta', () => {
-    const [quintal] = seccion('masas', 'salteneria')!.tarjetas;
+    const [quintal] = seccion(SALTENERIA, 'salteneria')!.tarjetas;
     expect(quintal).toMatchObject({ gancho: 'Por confirmar', precio: 'Bs 285,00', detalle: 'c/u' });
   });
 
   it('busca la palabra entera: «sal» no trae la salsa', () => {
-    const ids = seccion('masas', 'panaderia')!.tarjetas.map((t) => t.producto.id);
+    const ids = seccion(PANADERIA, 'panaderia')!.tarjetas.map((t) => t.producto.id);
     expect(ids).toContain('AB-007');
     expect(ids).not.toContain('X-1');
   });
 
   it('solo entra lo que vende Abasto y lo que está activo', () => {
-    const ids = seccionesDelNegocio('cocina', todos).flatMap((s) => s.tarjetas.map((t) => t.producto.id));
+    const ids = seccionesDelNegocio(PENSION, todos).flatMap((s) => s.tarjetas.map((t) => t.producto.id));
     expect(ids).not.toContain('Z-1');
     expect(ids).not.toContain('AB-200');
   });
 
   it('una pensión ve «Para llevar» con los descartables y nunca «Gana revendiendo»', () => {
-    const claves = seccionesDelNegocio('cocina', todos).map((s) => s.clave);
+    const claves = seccionesDelNegocio(PENSION, todos).map((s) => s.clave);
     expect(claves).toContain('descartables');
     expect(claves).not.toContain('reventa');
     expect(claves).not.toContain('super');
   });
 
   it('«También te puede servir» sugiere lo demás de sus rubros, sin repetir lo de sus secciones', () => {
-    const ids = seccion('masas', 'sugeridos')!.tarjetas.map((t) => t.producto.id);
-    expect(ids).toEqual(['X-1', 'AB-119']);
-    expect(seccion('masas', 'sugeridos')!.subtitulo).toContain('salteñería');
+    // Salteñería: lo de Granos, Condimentos y Descartables que no salió en «Para tu salteñería», en el orden de sus rubros
+    expect(seccion(SALTENERIA, 'sugeridos')!.tarjetas.map((t) => t.producto.id)).toEqual(['AB-001', 'AB-007', 'X-1', 'AB-119']);
+    expect(seccion(SALTENERIA, 'sugeridos')!.subtitulo).toContain('salteñería');
     // A una tienda sí se le sugiere higiene; a una pensión nunca
-    expect(seccion('tienda', 'sugeridos')!.tarjetas.map((t) => t.producto.id)).toContain('AB-032');
-    expect(seccionesDelNegocio('cocina', todos).flatMap((s) => s.tarjetas.map((t) => t.producto.id))).not.toContain('AB-032');
+    expect(seccion(TIENDA, 'sugeridos')!.tarjetas.map((t) => t.producto.id)).toContain('AB-032');
+    expect(seccionesDelNegocio(PENSION, todos).flatMap((s) => s.tarjetas.map((t) => t.producto.id))).not.toContain('AB-032');
+  });
+
+  it('el hogar tiene su despensa y la limpieza de la casa, y nunca «Gana revendiendo»', () => {
+    expect(seccion(HOGAR, 'despensa')!.tarjetas.map((t) => t.producto.id)).toContain('AB-001');
+    // En la casa, el kilo de harina antes que el quintal
+    const harinas = seccion(HOGAR, 'despensa')!.tarjetas.map((t) => t.producto.id).filter((id) => id === 'AB-004' || id === 'AB-101');
+    expect(harinas).toEqual(['AB-004', 'AB-101']);
+    expect(seccion(HOGAR, 'casa')!.tarjetas.map((t) => t.producto.id)).toEqual(['AB-040', 'AB-032']);
+    expect(seccionesDelNegocio(HOGAR, todos).map((s) => s.clave)).not.toContain('reventa');
+  });
+
+  it('el subtipo del productor decide su sección: la panadería no ve «Para tu salteñería»', () => {
+    const claves = seccionesDelNegocio(PANADERIA, todos).map((s) => s.clave);
+    expect(claves).toContain('panaderia');
+    expect(claves).not.toContain('salteneria');
   });
 
   it('una sección sin productos no se muestra', () => {
-    expect(seccionesDelNegocio('cocina', [shampoo]).map((s) => s.clave)).toEqual([]);
+    expect(seccionesDelNegocio(PENSION, [shampoo]).map((s) => s.clave)).toEqual([]);
   });
 });
 
@@ -126,8 +156,30 @@ describe('tu pedido de la semana', () => {
   });
 });
 
-it('reconoce el negocio guardado en el teléfono', () => {
-  expect(esTipoDeNegocio('masas')).toBe(true);
-  expect(esTipoDeNegocio('familia')).toBe(false);
-  expect(esTipoDeNegocio(null)).toBe(false);
+describe('el negocio guardado en el teléfono', () => {
+  it('reconoce los tres tipos', () => {
+    expect(esTipoDeNegocio('hogar')).toBe(true);
+    expect(esTipoDeNegocio('productor')).toBe(true);
+    expect(esTipoDeNegocio('familia')).toBe(false);
+    expect(esTipoDeNegocio(null)).toBe(false);
+  });
+
+  it('traduce lo guardado antes del 01/11', () => {
+    expect(leerNegocio('tienda')).toEqual({ tipo: 'tienda' });
+    expect(leerNegocio('masas')).toEqual({ tipo: 'productor', subtipo: 'salteneria' });
+    expect(leerNegocio('cocina')).toEqual({ tipo: 'productor', subtipo: 'pension' });
+  });
+
+  it('el productor sin subtipo no está completo: el registro vuelve a preguntar', () => {
+    expect(leerNegocio({ tipo: 'productor' })).toBeNull();
+    expect(negocioCompleto({ tipo: 'productor' })).toBe(false);
+    expect(leerNegocio({ tipo: 'productor', subtipo: 'panaderia' })).toEqual(PANADERIA);
+    expect(leerNegocio({ tipo: 'hogar', subtipo: 'panaderia' })).toEqual(HOGAR);
+    expect(leerNegocio('otra cosa')).toBeNull();
+  });
+
+  it('el nombre corto es el subtipo del productor', () => {
+    expect(nombreDelNegocio(SALTENERIA)).toBe('Salteñería');
+    expect(nombreDelNegocio(HOGAR)).toBe('Hogar');
+  });
 });

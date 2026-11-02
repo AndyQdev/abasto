@@ -35,14 +35,16 @@ const ESTILO: Record<ClaveDeVitrina, { icono: NombreDeIcono; etiqueta: [string, 
   pension: { icono: 'restaurant', etiqueta: [COLOR.bosque, COLOR.lima] },
   descartables: { icono: 'bag-handle', etiqueta: [COLOR.bosque, COLOR.lima] },
   sugeridos: { icono: 'sparkles', etiqueta: [COLOR.bosque, COLOR.lima] },
+  despensa: { icono: 'basket', etiqueta: [COLOR.bosque, COLOR.lima] },
+  casa: { icono: 'home', etiqueta: [COLOR.bosque, COLOR.lima] },
 };
 /** La etiqueta de un precio de demostración va en ámbar, para que se vea antes de pedir */
 const POR_CONFIRMAR: [string, string] = [COLOR.ambar, COLOR.bosque];
 
 /**
- * 01/11: el Inicio depende del negocio del cliente (tienda, salteñería-panadería o pensión-restaurante), que se
- * elige al registrarse (`pantallas/Negocio.tsx`) y se cambia en Cuenta: sus rubros, sus secciones («Para tu
- * salteñería»), «También te puede servir», «Tu pedido de la semana» y la promesa «No vuelvas a ir al mercado».
+ * 01/11: el Inicio depende del tipo de cliente (hogar, tienda o productor con su subtipo), que se elige al
+ * registrarse (`pantallas/Negocio.tsx`) y se cambia en Cuenta: sus rubros, sus secciones («La despensa del mes»,
+ * «Para tu salteñería»…), «También te puede servir», «Tu pedido de la semana» y «No vuelvas a ir al mercado».
  * La lógica está en `negocios.ts` de packages/comercio y las piezas en `src/NegocioInicio.tsx`.
  *
  * Inicio de ABASTO (31/10): lo primero que se ve son los productos y sus precios. Encabezado compacto, rubros y
@@ -51,8 +53,8 @@ const POR_CONFIRMAR: [string, string] = [COLOR.ambar, COLOR.bosque];
  */
 export function Inicio({ navigation }: PantallaDePestana<'Inicio'>) {
   const { catalogo, enLinea, agregarRapido, agregarAlCarrito, avisar } = useEstado();
-  const negocio = useNegocio();
-  const tipo = negocio.tipo ?? 'tienda';
+  // Sin negocio no se llega aquí (el registro lo pide); la tienda queda por si acaso
+  const negocio = useNegocio().negocio ?? { tipo: 'tienda' as const };
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const { elegida, porConfirmar } = useDirecciones();
   const [hoja, setHoja] = useState(false);
@@ -85,8 +87,8 @@ export function Inicio({ navigation }: PantallaDePestana<'Inicio'>) {
       });
   }, [enFoco, enLinea]);
 
-  const estantes = seccionesDelNegocio(tipo, catalogo.productos);
-  const losRubros = rubrosDelNegocio(tipo, catalogo.productos);
+  const estantes = seccionesDelNegocio(negocio, catalogo.productos);
+  const losRubros = rubrosDelNegocio(negocio, catalogo.productos);
   const semana = pedidoDeLaSemana(pedidos, catalogo.productos);
   const horas = Math.max(24, ...catalogo.productos.filter((p) => p.mayorista.deLaCasa).map((p) => p.entregaHoras ?? 24));
   const repetir = () => {

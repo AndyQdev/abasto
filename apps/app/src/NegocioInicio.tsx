@@ -1,50 +1,61 @@
-import { NEGOCIOS, TIPOS_DE_NEGOCIO, esTipoDeNegocio, type PedidoDeLaSemana, type TipoDeNegocio } from '@abasto/comercio';
+import {
+  SUBTIPOS,
+  SUBTIPOS_DE_PRODUCTOR,
+  TIPOS,
+  TIPOS_DE_NEGOCIO,
+  leerNegocio,
+  type NegocioElegido,
+  type PedidoDeLaSemana,
+  type SubtipoProductor,
+  type TipoDeNegocio,
+} from '@abasto/comercio';
 import { Image } from 'expo-image';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Flotar, Tocable } from './animacion';
 import { Boton, Icono, Texto, type NombreDeIcono } from './componentes';
 import { guardado } from './guardado';
-import { ILUSTRACION, imagenDeRubro } from './ilustraciones';
+import { ILUSTRACION } from './ilustraciones';
 import { COLOR, FUENTE, SOMBRA } from './tema';
 
 /**
- * El negocio del cliente (01/11): tienda, salteñería-panadería o pensión-restaurante. Se pregunta una sola vez, al
- * registrarse (`pantallas/Negocio.tsx`), y se cambia en Cuenta. El Inicio lo usa para mostrar primero lo suyo.
- * Se guarda en el teléfono.
+ * El tipo de cliente (01/11, plan en `docs/plan-mi-negocio.md`): hogar, tienda o productor (salteñería, panadería o
+ * pensión). Es obligatorio al registrarse (`pantallas/Negocio.tsx`) y se cambia en Cuenta. El Inicio lo usa para
+ * mostrar primero lo suyo. Se guarda en el teléfono; lo de antes («masas», «cocina») se traduce solo.
  */
-export const ICONO_DE_NEGOCIO: Record<TipoDeNegocio, NombreDeIcono> = { tienda: 'storefront', masas: 'pizza', cocina: 'restaurant' };
+export const ICONO_DE_NEGOCIO: Record<TipoDeNegocio, NombreDeIcono> = { hogar: 'home', tienda: 'storefront', productor: 'restaurant' };
+export const ICONO_DE_SUBTIPO: Record<SubtipoProductor, NombreDeIcono> = { salteneria: 'flame', panaderia: 'pizza', pension: 'restaurant' };
 
-/** La ilustración 3D de cada negocio, para la pantalla de elegir */
+/** La ilustración 3D de cada tipo, para el registro */
 export const IMAGEN_DE_NEGOCIO: Record<TipoDeNegocio, number> = {
-  tienda: ILUSTRACION.bannerAbarrotes,
-  masas: imagenDeRubro('Harinas y panificación'),
-  cocina: imagenDeRubro('Aceites y grasas'),
+  hogar: ILUSTRACION.negocioHogar,
+  tienda: ILUSTRACION.negocioTienda,
+  productor: ILUSTRACION.negocioProductor,
 };
 
 interface EstadoDeNegocio {
-  tipo: TipoDeNegocio | null;
+  negocio: NegocioElegido | null;
   /** false mientras se lee del teléfono: evita mostrar la pregunta un instante a quien ya eligió */
   leido: boolean;
-  elegir: (t: TipoDeNegocio) => void;
+  elegir: (n: NegocioElegido) => void;
 }
 
 const Contexto = createContext<EstadoDeNegocio | null>(null);
 
 export function ProveedorDeNegocio({ children }: { children: ReactNode }) {
-  const [tipo, setTipo] = useState<TipoDeNegocio | null>(null);
+  const [negocio, setNegocio] = useState<NegocioElegido | null>(null);
   const [leido, setLeido] = useState(false);
   useEffect(() => {
-    void guardado.leer<string>('negocio').then((v) => {
-      if (esTipoDeNegocio(v)) setTipo(v);
+    void guardado.leer<unknown>('negocio').then((v) => {
+      setNegocio(leerNegocio(v));
       setLeido(true);
     });
   }, []);
-  const elegir = (t: TipoDeNegocio) => {
-    setTipo(t);
-    void guardado.escribir('negocio', t);
+  const elegir = (n: NegocioElegido) => {
+    setNegocio(n);
+    void guardado.escribir('negocio', n);
   };
-  return <Contexto.Provider value={{ tipo, leido, elegir }}>{children}</Contexto.Provider>;
+  return <Contexto.Provider value={{ negocio, leido, elegir }}>{children}</Contexto.Provider>;
 }
 
 export function useNegocio() {
@@ -53,29 +64,53 @@ export function useNegocio() {
   return c;
 }
 
-/** En Cuenta: tres chips para cambiar de negocio */
-export function ChipsDeNegocio({ tipo, alElegir }: { tipo: TipoDeNegocio | null; alElegir: (t: TipoDeNegocio) => void }) {
+interface Opcion<T extends string> {
+  valor: T;
+  texto: string;
+  icono: NombreDeIcono;
+}
+
+/** Una fila de chips de los que se elige uno */
+export function Chips<T extends string>({ opciones, elegido, alElegir }: { opciones: Opcion<T>[]; elegido: T | null | undefined; alElegir: (v: T) => void }) {
   return (
     <View style={e.chips} accessibilityRole="radiogroup">
-      {TIPOS_DE_NEGOCIO.map((t) => {
-        const activo = t === tipo;
+      {opciones.map((o) => {
+        const activo = o.valor === elegido;
         return (
           <Tocable
-            key={t}
-            onPress={() => alElegir(t)}
+            key={o.valor}
+            onPress={() => alElegir(o.valor)}
             exterior={{ flex: 1 }}
             style={[e.chip, activo && e.chipActivo]}
             accessibilityRole="radio"
             accessibilityState={{ selected: activo }}
-            accessibilityLabel={NEGOCIOS[t].nombre}
+            accessibilityLabel={o.texto}
           >
-            <Icono nombre={ICONO_DE_NEGOCIO[t]} tamano={16} color={activo ? COLOR.lima : COLOR.bosque} />
+            <Icono nombre={o.icono} tamano={16} color={activo ? COLOR.lima : COLOR.bosque} />
             <Texto style={[e.textoChip, activo && { color: COLOR.lima }]} lineas={1}>
-              {NEGOCIOS[t].corto}
+              {o.texto}
             </Texto>
           </Tocable>
         );
       })}
+    </View>
+  );
+}
+
+export const OPCIONES_DE_TIPO: Opcion<TipoDeNegocio>[] = TIPOS_DE_NEGOCIO.map((t) => ({ valor: t, texto: TIPOS[t].corto, icono: ICONO_DE_NEGOCIO[t] }));
+export const OPCIONES_DE_SUBTIPO: Opcion<SubtipoProductor>[] = SUBTIPOS_DE_PRODUCTOR.map((t) => ({ valor: t, texto: SUBTIPOS[t].nombre, icono: ICONO_DE_SUBTIPO[t] }));
+
+/** En Cuenta: el tipo y, si es productor, qué hace */
+export function CambiarNegocio() {
+  const { negocio, elegir } = useNegocio();
+  return (
+    <View style={{ gap: 8 }}>
+      <Chips
+        opciones={OPCIONES_DE_TIPO}
+        elegido={negocio?.tipo}
+        alElegir={(tipo) => elegir(tipo === 'productor' ? { tipo, subtipo: negocio?.subtipo ?? 'salteneria' } : { tipo })}
+      />
+      {negocio?.tipo === 'productor' && <Chips opciones={OPCIONES_DE_SUBTIPO} elegido={negocio.subtipo} alElegir={(subtipo) => elegir({ tipo: 'productor', subtipo })} />}
     </View>
   );
 }

@@ -25,6 +25,9 @@ export const ILUSTRACION = {
   comprarOtraVez: require('../assets/ilustraciones/comprar-otra-vez.webp'),
   cabeceraMercado: require('../assets/ilustraciones/cabecera-mercado.webp'),
   bannerMercado: require('../assets/ilustraciones/banner-mercado.webp'),
+  negocioHogar: require('../assets/ilustraciones/negocio-hogar.webp'),
+  negocioTienda: require('../assets/ilustraciones/negocio-tienda.webp'),
+  negocioProductor: require('../assets/ilustraciones/negocio-productor.webp'),
 } satisfies Record<string, Recurso>;
 
 const PRESENTACIONES: Record<string, Recurso> = {
@@ -77,7 +80,7 @@ export function rubroCorto(rubro: string): string {
       'Harinas y panificación': 'Harinas',
       'Aceites y grasas': 'Aceites',
       'Granos y cereales': 'Granos',
-      'Huevos y lácteos': 'Huevos y leche',
+      'Huevos y lácteos': 'Huevos',
       'Verduras secas': 'Verduras',
     }[rubro] ?? rubro
   );

@@ -46,6 +46,7 @@ La app de clientes en el emulador Android. Después: registro de tiendas desde l
 - Nicho nuevo (01/11): tiendas de barrio y negocios que cocinan. El Inicio cambia según el negocio (tienda, salteñería-panadería, pensión-restaurante), con «Tu pedido de la semana» y «No vuelvas a ir al mercado». Catálogo: 22 productos del nicho en presentación de mercado (quintal, arroba, balde, maple), rubros nuevos (Harinas y panificación, Aceites y grasas, Granos y cereales, Condimentos, Huevos y lácteos, Verduras secas, Descartables) y `Producto.precioPorConfirmar` para los precios de demostración. **Falta cotizarlos en el mercado.**
   **Jhoel:** `pnpm semilla` (o `catalogo:semilla-abasto`) para ver los 49 productos.
 - App (01/11, pedido del usuario): «¿Qué negocio tienes?» pasó al registro (después del celular, antes de la dirección) y se cambia en Cuenta; el Inicio suma «También te puede servir» según el negocio; el banner del mercado quedó con poco texto y una ilustración 3D nueva.
+- Herramientas por tipo de cliente (01/11, pedido de Andrés): plan en `docs/plan-mi-negocio.md`. **Fase 1 hecha:** tres tipos (Hogar, Tienda, Productor con subtipo), registro obligatorio con ilustraciones 3D nuevas, Inicio de cada uno y cambio en Cuenta. Las fases 2 a 5 (inventario que se llena solo con las compras, caja, fiado, recetas y planificador) esperan su revisión.
 - e2e: 15 pruebas en verde.
 
 ## Cambié en contratos

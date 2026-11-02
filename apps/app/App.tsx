@@ -73,11 +73,11 @@ function Navegacion() {
   );
 }
 
-/** Registro (01/11): después del celular, una sola vez, qué negocio tiene. Después, la dirección. */
+/** Registro (01/11): después del celular, obligatorio, para qué compra (hogar, tienda o productor). Después, la dirección. */
 function ConNegocio() {
-  const { tipo, leido } = useNegocio();
+  const { negocio, leido } = useNegocio();
   if (!leido) return <View style={e.centro} />;
-  if (!tipo) return <Negocio />;
+  if (!negocio) return <Negocio />;
   return (
     <ProveedorDeDirecciones>
       <ConDireccion />
