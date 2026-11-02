@@ -57,6 +57,8 @@ La app de clientes en el emulador Android. Después: registro de tiendas desde l
 - App (02/11, pedido de Andrés): Vender con carrito flotante (la foto vuela, la hoja se abre sola con el primero); la pestaña Pedidos pasa a **Compras**, más directa; pedir con QR lleva directo al QR; seguimiento con línea de tiempo arriba, el paso actual latiendo y el QR dentro; festejo a pantalla completa al pagar. 10 fotos del catálogo rehechas e ilustraciones sin huecos.
 - App (02/11, segundo pedido de Andrés): escenas 3D animadas por estado en Compras y en la cabecera del seguimiento (la moto yendo, el vendedor revisando, empacando…), línea de tiempo compacta, festejo del pago más fuerte con sonido y festejo de la entrega que carga los productos al inventario y lleva a Mi negocio con lo recién llegado resaltado. 5 ilustraciones nuevas (USD ~0,20).
   **Jhoel:** la app suma `expo-audio` (nativo): `npm install` en `apps/app` y `npx expo run:android` una vez. Sin eso la app anda igual, solo que sin sonido.
+- App (02/11, tercer pedido): las escenas de Compras y del seguimiento pasan a **3D de verdad** (three.js + React Three Fiber sobre expo-gl, como el panel del taller): vendedor en su mostrador, cinta del depósito, moto por el barrio, QR en la tienda y entrega con confeti. Sin GL queda la escena ilustrada.
+  **Jhoel:** la app suma `expo-gl`, `three` y `@react-three/fiber` (nativo): `npm install` en `apps/app` y `npx expo run:android` una vez.
 - e2e: 22 pruebas en verde (02/11).
 
 ## Cambié en contratos
