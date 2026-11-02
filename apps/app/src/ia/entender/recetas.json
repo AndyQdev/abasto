@@ -1,0 +1,88 @@
+{
+  "nota": "Recetas de referencia para calcular insumos. No son la receta de cada negocio: la app siempre avisa que son de referencia y que se ajustan. Cantidades para el rinde indicado; el código las escala. Revisarlas y completarlas es parte del trabajo de datos (Jhoel).",
+  "recetas": [
+    {
+      "id": "saltena",
+      "nombre": "Salteñas de carne",
+      "alias": ["salteña", "salteñas", "saltena", "saltenas"],
+      "rinde": 100,
+      "unidadDeRinde": "salteñas",
+      "ingredientes": [
+        { "nombre": "harina de trigo", "cantidad": 4, "unidad": "kg" },
+        { "nombre": "manteca", "cantidad": 0.8, "unidad": "kg" },
+        { "nombre": "azúcar", "cantidad": 0.5, "unidad": "kg" },
+        { "nombre": "huevo", "cantidad": 10, "unidad": "u." },
+        { "nombre": "carne de res", "cantidad": 4, "unidad": "kg" },
+        { "nombre": "papa", "cantidad": 3, "unidad": "kg" },
+        { "nombre": "arveja", "cantidad": 1, "unidad": "kg" },
+        { "nombre": "cebolla", "cantidad": 1.5, "unidad": "kg" },
+        { "nombre": "ají colorado", "cantidad": 0.3, "unidad": "kg" },
+        { "nombre": "aceite", "cantidad": 0.9, "unidad": "L" },
+        { "nombre": "sal", "cantidad": 0.15, "unidad": "kg" }
+      ]
+    },
+    {
+      "id": "empanada-queso",
+      "nombre": "Empanadas de queso al horno",
+      "alias": ["empanada", "empanadas", "empanadas de queso", "empanada de queso"],
+      "rinde": 100,
+      "unidadDeRinde": "empanadas",
+      "ingredientes": [
+        { "nombre": "harina de trigo", "cantidad": 3, "unidad": "kg" },
+        { "nombre": "manteca", "cantidad": 0.6, "unidad": "kg" },
+        { "nombre": "azúcar", "cantidad": 0.2, "unidad": "kg" },
+        { "nombre": "huevo", "cantidad": 6, "unidad": "u." },
+        { "nombre": "queso", "cantidad": 2.5, "unidad": "kg" },
+        { "nombre": "polvo de hornear", "cantidad": 0.05, "unidad": "kg" },
+        { "nombre": "sal", "cantidad": 0.06, "unidad": "kg" }
+      ]
+    },
+    {
+      "id": "pan-batalla",
+      "nombre": "Pan de batalla",
+      "alias": ["pan", "panes", "pan de batalla", "marraqueta"],
+      "rinde": 100,
+      "unidadDeRinde": "panes",
+      "ingredientes": [
+        { "nombre": "harina de trigo", "cantidad": 5, "unidad": "kg" },
+        { "nombre": "levadura", "cantidad": 0.1, "unidad": "kg" },
+        { "nombre": "azúcar", "cantidad": 0.15, "unidad": "kg" },
+        { "nombre": "manteca", "cantidad": 0.25, "unidad": "kg" },
+        { "nombre": "sal", "cantidad": 0.1, "unidad": "kg" }
+      ]
+    },
+    {
+      "id": "torta-vainilla",
+      "nombre": "Torta de vainilla con relleno",
+      "alias": ["torta", "tortas", "pastel", "pasteles", "queque", "torta de vainilla"],
+      "rinde": 20,
+      "unidadDeRinde": "porciones",
+      "ingredientes": [
+        { "nombre": "harina de trigo", "cantidad": 0.5, "unidad": "kg" },
+        { "nombre": "azúcar", "cantidad": 0.45, "unidad": "kg" },
+        { "nombre": "huevo", "cantidad": 8, "unidad": "u." },
+        { "nombre": "mantequilla", "cantidad": 0.25, "unidad": "kg" },
+        { "nombre": "leche", "cantidad": 0.25, "unidad": "L" },
+        { "nombre": "polvo de hornear", "cantidad": 0.02, "unidad": "kg" },
+        { "nombre": "crema de leche", "cantidad": 0.5, "unidad": "L" }
+      ]
+    },
+    {
+      "id": "almuerzo-pension",
+      "nombre": "Almuerzo de pensión (sopa y segundo de pollo con arroz)",
+      "alias": ["almuerzo", "almuerzos", "menú", "menu", "pensión", "pension", "platos"],
+      "rinde": 50,
+      "unidadDeRinde": "platos",
+      "ingredientes": [
+        { "nombre": "arroz", "cantidad": 5, "unidad": "kg" },
+        { "nombre": "pollo", "cantidad": 10, "unidad": "kg" },
+        { "nombre": "papa", "cantidad": 6, "unidad": "kg" },
+        { "nombre": "fideo", "cantidad": 1.5, "unidad": "kg" },
+        { "nombre": "cebolla", "cantidad": 2, "unidad": "kg" },
+        { "nombre": "tomate", "cantidad": 2, "unidad": "kg" },
+        { "nombre": "aceite", "cantidad": 1.8, "unidad": "L" },
+        { "nombre": "sal", "cantidad": 0.3, "unidad": "kg" }
+      ]
+    }
+  ]
+}
