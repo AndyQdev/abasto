@@ -223,3 +223,142 @@ export const ui = StyleSheet.create({
   textoPildora: { fontFamily: FUENTE.negra, fontSize: 13, color: COLOR.bosque },
   vacio: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderRadius: 18, backgroundColor: COLOR.tenue, borderWidth: 1, borderColor: COLOR.borde, borderStyle: 'dashed' },
 });
+
+/**
+ * El botón flotante de «Mi negocio» (02/11): reemplaza a «Agregar a mano», «Anotar a alguien», etc. Va abajo a la
+ * derecha, encima de la barra, y dice qué agrega en esa sección («Insumo», «Receta», «Persona»…).
+ */
+export function BotonFlotante({ texto, icono = 'add', abajo, alTocar }: { texto: string; icono?: NombreDeIcono; abajo: number; alTocar: () => void }) {
+  return (
+    <View style={[uiExtra.flotanteLugar, { bottom: abajo }]} pointerEvents="box-none">
+      <Tocable onPress={alTocar} style={uiExtra.flotante} accessibilityRole="button" accessibilityLabel={texto}>
+        <Icono nombre={icono} tamano={22} color={COLOR.bosque} />
+        <Texto style={uiExtra.textoFlotante}>{texto}</Texto>
+      </Tocable>
+    </View>
+  );
+}
+
+/** Un número grande con «−» y «+» (cuántas hago, cuántas salieron). Se puede escribir también */
+export function Contador({
+  valor,
+  alCambiar,
+  paso = 1,
+  minimo = 0,
+  unidad,
+  etiqueta,
+}: {
+  valor: number;
+  alCambiar: (n: number) => void;
+  paso?: number;
+  minimo?: number;
+  unidad?: string;
+  etiqueta: string;
+}) {
+  const [texto, setTexto] = useState(String(valor));
+  useEffect(() => setTexto(String(valor)), [valor]);
+  return (
+    <View style={uiExtra.contador}>
+      <Tocable onPress={() => alCambiar(Math.max(minimo, valor - paso))} style={uiExtra.botonContador} accessibilityRole="button" accessibilityLabel={`${paso} menos`}>
+        <Icono nombre="remove" tamano={26} color={COLOR.bosque} />
+      </Tocable>
+      <View style={{ flex: 1, alignItems: 'center' }}>
+        <TextInput
+          accessibilityLabel={etiqueta}
+          value={texto}
+          onChangeText={(t) => {
+            setTexto(t);
+            const n = Number(t.replace(',', '.'));
+            if (Number.isFinite(n) && n >= minimo && t.trim() !== '') alCambiar(n);
+          }}
+          keyboardType="decimal-pad"
+          style={uiExtra.numeroContador}
+        />
+        {unidad && <Texto v="chico">{unidad}</Texto>}
+      </View>
+      <Tocable onPress={() => alCambiar(valor + paso)} style={[uiExtra.botonContador, { backgroundColor: COLOR.lima }]} accessibilityRole="button" accessibilityLabel={`${paso} más`}>
+        <Icono nombre="add" tamano={26} color={COLOR.bosque} />
+      </Tocable>
+    </View>
+  );
+}
+
+/** «1 Planifica · 2 Registra · 3 Listo»: en qué paso va */
+export function Pasos({ pasos, actual }: { pasos: string[]; actual: number }) {
+  return (
+    <View style={uiExtra.pasos} accessibilityLabel={`Paso ${actual + 1} de ${pasos.length}: ${pasos[actual]}`}>
+      {pasos.map((p, i) => (
+        <View key={p} style={uiExtra.paso}>
+          {i < pasos.length - 1 && <View style={[uiExtra.lineaPaso, i < actual && { backgroundColor: COLOR.lima }]} />}
+          <View style={[uiExtra.circuloPaso, i < actual && uiExtra.pasoHecho, i === actual && uiExtra.pasoActual]}>
+            {i < actual ? <Icono nombre="checkmark" tamano={14} color={COLOR.bosque} /> : <Texto style={[uiExtra.numeroPaso, i === actual && { color: COLOR.lima }]}>{i + 1}</Texto>}
+          </View>
+          <Texto style={[uiExtra.textoPaso, i === actual && { color: COLOR.texto }]} lineas={1}>
+            {p}
+          </Texto>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+/** Dos opciones grandes lado a lado («Insumos | Lo que haces»), con su cantidad */
+export function Alternador<T extends string>({
+  opciones,
+  elegida,
+  alElegir,
+}: {
+  opciones: { clave: T; texto: string; icono: NombreDeIcono; cuantos: number }[];
+  elegida: T;
+  alElegir: (c: T) => void;
+}) {
+  return (
+    <View style={uiExtra.alternador} accessibilityRole="tablist">
+      {opciones.map((o) => {
+        const activa = o.clave === elegida;
+        return (
+          <Tocable
+            key={o.clave}
+            onPress={() => alElegir(o.clave)}
+            exterior={{ flex: 1 }}
+            style={[uiExtra.opcionAlternador, activa && uiExtra.opcionAlternadorActiva]}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: activa }}
+            accessibilityLabel={o.texto}
+          >
+            <Icono nombre={o.icono} tamano={18} color={activa ? COLOR.lima : COLOR.bosque} />
+            <Texto style={[uiExtra.textoAlternador, activa && { color: '#FFFFFF' }]} lineas={1}>
+              {o.texto}
+            </Texto>
+            <View style={[uiExtra.cuantosAlternador, activa && { backgroundColor: COLOR.lima }]}>
+              <Texto style={uiExtra.textoCuantos}>{o.cuantos}</Texto>
+            </View>
+          </Tocable>
+        );
+      })}
+    </View>
+  );
+}
+
+export const uiExtra = StyleSheet.create({
+  flotanteLugar: { position: 'absolute', right: 16 },
+  flotante: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 16, paddingRight: 20, height: 56, borderRadius: 28, backgroundColor: COLOR.lima, ...SOMBRA, shadowOpacity: 0.25, shadowRadius: 14, elevation: 8 },
+  textoFlotante: { fontFamily: FUENTE.negra, fontSize: 15.5, color: COLOR.bosque },
+  contador: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 8, borderRadius: 24, backgroundColor: COLOR.tenue, borderWidth: 1.5, borderColor: COLOR.borde },
+  botonContador: { width: 58, height: 58, borderRadius: 20, backgroundColor: COLOR.superficie, alignItems: 'center', justifyContent: 'center' },
+  numeroContador: { minWidth: 90, textAlign: 'center', fontFamily: FUENTE.negra, fontSize: 34, color: COLOR.texto, letterSpacing: -1, padding: 0 },
+  pasos: { flexDirection: 'row', alignItems: 'flex-start' },
+  paso: { flex: 1, alignItems: 'center', gap: 4 },
+  circuloPaso: { width: 28, height: 28, borderRadius: 14, backgroundColor: COLOR.tenue, borderWidth: 1.5, borderColor: COLOR.borde, alignItems: 'center', justifyContent: 'center' },
+  pasoHecho: { backgroundColor: COLOR.lima, borderColor: COLOR.lima },
+  pasoActual: { backgroundColor: COLOR.bosque, borderColor: COLOR.bosque },
+  numeroPaso: { fontFamily: FUENTE.negra, fontSize: 13, color: COLOR.texto3 },
+  textoPaso: { fontFamily: FUENTE.fuerte, fontSize: 12, color: COLOR.texto3 },
+  lineaPaso: { position: 'absolute', top: 13, left: '50%', right: '-50%', height: 2, backgroundColor: COLOR.borde },
+  alternador: { flexDirection: 'row', gap: 6, padding: 5, borderRadius: 22, backgroundColor: COLOR.superficie, borderWidth: 1, borderColor: COLOR.borde },
+  opcionAlternador: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, height: 50, borderRadius: 18 },
+  opcionAlternadorActiva: { backgroundColor: COLOR.bosque },
+  textoAlternador: { fontFamily: FUENTE.negra, fontSize: 15, color: COLOR.bosque },
+  cuantosAlternador: { minWidth: 24, height: 22, paddingHorizontal: 6, borderRadius: 11, backgroundColor: COLOR.limaMedia, alignItems: 'center', justifyContent: 'center' },
+  textoCuantos: { fontFamily: FUENTE.negra, fontSize: 12, color: COLOR.bosque },
+});

@@ -20,7 +20,7 @@ import { Caja } from './Caja';
 import { Cuentas } from './Cuentas';
 import { Fiado } from './Fiado';
 import { HojaDeArticulo, HojaParaAgregar, VistaDeInventario } from './Inventario';
-import { Recetas } from './Recetas';
+import { Produccion } from './Produccion';
 
 jest.mock('@react-native-async-storage/async-storage', () => require('@react-native-async-storage/async-storage/jest/async-storage-mock'));
 jest.mock('../api', () => ({ graphql: jest.fn() }));
@@ -229,33 +229,73 @@ describe('vender y fiar', () => {
   });
 });
 
-describe('recetas', () => {
-  it('se crea una receta y se ve cuánto cuesta cada una; el planificador avisa lo que falta', async () => {
+describe('producción (receta, tanda y venta, paso a paso)', () => {
+  it('sin recetas invita a agregar la primera; el asistente la arma con el costo en vivo', async () => {
     const almacen = await almacenCon(conCompras());
     const alPedir = jest.fn();
+    const alVender = jest.fn();
     await render(
       <Con almacen={almacen}>
-        <ConDatos>{(d) => <Recetas negocio={SALTENERIA} datos={d} alPedir={alPedir} />}</ConDatos>
+        <ConDatos>{(d) => <Produccion negocio={SALTENERIA} datos={d} nuevo={0} alPedir={alPedir} alVender={alVender} />}</ConDatos>
       </Con>,
     );
-    await fireEvent.press(screen.getByRole('button', { name: 'Nueva receta' }));
-    await fireEvent.changeText(screen.getByLabelText('¿Qué haces?'), 'Salteña de pollo');
-    await fireEvent.changeText(screen.getByLabelText('¿Cuántas salen con esto?'), '100');
+    expect(screen.getByText('Agrega lo que haces')).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Agregar mi primera receta' }));
+    // 1 · ¿Qué haces?
+    await fireEvent.press(screen.getByRole('button', { name: 'Siguiente' }));
+    expect(await screen.findByText(/Escribe qué haces/)).toBeTruthy();
+    await fireEvent.press(screen.getByRole('radio', { name: 'Salteña de pollo' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Siguiente' }));
+    // 2 · ¿Cuántas salen? (100 por defecto)
+    expect(screen.getByLabelText('Cuántas salen con esto').props.value).toBe('100');
+    await fireEvent.press(screen.getByRole('button', { name: 'Siguiente' }));
+    // 3 · ¿Qué lleva? 46 kg de harina = 1 quintal de Bs 285 → Bs 2,85 cada una
+    await fireEvent.press(screen.getByRole('checkbox', { name: 'Harina de trigo' }));
     await fireEvent.changeText(screen.getByLabelText('Cuánto lleva de Harina de trigo'), '46');
+    expect(await screen.findByText('Bs 2,85')).toBeTruthy();
     await fireEvent.press(screen.getByRole('button', { name: 'Guardar receta' }));
-    // 46 kg = 1 quintal de Bs 285 → Bs 2,85 cada una
-    const receta = await screen.findByRole('button', { name: 'Salteña de pollo: cada una te cuesta Bs 2,85' });
-    await fireEvent.press(receta);
+
+    // La tarjeta: lo que cuesta, a cuánto se vende (costo + 50 %) y lo que gana
+    expect(await screen.findByText('Salteña de pollo')).toBeTruthy();
+    expect(screen.getByText('Bs 4,50')).toBeTruthy();
+    expect(screen.getByText('Bs 1,65')).toBeTruthy();
+
+    // Hacer una tanda: 300 no alcanzan (falta 1 quintal) → pedir lo que falta
+    await fireEvent.press(screen.getByRole('button', { name: 'Hacer una tanda' }));
     await fireEvent.changeText(screen.getByLabelText('Cuántas quieres hacer'), '300');
-    expect(await screen.findByText(/te falta 1 quintal · 46 kg/)).toBeTruthy();
+    expect(await screen.findByText(/Te falta 1 quintal · 46 kg/)).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Te faltan insumos' })).toBeTruthy();
     await fireEvent.press(screen.getByRole('button', { name: 'Pedir lo que falta a Abasto (1)' }));
     expect(alPedir).toHaveBeenCalledWith([{ productoId: 'AB-101', envases: 1 }]);
-    // Con 200 alcanza: registra la tanda y lo hecho entra a su inventario
+
+    // Con 200 alcanza: ya las hice → salieron 190 (10 de merma) → listo
     await fireEvent.changeText(screen.getByLabelText('Cuántas quieres hacer'), '200');
-    await fireEvent.press(screen.getByRole('button', { name: 'Registrar tanda' }));
-    expect(await screen.findByText(/Registramos 200 Salteña de pollo/)).toBeTruthy();
+    await fireEvent.press(await screen.findByRole('button', { name: 'Ya las hice' }));
+    await fireEvent.changeText(screen.getByLabelText('Cuántas salieron'), '190');
+    expect(await screen.findByText('Merma: 10 salteñas')).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Guardar tanda' }));
+    expect(await screen.findByText('¡Listo!')).toBeTruthy();
+    expect(screen.getByText(/Te costó Bs 570,00/)).toBeTruthy();
     const hecho = existencias(await almacen.leer()).find((x) => x.articulo.clase === 'HECHO')!;
-    expect(hecho).toMatchObject({ cantidad: 200, costoPromedioCentavos: 285 });
+    expect(hecho).toMatchObject({ cantidad: 190, costoPromedioCentavos: 300 });
+    await fireEvent.press(screen.getByRole('button', { name: 'Vender ahora' }));
+    expect(alVender).toHaveBeenCalled();
+  });
+
+  it('el botón flotante abre «Nueva receta»', async () => {
+    const almacen = await almacenCon(conCompras());
+    const { rerender } = await render(
+      <Con almacen={almacen}>
+        <ConDatos>{(d) => <Produccion negocio={SALTENERIA} datos={d} nuevo={0} alPedir={jest.fn()} alVender={jest.fn()} />}</ConDatos>
+      </Con>,
+    );
+    expect(screen.queryAllByText('¿Qué haces?')).toHaveLength(0);
+    await rerender(
+      <Con almacen={almacen}>
+        <ConDatos>{(d) => <Produccion negocio={SALTENERIA} datos={d} nuevo={1} alPedir={jest.fn()} alVender={jest.fn()} />}</ConDatos>
+      </Con>,
+    );
+    expect((await screen.findAllByText('¿Qué haces?')).length).toBeGreaterThan(0);
   });
 });
 

@@ -1,11 +1,11 @@
 import { anotacion, bs, mesDe, nombreDelMes, otroMes, reporteDelMes, type DatosDeNegocio } from '@abasto/comercio';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { HojaInferior, Tocable } from '../animacion';
 import { Boton, Falla, Icono, Texto } from '../componentes';
 import { ahora, nuevoId, useInventario } from '../inventario';
 import { COLOR, FUENTE } from '../tema';
-import { BotonDeAccion, Campo, CabezaDeSeccion, Cifra, ContenidoDeHoja, Opciones, fecha, leerBs, ui } from './ui';
+import { Campo, CabezaDeSeccion, Cifra, ContenidoDeHoja, Opciones, fecha, leerBs, ui } from './ui';
 
 const GASTOS_DEL_NEGOCIO = ['Alquiler', 'Luz y agua', 'Gas', 'Transporte', 'Sueldos', 'Otros'];
 
@@ -13,13 +13,16 @@ const GASTOS_DEL_NEGOCIO = ['Alquiler', 'Luz y agua', 'Gas', 'Transporte', 'Suel
  * «El mes» (tienda y productor), en palabras simples: vendí, me costó, gané, gastos y me quedó. Los gastos del negocio
  * (alquiler, luz, gas) se anotan aquí; lo comprado en Abasto no es gasto: se cuenta como costo cuando se vende.
  */
-export function ElMes({ datos, nombreDe }: { datos: DatosDeNegocio; nombreDe: (articuloId: string) => string }) {
+export function ElMes({ datos, nombreDe, nuevo = 0 }: { datos: DatosDeNegocio; nombreDe: (articuloId: string) => string; /** Sube con el botón flotante */ nuevo?: number }) {
   const { aplicar } = useInventario();
   const [mes, setMes] = useState(mesDe(ahora()));
   const [anotando, setAnotando] = useState(false);
   const r = reporteDelMes(datos, mes);
   const gastos = datos.anotaciones.filter((a) => a.tipo === 'GASTO' && a.origen === 'MANUAL' && mesDe(a.fecha) === mes).sort((a, b) => b.fecha.localeCompare(a.fecha));
   const esEsteMes = mes === mesDe(ahora());
+  useEffect(() => {
+    if (nuevo > 0) setAnotando(true);
+  }, [nuevo]);
 
   return (
     <View style={{ gap: 16 }}>
@@ -62,7 +65,6 @@ export function ElMes({ datos, nombreDe }: { datos: DatosDeNegocio; nombreDe: (a
         </View>
       )}
 
-      <BotonDeAccion icono="receipt" titulo="Anotar un gasto" detalle="Alquiler, luz, gas, transporte…" alTocar={() => setAnotando(true)} />
       {gastos.length > 0 && (
         <View style={ui.tarjeta}>
           <CabezaDeSeccion icono="wallet" titulo="Gastos del mes" />

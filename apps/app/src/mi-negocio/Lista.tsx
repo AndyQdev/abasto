@@ -11,23 +11,26 @@ import {
   type Producto,
 } from '@abasto/comercio';
 import { Image } from 'expo-image';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 import { HojaInferior, Tocable } from '../animacion';
 import { Boton, Icono, Texto } from '../componentes';
 import { fotoDe } from '../ilustraciones';
 import { ahora, nuevoId, useInventario } from '../inventario';
 import { COLOR, FUENTE } from '../tema';
-import { BotonDeAccion, CabezaDeSeccion, ContenidoDeHoja, ui } from './ui';
+import { CabezaDeSeccion, ContenidoDeHoja, ui } from './ui';
 
 /**
  * «Mi lista» del hogar (fase 6): la compra de cada semana. Se arma una vez con lo que se compra siempre y se pide de
  * un toque («Pedir mi lista»). Se guarda en la cuenta: también está en otro celular.
  */
-export function Lista({ datos, productos, alPedir }: { datos: DatosDeNegocio; productos: Producto[]; alPedir: (items: ItemDeCarrito[]) => void }) {
+export function Lista({ datos, productos, alPedir, nuevo = 0 }: { datos: DatosDeNegocio; productos: Producto[]; alPedir: (items: ItemDeCarrito[]) => void; /** Sube con el botón flotante */ nuevo?: number }) {
   const { aplicar } = useInventario();
   const [agregando, setAgregando] = useState(false);
   const lista = listaVigente(datos.lista);
+  useEffect(() => {
+    if (nuevo > 0) setAgregando(true);
+  }, [nuevo]);
   const conProducto = lista.map((i) => ({ item: i, producto: productos.find((p) => p.id === i.productoId) }));
   const escalaDe = (p: Producto, presentacion: string) => escalasConPrecio(p).find((e) => e.presentacion === presentacion) ?? escalasConPrecio(p)[0];
   const total = conProducto.reduce((s, { item, producto }) => {
@@ -51,7 +54,6 @@ export function Lista({ datos, productos, alPedir }: { datos: DatosDeNegocio; pr
 
   return (
     <View style={{ gap: 16 }}>
-      <BotonDeAccion icono="add" titulo="Agregar a mi lista" detalle="Lo que compras todas las semanas" alTocar={() => setAgregando(true)} />
       <CabezaDeSeccion icono="list" titulo="Mi lista de la semana" subtitulo={lista.length ? `${lista.length} ${lista.length === 1 ? "producto" : "productos"} · ${bs(total)}` : undefined} />
       {conProducto.length ? (
         <>

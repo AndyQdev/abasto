@@ -5,19 +5,22 @@ import { Aparecer, HojaInferior, Tocable } from '../animacion';
 import { Boton, Falla, Icono, Texto } from '../componentes';
 import { ahora, nuevoId, useInventario } from '../inventario';
 import { COLOR, FUENTE } from '../tema';
-import { BotonDeAccion, Campo, CabezaDeSeccion, Cifra, ContenidoDeHoja, Listo, bsEnCampo, fecha, leerBs, ui } from './ui';
+import { Campo, CabezaDeSeccion, Cifra, ContenidoDeHoja, Listo, bsEnCampo, fecha, leerBs, ui } from './ui';
 
 /**
  * El cuaderno de fiado (fase 4): quién debe, cuánto y desde cuándo. Las ventas fiadas entran solas desde la caja; aquí
  * se anota lo que pagan (o una deuda sin venta) y se le puede escribir por WhatsApp.
  */
-export function Fiado({ datos }: { datos: DatosDeNegocio }) {
+export function Fiado({ datos, nuevo: senal = 0 }: { datos: DatosDeNegocio; /** Sube con el botón flotante */ nuevo?: number }) {
   const { aplicar } = useInventario();
   const saldos = saldosDeFiado(datos);
   const [abierto, setAbierto] = useState<string | null>(null);
   const [nuevo, setNuevo] = useState(false);
   const deben = saldos.filter((s) => s.saldoCentavos > 0);
   const elegido = saldos.find((s) => s.cliente.id === abierto) ?? null;
+  useEffect(() => {
+    if (senal > 0) setNuevo(true);
+  }, [senal]);
 
   return (
     <View style={{ gap: 16 }}>
@@ -25,7 +28,6 @@ export function Fiado({ datos }: { datos: DatosDeNegocio }) {
         <Cifra nombre="Te deben" valor={bs(totalFiado(saldos))} tono="fuerte" />
         <Cifra nombre="Personas" valor={`${deben.length} de ${saldos.length}`} />
       </View>
-      <BotonDeAccion icono="person-add" titulo="Anotar a alguien" detalle="Para fiarle o anotar lo que ya debe" alTocar={() => setNuevo(true)} />
       <CabezaDeSeccion icono="book" titulo="Tu cuaderno" subtitulo="El que más debe primero" />
       {saldos.length ? (
         saldos.map((s, i) => (

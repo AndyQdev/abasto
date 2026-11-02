@@ -35,14 +35,14 @@ import { ElMes } from '../mi-negocio/ElMes';
 import { Fiado } from '../mi-negocio/Fiado';
 import { HojaDeArticulo, HojaParaAgregar, VistaDeInventario } from '../mi-negocio/Inventario';
 import { Lista } from '../mi-negocio/Lista';
-import { Recetas } from '../mi-negocio/Recetas';
-import { Segmentos, imagenDeArticulo } from '../mi-negocio/ui';
+import { Produccion, nombreDeLoHecho } from '../mi-negocio/Produccion';
+import { Alternador, BotonFlotante, Segmentos, imagenDeArticulo } from '../mi-negocio/ui';
 import type { PantallaDePestana } from '../navegacion';
 import { IMAGEN_DE_NEGOCIO, useNegocio } from '../NegocioInicio';
 import { CABECERA, COLOR, FUENTE } from '../tema';
 import { AvisoSinSenal } from './Inicio';
 
-export type ClaveDeSeccion = 'inventario' | 'recetas' | 'vender' | 'fiado' | 'mes' | 'cuentas' | 'despensa' | 'lista';
+export type ClaveDeSeccion = 'inventario' | 'vender' | 'fiado' | 'mes' | 'cuentas' | 'despensa' | 'lista';
 
 /** Las secciones de cada tipo, en el orden en que se usan */
 export const SECCIONES: Record<TipoDeNegocio, { clave: ClaveDeSeccion; texto: string; icono: NombreDeIcono }[]> = {
@@ -53,8 +53,7 @@ export const SECCIONES: Record<TipoDeNegocio, { clave: ClaveDeSeccion; texto: st
     { clave: 'mes', texto: 'El mes', icono: 'stats-chart' },
   ],
   productor: [
-    { clave: 'inventario', texto: 'Inventario', icono: 'cube' },
-    { clave: 'recetas', texto: 'Recetas', icono: 'restaurant' },
+    { clave: 'inventario', texto: 'Producción', icono: 'flame' },
     { clave: 'vender', texto: 'Vender', icono: 'cash' },
     { clave: 'fiado', texto: 'Fiado', icono: 'book' },
     { clave: 'mes', texto: 'El mes', icono: 'stats-chart' },
@@ -87,6 +86,10 @@ export function MiNegocio({ navigation }: PantallaDePestana<'MiNegocio'>) {
   const [abierta, setAbierta] = useState<string | null>(null);
   const [agregando, setAgregando] = useState(false);
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
+  // El productor elige entre sus insumos y lo que hace (02/11: arriba, no al fondo de la lista)
+  const [vista, setVista] = useState<'insumos' | 'hechos'>('hechos');
+  // El botón flotante avisa a la sección que abra su «agregar»
+  const [nuevo, setNuevo] = useState(0);
 
   // Si cambia el tipo (desde Cuenta), se vuelve a su primera sección
   useEffect(() => {
@@ -144,6 +147,20 @@ export function MiNegocio({ navigation }: PantallaDePestana<'MiNegocio'>) {
     return resumenDelInventario(negocio, inventarioDelNegocio(negocio, datos)) ?? 'Lo que compras en Abasto entra aquí solo.';
   }, [negocio, datos]);
 
+  // Qué agrega el botón flotante en cada sección
+  const flotante: { texto: string; icono: NombreDeIcono; alTocar: () => void } | null =
+    seccion === 'inventario' && negocio.tipo === 'productor' && vista === 'hechos'
+      ? { texto: 'Nueva receta', icono: 'add', alTocar: () => setNuevo((n) => n + 1) }
+      : seccion === 'inventario' || seccion === 'despensa'
+        ? { texto: negocio.tipo === 'productor' ? 'Agregar insumo' : 'Agregar producto', icono: 'add', alTocar: () => setAgregando(true) }
+        : seccion === 'fiado'
+          ? { texto: 'Anotar persona', icono: 'person-add', alTocar: () => setNuevo((n) => n + 1) }
+          : seccion === 'mes'
+            ? { texto: 'Anotar gasto', icono: 'receipt', alTocar: () => setNuevo((n) => n + 1) }
+            : seccion === 'lista'
+              ? { texto: 'Agregar a mi lista', icono: 'add', alTocar: () => setNuevo((n) => n + 1) }
+              : null;
+
   const inventarioVista = (
     <VistaDeInventario
       negocio={negocio}
@@ -154,6 +171,7 @@ export function MiNegocio({ navigation }: PantallaDePestana<'MiNegocio'>) {
       alAgregar={() => setAgregando(true)}
       alComprar={() => navigation.navigate('Inicio')}
       alPedir={alPedir}
+      grupo={negocio.tipo === 'productor' ? 'insumos' : undefined}
     />
   );
 
@@ -191,19 +209,46 @@ export function MiNegocio({ navigation }: PantallaDePestana<'MiNegocio'>) {
         {!enLinea && <AvisoSinSenal />}
 
         <View style={{ marginTop: 16 }}>
-          <Segmentos opciones={secciones} elegida={seccion} alElegir={setSeccion} />
+          <Segmentos
+            opciones={secciones}
+            elegida={seccion}
+            alElegir={(c) => {
+              setNuevo(0);
+              setSeccion(c);
+            }}
+          />
         </View>
 
-        <View style={e.cuerpo}>
-          {(seccion === 'inventario' || seccion === 'despensa') && inventarioVista}
+        {/* Lugar para que el botón flotante no tape lo último */}
+        <View style={[e.cuerpo, flotante && { paddingBottom: 90 }]}>
+          {negocio.tipo === 'productor' && seccion === 'inventario' ? (
+            <>
+              <Alternador
+                opciones={[
+                  { clave: 'hechos', texto: nombreDeLoHecho(negocio).titulo, icono: 'flame', cuantos: datos.recetas.filter((r) => !r.eliminado).length },
+                  { clave: 'insumos', texto: 'Insumos', icono: 'cube', cuantos: datos.articulos.filter((a) => a.clase === 'COMPRADO' && !a.eliminado).length },
+                ]}
+                elegida={vista}
+                alElegir={setVista}
+              />
+              {vista === 'hechos' ? (
+                <Produccion negocio={negocio} datos={datos} nuevo={seccion === 'inventario' ? nuevo : 0} alPedir={alPedir} alVender={() => setSeccion('vender')} />
+              ) : (
+                inventarioVista
+              )}
+            </>
+          ) : (
+            (seccion === 'inventario' || seccion === 'despensa') && inventarioVista
+          )}
           {seccion === 'vender' && <Caja negocio={negocio} datos={datos} imagenDe={(x) => imagenDeArticulo(x.articulo, productos)} alVendido={avisar} />}
-          {seccion === 'fiado' && <Fiado datos={datos} />}
-          {seccion === 'mes' && <ElMes datos={datos} nombreDe={nombreDe} />}
-          {seccion === 'recetas' && <Recetas negocio={negocio} datos={datos} alPedir={alPedir} />}
+          {seccion === 'fiado' && <Fiado datos={datos} nuevo={nuevo} />}
+          {seccion === 'mes' && <ElMes datos={datos} nombreDe={nombreDe} nuevo={nuevo} />}
           {seccion === 'cuentas' && <Cuentas datos={datos} pedidos={pedidos} productos={catalogo.productos} />}
-          {seccion === 'lista' && <Lista datos={datos} productos={catalogo.productos} alPedir={(items) => alCarrito(items)} />}
+          {seccion === 'lista' && <Lista datos={datos} productos={catalogo.productos} alPedir={(items) => alCarrito(items)} nuevo={nuevo} />}
         </View>
       </ScrollView>
+
+      {flotante && <BotonFlotante texto={flotante.texto} icono={flotante.icono} abajo={espacio - 4} alTocar={flotante.alTocar} />}
 
       <HojaDeArticulo
         negocio={negocio}

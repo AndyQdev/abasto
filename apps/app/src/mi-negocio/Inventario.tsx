@@ -29,7 +29,7 @@ import { Boton, Falla, Icono, Texto, type NombreDeIcono } from '../componentes';
 import { ILUSTRACION, type Imagen } from '../ilustraciones';
 import { ahora, useInventario } from '../inventario';
 import { COLOR, FUENTE, SOMBRA, TINTES } from '../tema';
-import { BotonDeAccion, Campo, CabezaDeSeccion, ContenidoDeHoja, enCampo, bsEnCampo, fecha, Listo, Opciones, leerBs, ui } from './ui';
+import { Campo, CabezaDeSeccion, ContenidoDeHoja, enCampo, bsEnCampo, fecha, Listo, Opciones, leerBs, ui } from './ui';
 
 const ICONO_DE_GRUPO: Record<GrupoDeInventario['clave'], NombreDeIcono> = { despensa: 'basket', para_vender: 'storefront', insumos: 'flask', hechos: 'restaurant' };
 
@@ -43,11 +43,13 @@ export interface PropsDeInventario {
   alComprar: () => void;
   /** «Pedir de nuevo» lo que queda poco (o lo que se acaba en la casa) */
   alPedir: (faltantes: Faltante[]) => void;
+  /** Mostrar un solo grupo (el productor elige entre insumos y lo que hace) */
+  grupo?: GrupoDeInventario['clave'];
 }
 
 /** El inventario (o la despensa del hogar), agrupado como lo ve cada tipo. Sin estado propio: lo usan la pantalla y las pruebas */
-export function VistaDeInventario({ negocio, datos, cargando, imagenDe, alAbrir, alAgregar, alComprar, alPedir }: PropsDeInventario) {
-  const grupos = useMemo(() => inventarioDelNegocio(negocio, datos), [negocio, datos]);
+export function VistaDeInventario({ negocio, datos, cargando, imagenDe, alAbrir, alAgregar, alComprar, alPedir, grupo }: PropsDeInventario) {
+  const grupos = useMemo(() => inventarioDelNegocio(negocio, datos).filter((g) => !grupo || g.clave === grupo), [negocio, datos, grupo]);
   const sinNada = !cargando && grupos.every((g) => !g.lineas.length);
   const hoy = ahora();
 
@@ -98,7 +100,6 @@ export function VistaDeInventario({ negocio, datos, cargando, imagenDe, alAbrir,
           </View>
         </Aparecer>
       )}
-      <BotonDeAccion icono="add" titulo="Agregar a mano" detalle="Lo que compras a otro proveedor" alTocar={alAgregar} />
       {grupos.map((g, i) => (
         <Aparecer key={g.clave} orden={1 + i} style={{ gap: 10 }}>
           <CabezaDeSeccion icono={ICONO_DE_GRUPO[g.clave]} titulo={g.titulo} subtitulo={g.subtitulo} derecha={g.valorCentavos > 0 ? <Texto style={e.valorGrupo}>{bs(g.valorCentavos)}</Texto> : undefined} />
