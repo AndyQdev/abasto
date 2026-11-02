@@ -2,6 +2,30 @@
   "estilo": "Gibby: 3D estilizado tipo película animada, con la paleta de ABASTO (lima, bosque y ámbar). Todas son objetos recortados para que sobresalgan de las tarjetas. El texto del estilo está en scripts/ilustraciones/generar.mjs.",
   "imagenes": [
     {
+      "nombre": "portada-nombre",
+      "tipo": "escena",
+      "ambiente": true,
+      "proporcion": "3:4",
+      "uso": "Acceso: nombre (portada a sangre)",
+      "tema": "A cheerful young Bolivian delivery rider in a deep forest-green polo shirt and cap with lime-green details, walking toward the viewer with a big smile, holding a deep forest-green plastic crate full of wholesale groceries: a white rice sack, a tray of brown eggs, a golden cooking-oil bottle and a flour bag. Behind him on the left, a lime-green scooter is parked with a forest-green delivery box; on the right, the open door of a warm neighborhood grocery store with terracotta roof tiles, hanging lanterns and shelves of products; a cream colonial church tower and palm trees in the soft-focus background, tropical plants framing the corners. Full-bleed illustrated environment that fills the whole frame edge to edge, no border, no frame, no studio backdrop. Composition for a phone screen: the main subject sits in the upper 60% of the image; the lower 35% is a calm, plain sunny cobblestone sidewalk with nothing important on it. Warm golden-hour light, soft lime-green and cream tones, gentle depth of field in the background."
+    },
+    {
+      "nombre": "portada-codigo",
+      "tipo": "escena",
+      "ambiente": true,
+      "proporcion": "3:4",
+      "uso": "Acceso: código (portada a sangre)",
+      "tema": "A big cute glossy cream-white smartphone floating and slightly tilted in the center, its screen showing a large lime-green chat bubble with a thick white check mark; a small lime chat bubble and a small amber chat bubble with three dots float around it, plus a few lime sparkle dashes. Behind it, a sunny colonial street of Santa Cruz, Bolivia: a grocery store with a forest-green awning and fruit crates on the left, palm trees and a warm cream colonial church tower in the soft-focus distance on the right. On the lower right, a forest-green plastic crate with a tray of brown eggs, a golden oil bottle and a white rice bag. Full-bleed illustrated environment that fills the whole frame edge to edge, no border, no frame, no studio backdrop. Composition for a phone screen: the main subject sits in the upper 60% of the image; the lower 35% is a calm, plain sunny cobblestone sidewalk with nothing important on it. Warm golden-hour light, soft lime-green and cream tones, gentle depth of field in the background."
+    },
+    {
+      "nombre": "portada-bienvenida",
+      "tipo": "escena",
+      "ambiente": true,
+      "proporcion": "3:4",
+      "uso": "Acceso: celular (portada a sangre, la tarjeta blanca tapa abajo)",
+      "tema": "A cheerful young Bolivian delivery rider in a deep forest-green polo shirt and cap with lime-green details, waving hello while riding a cute rounded lime-green scooter toward the viewer, three-quarter view. On the back of the scooter a deep forest-green delivery box overflowing with wholesale groceries: a white rice sack, a white flour sack, golden cooking-oil bottles and a tray of brown eggs. Behind him, a cozy neighborhood corner grocery store from Santa Cruz, Bolivia, with a terracotta tile roof, a lime-and-cream striped awning, wooden shelves full of colorful products, crates of fresh fruit and potted plants; a leafy tree and soft blue sky on the left. Full-bleed illustrated environment that fills the whole frame edge to edge, no border, no frame, no studio backdrop. Composition for a phone screen: the main subject sits in the upper 60% of the image; the lower 35% is a calm, plain sunny cobblestone sidewalk with nothing important on it. Warm golden-hour light, soft lime-green and cream tones, gentle depth of field in the background."
+    },
+    {
       "nombre": "negocio-productor",
       "tipo": "objeto",
       "lado": 1024,

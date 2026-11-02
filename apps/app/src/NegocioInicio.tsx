@@ -72,8 +72,17 @@ export function ProveedorDeNegocio({ children, dueno, servidor = graphql }: { ch
   useEffect(() => {
     let vivo = true;
     void (async () => {
-      // Lo guardado por usuario; los teléfonos de antes del 01/11 lo tenían sin usuario
-      const local = leerNegocio((await guardado.leer<unknown>(clave)) ?? (await guardado.leer<unknown>('negocio')));
+      // Lo guardado por usuario. Los teléfonos de antes del 01/11 lo tenían sin usuario: se pasa al primero que entra
+      // y se borra, para que otra cuenta en el mismo celular no lo herede
+      let local = leerNegocio(await guardado.leer<unknown>(clave));
+      const viejo = await guardado.leer<unknown>('negocio');
+      if (viejo !== null) {
+        await guardado.borrar('negocio');
+        if (!local && leerNegocio(viejo)) {
+          local = leerNegocio(viejo);
+          await guardado.escribir(clave, local);
+        }
+      }
       const porSubir = (await guardado.leer<boolean>(marca)) === true;
       if (vivo && local) {
         setNegocio(local);
