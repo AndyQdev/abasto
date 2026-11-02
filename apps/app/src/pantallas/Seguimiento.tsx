@@ -3,7 +3,6 @@ import { Flotar } from '../animacion';
 import { ILUSTRACION } from '../ilustraciones';
 import {
   compensaciones,
-  enCurso,
   estadoVisible,
   fechaHora,
   lineaDeTiempo,
@@ -16,7 +15,7 @@ import {
   type Pedido,
   type Presentacion,
 } from '@abasto/comercio';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -26,10 +25,11 @@ import { useEstado } from '../estado';
 import type { PantallaDePila } from '../navegacion';
 import { MapaChico } from '../Mapa';
 import { COLOR } from '../tema';
+import { unaALaVez, useAvisosDePedidos } from '../tiempo-real';
 
 const PAGO = { QR: 'Pago por QR', CREDITO: 'Crédito', CONTRA_ENTREGA: 'Contra entrega' } as const;
 
-/** Un pedido y su saga paso a paso. Mientras se mueve, se vuelve a pedir cada 2 segundos. */
+/** Un pedido y su saga paso a paso. Se actualiza en tiempo real: cuando Conecta avisa que este pedido cambió (02/11). */
 export function Seguimiento({ route, navigation }: PantallaDePila<'Seguimiento'>) {
   const { enLinea } = useEstado();
   const [pedido, setPedido] = useState<Pedido | null>(null);
@@ -38,21 +38,28 @@ export function Seguimiento({ route, navigation }: PantallaDePila<'Seguimiento'>
   const [pagando, setPagando] = useState(false);
   const id = route.params.id;
 
-  const moviendose = pedido ? enCurso(pedido) : true;
+  const traer = useMemo(
+    () =>
+      unaALaVez(async () => {
+        if (!enLinea) return;
+        try {
+          const d = await graphql<{ pedido: Pedido | null }>(UN_PEDIDO, { id });
+          setPedido(d.pedido);
+          setError(null);
+        } catch (e) {
+          setError((e as Error).message);
+        }
+      }),
+    [id, enLinea],
+  );
   useEffect(() => {
-    if (!enLinea) return;
-    let vigente = true;
-    const traer = () =>
-      graphql<{ pedido: Pedido | null }>(UN_PEDIDO, { id })
-        .then((d) => vigente && setPedido(d.pedido))
-        .catch((e: Error) => vigente && setError(e.message));
     void traer();
-    const reloj = moviendose ? setInterval(() => void traer(), 2000) : undefined;
-    return () => {
-      vigente = false;
-      clearInterval(reloj);
-    };
-  }, [id, enLinea, moviendose]);
+  }, [traer]);
+  // Solo los avisos de este pedido; al volver la conexión, se pide una vez por si se perdió algo
+  useAvisosDePedidos(
+    (a) => a.pedidoId === id && void traer(),
+    () => void traer(),
+  );
 
   useEffect(() => {
     if (pedido) navigation.setOptions({ title: `Pedido #${pedido.codigo}` });

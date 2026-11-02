@@ -15,7 +15,7 @@ export type Resultado = 'atendido' | 'repetido' | 'rechazado' | 'desconocido';
 /**
  * Atiende los comandos de la saga de compra que manda Pedidos:
  * - cobros.autorizar_credito → cobro.credito_autorizado o cobro.rechazado
- * - cobros.generar_qr → crea el QR; cuando la tienda paga sale cobro.qr_pagado
+ * - cobros.generar_qr → crea el QR y avisa cobro.qr_generado (la app de la tienda lo muestra); cuando paga sale cobro.qr_pagado
  * - cobros.liberar_credito → cobro.credito_liberado
  * - cobros.devolver_qr → cobro.qr_devuelto
  * Si el dominio no deja cobrar, la saga recibe cobro.rechazado con el motivo y Pedidos libera el stock.
@@ -46,9 +46,11 @@ export class AtenderComando {
         case 'cobros.autorizar_credito':
           await this.casos.autorizarCredito.ejecutar({ ...ref, centavos: datos.centavos ?? 0 });
           return 'atendido';
-        case 'cobros.generar_qr':
-          await this.casos.generarQr.ejecutar({ ...ref, centavos: datos.centavos ?? 0 });
+        case 'cobros.generar_qr': {
+          const { cobro, nuevo } = await this.casos.generarQr.ejecutar({ ...ref, centavos: datos.centavos ?? 0 });
+          if (nuevo) await this.outbox.agregar({ tipo: 'cobro.qr_generado', ...ref, centavos: cobro.monto.centavos, venceEn: cobro.venceEn.toISOString() });
           return 'atendido';
+        }
         case 'cobros.liberar_credito':
           await this.casos.liberarCredito.ejecutar(ref);
           return 'atendido';

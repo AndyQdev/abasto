@@ -27,9 +27,10 @@ export class GenerarQr {
     private readonly opciones: OpcionesQr,
   ) {}
 
-  async ejecutar(e: GenerarQrEntrada): Promise<CobroQr> {
+  /** `nuevo` es false si el pedido ya tenía su QR (un comando repetido): así el aviso sale una sola vez */
+  async ejecutar(e: GenerarQrEntrada): Promise<{ cobro: CobroQr; nuevo: boolean }> {
     const existente = await this.cobros.porPedido(e.pedidoId);
-    if (existente) return existente;
+    if (existente) return { cobro: existente, nuevo: false };
     const cobro = CobroQr.generar({
       id: this.opciones.generarId(),
       pedidoId: e.pedidoId,
@@ -40,7 +41,7 @@ export class GenerarQr {
       vigenciaMinutos: this.opciones.vigenciaMinutos,
     });
     await this.cobros.guardar(cobro);
-    return cobro;
+    return { cobro, nuevo: true };
   }
 }
 

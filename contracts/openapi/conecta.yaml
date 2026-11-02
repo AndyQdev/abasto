@@ -10,6 +10,19 @@ servers:
 security:
   - keycloak: []
 paths:
+  /v1/tiempo-real:
+    get:
+      summary: Canal WebSocket de la app de la tienda (02/11) — avisos de sus pedidos en tiempo real
+      description: >-
+        Se abre como WebSocket (ws:// o wss:// al mismo host de Conecta). El primer mensaje de la app es
+        `{"tipo":"hola","token":"<token de Keycloak>"}` (el token nunca va en la URL). Si vale y es de una tienda,
+        Conecta responde `{"tipo":"listo"}` y desde ahí manda `{"tipo","pedidoId","codigo","ocurridoEn"}` por cada
+        pedido.* o cobro.* de esa tienda (sin montos ni líneas: la app vuelve a pedir el pedido por GraphQL).
+        Cierres: 4401 sin sesión o inválida (o sin «hola» en 10 s), 4001 el token venció (la app entra con uno nuevo),
+        4400 mensaje que no se entiende. Conecta hace ping cada 25 s y corta a quien no contesta.
+      security: []
+      responses:
+        '101': { description: Se cambió a WebSocket }
   /salud:
     get:
       security: []

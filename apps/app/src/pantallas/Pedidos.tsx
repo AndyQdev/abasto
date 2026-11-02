@@ -3,7 +3,7 @@ import { ILUSTRACION } from '../ilustraciones';
 import { estadoVisible, fechaHora, filtrarPedidos, MIS_COMPRAS, nombreCorto, porPagar, productos as cuantos, type FiltroDePedidos, type Pedido } from '@abasto/comercio';
 import type { OperacionLocal } from '@abasto/bandeja';
 import { useFocusEffect } from '@react-navigation/native';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { graphql } from '../api';
@@ -11,6 +11,7 @@ import { bandeja } from '../bandeja-pedidos';
 import { Chip, colorDeClase, Falla, Insignia, Tarjeta, Texto, Vacio } from '../componentes';
 import { useEstado } from '../estado';
 import { guardado } from '../guardado';
+import { unaALaVez, useAvisosDePedidos } from '../tiempo-real';
 import type { PantallaDePestana } from '../navegacion';
 import { COLOR } from '../tema';
 
@@ -21,7 +22,11 @@ const PESTANAS: [FiltroDePedidos, string][] = [
   ['cancelados', 'Cancelados'],
 ];
 
-/** Mis pedidos: los que ya llegaron y los que esperan señal en el teléfono. */
+/**
+ * Mis pedidos: los que ya llegaron y los que esperan señal en el teléfono.
+ * Se actualiza en tiempo real (02/11): al entrar a la pestaña, al tirar hacia abajo y cuando Conecta avisa que un
+ * pedido cambió (`useAvisosDePedidos`). Nada de preguntar cada pocos segundos, y la ruedita solo sale al tirar.
+ */
 export function Pedidos({ navigation }: PantallaDePestana<'Pedidos'>) {
   const espacio = useEspacioBarra();
   const { enLinea, catalogo } = useEstado();
@@ -29,7 +34,7 @@ export function Pedidos({ navigation }: PantallaDePestana<'Pedidos'>) {
   const [enTelefono, setEnTelefono] = useState<OperacionLocal[]>([]);
   const [filtro, setFiltro] = useState<FiltroDePedidos>('todos');
   const [error, setError] = useState<string | null>(null);
-  const [cargando, setCargando] = useState(false);
+  const [refrescando, setRefrescando] = useState(false);
 
   useEffect(() => {
     void guardado.leer<Pedido[]>('pedidos').then((p) => p && setPedidos(p));
@@ -37,34 +42,40 @@ export function Pedidos({ navigation }: PantallaDePestana<'Pedidos'>) {
     return bandeja.alCambiar((ops) => setEnTelefono(ops.filter((o) => o.estado !== 'aplicada')));
   }, []);
 
-  const traer = useCallback(async () => {
-    if (!enLinea) return;
-    setCargando(true);
-    try {
-      const d = await graphql<{ misCompras: Pedido[] }>(MIS_COMPRAS);
-      setPedidos(d.misCompras);
-      void guardado.escribir('pedidos', d.misCompras);
-      setError(null);
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setCargando(false);
-    }
-  }, [enLinea]);
+  // En silencio: la lista se reemplaza sin ruedita ni salto (los avisos llegan solos)
+  const traer = useMemo(
+    () =>
+      unaALaVez(async () => {
+        if (!enLinea) return;
+        try {
+          const d = await graphql<{ misCompras: Pedido[] }>(MIS_COMPRAS);
+          setPedidos(d.misCompras);
+          void guardado.escribir('pedidos', d.misCompras);
+          setError(null);
+        } catch (e) {
+          setError((e as Error).message);
+        }
+      }),
+    [enLinea],
+  );
 
-  // Al entrar a la pestaña, cuando la bandeja manda algo y cada 5 s mientras haya un pedido en curso
+  // Al entrar a la pestaña y cuando la bandeja manda un pedido que estaba sin señal
   useFocusEffect(
     useCallback(() => {
       void traer();
     }, [traer]),
   );
-  const hayEnCurso = pedidos.some((p) => p.estado === 'PENDIENTE' || p.estado === 'POR_CONFIRMAR');
   useEffect(() => {
     void traer();
-    if (!hayEnCurso) return;
-    const reloj = setInterval(() => void traer(), 5000);
-    return () => clearInterval(reloj);
-  }, [traer, hayEnCurso, enTelefono.length]);
+  }, [traer, enTelefono.length]);
+  // Cuando cambia un pedido (o vuelve la conexión), se vuelve a pedir la lista
+  useAvisosDePedidos(() => void traer(), () => void traer());
+
+  const tirar = async () => {
+    setRefrescando(true);
+    await traer();
+    setRefrescando(false);
+  };
 
   const vendedor = (id: string) => catalogo.mayoristas.find((m) => m.id === id)?.nombre ?? id;
   const lista = filtrarPedidos(pedidos, filtro);
@@ -75,7 +86,7 @@ export function Pedidos({ navigation }: PantallaDePestana<'Pedidos'>) {
         data={lista}
         keyExtractor={(p) => p.id}
         contentContainerStyle={[e.contenido, { paddingBottom: espacio }]}
-        refreshControl={<RefreshControl refreshing={cargando} onRefresh={() => void traer()} />}
+        refreshControl={<RefreshControl refreshing={refrescando} onRefresh={() => void tirar()} />}
         ListHeaderComponent={
           <View style={{ gap: 12 }}>
             <Texto v="t1">Mis pedidos</Texto>
