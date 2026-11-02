@@ -48,7 +48,8 @@
           "locationWhenInUsePermission": "Abasto usa tu ubicación solo para saber a dónde llevarte tu pedido.",
           "isAndroidBackgroundLocationEnabled": false
         }
-      ]
+      ],
+      "llama.rn"
     ],
     "scheme": "abasto",
     "ios": {
