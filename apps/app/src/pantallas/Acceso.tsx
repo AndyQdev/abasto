@@ -5,7 +5,7 @@ import { Animated, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollVi
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { entrarConCodigo, ErrorDeAcceso, esCelular, formatoCelular, pedirCodigo, soloDigitos, type EnvioDeCodigo } from '../acceso';
 import { Aparecer, Tocable, useSacudida, vibrar } from '../animacion';
-import { Boton, Falla, Icono, Logo, Texto } from '../componentes';
+import { Boton, Falla, Icono, Texto } from '../componentes';
 import { ILUSTRACION } from '../ilustraciones';
 import { useSesion } from '../sesion';
 import { COLOR, FUENTE, SOMBRA } from '../tema';
@@ -18,8 +18,8 @@ type Paso = 'telefono' | 'codigo' | 'nombre';
  *
  * Diseño (02/11, referencias en contracts/onboarding/): cada paso tiene su escena 3D a sangre arriba
  * (`portada-bienvenida`, `portada-codigo`, `portada-nombre`) y una tarjeta blanca con las esquinas de arriba muy
- * redondeadas que se monta sobre la escena. En el primer paso la escena termina redondeada (sin desvanecido) y el
- * logo y el lema van entre la escena y la tarjeta; el repartidor mira a la cámara y saluda.
+ * redondeadas que se monta sobre la escena. La bienvenida es la referencia de Andrés tal cual (contracts/onboarding/
+ * image1.png sin la barra de estado): trae el logo y el lema dentro de la imagen y se muestra entera.
  */
 export function Acceso() {
   const { iniciar } = useSesion();
@@ -96,8 +96,17 @@ export function Acceso() {
       <StatusBar style="dark" />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" bounces={false} showsVerticalScrollIndicator={false}>
-          <View style={[{ height: altoPortada }, paso === 'telefono' && e.portadaRedondeada]}>
-            <Image source={portada} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition="top" transition={300} accessibilityIgnoresInvertColors />
+          {/* Bienvenida: la imagen entera (trae el logo y el lema); con el teclado abierto, solo una franja de arriba */}
+          <View style={paso === 'telefono' && !teclado ? { aspectRatio: PROPORCION_BIENVENIDA } : { height: altoPortada }}>
+            <Image
+              source={portada}
+              style={StyleSheet.absoluteFill}
+              contentFit="cover"
+              contentPosition="top"
+              transition={300}
+              accessibilityLabel={paso === 'telefono' ? 'ABASTO. Tu mayorista, siempre más cerca.' : undefined}
+              accessibilityIgnoresInvertColors
+            />
             {paso !== 'telefono' && (
               <Tocable onPress={atras} style={e.atras} exterior={[e.atrasLugar, { top: arriba + 10 }]} accessibilityRole="button" accessibilityLabel="Atrás">
                 <Icono nombre="arrow-back" tamano={22} color={COLOR.bosque} />
@@ -105,17 +114,8 @@ export function Acceso() {
             )}
           </View>
 
-          {paso === 'telefono' && !teclado && (
-            <View style={e.marca}>
-              <Aparecer orden={1} style={{ alignItems: 'center', gap: 8 }}>
-                <Logo tamano={52} />
-                <Texto style={e.lema}>Tu mayorista, siempre más cerca.</Texto>
-              </Aparecer>
-            </View>
-          )}
-
           <Aparecer orden={2} desde={60} style={{ flexGrow: 1 }}>
-            <View style={[e.tarjeta, paso !== 'telefono' && e.tarjetaMontada, { paddingBottom: 24 + abajo }]}>
+            <View style={[e.tarjeta, paso === 'telefono' && !teclado ? e.tarjetaBajoElLema : e.tarjetaMontada, { paddingBottom: 24 + abajo }]}>
               {paso === 'telefono' && (
                 <>
                   <View style={{ gap: 4 }}>
@@ -305,14 +305,13 @@ function CajitasDeCodigo({ valor, alCambiar, deshabilitado, conError }: { valor:
   );
 }
 
+/** El ancho sobre el alto de `portada-bienvenida` (832 × 1248): se muestra entera */
+const PROPORCION_BIENVENIDA = 832 / 1248;
+
 const e = StyleSheet.create({
   pantalla: { flex: 1, backgroundColor: COLOR.fondo },
-  // En la bienvenida la escena termina con las esquinas de abajo redondeadas, sin desvanecido
-  portadaRedondeada: { borderBottomLeftRadius: 36, borderBottomRightRadius: 36, overflow: 'hidden' },
   atrasLugar: { position: 'absolute', left: 16, zIndex: 2 },
   atras: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', ...SOMBRA, shadowOpacity: 0.16 },
-  marca: { paddingTop: 18, paddingBottom: 18, alignItems: 'center' },
-  lema: { fontFamily: FUENTE.fuerte, fontSize: 17, color: COLOR.bosque, textAlign: 'center' },
   titulo: { fontFamily: FUENTE.negra, fontSize: 23, color: COLOR.texto, letterSpacing: -0.6 },
   tarjeta: {
     flexGrow: 1,
@@ -326,8 +325,10 @@ const e = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: -8 },
   },
-  // En código y nombre la tarjeta se monta sobre la escena
-  tarjetaMontada: { marginTop: -36 },
+  // La tarjeta se monta sobre el borde de abajo de la escena
+  tarjetaMontada: { marginTop: -30 },
+  // En la bienvenida el lema está al pie de la imagen: la tarjeta apenas la toca
+  tarjetaBajoElLema: { marginTop: -8 },
   campoTelefono: {
     flexDirection: 'row',
     alignItems: 'center',
