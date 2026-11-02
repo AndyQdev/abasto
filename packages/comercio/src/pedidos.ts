@@ -145,8 +145,9 @@ export function lineaDeTiempo(p: Pick<Pedido, 'estado' | 'metodoPago' | 'cobro' 
       nodo: p.estado === 'POR_CONFIRMAR' ? 'proc' : llego('CONFIRMADO') ? 'hecho' : 'pend',
       detalle: p.estado === 'POR_CONFIRMAR' ? 'El mayorista revisa tu pedido' : undefined,
     },
-    { nombre: 'En preparación', nodo: llego('EN_PREPARACION') ? 'hecho' : 'pend' },
-    { nombre: 'En camino', nodo: llego('DESPACHADO') ? 'hecho' : 'pend' },
+    // Mientras se prepara o va en camino, ese paso está en curso (late en la app), no hecho
+    { nombre: 'En preparación', nodo: p.estado === 'EN_PREPARACION' ? 'proc' : llego('EN_PREPARACION') ? 'hecho' : 'pend' },
+    { nombre: 'En camino', nodo: p.estado === 'DESPACHADO' ? 'proc' : llego('DESPACHADO') ? 'hecho' : 'pend' },
     {
       nombre: 'Entregado',
       detalle: contraEntrega && !llego('ENTREGADO') ? 'Pagas al recibir, en efectivo o QR' : undefined,

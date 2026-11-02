@@ -142,8 +142,10 @@ describe('Compras: la línea de tiempo arriba (02/11)', () => {
 
   it('el progreso cuenta los pasos hechos', () => {
     const p = progresoDelPedido(pedido({ estado: 'EN_PREPARACION', cobro: qr('PAGADO') }));
-    expect(p.hechos).toBe(5);
-    expect(p.pasos[p.actual].nombre).toBe('En camino');
+    expect(p.hechos).toBe(4);
+    expect(p.pasos[p.actual]).toMatchObject({ nombre: 'En preparación', nodo: 'proc' });
+    const enCamino = progresoDelPedido(pedido({ estado: 'DESPACHADO', cobro: qr('PAGADO') }));
+    expect(enCamino.pasos[enCamino.actual]).toMatchObject({ nombre: 'En camino', nodo: 'proc' });
     expect(terminado({ estado: 'ENTREGADO' })).toBe(true);
   });
 });

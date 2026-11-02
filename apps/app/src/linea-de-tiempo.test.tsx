@@ -48,7 +48,7 @@ describe('la línea de tiempo del seguimiento (02/11)', () => {
 
   it('la barrita de Compras dice en qué paso va', async () => {
     await render(<ProgresoChico pedido={{ ...base, estado: 'DESPACHADO', cobro: conQr('PAGADO').cobro }} />);
-    expect(screen.getByLabelText('Paso 7 de 7')).toBeTruthy();
+    expect(screen.getByLabelText('Paso 6 de 7')).toBeTruthy(); // En camino, latiendo
   });
 
   it('el festejo del pago cubre la pantalla y se cierra solo', async () => {

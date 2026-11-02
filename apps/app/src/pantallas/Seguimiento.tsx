@@ -9,6 +9,7 @@ import {
   type Pedido,
   type Presentacion,
 } from '@abasto/comercio';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -18,6 +19,7 @@ import { Aparecer, Tocable } from '../animacion';
 import { graphql } from '../api';
 import { Falla, Foto, Icono, Iniciales, Insignia, Tarjeta, Texto, Vacio } from '../componentes';
 import { useEstado } from '../estado';
+import { ILUSTRACION } from '../ilustraciones';
 import { LineaDeTiempo, PagoExitoso } from '../linea-de-tiempo';
 import { MapaChico } from '../Mapa';
 import type { PantallaDePila } from '../navegacion';
@@ -114,9 +116,13 @@ export function Seguimiento({ route, navigation }: PantallaDePila<'Seguimiento'>
               Compra #{pedido.codigo} · {vendedor}
             </Texto>
           </View>
-          <Aparecer key={titular.titulo}>
-            <Texto style={e.titular}>{titular.titulo}</Texto>
-            <Texto style={e.detalleTitular}>{titular.detalle}</Texto>
+          <Aparecer key={titular.titulo} style={e.filaTitular}>
+            <View style={{ flex: 1 }}>
+              <Texto style={e.titular}>{titular.titulo}</Texto>
+              <Texto style={e.detalleTitular}>{titular.detalle}</Texto>
+            </View>
+            {/* Al final, la ilustración festeja la entrega: chica, al costado del titular */}
+            {pedido.estado === 'ENTREGADO' && <Image source={ILUSTRACION.pedidoEntregado} style={e.entregado} contentFit="contain" accessibilityIgnoresInvertColors />}
           </Aparecer>
         </LinearGradient>
 
@@ -202,6 +208,8 @@ const e = StyleSheet.create({
   atras: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(201,244,90,0.14)' },
   atrasClaro: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: COLOR.superficie },
   codigo: { flex: 1, fontFamily: FUENTE.fuerte, fontSize: 13, color: '#CFE3D6' },
+  filaTitular: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  entregado: { width: 110, height: 110, marginVertical: -14 },
   titular: { fontFamily: FUENTE.negra, fontSize: 28, lineHeight: 33, color: '#fff', letterSpacing: -0.8 },
   detalleTitular: { fontFamily: FUENTE.semi, fontSize: 15, color: COLOR.lima, marginTop: 4 },
   cuerpo: { paddingHorizontal: 16, gap: 14, marginTop: -40 },

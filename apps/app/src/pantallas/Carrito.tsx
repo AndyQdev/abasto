@@ -119,7 +119,7 @@ export function Carrito({ navigation }: PantallaDePestana<'Carrito'>) {
                           </Tocable>
                         </View>
                         <Texto v="chico">
-                          {i.cantidad} {nombreDe(i.presentacion).toLowerCase()} · {unidadesDe(i)} u.
+                          {i.cantidad} {nombreDe(i.presentacion, i.cantidad).toLowerCase()} · {unidadesDe(i)} u.
                         </Texto>
                       </View>
                     </View>

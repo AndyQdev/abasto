@@ -228,7 +228,8 @@ export function Vacio({ titulo, detalle, imagen, children }: { titulo: string; d
       {imagen !== undefined && <Image source={imagen} style={{ width: 130, height: 130 }} contentFit="contain" transition={250} />}
       <Texto v="t3">{titulo}</Texto>
       {detalle && <Texto v="gris" style={{ textAlign: 'center' }}>{detalle}</Texto>}
-      {children}
+      {/* Los botones de abajo, de lado a lado: así nunca se cortan */}
+      {children && <View style={{ alignSelf: 'stretch', gap: 8, marginTop: 4 }}>{children}</View>}
     </Tarjeta>
   );
 }
