@@ -16,6 +16,7 @@ import {
   precioDesde,
   preciosDeLaCasa,
   separarContenido,
+  sinPruebas,
   rubros,
   textoDeStock,
   type Mayorista,
@@ -245,5 +246,19 @@ describe('conciliarCarrito', () => {
     const r = conciliarCarrito([alDia], [aceite]);
     expect(r.cambio).toBe(false);
     expect(r.carrito[0]).toBe(alDia);
+  });
+});
+
+describe('sinPruebas', () => {
+  it('la app no muestra los mayoristas de demostración ni sus productos', () => {
+    const abasto: Mayorista = { id: 'abasto', nombre: 'Abasto', ciudad: 'Santa Cruz', verificado: true, relacion: 'NINGUNA', deLaCasa: true, dePrueba: false };
+    const prueba: Mayorista = { ...losPozos, dePrueba: true };
+    const r = sinPruebas({
+      productos: [producto({ id: 'AB-001', nombre: 'Arroz', mayorista: abasto }), producto({ id: 'AR-0100', nombre: 'Arroz de prueba', mayorista: prueba })],
+      mayoristas: [abasto, prueba],
+    });
+
+    expect(r.productos.map((p) => p.id)).toEqual(['AB-001']);
+    expect(r.mayoristas.map((m) => m.id)).toEqual(['abasto']);
   });
 });

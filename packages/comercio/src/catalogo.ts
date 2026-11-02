@@ -16,6 +16,8 @@ export interface Mayorista {
   relacion: EstadoRelacion;
   /** Abasto mismo vendiendo: sus precios los ve cualquier tienda registrada */
   deLaCasa: boolean;
+  /** Mayorista de demostración (e2e y casos de uso del parcial): la app no lo muestra (ver `sinPruebas`) */
+  dePrueba?: boolean;
 }
 
 export interface Escala {
@@ -48,15 +50,29 @@ export interface Producto {
   precioEnSuper?: { precio: { centavos: number; texto: string }; donde: string; fecha: string } | null;
   /** Precio de demostración: todavía no se cotizó en el mercado */
   precioPorConfirmar?: boolean;
+  /**
+   * A quién se le muestra en el Inicio (02/11): 'hogar', 'tienda' o un área del productor ('salteneria', 'panaderia',
+   * 'horneados', 'pension', 'polleria', 'puesto'). Lo decide Abasto en el Panel. Buscar encuentra todo.
+   */
+  usos?: string[];
 }
 
-const CAMPOS_MAYORISTA = 'id nombre ciudad verificado relacion deLaCasa';
+/** Lo que la app no muestra: los mayoristas de demostración y sus productos (siguen para e2e y el parcial). */
+export function sinPruebas<T extends { productos: Producto[]; mayoristas: Mayorista[] }>(catalogo: T): T {
+  return {
+    ...catalogo,
+    productos: catalogo.productos.filter((p) => !p.mayorista.dePrueba),
+    mayoristas: catalogo.mayoristas.filter((m) => !m.dePrueba),
+  };
+}
+
+const CAMPOS_MAYORISTA = 'id nombre ciudad verificado relacion deLaCasa dePrueba';
 
 export const CONSULTA_CATALOGO = `
   query Catalogo {
     productos {
       id codigo nombre rubro descripcion stock estado precioVisible abastecimiento entregaHoras foto
-      marca marcaBoliviana precioPorConfirmar precioEnSuper { precio { centavos texto } donde fecha }
+      marca marcaBoliviana precioPorConfirmar usos precioEnSuper { precio { centavos texto } donde fecha }
       mayorista { ${CAMPOS_MAYORISTA} }
       escalas { presentacion cantidad precioUnitario { centavos texto } }
     }

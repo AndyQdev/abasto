@@ -360,6 +360,7 @@ final readonly class Resolutores
                 (int) $e['stock'],
                 self::escalas($e['escalas']),
                 ...self::abastecimiento($e),
+                usos: self::usos($e),
             );
 
             return $this->vistaDe($producto->id, $usuario->orgId);
@@ -386,6 +387,7 @@ final readonly class Resolutores
                 isset($e['escalas']) ? self::escalas($e['escalas']) : null,
                 isset($e['estado']) ? EstadoProducto::from((string) $e['estado']) : null,
                 ...self::abastecimiento($e),
+                usos: self::usos($e),
             );
 
             return $this->vistaDe($producto->id, $usuario->orgId);
@@ -445,6 +447,18 @@ final readonly class Resolutores
             (int) $e['unidades'],
             (int) $e['precioUnitarioCentavos'],
         ), $entradas);
+    }
+
+    /**
+     * A quién se muestra el producto; null si no vino (al editar, no se toca).
+     *
+     * @param array<string, mixed> $e
+     *
+     * @return list<string>|null
+     */
+    private static function usos(array $e): ?array
+    {
+        return isset($e['usos']) ? array_values(array_map('strval', (array) $e['usos'])) : null;
     }
 
     /**

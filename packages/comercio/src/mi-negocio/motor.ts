@@ -26,6 +26,8 @@ export interface Existencia {
   valorCentavos: number | null;
   ultimaEntrada: string | null;
   agotado: boolean;
+  /** Todavía no se compró nunca (lo creó una receta o el primer estante, 02/11): no está «agotado», está por comprar */
+  porComprar: boolean;
 }
 
 /** Las existencias de los artículos vigentes (no eliminados), sumando sus movimientos */
@@ -47,6 +49,7 @@ export function existencias({ articulos, movimientos }: Libro): Existencia[] {
       valorCentavos: costoPromedioCentavos !== null ? Math.round(Math.max(cantidad, 0) * costoPromedioCentavos) : null,
       ultimaEntrada: entradas.length ? entradas.sort()[entradas.length - 1] : null,
       agotado: cantidad <= 0,
+      porComprar: suyos.length === 0,
     };
   });
 }

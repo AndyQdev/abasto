@@ -23,6 +23,7 @@ final readonly class EditarProducto
 
     /**
      * @param list<EscalaDePrecio>|null $escalas
+     * @param list<string>|null         $usos
      */
     public function ejecutar(
         string $productoId,
@@ -36,6 +37,7 @@ final readonly class EditarProducto
         ?int $entregaHoras = null,
         ?int $costoUnitarioCentavos = null,
         ?string $proveedor = null,
+        ?array $usos = null,
     ): Producto {
         $producto = $this->productos->porId($productoId)
             ?? throw new ErrorDeDominio('PRODUCTO_INEXISTENTE', 'El producto no existe o fue dado de baja');
@@ -65,6 +67,9 @@ final readonly class EditarProducto
                 $costoUnitarioCentavos ?? $producto->costoUnitarioCentavos,
                 $proveedor ?? $producto->proveedor,
             );
+        }
+        if ($usos !== null) {
+            $producto->cambiarUsos($usos);
         }
         if ($estado !== null) {
             // Activar un producto sin mercadería lo deja visible pero sin stock, nunca "activo con 0".

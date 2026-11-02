@@ -1,9 +1,9 @@
 import { useEspacioBarra } from '../BarraInferior';
-import { MIS_COMPRAS, rubrosDelNegocio, seccionesDelNegocio, separarContenido, tinte, type ClaveDeVitrina, type Pedido, type Producto, type TarjetaDeVitrina, type Vitrina } from '@abasto/comercio';
+import { MIS_COMPRAS, misRecetas, rubrosDelNegocio, seccionesDelNegocio, separarContenido, tinte, type ClaveDeVitrina, type Pedido, type Producto, type TarjetaDeVitrina, type Vitrina } from '@abasto/comercio';
 import { useIsFocused } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, RefreshControl, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Aparecer, Esqueleto, Tocable } from '../animacion';
@@ -32,9 +32,8 @@ const ESTILO: Record<ClaveDeVitrina, { icono: NombreDeIcono; etiqueta: [string, 
   volumen: { icono: 'cube', etiqueta: [COLOR.ambar, COLOR.bosque] },
   deAqui: { icono: 'flag', etiqueta: ['#FFFFFF', COLOR.bosque] },
   repone: { icono: 'repeat', etiqueta: [COLOR.bosque, COLOR.lima] },
-  salteneria: { icono: 'flame', etiqueta: [COLOR.bosque, COLOR.lima] },
-  panaderia: { icono: 'pizza', etiqueta: [COLOR.bosque, COLOR.lima] },
-  pension: { icono: 'restaurant', etiqueta: [COLOR.bosque, COLOR.lima] },
+  receta: { icono: 'flame', etiqueta: [COLOR.bosque, COLOR.lima] },
+  rubro: { icono: 'trending-up', etiqueta: [COLOR.bosque, COLOR.lima] },
   descartables: { icono: 'bag-handle', etiqueta: [COLOR.bosque, COLOR.lima] },
   sugeridos: { icono: 'sparkles', etiqueta: [COLOR.bosque, COLOR.lima] },
   despensa: { icono: 'basket', etiqueta: [COLOR.bosque, COLOR.lima] },
@@ -58,7 +57,7 @@ export function Inicio({ navigation }: PantallaDePestana<'Inicio'>) {
   // Sin negocio no se llega aquí (el registro lo pide); la tienda queda por si acaso
   const negocio = useNegocio().negocio ?? { tipo: 'tienda' as const };
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
-  const { sincronizar } = useInventario();
+  const { sincronizar, datos } = useInventario();
   const { elegida, porConfirmar } = useDirecciones();
   const [hoja, setHoja] = useState(false);
   const arriba = useSafeAreaInsets().top;
@@ -93,7 +92,9 @@ export function Inicio({ navigation }: PantallaDePestana<'Inicio'>) {
       });
   }, [enFoco, enLinea, sincronizar]);
 
-  const estantes = seccionesDelNegocio(negocio, catalogo.productos);
+  // El productor ve primero lo de sus recetas («Para tu receta de salteña»)
+  const recetas = useMemo(() => misRecetas(datos), [datos]);
+  const estantes = useMemo(() => seccionesDelNegocio(negocio, catalogo.productos, 10, recetas), [negocio, catalogo.productos, recetas]);
   const losRubros = rubrosDelNegocio(negocio, catalogo.productos);
   const horas = Math.max(24, ...catalogo.productos.filter((p) => p.mayorista.deLaCasa).map((p) => p.entregaHoras ?? 24));
   const cargandoPrimeraVez = catalogo.cargando && !catalogo.productos.length;

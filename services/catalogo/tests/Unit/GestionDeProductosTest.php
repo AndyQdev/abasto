@@ -204,3 +204,12 @@ it('ajustar el stock avisa el stock nuevo a los reportes, con un aviso distinto 
         ->and($avisos[0]['orgId'])->toBe('lp')
         ->and($avisos[0]['clave'])->not->toBe($avisos[1]['clave']);
 });
+
+it('Abasto decide a quién se muestra cada producto: editar los usos no toca lo demás', function () {
+    $producto = $this->crear->ejecutar('lp', 'AB-018', 'Yogurt 1 L', 'Lácteos', '', 0, escalasDeShampoo(), usos: ['tienda', 'hogar']);
+    expect($producto->usos())->toBe(['hogar', 'tienda']);
+
+    $editado = $this->editar->ejecutar($producto->id, 'lp', usos: ['hogar']);
+    expect($editado->usos())->toBe(['hogar'])->and($editado->nombre)->toBe('Yogurt 1 L')
+        ->and(fn () => $this->editar->ejecutar($producto->id, 'lp', usos: ['carniceria']))->toThrow(ErrorDeDominio::class);
+});

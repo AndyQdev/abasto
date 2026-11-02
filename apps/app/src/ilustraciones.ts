@@ -62,8 +62,11 @@ const RUBROS: Record<string, Recurso> = {
   'Granos y cereales': require('../assets/ilustraciones/rubro-abarrotes.webp'),
   Condimentos: require('../assets/ilustraciones/rubro-condimentos.webp'),
   'Huevos y lácteos': require('../assets/ilustraciones/rubro-lacteos.webp'),
-  'Verduras secas': require('../assets/ilustraciones/rubro-verduras.webp'),
+  'Verduras y tubérculos': require('../assets/ilustraciones/rubro-verduras.webp'),
   Descartables: require('../assets/ilustraciones/rubro-descartables.webp'),
+  // Catálogo real por área (02/11)
+  Carnes: require('../assets/ilustraciones/rubro-carnes.webp'),
+  'Conservas y desayuno': require('../assets/ilustraciones/rubro-abarrotes.webp'),
 };
 
 /** La imagen del rubro; si es un rubro nuevo, la de Varios. */
@@ -87,7 +90,8 @@ export function rubroCorto(rubro: string): string {
       'Aceites y grasas': 'Aceites',
       'Granos y cereales': 'Granos',
       'Huevos y lácteos': 'Huevos',
-      'Verduras secas': 'Verduras',
+      'Verduras y tubérculos': 'Verduras',
+      'Conservas y desayuno': 'Conservas',
     }[rubro] ?? rubro
   );
 }

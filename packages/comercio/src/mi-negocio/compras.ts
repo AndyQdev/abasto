@@ -3,12 +3,11 @@
  * La clave «pedido:<id>:<producto>:<presentación>» hace que sincronizar dos veces (o leer `misCompras` en cada
  * pantalla) no duplique nada. El costo sale de lo que se pagó.
  */
-import { separarContenido } from '../catalogo';
 import type { Pedido } from '../pedidos';
-import { medidaDeContenido } from './medidas';
 import { gastoDeCompra } from './hogar';
 import type { Anotacion, Articulo, Movimiento } from './modelo';
 import type { Libro } from './motor';
+import { articuloDeAbasto } from './primera-receta';
 
 export type PedidoComprado = Pick<Pedido, 'id' | 'codigo' | 'estado' | 'lineas'> & { total?: { centavos: number }; creadoEn?: string };
 
@@ -51,23 +50,7 @@ export function comprasQueEntran(pedidos: PedidoComprado[], ya: Libro & { anotac
 
       const id = idDeArticuloDeAbasto(l.producto.id);
       if (!articulos.has(id)) {
-        const { nombre, contenido } = separarContenido(l.producto.nombre ?? l.producto.id);
-        const articulo: Articulo = {
-          id,
-          nombre,
-          detalle: contenido,
-          rubro: l.producto.rubro ?? null,
-          medida: medidaDeContenido(contenido),
-          clase: 'COMPRADO',
-          origen: 'ABASTO',
-          productoId: l.producto.id,
-          proveedor: null,
-          precioVentaCentavos: null,
-          stockMinimo: null,
-          creadoEn: ahora,
-          actualizadoEn: ahora,
-          eliminado: false,
-        };
+        const articulo = articuloDeAbasto({ id: l.producto.id, nombre: l.producto.nombre, rubro: l.producto.rubro }, ahora);
         articulos.set(id, articulo);
         nuevos.push(articulo);
       }

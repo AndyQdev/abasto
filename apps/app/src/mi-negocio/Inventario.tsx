@@ -45,10 +45,12 @@ export interface PropsDeInventario {
   alPedir: (faltantes: Faltante[]) => void;
   /** Mostrar un solo grupo (el productor elige entre insumos y lo que hace) */
   grupo?: GrupoDeInventario['clave'];
+  /** Tienda: «Arma tu primer estante» con lo que más se repone (el del registro, si lo saltó) */
+  alArmarEstante?: () => void;
 }
 
 /** El inventario (o la despensa del hogar), agrupado como lo ve cada tipo. Sin estado propio: lo usan la pantalla y las pruebas */
-export function VistaDeInventario({ negocio, datos, cargando, imagenDe, alAbrir, alAgregar, alComprar, alPedir, grupo }: PropsDeInventario) {
+export function VistaDeInventario({ negocio, datos, cargando, imagenDe, alAbrir, alAgregar, alComprar, alPedir, grupo, alArmarEstante }: PropsDeInventario) {
   const grupos = useMemo(() => inventarioDelNegocio(negocio, datos).filter((g) => !grupo || g.clave === grupo), [negocio, datos, grupo]);
   const sinNada = !cargando && grupos.every((g) => !g.lineas.length);
   const hoy = ahora();
@@ -63,6 +65,7 @@ export function VistaDeInventario({ negocio, datos, cargando, imagenDe, alAbrir,
             {grupos[0]?.vacio}
           </Texto>
           <View style={{ alignSelf: 'stretch', gap: 8, marginTop: 6 }}>
+            {alArmarEstante && <Boton tipo="oscuro" texto="Arma tu primer estante" icono="sparkles" alTocar={alArmarEstante} />}
             <Boton texto="Ir a comprar" icono="cart" alTocar={alComprar} />
             <Boton tipo="secundario" texto="Agregar a mano" icono="add" alTocar={alAgregar} />
           </View>
@@ -131,7 +134,7 @@ function FilaDeArticulo({ negocio, datos, existencia: x, imagen, alTocar }: { ne
   const aviso = avisoDeStock(x, datos);
   const dias = negocio.tipo === 'hogar' ? seTeAcaba(x, datos.movimientos, ahora()) : null;
   return (
-    <Tocable onPress={alTocar} style={[ui.fila, x.agotado && { opacity: 0.7 }]} accessibilityRole="button" accessibilityLabel={`${a.nombre}: ${x.agotado ? 'agotado' : x.texto}`}>
+    <Tocable onPress={alTocar} style={[ui.fila, x.agotado && { opacity: 0.7 }]} accessibilityRole="button" accessibilityLabel={`${a.nombre}: ${x.porComprar ? 'por comprar' : x.agotado ? 'agotado' : x.texto}`}>
       <View style={[ui.foto, { width: 64, height: 64, backgroundColor: a.rubro ? TINTES[tinte(a.rubro)] : COLOR.limaSuave }]}>
         <Image source={imagen} style={ui.imagenFila} contentFit="contain" />
       </View>
@@ -145,7 +148,7 @@ function FilaDeArticulo({ negocio, datos, existencia: x, imagen, alTocar }: { ne
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
           <View style={[ui.pildora, x.agotado && e.agotado]}>
             <Texto style={[ui.textoPildora, x.agotado && { color: COLOR.texto3 }]} lineas={1}>
-              {x.agotado ? 'Agotado' : x.texto}
+              {x.porComprar ? 'Por comprar' : x.agotado ? 'Agotado' : x.texto}
             </Texto>
           </View>
           {aviso === 'poco' && (
@@ -269,7 +272,7 @@ export function HojaDeArticulo({
 
         <View style={e.cuadro}>
           <Texto v="chico">Tienes</Texto>
-          <Texto style={e.cuantoHay}>{x.agotado ? 'Agotado' : x.texto}</Texto>
+          <Texto style={e.cuantoHay}>{x.porComprar ? 'Por comprar' : x.agotado ? 'Agotado' : x.texto}</Texto>
           {equivalencia(a.medida) && <Texto v="chico">{equivalencia(a.medida)}</Texto>}
           {x.costoPromedioCentavos !== null && (
             <Texto v="gris">

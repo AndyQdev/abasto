@@ -7,6 +7,7 @@ import {
   inventarioDelNegocio,
   itemsParaPedir,
   mesDe,
+  preciosDeReferencia,
   reporteDelMes,
   resumenDelInventario,
   type Faltante,
@@ -20,7 +21,7 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { Modal, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { graphql } from '../api';
 import { Tocable } from '../animacion';
@@ -41,6 +42,7 @@ import type { PantallaDePestana } from '../navegacion';
 import { IMAGEN_DE_NEGOCIO, useNegocio } from '../NegocioInicio';
 import { CABECERA, COLOR, FUENTE } from '../tema';
 import { AvisoSinSenal } from './Inicio';
+import { PrimerEstante, PrimeraReceta } from './PrimerPaso';
 
 export type ClaveDeSeccion = 'inventario' | 'vender' | 'fiado' | 'mes' | 'cuentas' | 'despensa' | 'lista';
 
@@ -90,6 +92,9 @@ export function MiNegocio({ navigation }: PantallaDePestana<'MiNegocio'>) {
   const [vista, setVista] = useState<'insumos' | 'hechos'>('hechos');
   // El botón flotante avisa a la sección que abra su «agregar»
   const [nuevo, setNuevo] = useState(0);
+  // «Usar una receta lista» o «Arma tu primer estante»: las plantillas del registro, para quien las saltó
+  const [plantilla, setPlantilla] = useState(false);
+  const referencia = useMemo(() => preciosDeReferencia(catalogo.productos), [catalogo.productos]);
 
   // Si cambia el tipo (desde Cuenta), se vuelve a su primera sección
   useEffect(() => {
@@ -172,6 +177,7 @@ export function MiNegocio({ navigation }: PantallaDePestana<'MiNegocio'>) {
       alComprar={() => navigation.navigate('Inicio')}
       alPedir={alPedir}
       grupo={negocio.tipo === 'productor' ? 'insumos' : undefined}
+      alArmarEstante={negocio.tipo === 'tienda' ? () => setPlantilla(true) : undefined}
     />
   );
 
@@ -232,7 +238,15 @@ export function MiNegocio({ navigation }: PantallaDePestana<'MiNegocio'>) {
                 alElegir={setVista}
               />
               {vista === 'hechos' ? (
-                <Produccion negocio={negocio} datos={datos} nuevo={seccion === 'inventario' ? nuevo : 0} alPedir={alPedir} alVender={() => setSeccion('vender')} />
+                <Produccion
+                  negocio={negocio}
+                  datos={datos}
+                  nuevo={seccion === 'inventario' ? nuevo : 0}
+                  alPedir={alPedir}
+                  alVender={() => setSeccion('vender')}
+                  alUsarPlantilla={negocio.subtipo ? () => setPlantilla(true) : undefined}
+                  referencia={referencia}
+                />
               ) : (
                 inventarioVista
               )}
@@ -249,6 +263,21 @@ export function MiNegocio({ navigation }: PantallaDePestana<'MiNegocio'>) {
       </ScrollView>
 
       {flotante && <BotonFlotante texto={flotante.texto} icono={flotante.icono} abajo={espacio - 4} alTocar={flotante.alTocar} />}
+
+      <Modal visible={plantilla} animationType="slide" onRequestClose={() => setPlantilla(false)}>
+        {negocio.tipo === 'productor' && negocio.subtipo ? (
+          <PrimeraReceta
+            area={negocio.subtipo}
+            productos={catalogo.productos}
+            libro={datos}
+            aplicar={inventario.aplicar}
+            alPedir={(items) => alCarrito(items)}
+            alTerminar={() => setPlantilla(false)}
+          />
+        ) : (
+          <PrimerEstante productos={catalogo.productos} libro={datos} aplicar={inventario.aplicar} alPedir={(items) => alCarrito(items)} alTerminar={() => setPlantilla(false)} />
+        )}
+      </Modal>
 
       <HojaDeArticulo
         negocio={negocio}

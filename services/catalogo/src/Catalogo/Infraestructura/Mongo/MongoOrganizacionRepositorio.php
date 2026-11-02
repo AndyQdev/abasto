@@ -47,6 +47,7 @@ final readonly class MongoOrganizacionRepositorio implements OrganizacionReposit
             'verificado' => $organizacion->estaVerificada(),
             'nit' => $organizacion->nit,
             'de_la_casa' => $organizacion->deLaCasa,
+            'de_prueba' => $organizacion->dePrueba,
             'representante' => $organizacion->representante,
             'telefono' => $organizacion->telefono,
             'correo' => $organizacion->correo,
@@ -106,6 +107,7 @@ final readonly class MongoOrganizacionRepositorio implements OrganizacionReposit
             motivoRechazo: self::texto($doc, 'motivo_rechazo'),
             registradaEn: self::texto($doc, 'registrada_en'),
             negocio: self::negocio($doc['negocio'] ?? null),
+            dePrueba: (bool) ($doc['de_prueba'] ?? false),
         );
     }
 

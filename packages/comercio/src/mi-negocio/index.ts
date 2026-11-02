@@ -11,3 +11,6 @@ export * from './produccion';
 export * from './reporte';
 export * from './ventas';
 export * from './graphql';
+export * from './plantillas';
+export * from './primera-receta';
+export * from './primer-estante';

@@ -190,7 +190,7 @@
       "nombre": "rubro-verduras",
       "tipo": "objeto",
       "lado": 512,
-      "uso": "Rubro Verduras secas (01/11)",
+      "uso": "Rubro Verduras y tubérculos (01/11)",
       "tema": "A small group of market vegetables: a few brown potatoes, a red onion, a white onion and a garlic bulb next to a small woven mesh sack, no writing. Inanimate objects: no faces, no eyes. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
     },
     {
@@ -263,6 +263,13 @@
       "uso": "Inicio: la composición 3D del encabezado, entre la dirección y la campana",
       "tema": "A rich, abundant pile of wholesale groceries, full and generous but tidy: a big glossy lime-green map pin rising from the middle, several kraft cardboard boxes (one open with products peeking out, one tied with a lime ribbon), golden cooking-oil bottles, colorful soda bottles, plain white cloth sacks with absolutely no letters or print, an egg tray, a bunch of bananas, red tomatoes, a fresh lettuce, pasta packs without writing and glossy green leaves tucked around the pile. Three-quarter view, the pile is wider than tall and fills the frame from side to side. Floating in the air with nothing under it. Absolutely no floor, no ground plane, no shadow under the objects.",
       "proporcion": "4:3"
+    },
+    {
+      "nombre": "rubro-carnes",
+      "tipo": "objeto",
+      "lado": 512,
+      "uso": "Rubro Carnes (02/11)",
+      "tema": "A small wooden board with grilled meats: a juicy brown grilled steak, a golden roasted chicken and grilled chorizo sausages, with a sprig of green parsley. No purple, pink or magenta anywhere. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
     }
   ]
 }

@@ -8,15 +8,18 @@ import {
   margenDe,
   numeroBonito,
   planificar,
+  plantillasDe,
   precioSugerido,
   receta as armarReceta,
   registrarTanda,
+  SUBTIPOS_DE_PRODUCTOR,
   textoDeReceta,
   unidadDeReceta,
   type DatosDeNegocio,
   type Faltante,
   type NegocioElegido,
   type Plan,
+  type PrecioDeReferencia,
   type Receta,
   type SubtipoProductor,
 } from '@abasto/comercio';
@@ -38,16 +41,23 @@ import { Campo, ContenidoDeHoja, Contador, Opciones, Pasos, bsEnCampo, leerBs, u
  */
 
 /** Cómo se llama lo que hace cada productor: «Mis salteñas», «Mis panes», «Mis platos» */
+const LO_HECHO: Record<SubtipoProductor, { plural: string; titulo: string; una: string }> = {
+  salteneria: { plural: 'salteñas', titulo: 'Mis salteñas', una: 'cada salteña' },
+  panaderia: { plural: 'panes', titulo: 'Mis panes', una: 'cada pan' },
+  horneados: { plural: 'horneados', titulo: 'Mis horneados', una: 'cada uno' },
+  pension: { plural: 'platos', titulo: 'Mis platos', una: 'cada plato' },
+  polleria: { plural: 'porciones', titulo: 'Lo que vendo', una: 'cada porción' },
+  puesto: { plural: 'porciones', titulo: 'Lo que vendo', una: 'cada porción' },
+};
+
 export function nombreDeLoHecho(n: NegocioElegido) {
-  const s = n.subtipo as SubtipoProductor | undefined;
-  return s === 'panaderia' ? { plural: 'panes', titulo: 'Mis panes', una: 'cada pan' } : s === 'pension' ? { plural: 'platos', titulo: 'Mis platos', una: 'cada plato' } : { plural: 'salteñas', titulo: 'Mis salteñas', una: 'cada salteña' };
+  return LO_HECHO[(n.subtipo as SubtipoProductor | undefined) ?? 'salteneria'] ?? LO_HECHO.salteneria;
 }
 
-const SUGERENCIAS: Record<string, string[]> = {
-  salteneria: ['Salteña de pollo', 'Salteña de carne', 'Empanada de queso', 'Tucumana'],
-  panaderia: ['Marraqueta', 'Pan de batalla', 'Cuñapé', 'Sonso'],
-  pension: ['Almuerzo completo', 'Sopa de maní', 'Majadito', 'Pollo frito'],
-};
+/** Los nombres que se ofrecen al crear una receta: los de las plantillas de su área */
+const SUGERENCIAS: Record<string, string[]> = Object.fromEntries(
+  SUBTIPOS_DE_PRODUCTOR.map((a) => [a, plantillasDe(a).map((p) => p.nombre)]),
+);
 
 export function Produccion({
   negocio,
@@ -55,6 +65,8 @@ export function Produccion({
   nuevo,
   alPedir,
   alVender,
+  alUsarPlantilla,
+  referencia,
 }: {
   negocio: NegocioElegido;
   datos: DatosDeNegocio;
@@ -62,6 +74,10 @@ export function Produccion({
   nuevo: number;
   alPedir: (faltantes: Faltante[]) => void;
   alVender: () => void;
+  /** Arma una receta desde una plantilla de su área (la del registro, si la saltó) */
+  alUsarPlantilla?: () => void;
+  /** El precio del catálogo de lo que todavía no compró: el costo sale aunque el insumo esté en cero */
+  referencia?: PrecioDeReferencia;
 }) {
   const [creando, setCreando] = useState<Receta | 'nueva' | null>(null);
   const [tanda, setTanda] = useState<string | null>(null);
@@ -100,16 +116,17 @@ export function Produccion({
                 </View>
               ))}
             </View>
-            <View style={{ alignSelf: 'stretch' }}>
-              <Boton texto="Agregar mi primera receta" icono="add" alTocar={() => setCreando('nueva')} />
+            <View style={{ alignSelf: 'stretch', gap: 8 }}>
+              {alUsarPlantilla && <Boton texto="Usar una receta lista" icono="sparkles" alTocar={alUsarPlantilla} />}
+              <Boton tipo={alUsarPlantilla ? 'secundario' : 'primario'} texto="Escribir mi receta" icono="create" alTocar={() => setCreando('nueva')} />
             </View>
-            {!insumos.length && <Texto v="chico" style={{ textAlign: 'center' }}>Primero compra tus insumos en Abasto o agrégalos en «Insumos».</Texto>}
+            {!insumos.length && !alUsarPlantilla && <Texto v="chico" style={{ textAlign: 'center' }}>Primero compra tus insumos en Abasto o agrégalos en «Insumos».</Texto>}
           </View>
         </Aparecer>
       ) : (
         recetas.map((r, i) => {
           const a = datos.articulos.find((x) => x.id === r.articuloId);
-          const c = costoDeReceta(r, datos);
+          const c = costoDeReceta(r, datos, referencia);
           const precio = a?.precioVentaCentavos ?? precioSugerido(c.porUnidadCentavos, margenDe(negocio));
           const listas = Math.max(hay.get(r.articuloId)?.cantidad ?? 0, 0);
           const ganas = precio - c.porUnidadCentavos;
@@ -153,10 +170,11 @@ export function Produccion({
         })
       )}
 
-      <HojaDeTanda negocio={negocio} datos={datos} receta={recetas.find((r) => r.id === tanda) ?? null} alCerrar={() => setTanda(null)} alPedir={alPedir} alVender={alVender} />
+      <HojaDeTanda negocio={negocio} datos={datos} referencia={referencia} receta={recetas.find((r) => r.id === tanda) ?? null} alCerrar={() => setTanda(null)} alPedir={alPedir} alVender={alVender} />
       <HojaDeReceta
         negocio={negocio}
         datos={datos}
+        referencia={referencia}
         receta={recetas.find((r) => r.id === verReceta) ?? null}
         alCerrar={() => setVerReceta(null)}
         alEditar={(r) => {
@@ -185,6 +203,7 @@ function HojaDeTanda({
   negocio,
   datos,
   receta: r,
+  referencia,
   alCerrar,
   alPedir,
   alVender,
@@ -192,6 +211,7 @@ function HojaDeTanda({
   negocio: NegocioElegido;
   datos: DatosDeNegocio;
   receta: Receta | null;
+  referencia?: PrecioDeReferencia;
   alCerrar: () => void;
   alPedir: (f: Faltante[]) => void;
   alVender: () => void;
@@ -214,11 +234,11 @@ function HojaDeTanda({
   const plan: Plan | null = useMemo(() => {
     if (!r || !(cuantas > 0)) return null;
     try {
-      return planificar(r, cuantas, datos);
+      return planificar(r, cuantas, datos, referencia);
     } catch {
       return null;
     }
-  }, [r, cuantas, datos]);
+  }, [r, cuantas, datos, referencia]);
   if (!r) return <HojaInferior visible={false}>{null}</HojaInferior>;
   const lo = nombreDeLoHecho(negocio);
   const faltan = plan?.insumos.filter((i) => i.textoFalta) ?? [];
@@ -350,7 +370,21 @@ function HojaDeTanda({
 }
 
 /** Ver la receta: qué lleva, cuánto cuesta y a cuánto la vendes (editable) */
-function HojaDeReceta({ negocio, datos, receta: r, alCerrar, alEditar }: { negocio: NegocioElegido; datos: DatosDeNegocio; receta: Receta | null; alCerrar: () => void; alEditar: (r: Receta) => void }) {
+function HojaDeReceta({
+  negocio,
+  datos,
+  receta: r,
+  referencia,
+  alCerrar,
+  alEditar,
+}: {
+  negocio: NegocioElegido;
+  datos: DatosDeNegocio;
+  receta: Receta | null;
+  referencia?: PrecioDeReferencia;
+  alCerrar: () => void;
+  alEditar: (r: Receta) => void;
+}) {
   const { aplicar } = useInventario();
   const a = r ? datos.articulos.find((x) => x.id === r.articuloId) : undefined;
   const [precio, setPrecio] = useState('');
@@ -361,7 +395,7 @@ function HojaDeReceta({ negocio, datos, receta: r, alCerrar, alEditar }: { negoc
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [r?.id]);
   if (!r || !a) return <HojaInferior visible={false}>{null}</HojaInferior>;
-  const c = costoDeReceta(r, datos);
+  const c = costoDeReceta(r, datos, referencia);
   const sugerido = precioSugerido(c.porUnidadCentavos, margenDe(negocio));
   const lo = nombreDeLoHecho(negocio);
 

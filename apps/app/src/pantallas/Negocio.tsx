@@ -1,26 +1,27 @@
-import { TIPOS, TIPOS_DE_NEGOCIO, negocioCompleto, type NegocioElegido, type SubtipoProductor, type TipoDeNegocio } from '@abasto/comercio';
+import { SUBTIPOS, SUBTIPOS_DE_PRODUCTOR, TIPOS, TIPOS_DE_NEGOCIO, negocioCompleto, type NegocioElegido, type SubtipoProductor, type TipoDeNegocio } from '@abasto/comercio';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useState } from 'react';
+import { useRef, useState, type ComponentRef } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Aparecer, Tocable } from '../animacion';
 import { Boton, Icono, Texto } from '../componentes';
-import { Chips, IMAGEN_DE_NEGOCIO, OPCIONES_DE_SUBTIPO, useNegocio } from '../NegocioInicio';
+import { ICONO_DE_SUBTIPO, IMAGEN_DE_NEGOCIO, useNegocio } from '../NegocioInicio';
 import { useSesion } from '../sesion';
 import { COLOR, FUENTE, SOMBRA } from '../tema';
 
 /**
  * Registro, paso del tipo de cliente (01/11, obligatorio): después de entrar con el celular y antes de la dirección.
  * Tres tarjetas grandes (Hogar, Tienda, Productor) con su ilustración 3D y lo que gana; el productor dice además
- * qué hace (salteñería, panadería o pensión). Con eso cambian el Inicio y, desde la Fase 2, su pestaña
- * («Mi casa», «Mi tienda», «Mi producción»). Se cambia después en Cuenta.
+ * qué hace: una de las 6 áreas (02/11). Con eso cambian el Inicio y su pestaña («Mi casa», «Mi tienda», «Mi
+ * producción»). Después sigue el primer paso: la primera receta o el primer estante. Se cambia después en Cuenta.
  */
 export function Negocio() {
   const { elegir } = useNegocio();
   const { usuario } = useSesion();
   const [tipo, setTipo] = useState<TipoDeNegocio | null>(null);
   const [subtipo, setSubtipo] = useState<SubtipoProductor | null>(null);
+  const desplazar = useRef<ComponentRef<typeof ScrollView>>(null);
   const nombre = usuario?.nombre?.split(' ')[0];
   const elegido: Partial<NegocioElegido> | null = tipo && (tipo === 'productor' ? { tipo, subtipo: subtipo ?? undefined } : { tipo });
   const listo = negocioCompleto(elegido);
@@ -30,7 +31,7 @@ export function Negocio() {
       <LinearGradient colors={['#DDF4A0', '#EEF8D5', COLOR.fondo]} locations={[0, 0.45, 1]} style={StyleSheet.absoluteFill} />
       <View style={[e.burbuja, { width: 240, height: 240, top: -70, right: -70 }]} />
       <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
-        <ScrollView contentContainerStyle={e.contenido} bounces={false}>
+        <ScrollView ref={desplazar} contentContainerStyle={e.contenido} bounces={false}>
           <Aparecer style={{ gap: 4 }}>
             <Texto style={e.saludo}>{nombre ? `¡Hola, ${nombre}!` : '¡Ya casi!'}</Texto>
             <Texto style={e.pregunta}>¿Para qué compras?</Texto>
@@ -44,7 +45,11 @@ export function Negocio() {
               <Aparecer key={t} orden={1 + i}>
                 <Tocable
                   hundir={0.98}
-                  onPress={() => setTipo(t)}
+                  onPress={() => {
+                    setTipo(t);
+                    // Las 6 áreas aparecen abajo: se llevan a la vista para que no haya que buscarlas
+                    if (t === 'productor') setTimeout(() => desplazar.current?.scrollToEnd({ animated: true }), 120);
+                  }}
                   style={[e.opcion, activo && e.opcionActiva]}
                   accessibilityRole="radio"
                   accessibilityState={{ selected: activo }}
@@ -68,7 +73,32 @@ export function Negocio() {
                 {activo && t === 'productor' && (
                   <View style={e.subtipos}>
                     <Texto v="fuerte">¿Qué haces?</Texto>
-                    <Chips opciones={OPCIONES_DE_SUBTIPO} elegido={subtipo} alElegir={setSubtipo} />
+                    <View style={e.areas} accessibilityRole="radiogroup">
+                      {SUBTIPOS_DE_PRODUCTOR.map((a) => {
+                        const suya = a === subtipo;
+                        return (
+                          <Tocable
+                            key={a}
+                            onPress={() => setSubtipo(a)}
+                            exterior={{ width: '48%' }}
+                            style={[e.area, suya && e.areaActiva]}
+                            accessibilityRole="radio"
+                            accessibilityState={{ selected: suya }}
+                            accessibilityLabel={SUBTIPOS[a].nombre}
+                          >
+                            <View style={[e.iconoArea, suya && { backgroundColor: COLOR.lima }]}>
+                              <Icono nombre={ICONO_DE_SUBTIPO[a]} tamano={18} color={COLOR.bosque} />
+                            </View>
+                            <Texto style={e.nombreArea} lineas={2}>
+                              {SUBTIPOS[a].nombre}
+                            </Texto>
+                            <Texto v="chico" lineas={2}>
+                              {SUBTIPOS[a].ejemplo}
+                            </Texto>
+                          </Tocable>
+                        );
+                      })}
+                    </View>
                   </View>
                 )}
               </Aparecer>
@@ -80,7 +110,7 @@ export function Negocio() {
             texto={tipo === 'productor' && !subtipo ? 'Elige qué haces' : 'Continuar'}
             icono="arrow-forward"
             deshabilitado={!listo}
-            alTocar={() => listo && elegir(elegido)}
+            alTocar={() => listo && elegir(elegido, { registro: true })}
           />
         </View>
       </SafeAreaView>
@@ -107,4 +137,9 @@ const e = StyleSheet.create({
   imagen: { position: 'absolute', right: 4, bottom: 4, width: 138, height: ALTO + 18 },
   subtipos: { gap: 8, marginTop: 10, padding: 12, borderRadius: 20, backgroundColor: COLOR.superficie, ...SOMBRA },
   pie: { paddingHorizontal: 20, paddingBottom: 12, paddingTop: 8 },
+  areas: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 8 },
+  area: { gap: 4, padding: 10, minHeight: 112, borderRadius: 18, backgroundColor: COLOR.fondo, borderWidth: 2, borderColor: 'transparent' },
+  areaActiva: { borderColor: COLOR.bosque, backgroundColor: COLOR.limaSuave },
+  iconoArea: { width: 34, height: 34, borderRadius: 12, backgroundColor: COLOR.superficie, alignItems: 'center', justifyContent: 'center' },
+  nombreArea: { fontFamily: FUENTE.negra, fontSize: 14, lineHeight: 17, color: COLOR.texto },
 });

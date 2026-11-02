@@ -26,6 +26,8 @@ final readonly class Organizacion
         public ?string $registradaEn = null,
         /** Solo clientes de la app: para qué compra (hogar, tienda o productor). Null si todavía no eligió */
         public ?NegocioDelCliente $negocio = null,
+        /** Datos de demostración de `catalogo:semilla` (e2e y casos de uso del parcial): la app no los muestra */
+        public bool $dePrueba = false,
     ) {
     }
 
@@ -68,7 +70,7 @@ final readonly class Organizacion
 
         return new self(
             $this->id, $this->nombre, $this->tipo, $this->ciudad, $this->verificacion, $this->nit, $this->deLaCasa,
-            $this->representante, $this->telefono, $this->correo, $this->motivoRechazo, $this->registradaEn, $negocio,
+            $this->representante, $this->telefono, $this->correo, $this->motivoRechazo, $this->registradaEn, $negocio, $this->dePrueba,
         );
     }
 
@@ -76,7 +78,7 @@ final readonly class Organizacion
     {
         return new self(
             $o->id, $o->nombre, $o->tipo, $o->ciudad, $verificacion, $o->nit, $o->deLaCasa,
-            $o->representante, $o->telefono, $o->correo, $motivo, $o->registradaEn, $o->negocio,
+            $o->representante, $o->telefono, $o->correo, $motivo, $o->registradaEn, $o->negocio, $o->dePrueba,
         );
     }
 }

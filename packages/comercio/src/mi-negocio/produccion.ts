@@ -66,17 +66,26 @@ export interface CostoDeReceta {
   sinCosto: string[];
 }
 
-export function costoDeReceta(r: Receta, libro: Libro): CostoDeReceta {
+/**
+ * Lo que cuesta un envase del insumo: lo que se pagó (costo promedio) o, si todavía no se compró, el precio de
+ * referencia del catálogo (02/11: la receta se arma antes de comprar).
+ */
+export type PrecioDeReferencia = (a: Articulo) => number | null;
+
+export function costoDeReceta(r: Receta, libro: Libro, referencia?: PrecioDeReferencia): CostoDeReceta {
   const hay = new Map(existencias(libro).map((x) => [x.articulo.id, x]));
+  const articulos = new Map(libro.articulos.map((a) => [a.id, a]));
   let total = 0;
   const sinCosto: string[] = [];
   for (const i of r.insumos) {
     const x = hay.get(i.articuloId);
-    if (!x || x.costoPromedioCentavos === null) {
-      sinCosto.push(x?.articulo.nombre ?? 'un insumo que ya no está');
+    const articulo = x?.articulo ?? articulos.get(i.articuloId);
+    const costo = x?.costoPromedioCentavos ?? (articulo && referencia ? referencia(articulo) : null);
+    if (!articulo || costo === null) {
+      sinCosto.push(articulo?.nombre ?? 'un insumo que ya no está');
       continue;
     }
-    total += aEnvases(x.articulo, i.cantidad) * x.costoPromedioCentavos;
+    total += aEnvases(articulo, i.cantidad) * costo;
   }
   return { totalCentavos: Math.round(total), porUnidadCentavos: Math.round(total / r.rinde), sinCosto };
 }
@@ -104,7 +113,7 @@ export interface Plan {
 }
 
 /** «Quiero hacer 300»: cuánto de cada insumo, cuánto hay y cuánto falta */
-export function planificar(r: Receta, cantidad: number, libro: Libro): Plan {
+export function planificar(r: Receta, cantidad: number, libro: Libro, referencia?: PrecioDeReferencia): Plan {
   if (!Number.isFinite(cantidad) || cantidad <= 0) throw new ErrorDeInventario('¿Cuántas quieres hacer?');
   const factor = cantidad / r.rinde;
   const hay = new Map<string, Existencia>(existencias(libro).map((x) => [x.articulo.id, x]));
@@ -117,7 +126,7 @@ export function planificar(r: Receta, cantidad: number, libro: Libro): Plan {
     const necesita = aEnvases(articulo, i.cantidad * factor);
     const tiene = Math.max(x?.cantidad ?? 0, 0);
     const falta = Math.max(necesita - tiene, 0);
-    costo += necesita * (x?.costoPromedioCentavos ?? 0);
+    costo += necesita * (x?.costoPromedioCentavos ?? referencia?.(articulo) ?? 0);
     return {
       articulo,
       necesita,
@@ -173,4 +182,9 @@ export function registrarTanda(r: Receta, libro: Libro, planificado: number, obt
   };
   const tanda: Tanda = { id, recetaId: r.id, articuloId: r.articuloId, planificado, obtenido, costoTotalCentavos: plan.costoCentavos, fecha: ahora };
   return { tanda, movimientos: [...consumos, produccion] };
+}
+
+/** «Pedir lo que falta»: lo que falta del plan que se compra en Abasto, en envases de cada producto */
+export function faltantesDelPlan(plan: Plan) {
+  return plan.insumos.filter((i) => i.falta > 1e-9 && i.articulo.productoId).map((i) => ({ productoId: i.articulo.productoId!, envases: i.falta }));
 }

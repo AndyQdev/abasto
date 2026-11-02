@@ -59,6 +59,7 @@ export type AvisoDeStock = 'agotado' | 'poco' | null;
  * Nunca inventa urgencias: sin compras no avisa nada.
  */
 export function avisoDeStock(x: Existencia, libro: Libro): AvisoDeStock {
+  if (x.porComprar) return null;
   if (x.agotado) return 'agotado';
   if (x.articulo.stockMinimo !== null) return x.cantidad <= x.articulo.stockMinimo ? 'poco' : null;
   const entradas = libro.movimientos.filter((m) => m.articuloId === x.articulo.id && (m.tipo === 'ENTRADA' || m.tipo === 'PRODUCCION') && m.cantidad > 0);

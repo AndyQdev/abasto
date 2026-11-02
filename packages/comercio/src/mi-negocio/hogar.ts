@@ -58,6 +58,7 @@ const DIA = 24 * 60 * 60 * 1000;
  * null: nunca se inventa.
  */
 export function seTeAcaba(x: Existencia, movimientos: Movimiento[], ahora: string): number | null {
+  if (x.porComprar) return null;
   if (x.agotado) return 0;
   const suyos = movimientos.filter((m) => m.articuloId === x.articulo.id).sort((a, b) => a.fecha.localeCompare(b.fecha));
   const entradas = suyos.filter((m) => m.tipo === 'ENTRADA' && m.cantidad > 0);

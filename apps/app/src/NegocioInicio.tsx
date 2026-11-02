@@ -28,7 +28,7 @@ import { COLOR, FUENTE, SOMBRA } from './tema';
  * mostrar primero lo suyo. Se guarda en el teléfono; lo de antes («masas», «cocina») se traduce solo.
  */
 export const ICONO_DE_NEGOCIO: Record<TipoDeNegocio, NombreDeIcono> = { hogar: 'home', tienda: 'storefront', productor: 'restaurant' };
-export const ICONO_DE_SUBTIPO: Record<SubtipoProductor, NombreDeIcono> = { salteneria: 'flame', panaderia: 'pizza', pension: 'restaurant' };
+export const ICONO_DE_SUBTIPO: Record<SubtipoProductor, NombreDeIcono> = { salteneria: 'flame', panaderia: 'pizza', horneados: 'bonfire', pension: 'restaurant', polleria: 'fast-food', puesto: 'storefront' };
 
 /** La ilustración 3D de cada tipo, para el registro */
 export const IMAGEN_DE_NEGOCIO: Record<TipoDeNegocio, number> = {
@@ -41,7 +41,11 @@ interface EstadoDeNegocio {
   negocio: NegocioElegido | null;
   /** false mientras se lee del teléfono: evita mostrar la pregunta un instante a quien ya eligió */
   leido: boolean;
-  elegir: (n: NegocioElegido) => void;
+  /** En el registro: true hasta que arma (o salta) su primera receta o su primer estante */
+  primerPaso: boolean;
+  /** Elegir o cambiar el negocio. `registro`: es la primera vez, sigue el primer paso (tienda y productor) */
+  elegir: (n: NegocioElegido, opciones?: { registro?: boolean }) => void;
+  terminarPrimerPaso: () => void;
 }
 
 const Contexto = createContext<EstadoDeNegocio | null>(null);
@@ -54,8 +58,11 @@ const Contexto = createContext<EstadoDeNegocio | null>(null);
 export function ProveedorDeNegocio({ children, dueno, servidor = graphql }: { children: ReactNode; dueno: string; servidor?: typeof graphql }) {
   const [negocio, setNegocio] = useState<NegocioElegido | null>(null);
   const [leido, setLeido] = useState(false);
+  const [primerPaso, setPrimerPaso] = useState(false);
   const clave = `negocio:${dueno}`;
   const marca = `negocio-por-subir:${dueno}`;
+  // Por dónde va el registro (no es un dato del negocio): si cierra la app a mitad, vuelve al primer paso
+  const pasoPendiente = `primer-paso:${dueno}`;
 
   const subir = useCallback(
     async (n: NegocioElegido) => {
@@ -84,6 +91,7 @@ export function ProveedorDeNegocio({ children, dueno, servidor = graphql }: { ch
         }
       }
       const porSubir = (await guardado.leer<boolean>(marca)) === true;
+      if (vivo && (await guardado.leer<boolean>(pasoPendiente)) === true) setPrimerPaso(true);
       if (vivo && local) {
         setNegocio(local);
         setLeido(true);
@@ -110,14 +118,22 @@ export function ProveedorDeNegocio({ children, dueno, servidor = graphql }: { ch
     return () => {
       vivo = false;
     };
-  }, [clave, marca, servidor, subir]);
+  }, [clave, marca, pasoPendiente, servidor, subir]);
 
-  const elegir = (n: NegocioElegido) => {
+  const elegir = (n: NegocioElegido, opciones?: { registro?: boolean }) => {
+    if (opciones?.registro && n.tipo !== 'hogar') {
+      setPrimerPaso(true);
+      void guardado.escribir(pasoPendiente, true);
+    }
     setNegocio(n);
     void guardado.escribir(clave, n);
     void subir(n);
   };
-  return <Contexto.Provider value={{ negocio, leido, elegir }}>{children}</Contexto.Provider>;
+  const terminarPrimerPaso = () => {
+    setPrimerPaso(false);
+    void guardado.borrar(pasoPendiente);
+  };
+  return <Contexto.Provider value={{ negocio, leido, primerPaso, elegir, terminarPrimerPaso }}>{children}</Contexto.Provider>;
 }
 
 /** Espera la respuesta hasta un límite: sin señal, la app no se queda esperando para abrir */
@@ -159,7 +175,7 @@ export function Chips<T extends string>({ opciones, elegido, alElegir }: { opcio
           <Tocable
             key={o.valor}
             onPress={() => alElegir(o.valor)}
-            exterior={{ flex: 1 }}
+            exterior={{ flexGrow: 1, flexBasis: opciones.length > 3 ? '30%' : 0 }}
             style={[e.chip, activo && e.chipActivo]}
             accessibilityRole="radio"
             accessibilityState={{ selected: activo }}
@@ -177,7 +193,7 @@ export function Chips<T extends string>({ opciones, elegido, alElegir }: { opcio
 }
 
 export const OPCIONES_DE_TIPO: Opcion<TipoDeNegocio>[] = TIPOS_DE_NEGOCIO.map((t) => ({ valor: t, texto: TIPOS[t].corto, icono: ICONO_DE_NEGOCIO[t] }));
-export const OPCIONES_DE_SUBTIPO: Opcion<SubtipoProductor>[] = SUBTIPOS_DE_PRODUCTOR.map((t) => ({ valor: t, texto: SUBTIPOS[t].nombre, icono: ICONO_DE_SUBTIPO[t] }));
+export const OPCIONES_DE_SUBTIPO: Opcion<SubtipoProductor>[] = SUBTIPOS_DE_PRODUCTOR.map((t) => ({ valor: t, texto: SUBTIPOS[t].corto, icono: ICONO_DE_SUBTIPO[t] }));
 
 /** En Cuenta: el tipo y, si es productor, qué hace */
 export function CambiarNegocio() {
@@ -243,7 +259,7 @@ export function PedidoDeLaSemanaCarta({ pedido, alRepetir }: { pedido: PedidoDeL
 const e = StyleSheet.create({
   carta: { gap: 12, padding: 16, borderRadius: 24, backgroundColor: COLOR.superficie, ...SOMBRA },
   pregunta: { fontFamily: FUENTE.negra, fontSize: 19, color: COLOR.texto, letterSpacing: -0.5 },
-  chips: { flexDirection: 'row', gap: 8 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, height: 42, borderRadius: 21, backgroundColor: COLOR.superficie, borderWidth: 1, borderColor: COLOR.borde },
   chipActivo: { backgroundColor: COLOR.bosque, borderColor: COLOR.bosque },
   textoChip: { fontFamily: FUENTE.fuerte, fontSize: 13, color: COLOR.bosque },

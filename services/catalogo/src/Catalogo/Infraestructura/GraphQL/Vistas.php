@@ -68,6 +68,7 @@ final class Vistas
                 'fecha' => $p->precioEnSuper->fecha,
             ],
             'precioPorConfirmar' => $p->precioPorConfirmar,
+            'usos' => $p->usos(),
         ];
     }
 
@@ -82,6 +83,7 @@ final class Vistas
             'estadoVerificacion' => ($o->verificacion ?? EstadoVerificacion::PENDIENTE)->value,
             'relacion' => $relacion,
             'deLaCasa' => $o->deLaCasa ?? false,
+            'dePrueba' => $o->dePrueba ?? false,
         ];
     }
 

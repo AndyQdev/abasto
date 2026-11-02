@@ -1,6 +1,7 @@
 import {
   agregar,
   CONSULTA_CATALOGO,
+  sinPruebas,
   conciliarCarrito,
   conRelacion,
   escalaPorDefecto,
@@ -69,7 +70,8 @@ export function ProveedorDeEstado({ children }: { children: ReactNode }) {
     if (!usuario) return;
     setCargando(true);
     try {
-      const r = await graphql<{ productos: Producto[]; mayoristas: Mayorista[] }>(CONSULTA_CATALOGO);
+      // Los mayoristas de demostración (e2e, parcial) no se muestran: la app es solo el catálogo real
+      const r = sinPruebas(await graphql<{ productos: Producto[]; mayoristas: Mayorista[] }>(CONSULTA_CATALOGO));
       const nuevo = { ...r, actualizado: new Date().toISOString() };
       setCatalogo(nuevo);
       void guardado.escribir('catalogo', nuevo);

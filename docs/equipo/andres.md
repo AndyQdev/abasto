@@ -28,7 +28,7 @@
 >
 > Tus tareas están en Trello, en la tarjeta «LEER PRIMERO · Reparto nuevo» y en las que tienen tu nombre. El prompt para tu Claude está en `docs/PROMPT-JHOEL.md`.
 
-Actualizado: 01/11/2026 · en main (los dos trabajamos ahí)
+Actualizado: 02/11/2026 · en main (los dos trabajamos ahí)
 
 ## Estoy en
 La app de clientes en el emulador Android. Después: registro de tiendas desde la app (CU-15) y el cobro contra entrega (CU-09).
@@ -53,9 +53,11 @@ La app de clientes en el emulador Android. Después: registro de tiendas desde l
   **Jhoel:** `pnpm semilla` (o `catalogo:semilla-abasto`) para ver los 49 productos.
 - App (01/11, pedido del usuario): «¿Qué negocio tienes?» pasó al registro (después del celular, antes de la dirección) y se cambia en Cuenta; el Inicio suma «También te puede servir» según el negocio; el banner del mercado quedó con poco texto y una ilustración 3D nueva.
 - Herramientas por tipo de cliente (01/11, pedido de Andrés): plan en `docs/plan-mi-negocio.md`. **Fase 1 hecha:** tres tipos (Hogar, Tienda, Productor con subtipo), registro obligatorio con ilustraciones 3D nuevas, Inicio de cada uno y cambio en Cuenta. **Fases 1 a 6 hechas (02/11):** tipo de cliente, inventario que se llena solo, caja, fiado, el mes, recetas con planificador y tandas, cuentas de la casa y lista fija. **Todo queda en la base de datos** (tipo de negocio en Catálogo, lo demás en el esquema `negocio` de Cobros); el teléfono guarda solo sin señal y sube solo. Ver «Cómo quedó» en `docs/plan-mi-negocio.md`. **Jhoel:** después de `git pull`, `pnpm install`, `npm install` en `apps/app`, `pnpm todo` (reconstruye Cobros y Pedidos) y `node infra/keycloak/al-dia.mjs`.
-- e2e: 15 pruebas en verde.
+- Catálogo real por área y primera receta (02/11, plan en `docs/plan-catalogo-real-y-plantillas.md`): 138 productos de Santa Cruz con imagen y `usos`; el Panel filtra y edita los usos; 6 áreas del productor; 20 plantillas de receta (`mi-negocio/plantillas.ts`); la receta se arma con insumos en cero; el registro sigue con «Arma tu primera receta» o «Arma tu primer estante»; el Inicio muestra solo lo de cada uno («Para tu receta de…», «Lo que más se pide en tu rubro»).
+- e2e: 22 pruebas en verde (02/11).
 
 ## Cambié en contratos
+- 02/11 · Catálogo: `Producto.usos: [String!]!` (a quién se muestra en el Inicio), `usos` en `CrearProductoEntrada` y `EditarProductoEntrada`, y `Mayorista.dePrueba: Boolean!`. Subtipos del productor: se suman `horneados`, `polleria` y `puesto`. Todo aditivo; subgrafo y supergrafo regenerados. **Jhoel:** nada que tocar; después de `git pull`, `pnpm semilla` para ver los 138 productos.
 - 02/11 · Tiempo real: Conecta abre el WebSocket `/v1/tiempo-real` (OpenAPI de Conecta) y escucha `pedido.*` y `cobro.*` con una cola exclusiva propia. AsyncAPI: `cobro.qr_generado` (aditivo; Cobros lo publica al crear el QR). **Jhoel:** el proyector de Asistente recibe `cobro.qr_generado` y lo ignora (cae en `default`); no hay que tocar nada.
 - 01/11 · «Mi negocio» en Cobros (esquema `negocio`): `miNegocio(desde)` y `sincronizarMiNegocio(cambios)` en el subgrafo de Cobros (supergrafo regenerado). AsyncAPI: `DatosPedido.lineas` (aditivo; Pedidos lo manda en todos los `pedido.*`) y la cola nueva `cobros.mi-negocio` (solo `pedido.entregado`). Keycloak: cuenta de servicio `cobros-servicio` (`infra/keycloak/al-dia.mjs`). **Jhoel:** el proyector de Asistente recibe `lineas` de más en `pedido.*`; no cambia nada de lo que ya lee.
 - Cobros: cobroDePedido, pagarQrDePrueba, CobroQr y Pedido.cobro.

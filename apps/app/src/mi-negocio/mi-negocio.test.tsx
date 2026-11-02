@@ -240,7 +240,7 @@ describe('producción (receta, tanda y venta, paso a paso)', () => {
       </Con>,
     );
     expect(screen.getByText('Agrega lo que haces')).toBeTruthy();
-    await fireEvent.press(screen.getByRole('button', { name: 'Agregar mi primera receta' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Escribir mi receta' }));
     // 1 · ¿Qué haces?
     await fireEvent.press(screen.getByRole('button', { name: 'Siguiente' }));
     expect(await screen.findByText(/Escribe qué haces/)).toBeTruthy();
