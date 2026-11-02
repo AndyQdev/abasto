@@ -1,5 +1,4 @@
 import { Image } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { Animated, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
@@ -19,7 +18,8 @@ type Paso = 'telefono' | 'codigo' | 'nombre';
  *
  * Diseño (02/11, referencias en contracts/onboarding/): cada paso tiene su escena 3D a sangre arriba
  * (`portada-bienvenida`, `portada-codigo`, `portada-nombre`) y una tarjeta blanca con las esquinas de arriba muy
- * redondeadas que se monta sobre la escena. En el primer paso, el logo y el lema van entre la escena y la tarjeta.
+ * redondeadas que se monta sobre la escena. En el primer paso la escena termina redondeada (sin desvanecido) y el
+ * logo y el lema van entre la escena y la tarjeta; el repartidor mira a la cámara y saluda.
  */
 export function Acceso() {
   const { iniciar } = useSesion();
@@ -88,7 +88,7 @@ export function Acceso() {
   const portada = paso === 'telefono' ? ILUSTRACION.portadaBienvenida : paso === 'codigo' ? ILUSTRACION.portadaCodigo : ILUSTRACION.portadaNombre;
   const teclado = useTecladoAbierto();
   // La escena ocupa la mitad de arriba; con el teclado abierto se achica para que el formulario quede a la vista
-  const altoPortada = Math.round(height * (teclado ? 0.22 : paso === 'telefono' ? 0.55 : paso === 'codigo' ? 0.52 : 0.62));
+  const altoPortada = Math.round(height * (teclado ? 0.22 : paso === 'telefono' ? 0.5 : paso === 'codigo' ? 0.52 : 0.62));
   const codigoListo = codigo.length === 6;
 
   return (
@@ -96,12 +96,8 @@ export function Acceso() {
       <StatusBar style="dark" />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" bounces={false} showsVerticalScrollIndicator={false}>
-          <View style={{ height: altoPortada }}>
+          <View style={[{ height: altoPortada }, paso === 'telefono' && e.portadaRedondeada]}>
             <Image source={portada} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition="top" transition={300} accessibilityIgnoresInvertColors />
-            {paso === 'telefono' && (
-              // La escena se funde con el fondo crema, donde va el logo
-              <LinearGradient colors={['rgba(242,247,235,0)', COLOR.fondo]} locations={[0, 1]} style={e.fundido} pointerEvents="none" />
-            )}
             {paso !== 'telefono' && (
               <Tocable onPress={atras} style={e.atras} exterior={[e.atrasLugar, { top: arriba + 10 }]} accessibilityRole="button" accessibilityLabel="Atrás">
                 <Icono nombre="arrow-back" tamano={22} color={COLOR.bosque} />
@@ -111,7 +107,6 @@ export function Acceso() {
 
           {paso === 'telefono' && !teclado && (
             <View style={e.marca}>
-              <View style={[e.mancha, { width: 220, height: 220, left: -110, top: -10 }]} pointerEvents="none" />
               <Aparecer orden={1} style={{ alignItems: 'center', gap: 8 }}>
                 <Logo tamano={52} />
                 <Texto style={e.lema}>Tu mayorista, siempre más cerca.</Texto>
@@ -312,11 +307,11 @@ function CajitasDeCodigo({ valor, alCambiar, deshabilitado, conError }: { valor:
 
 const e = StyleSheet.create({
   pantalla: { flex: 1, backgroundColor: COLOR.fondo },
-  fundido: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '24%' },
+  // En la bienvenida la escena termina con las esquinas de abajo redondeadas, sin desvanecido
+  portadaRedondeada: { borderBottomLeftRadius: 36, borderBottomRightRadius: 36, overflow: 'hidden' },
   atrasLugar: { position: 'absolute', left: 16, zIndex: 2 },
   atras: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', ...SOMBRA, shadowOpacity: 0.16 },
-  marca: { marginTop: -34, paddingBottom: 16, alignItems: 'center' },
-  mancha: { position: 'absolute', borderRadius: 999, backgroundColor: COLOR.lima, opacity: 0.45 },
+  marca: { paddingTop: 18, paddingBottom: 18, alignItems: 'center' },
   lema: { fontFamily: FUENTE.fuerte, fontSize: 17, color: COLOR.bosque, textAlign: 'center' },
   titulo: { fontFamily: FUENTE.negra, fontSize: 23, color: COLOR.texto, letterSpacing: -0.6 },
   tarjeta: {
