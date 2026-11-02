@@ -90,7 +90,7 @@ export function leerItem(fragmento: string): ItemPedido | null {
 }
 
 /** «para 20 personas», «100 empanadas», «rinde 50» */
-function rindeDe(texto: string): { rinde: number; preparacion: string | null } | null {
+export function rindeDe(texto: string): { rinde: number; preparacion: string | null } | null {
   const t = minuscula(texto);
   let m = t.match(/para\s+(\d+)\s+(personas|porciones|platos)/);
   if (m) return { rinde: Number(m[1]), preparacion: null };

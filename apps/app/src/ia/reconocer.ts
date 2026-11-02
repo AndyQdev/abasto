@@ -8,9 +8,12 @@ import { leerVectores, masParecidos, mezclarConClasificador, type Reconocido, ty
 const ARCHIVO_DEL_MODELO = require('../../assets/modelos/productos.tflite');
 const ARCHIVO_DE_VECTORES: unknown = require('../../assets/modelos/vectores.json');
 const ETIQUETAS: string[] = require('../../assets/modelos/etiquetas.json');
+// Los platos usan el mismo vector: una sola pasada por la red compara la foto con productos y con platos
+const ARCHIVO_DE_PLATOS: unknown = require('../../assets/modelos/platos.json');
 
 let modelo: Promise<TensorflowModel> | null = null;
 let catalogo: VectoresDelCatalogo | null = null;
+let platos: VectoresDelCatalogo | null = null;
 
 /** Se carga una sola vez y queda en memoria: la segunda foto ya no paga la carga (~200 ms). */
 function cargar(): { modelo: Promise<TensorflowModel>; catalogo: VectoresDelCatalogo } {
@@ -50,14 +53,31 @@ function salidasDe(salidas: ArrayBuffer[], dimension: number) {
  * Devuelve los más parecidos del catálogo, de mayor a menor confianza (0 a 1).
  * Para sumar lo que leyó ML Kit en la etiqueta, usa `combinarConTexto`.
  */
-export async function reconocerProducto(fotoUri: string, maximo = 5): Promise<Reconocido[]> {
+/** Lo que la foto parece: productos del catálogo y platos de comida, cada uno con su confianza (0 a 1). */
+export interface FotoReconocida {
+  productos: Reconocido[];
+  platos: Reconocido[];
+}
+
+/**
+ * Reconoce una foto dentro del teléfono y sin internet: un solo paso por MobileNetV3 (TensorFlow Lite)
+ * y el vector se compara con los productos y con los platos.
+ */
+export async function reconocerFoto(fotoUri: string, maximo = 5): Promise<FotoReconocida> {
   const { modelo: cargando, catalogo: vectores } = cargar();
-  if (!vectores.productos.length) return [];
+  platos ??= leerVectores(ARCHIVO_DE_PLATOS);
+  if (!vectores.productos.length && !platos.productos.length) return { productos: [], platos: [] };
   const [m, entrada] = await Promise.all([cargando, pixeles(fotoUri)]);
   const salidas = await m.run([entrada.buffer as ArrayBuffer]);
   const { vector, probabilidades } = salidasDe(salidas, vectores.dimension);
   // Con el clasificador entrenado se juntan las dos señales; sin él, solo el parecido
-  return probabilidades
+  const productos = probabilidades
     ? mezclarConClasificador(vector, vectores.productos, probabilidades, ETIQUETAS, maximo)
     : masParecidos(vector, vectores.productos, maximo);
+  return { productos, platos: platos.productos.length ? masParecidos(vector, platos.productos, maximo) : [] };
+}
+
+/** Solo los productos (lo usa Buscar por foto). */
+export async function reconocerProducto(fotoUri: string, maximo = 5): Promise<Reconocido[]> {
+  return (await reconocerFoto(fotoUri, maximo)).productos;
 }

@@ -33,6 +33,7 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 ml/datos/fotos/
+ml/datos/platos/
 ml/modelos/entrenados/
 
 # Pruebas

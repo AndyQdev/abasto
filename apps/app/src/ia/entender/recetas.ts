@@ -14,6 +14,8 @@ export interface Ingrediente {
 
 export interface RecetaDeReferencia {
   id: string;
+  /** El plato que reconoce la foto (platos.json); un plato puede tener varias recetas */
+  plato?: string;
   nombre: string;
   alias: string[];
   rinde: number;
@@ -54,4 +56,9 @@ export function escalarReceta(receta: RecetaDeReferencia, rinde: number | null):
     })),
     supuestos,
   };
+}
+
+/** Las recetas de un plato reconocido en la foto: un plato se prepara de varias formas. */
+export function recetasDelPlato(plato: string, recetas = RECETAS): RecetaDeReferencia[] {
+  return recetas.filter((r) => r.plato === plato);
 }

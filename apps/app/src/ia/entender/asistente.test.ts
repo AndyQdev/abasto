@@ -101,17 +101,38 @@ describe('Asistente de compra', () => {
     expect(p.supuestos[0]).toContain('pega tu receta');
   });
 
-  it('solo una foto y sin modelo que vea: el reconocedor de productos dice qué es', async () => {
-    const p = await proponerCompra({ texto: '', fotoUri: 'file:///foto.jpg' }, catalogo, {
-      reconocer: async () => [{ codigo: 'AB-005', confianza: 0.9 }],
-    });
+  const foto = { texto: '', fotoUri: 'file:///foto.jpg' };
+  const vio = (productos: { codigo: string; confianza: number }[], platos: { codigo: string; confianza: number }[]) => ({
+    reconocerFoto: async () => ({ productos, platos }),
+  });
+
+  it('una foto de un producto: el reconocedor propio dice cuál es', async () => {
+    const p = await proponerCompra(foto, catalogo, vio([{ codigo: 'AB-005', confianza: 0.9 }], [{ codigo: 'salchipapa', confianza: 0.4 }]));
     expect(p.origen).toBe('foto');
+    expect(p.mensaje).toBe('Es Aceite Fino 900 ml (90 %).');
     expect(p.lineas[0].producto?.codigo).toBe('AB-005');
   });
 
-  it('una foto que no se parece a nada lo dice', async () => {
-    const p = await proponerCompra({ texto: '', fotoUri: 'file:///foto.jpg' }, catalogo, { reconocer: async () => [{ codigo: 'AB-005', confianza: 0.2 }] });
+  it('una foto de salchipapa: dice que parece, usa su receta y ofrece las otras formas de prepararla', async () => {
+    const p = await proponerCompra({ ...foto, texto: 'para 8 personas' }, catalogo, vio([], [{ codigo: 'salchipapa', confianza: 0.88 }, { codigo: 'silpancho', confianza: 0.7 }]));
+    expect(p.mensaje).toContain('Parece salchipapa (88 %)');
+    expect(p.variantes.map((r) => r.id)).toEqual(['salchipapa-clasica', 'salchipapa-huevo']);
+    expect(p.receta?.id).toBe('salchipapa-clasica');
+    // 1 L de aceite para 4 → 2 L para 8 → 3 botellas de 900 ml
+    expect(p.lineas.find((l) => l.producto?.codigo === 'AB-005')?.cantidad).toBe(3);
+  });
+
+  it('si duda entre dos platos, pregunta «¿Es esto?» y no arma nada hasta que la persona elija', async () => {
+    const p = await proponerCompra(foto, catalogo, vio([], [{ codigo: 'majadito', confianza: 0.85 }, { codigo: 'silpancho', confianza: 0.836 }]));
+    expect(p.mensaje).toBe('¿Es majadito o silpancho? Elige y te armamos la compra.');
     expect(p.lineas).toEqual([]);
-    expect(p.supuestos[0]).toContain('No reconocimos la foto');
+    const elegido = await proponerCompra(foto, catalogo, { ...vio([], []), platoElegido: 'silpancho' });
+    expect(elegido.receta?.id).toBe('silpancho');
+  });
+
+  it('una foto que no se parece a nada lo dice', async () => {
+    const p = await proponerCompra(foto, catalogo, vio([{ codigo: 'AB-005', confianza: 0.2 }], [{ codigo: 'silpancho', confianza: 0.44 }]));
+    expect(p.lineas).toEqual([]);
+    expect(p.mensaje).toContain('No reconocimos la foto');
   });
 });

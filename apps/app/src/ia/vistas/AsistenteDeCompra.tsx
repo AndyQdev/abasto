@@ -2,12 +2,13 @@ import { cantidadConUnidad, itemDeCarrito, type ItemDeCarrito, type Producto } f
 import * as ImagePicker from 'expo-image-picker';
 import { useEffect, useState } from 'react';
 import { Image, Pressable, StyleSheet, TextInput, View } from 'react-native';
-import { Boton, Foto, Icono, Insignia, Tarjeta, Texto } from '../../componentes';
+import { Boton, Chip, Foto, Icono, Insignia, Tarjeta, Texto } from '../../componentes';
 import { COLOR } from '../../tema';
 import { proponerCompra, type Propuesta } from '../entender/asistente';
 import type { LineaPropuesta } from '../entender/catalogar';
 import { useIaLocal } from '../local/estado';
-import { reconocerProducto } from '../reconocer';
+import { NOMBRES_DE_PLATOS } from '../entender/foto';
+import { reconocerFoto } from '../reconocer';
 
 const EJEMPLOS = [
   'Necesito 3 cajas de aceite, 2 fardos de arroz y 5 docenas de leche',
@@ -51,7 +52,7 @@ export function AsistenteDeCompra({
     if (!r.canceled && r.assets[0]) setFoto(r.assets[0].uri);
   }
 
-  async function entender() {
+  async function entender(eleccion: { platoElegido?: string; recetaElegida?: string } = {}) {
     setPensando(true);
     setQuitadas(new Set());
     try {
@@ -59,8 +60,11 @@ export function AsistenteDeCompra({
       setPropuesta(
         await proponerCompra({ texto, fotoUri: foto }, productos, {
           interprete,
-          reconocer: reconocerProducto,
-          contexto: { negocio, nombresDelCatalogo: productos.map((p) => p.nombre) },
+          reconocerFoto,
+          contexto: { negocio },
+          // Al elegir otra forma de preparar el mismo plato se queda el plato ya reconocido
+          platoElegido: eleccion.platoElegido ?? (eleccion.recetaElegida && propuesta?.lectura?.tipo === 'plato' ? propuesta.lectura.plato : null),
+          recetaElegida: eleccion.recetaElegida ?? null,
         }),
       );
     } finally {
@@ -120,6 +124,29 @@ export function AsistenteDeCompra({
 
       {propuesta && (
         <>
+          {propuesta.mensaje && (
+            <Tarjeta style={estilos.mensaje}>
+              <View style={estilos.fila}>
+                <Icono nombre="sparkles" color={COLOR.bosque} />
+                <Texto v="fuerte" style={{ flex: 1 }}>{propuesta.mensaje}</Texto>
+              </View>
+              {propuesta.lectura?.tipo === 'plato' && propuesta.lectura.opciones.length > 0 && (
+                <View style={estilos.opciones}>
+                  {propuesta.lectura.opciones.map((o) => (
+                    <Chip key={o.codigo} texto={`${NOMBRES_DE_PLATOS[o.codigo] ?? o.codigo} · ${Math.round(o.confianza * 100)} %`} alTocar={() => void entender({ platoElegido: o.codigo })} />
+                  ))}
+                </View>
+              )}
+              {propuesta.variantes.length > 1 && (
+                <View style={estilos.opciones}>
+                  {propuesta.variantes.map((r) => (
+                    <Chip key={r.id} texto={r.nombre} activo={r.id === propuesta.receta?.id} alTocar={() => void entender({ recetaElegida: r.id })} />
+                  ))}
+                </View>
+              )}
+            </Tarjeta>
+          )}
+
           {propuesta.supuestos.length > 0 && (
             <Tarjeta style={estilos.supuestos}>
               <Texto v="fuerte">Lo que supusimos</Texto>
@@ -170,7 +197,7 @@ export function AsistenteDeCompra({
             !propuesta.supuestos.length && <Texto v="gris">No encontramos productos para eso. Prueba con otras palabras.</Texto>
           )}
           <Texto v="chico">
-            Entendió: {propuesta.origen === 'modelo' ? `la IA de tu teléfono (${ia.activo?.nombre ?? ''})` : propuesta.origen === 'foto' ? 'el reconocedor de productos' : 'las reglas'}
+            Entendió: {propuesta.origen === 'modelo' ? `la IA de tu teléfono (${ia.activo?.nombre ?? ''})` : propuesta.origen === 'foto' ? 'el reconocedor de fotos de Abasto' : 'las reglas'}
             {propuesta.respuestaMs !== null ? ` · ${(propuesta.respuestaMs / 1000).toFixed(1).replace('.', ',')} s` : ''}
           </Texto>
           {propuesta.falloDelModelo && <Texto v="chico" style={{ color: COLOR.rojoTexto }}>La IA no pudo responder: {propuesta.falloDelModelo}</Texto>}
@@ -196,4 +223,6 @@ const estilos = StyleSheet.create({
   miniatura: { width: 64, height: 64, borderRadius: 10 },
   ejemplo: { color: COLOR.texto2, textDecorationLine: 'underline' },
   supuestos: { backgroundColor: COLOR.ambarSuave },
+  mensaje: { backgroundColor: COLOR.limaSuave, gap: 8 },
+  opciones: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
 });

@@ -1,0 +1,32 @@
+{
+  "modelo": "platos-imagenet-v1",
+  "platos": {
+    "majadito": 8,
+    "pique-macho": 14,
+    "salchipapa": 11,
+    "saltena": 37,
+    "silpancho": 8
+  },
+  "fotos_de_prueba": 15,
+  "top1": 0.8,
+  "confusion": {
+    "majadito": {
+      "majadito": 2
+    },
+    "pique-macho": {
+      "pique-macho": 3
+    },
+    "salchipapa": {
+      "salchipapa": 4,
+      "silpancho": 1
+    },
+    "saltena": {
+      "saltena": 2,
+      "silpancho": 1
+    },
+    "silpancho": {
+      "saltena": 1,
+      "silpancho": 1
+    }
+  }
+}

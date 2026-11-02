@@ -7,13 +7,14 @@
  * Todo corre en el teléfono: anda sin internet sobre el catálogo guardado.
  */
 import type { Producto } from '@abasto/comercio';
-import type { Reconocido } from '../parecido';
+import type { FotoReconocida } from '../reconocer';
 import type { EntradaDelAsistente, Interprete } from '../local/motor';
 import { candidatos, catalogar, type LineaPropuesta } from './catalogar';
 import type { Contexto } from './con-modelo';
 import { intencionVacia, type Intencion } from './intencion';
-import { buscarReceta, escalarReceta, type RecetaDeReferencia } from './recetas';
-import { entenderConReglas } from './reglas';
+import { leerFoto, NOMBRES_DE_PLATOS, type LecturaDeFoto } from './foto';
+import { buscarReceta, escalarReceta, recetasDelPlato, type RecetaDeReferencia } from './recetas';
+import { entenderConReglas, rindeDe } from './reglas';
 
 export interface Propuesta {
   intencion: Intencion;
@@ -27,16 +28,25 @@ export interface Propuesta {
   falloDelModelo: string | null;
   /** Cuánto tardó el modelo en responder */
   respuestaMs: number | null;
+  /** Qué vio el reconocedor propio en la foto (producto, plato o nada) */
+  lectura: LecturaDeFoto | null;
+  /** Lo que se le dice a la persona: «Parece una salchipapa (87 %)…» */
+  mensaje: string | null;
+  /** Las formas de preparar el plato reconocido, para elegir otra */
+  variantes: RecetaDeReferencia[];
 }
 
 export interface OpcionesDelAsistente {
   interprete?: Interprete | null;
   contexto?: Contexto;
-  /** MobileNetV3 + vectores del catálogo: reconoce un producto en la foto aunque no haya modelo de lenguaje */
-  reconocer?: (fotoUri: string) => Promise<Reconocido[]>;
+  /** MobileNetV3 (TensorFlow Lite) + vectores: productos y platos parecidos a la foto */
+  reconocerFoto?: (fotoUri: string) => Promise<FotoReconocida>;
+  /** La persona eligió el plato en «¿Es esto?» o otra forma de prepararlo */
+  platoElegido?: string | null;
+  recetaElegida?: string | null;
 }
 
-const CONFIANZA_DE_FOTO = 0.5;
+const pct = (n: number) => `${Math.round(n * 100)} %`;
 
 async function entender(entrada: EntradaDelAsistente, productos: Producto[], o: OpcionesDelAsistente): Promise<{ intencion: Intencion; origen: Propuesta['origen'] }> {
   if (o.interprete) {
@@ -45,22 +55,52 @@ async function entender(entrada: EntradaDelAsistente, productos: Producto[], o: 
   }
   if (entrada.texto.trim()) return { intencion: entenderConReglas(entrada.texto), origen: 'reglas' };
 
-  // Solo una foto y sin modelo que vea: el reconocedor de productos (TensorFlow Lite) dice qué es
-  if (entrada.fotoUri && o.reconocer) {
-    const [mejor] = await o.reconocer(entrada.fotoUri).catch(() => []);
-    const producto = mejor && mejor.confianza >= CONFIANZA_DE_FOTO ? productos.find((p) => p.codigo === mejor.codigo) : undefined;
-    if (producto) {
-      return { intencion: { ...intencionVacia('busqueda'), items: [{ nombre: producto.nombre, cantidad: null, unidad: null, envase: null }] }, origen: 'foto' };
-    }
-  }
   return { intencion: intencionVacia(), origen: 'reglas' };
 }
 
 export async function proponerCompra(entrada: EntradaDelAsistente, productos: Producto[], opciones: OpcionesDelAsistente = {}): Promise<Propuesta> {
-  const { intencion, origen } = await entender(entrada, productos, opciones);
+  // La foto pasa por el reconocedor propio mientras el modelo de lenguaje (o las reglas) lee el texto
+  const deLaFoto = entrada.fotoUri && opciones.reconocerFoto ? opciones.reconocerFoto(entrada.fotoUri).catch(() => null) : Promise.resolve(null);
+  const [{ intencion, origen: origenDelTexto }, foto] = await Promise.all([entender(entrada, productos, opciones), deLaFoto]);
+  const lectura: LecturaDeFoto | null = opciones.platoElegido
+    ? { tipo: 'plato', plato: opciones.platoElegido, confianza: 1, seguro: true, opciones: [] }
+    : foto
+      ? leerFoto(foto.productos, foto.platos)
+      : null;
   const supuestos = [...intencion.supuestos];
   let items = intencion.items;
   let receta: RecetaDeReferencia | null = null;
+  let mensaje: string | null = null;
+  let variantes: RecetaDeReferencia[] = [];
+  let origen = origenDelTexto;
+
+  if (lectura?.tipo === 'plato' && lectura.seguro) {
+    // La foto reconoció el plato: manda sobre lo que adivinó el texto, y salen sus recetas
+    variantes = recetasDelPlato(lectura.plato);
+    receta = variantes.find((r) => r.id === opciones.recetaElegida) ?? variantes[0] ?? null;
+    const nombre = NOMBRES_DE_PLATOS[lectura.plato] ?? lectura.plato;
+    mensaje = opciones.platoElegido ? `Elegiste ${nombre}.` : `Parece ${nombre} (${pct(lectura.confianza)}).`;
+    if (receta) {
+      // «para 8 personas» junto a la foto: el texto dice para cuántos
+      const escalada = escalarReceta(receta, intencion.rinde ?? rindeDe(entrada.texto)?.rinde ?? null);
+      // Lo que el texto pidió y sí se vende se queda; el plato mismo («salchipapa») no es un producto
+      items = [...items.filter((i) => candidatos(i.nombre, productos).length > 0), ...escalada.items];
+      supuestos.push(...escalada.supuestos);
+      if (variantes.length > 1) mensaje += ` Hay ${variantes.length} formas de prepararlo: elige la tuya abajo.`;
+    } else {
+      mensaje += ' Todavía no tenemos su receta: escribe los ingredientes y te armamos la compra.';
+    }
+    if (!entrada.texto.trim() || origen !== 'modelo') origen = 'foto';
+  } else if (lectura?.tipo === 'plato') {
+    mensaje = `¿Es ${lectura.opciones.map((o) => NOMBRES_DE_PLATOS[o.codigo] ?? o.codigo).join(' o ')}? Elige y te armamos la compra.`;
+  } else if (lectura?.tipo === 'producto') {
+    const producto = productos.find((p) => p.codigo === lectura.codigo);
+    if (producto) {
+      mensaje = `Es ${producto.nombre} (${pct(lectura.confianza)}).`;
+      if (!items.some((i) => candidatos(i.nombre, productos)[0]?.codigo === producto.codigo)) items = [{ nombre: producto.nombre, cantidad: null, unidad: null, envase: null }, ...items];
+      if (!entrada.texto.trim()) origen = 'foto';
+    }
+  }
 
   // «100 empanadas de queso» como si fuera un producto: no se vende, pero es una receta conocida → sus insumos.
   // Los modelos chicos lo confunden seguido; corregirlo con código es más fiable que con más instrucciones.
@@ -87,9 +127,7 @@ export async function proponerCompra(entrada: EntradaDelAsistente, productos: Pr
   }
 
   const lineas = catalogar(items, productos);
-  if (!items.length && origen !== 'modelo' && !entrada.texto.trim() && entrada.fotoUri) {
-    supuestos.push('No reconocimos la foto: prueba más cerca, con buena luz, o escribe qué buscas');
-  }
+  if (!items.length && !mensaje && entrada.fotoUri) mensaje = 'No reconocimos la foto: prueba más cerca, con buena luz, o escribe qué buscas.';
   const diag = opciones.interprete?.diagnostico() ?? null;
   return {
     intencion: { ...intencion, items },
@@ -99,5 +137,8 @@ export async function proponerCompra(entrada: EntradaDelAsistente, productos: Pr
     receta,
     falloDelModelo: opciones.interprete && origen !== 'modelo' ? (diag?.error ?? 'El modelo no respondió') : null,
     respuestaMs: diag?.respuestaMs ?? null,
+    lectura,
+    mensaje,
+    variantes,
   };
 }
