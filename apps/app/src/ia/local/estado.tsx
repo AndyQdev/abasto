@@ -8,6 +8,7 @@ import { manifiesto, modeloRecomendado, modelosPosibles, nivelDelDispositivo, ty
 
 /** El modelo elegido sobrevive a cerrar la app */
 const CLAVE = 'abasto.ia.modelo';
+const SIN_MODELO = 'ninguno';
 
 export interface IaLocal {
   telefono: string;
@@ -54,7 +55,8 @@ export function ProveedorDeIaLocal({ children }: { children: ReactNode }) {
       setCapacidades(await capacidadesDelTelefono());
       const listos = await revisar();
       const guardado = await AsyncStorage.getItem(CLAVE).catch(() => null);
-      setActivoId(guardado && listos.includes(guardado) ? guardado : (listos[0] ?? null));
+      // «ninguno» es una elección: probar o usar la app solo con las reglas y el reconocedor
+      setActivoId(guardado === SIN_MODELO ? null : guardado && listos.includes(guardado) ? guardado : (listos[0] ?? null));
     })();
   }, [revisar]);
 
@@ -67,7 +69,7 @@ export function ProveedorDeIaLocal({ children }: { children: ReactNode }) {
       await anterior.then((i) => i.liberar()).catch(() => undefined);
     }
     setActivoId(m?.id ?? null);
-    await (m ? AsyncStorage.setItem(CLAVE, m.id) : AsyncStorage.removeItem(CLAVE)).catch(() => undefined);
+    await AsyncStorage.setItem(CLAVE, m?.id ?? SIN_MODELO).catch(() => undefined);
   }, []);
 
   const descargar = useCallback(

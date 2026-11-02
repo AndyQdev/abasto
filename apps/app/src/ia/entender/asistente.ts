@@ -9,7 +9,7 @@
 import type { Producto } from '@abasto/comercio';
 import type { Reconocido } from '../parecido';
 import type { EntradaDelAsistente, Interprete } from '../local/motor';
-import { catalogar, type LineaPropuesta } from './catalogar';
+import { candidatos, catalogar, type LineaPropuesta } from './catalogar';
 import type { Contexto } from './con-modelo';
 import { intencionVacia, type Intencion } from './intencion';
 import { buscarReceta, escalarReceta, type RecetaDeReferencia } from './recetas';
@@ -23,6 +23,10 @@ export interface Propuesta {
   /** Quién entendió: el modelo de lenguaje local o las reglas */
   origen: 'modelo' | 'reglas' | 'foto';
   receta: RecetaDeReferencia | null;
+  /** Si había modelo y no respondió: por qué (para probar y mejorar) */
+  falloDelModelo: string | null;
+  /** Cuánto tardó el modelo en responder */
+  respuestaMs: number | null;
 }
 
 export interface OpcionesDelAsistente {
@@ -58,6 +62,17 @@ export async function proponerCompra(entrada: EntradaDelAsistente, productos: Pr
   let items = intencion.items;
   let receta: RecetaDeReferencia | null = null;
 
+  // «100 empanadas de queso» como si fuera un producto: no se vende, pero es una receta conocida → sus insumos.
+  // Los modelos chicos lo confunden seguido; corregirlo con código es más fiable que con más instrucciones.
+  const sinCatalogo = items.filter((i) => !candidatos(i.nombre, productos).length);
+  const comoReceta = sinCatalogo.map((i) => ({ item: i, receta: buscarReceta(i.nombre) })).find((x) => x.receta);
+  if (comoReceta && !receta) {
+    receta = comoReceta.receta!;
+    const escalada = escalarReceta(receta, comoReceta.item.cantidad ?? intencion.rinde);
+    items = [...items.filter((i) => i !== comoReceta.item), ...escalada.items];
+    supuestos.push(...escalada.supuestos);
+  }
+
   if (intencion.tipo === 'receta' && !items.length) {
     receta = buscarReceta(intencion.preparacion) ?? buscarReceta(entrada.texto);
     if (receta) {
@@ -75,5 +90,14 @@ export async function proponerCompra(entrada: EntradaDelAsistente, productos: Pr
   if (!items.length && origen !== 'modelo' && !entrada.texto.trim() && entrada.fotoUri) {
     supuestos.push('No reconocimos la foto: prueba más cerca, con buena luz, o escribe qué buscas');
   }
-  return { intencion: { ...intencion, items }, lineas, supuestos, origen, receta };
+  const diag = opciones.interprete?.diagnostico() ?? null;
+  return {
+    intencion: { ...intencion, items },
+    lineas,
+    supuestos,
+    origen,
+    receta,
+    falloDelModelo: opciones.interprete && origen !== 'modelo' ? (diag?.error ?? 'El modelo no respondió') : null,
+    respuestaMs: diag?.respuestaMs ?? null,
+  };
 }

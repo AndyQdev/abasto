@@ -1,6 +1,6 @@
 import { cantidadConUnidad, itemDeCarrito, type ItemDeCarrito, type Producto } from '@abasto/comercio';
 import * as ImagePicker from 'expo-image-picker';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Image, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { Boton, Foto, Icono, Insignia, Tarjeta, Texto } from '../../componentes';
 import { COLOR } from '../../tema';
@@ -38,6 +38,11 @@ export function AsistenteDeCompra({
   const [pensando, setPensando] = useState(false);
   const [propuesta, setPropuesta] = useState<Propuesta | null>(null);
   const [quitadas, setQuitadas] = useState<Set<number>>(new Set());
+
+  // El modelo tarda en cargar: se empieza apenas se abre la pantalla, mientras la persona escribe
+  useEffect(() => {
+    void ia.interprete();
+  }, [ia.interprete]);
 
   async function elegirFoto(desde: 'camara' | 'galeria') {
     const opciones: ImagePicker.ImagePickerOptions = { mediaTypes: ['images'], quality: 0.7 };
@@ -164,7 +169,11 @@ export function AsistenteDeCompra({
           ) : (
             !propuesta.supuestos.length && <Texto v="gris">No encontramos productos para eso. Prueba con otras palabras.</Texto>
           )}
-          <Texto v="chico">Entendió: {propuesta.origen === 'modelo' ? 'la IA de tu teléfono' : propuesta.origen === 'foto' ? 'el reconocedor de productos' : 'las reglas'}</Texto>
+          <Texto v="chico">
+            Entendió: {propuesta.origen === 'modelo' ? `la IA de tu teléfono (${ia.activo?.nombre ?? ''})` : propuesta.origen === 'foto' ? 'el reconocedor de productos' : 'las reglas'}
+            {propuesta.respuestaMs !== null ? ` · ${(propuesta.respuestaMs / 1000).toFixed(1).replace('.', ',')} s` : ''}
+          </Texto>
+          {propuesta.falloDelModelo && <Texto v="chico" style={{ color: COLOR.rojoTexto }}>La IA no pudo responder: {propuesta.falloDelModelo}</Texto>}
         </>
       )}
     </View>

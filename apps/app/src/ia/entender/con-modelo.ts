@@ -10,6 +10,9 @@ const UNIDADES: Unidad[] = ['kg', 'g', 'L', 'ml', 'u.'];
 const TIPOS: TipoDeIntencion[] = ['pedido', 'receta', 'busqueda'];
 const ENVASES = ['caja', 'fardo', 'docena', 'unidad', 'quintal', 'arroba', 'maple', 'bolsa', 'paquete', 'botella', 'lata', 'balde', 'bidón', 'sobre'];
 
+/** «Esto o null» escrito como lo entiende el conversor de llama.cpp (anyOf), no como lista con null adentro */
+const oNulo = (esquema: object) => ({ anyOf: [esquema, { type: 'null' }] });
+
 export const ESQUEMA_DE_INTENCION = {
   type: 'object',
   additionalProperties: false,
@@ -18,44 +21,44 @@ export const ESQUEMA_DE_INTENCION = {
     tipo: { type: 'string', enum: TIPOS },
     items: {
       type: 'array',
-      maxItems: 25,
+      maxItems: 20,
       items: {
         type: 'object',
         additionalProperties: false,
         required: ['nombre', 'cantidad', 'unidad', 'envase'],
         properties: {
           nombre: { type: 'string', maxLength: 60 },
-          cantidad: { type: ['number', 'null'] },
-          unidad: { type: ['string', 'null'], enum: [...UNIDADES, null] },
-          envase: { type: ['string', 'null'], enum: [...ENVASES, null] },
+          cantidad: oNulo({ type: 'number' }),
+          unidad: oNulo({ type: 'string', enum: UNIDADES }),
+          envase: oNulo({ type: 'string', enum: ENVASES }),
         },
       },
     },
-    preparacion: { type: ['string', 'null'], maxLength: 80 },
-    rinde: { type: ['number', 'null'] },
-    supuestos: { type: 'array', maxItems: 6, items: { type: 'string', maxLength: 140 } },
+    preparacion: oNulo({ type: 'string', maxLength: 80 }),
+    rinde: oNulo({ type: 'number' }),
+    supuestos: { type: 'array', maxItems: 4, items: { type: 'string', maxLength: 140 } },
   },
 } as const;
 
 export interface Contexto {
   /** Para qué compra: hogar, tienda o productor (y qué produce) */
   negocio?: string | null;
-  /** Nombres del catálogo, para que use las mismas palabras (no para elegir: elige el código) */
+  /**
+   * Ya no va en el prompt: con la lista del catálogo, el modelo de 450M la copiaba en vez de mirar la foto, y
+   * alargaba el prompt (un minuto en un teléfono de 4 GB). El catálogo lo cruza el código, no el modelo.
+   */
   nombresDelCatalogo?: string[];
 }
 
-export function instrucciones({ negocio, nombresDelCatalogo = [] }: Contexto = {}): string {
+/** Corto a propósito: en un teléfono cada palabra del prompt cuesta tiempo antes de la primera respuesta. */
+export function instrucciones({ negocio }: Contexto = {}): string {
   return [
-    'Eres el asistente de compras de Abasto, una app boliviana de compras al por mayor.',
-    'Tu único trabajo es entender qué quiere comprar, abastecer o producir la persona y devolverlo como JSON.',
-    'Reglas:',
-    '- tipo «pedido» si nombra productos para comprar; «receta» si quiere preparar algo (o pega una receta o manda la foto de una comida); «busqueda» si busca algo sin decir cuánto.',
-    '- En items va cada producto o ingrediente con el nombre en minúsculas y en singular, la cantidad y su unidad (kg, g, L, ml, u.) o su envase (caja, fardo, docena, quintal, arroba, maple…). Si no dijo cuánto, cantidad null.',
-    '- Si pegó una receta, copia sus ingredientes y cantidades tal cual. Si no hay receta, deja items vacío y pon en preparacion qué quiere hacer y en rinde cuántas porciones o unidades.',
-    '- Nunca inventes precios, marcas ni cantidades que la persona no dio. Lo que supongas va en supuestos, en una frase corta.',
-    '- Si mandó una foto, describe en preparacion lo que ves (ej. «torta de chocolate de dos pisos») o, si es un producto, ponlo como item.',
-    negocio ? `La persona compra para: ${negocio}.` : '',
-    nombresDelCatalogo.length ? `Productos que vende Abasto (usa estas palabras si corresponden): ${nombresDelCatalogo.slice(0, 80).join('; ')}.` : '',
+    'Entiendes lo que una persona en Bolivia quiere comprar, abastecer o preparar, y respondes solo con JSON.',
+    'tipo: «pedido» si nombra productos; «receta» si quiere preparar algo, pega una receta o manda la foto de una comida; «busqueda» si busca algo sin decir cuánto.',
+    'items: cada producto o ingrediente que la persona dijo o que se lee en la foto, en minúsculas y singular, con su cantidad y unidad (kg, g, L, ml, u.) o envase (caja, fardo, docena, quintal, arroba, maple). Sin cantidad: null.',
+    'Si es una comida sin receta, deja items vacío, escribe en preparacion qué es (por ejemplo «salchipapa») y en rinde para cuántos.',
+    'No inventes cantidades, precios ni marcas. Lo que supongas va en supuestos.',
+    negocio ? `Compra para: ${negocio}.` : '',
   ]
     .filter(Boolean)
     .join('\n');
@@ -79,10 +82,13 @@ function item(v: unknown): ItemPedido | null {
  * usa las reglas: nunca se muestra una respuesta inventada.
  */
 export function leerRespuesta(crudo: string): Intencion | null {
+  // Algunos modelos rodean el JSON con marcas de la plantilla («<|im_start|>assistant») o un bloque ```json
+  const desde = crudo.indexOf('{');
+  const hasta = crudo.lastIndexOf('}');
+  if (desde < 0 || hasta <= desde) return null;
   let datos: unknown;
   try {
-    // Algunos modelos envuelven el JSON en ```json … ```
-    datos = JSON.parse(crudo.replace(/^\s*```(?:json)?/i, '').replace(/```\s*$/, ''));
+    datos = JSON.parse(crudo.slice(desde, hasta + 1));
   } catch {
     return null;
   }

@@ -33,6 +33,7 @@ const interpreteQueDevuelve = (intencion: Intencion | null): Interprete => ({
   modelo: manifiesto.modelos[0],
   veFotos: true,
   interpretar: async () => intencion,
+  diagnostico: () => (intencion ? null : { cargaMs: 0, respuestaMs: 1, crudo: null, error: 'grammar error' }),
   liberar: async () => {},
 });
 
@@ -63,6 +64,7 @@ describe('Asistente de compra', () => {
     const p = await proponerCompra({ texto: '2 fardos de arroz' }, catalogo, { interprete: interpreteQueDevuelve(null) });
     expect(p.origen).toBe('reglas');
     expect(p.lineas[0].producto?.codigo).toBe('AB-001');
+    expect(p.falloDelModelo).toBe('grammar error');
   });
 
   it('«300 salteñas» usa la receta de referencia, escala con aritmética y dice lo que supuso', async () => {
@@ -76,6 +78,20 @@ describe('Asistente de compra', () => {
     expect(p.supuestos.some((s) => s.includes('receta de referencia'))).toBe(true);
     // Lo que no vendemos (carne, papa…) se dice, no se inventa
     expect(p.lineas.some((l) => l.certeza === 'sin_producto' && l.pedido.nombre === 'carne de res')).toBe(true);
+  });
+
+  it('si el modelo pide «100 empanadas» como producto, el código lo convierte en la receta de referencia (pasó con LFM2.5 en el TECNO)', async () => {
+    const interprete = interpreteQueDevuelve({
+      tipo: 'pedido',
+      items: [{ nombre: 'empanadas de queso', cantidad: 100, unidad: null, envase: null }],
+      preparacion: null,
+      rinde: null,
+      supuestos: [],
+    });
+    const p = await proponerCompra({ texto: 'quiero hacer 100 empanadas de queso' }, catalogo, { interprete });
+    expect(p.receta?.id).toBe('empanada-queso');
+    expect(p.lineas.find((l) => l.producto?.codigo === 'AB-050')).toMatchObject({ cantidad: 1 });
+    expect(p.lineas.some((l) => l.pedido.nombre === 'empanadas de queso')).toBe(false);
   });
 
   it('una receta que no conocemos pide los ingredientes en vez de inventarlos', async () => {

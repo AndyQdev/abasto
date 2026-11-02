@@ -45,6 +45,21 @@ export function AjustesIaLocal() {
         </Tarjeta>
       )}
 
+      <Tarjeta>
+        <View style={estilos.fila}>
+          <View style={{ flex: 1 }}>
+            <Texto v="fuerte">Sin modelo</Texto>
+            <Texto v="gris">Solo las reglas y el reconocedor de productos. Rápido y anda en cualquier teléfono.</Texto>
+          </View>
+          {!ia.activo && <Insignia texto="En uso" />}
+        </View>
+        {ia.activo && (
+          <View style={estilos.acciones}>
+            <Boton tipo="chico" texto="Usar sin modelo" alTocar={() => void ia.usar(null)} />
+          </View>
+        )}
+      </Tarjeta>
+
       {ia.recomendado && <FilaDeModelo modelo={ia.recomendado} recomendado />}
       {otros.map((m) => (
         <FilaDeModelo key={m.id} modelo={m} />
