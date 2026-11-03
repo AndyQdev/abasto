@@ -11,8 +11,8 @@ sin internet).
 
 | Qué reconoce | Archivo en la app | Cómo se generó | Datos | Resultado |
 |---|---|---|---|---|
-| **117 de los 138 productos** del catálogo de Abasto | `vectores.json`, `etiquetas.json` | `ml/src/abasto_ml/vision/catalogo.py` | 198 fotos reales: las 27 fotos de tienda del catálogo + fotos de referencia (§5) + 43 de Wikimedia Commons revisadas a mano; las ilustraciones 3D genéricas **no** se usan. 6 vistas por foto | top-1 702/702 con fotos de celular **simuladas** (optimista: salen de las mismas fotos) |
-| Clasificador de los 117 productos (deep learning, TensorFlow) | dentro de `productos.tflite` | `catalogo.py` › `entrenar_clasificador` (transfer learning: base congelada, capa densa entrenada) | 40 fotos de celular simuladas por producto (giro, recorte, luz, desenfoque) | validación 100 % (mismo aviso) |
+| **137 de los 138 productos** del catálogo de Abasto | `vectores.json`, `etiquetas.json` | `ml/src/abasto_ml/vision/catalogo.py` | 248 fotos reales: las 27 fotos de tienda del catálogo + fotos de referencia (§5) + 43 de Wikimedia Commons + 50 de tiendas web (`ml/fotos-web.csv`), todas revisadas a mano; las ilustraciones 3D genéricas **no** se usan. 6 vistas por foto | top-1 822/822 con fotos de celular **simuladas** (optimista: salen de las mismas fotos) |
+| Clasificador de los 137 productos (deep learning, TensorFlow) | dentro de `productos.tflite` | `catalogo.py` › `entrenar_clasificador` (transfer learning: base congelada, capa densa entrenada) | 40 fotos de celular simuladas por producto (giro, recorte, luz, desenfoque) | validación 100 % (mismo aviso) |
 | **5 platos** bolivianos | `platos.json`, `metricas-platos.json` | `ml/src/abasto_ml/vision/platos.py` (vector promedio por plato) | **Wikimedia Commons**, ver §2 | **top-1 12/15 = 80 %** con fotos reales que no se usaron |
 
 Detalle de los platos (02/11/2026):
@@ -234,7 +234,7 @@ Las fotos de referencia son sólo para el modelo local; no se publican en la app
 <!-- que-probar:inicio -->
 ## 6. Qué reconoce hoy y qué recetas sabe (para probar en el celular)
 
-Al 03/11/2026: **117 productos** y **5 platos** por foto, y **38 recetas** por texto.
+Al 03/11/2026: **137 productos** y **5 platos** por foto, y **38 recetas** por texto.
 
 ### Platos por foto
 
@@ -283,12 +283,15 @@ Wikimedia Commons (carne, verdura, descartables): reconoce el tipo de producto, 
 | AB-020 | Galleta wafer Mabel's chocolate 100 g | ★ marca exacta |
 | AB-021 | Galletas Mabel's Cremositas Max 216 g | ★ marca exacta |
 | AB-023 | Chocolate Para Ti blanco 100 g | ★ marca exacta |
+| AB-101 | Harina de trigo · quintal 46 kg | foto de tienda web (parecida) |
+| AB-102 | Harina de trigo · arroba 11,5 kg | foto de tienda web (parecida) |
 | AB-103 | Azúcar · quintal 46 kg | ★ marca exacta |
 | AB-104 | Levadura seca instantánea 500 g | otra presentación |
 | AB-105 | Polvo de hornear 1 kg | otra presentación |
 | AB-106 | Manteca vegetal · balde 15 kg | otra presentación |
 | AB-107 | Aceite vegetal · bidón 5 L | otra presentación |
 | AB-108 | Arroz · quintal 46 kg | otra presentación |
+| AB-109 | Arroz · arroba 11,5 kg | foto de tienda web (parecida) |
 | AB-110 | Fideo tallarín · bolsa 5 kg | otra presentación |
 | AB-111 | Ají colorado molido 1 kg | otra presentación |
 | AB-112 | Comino molido 500 g | otra presentación |
@@ -299,18 +302,25 @@ Wikimedia Commons (carne, verdura, descartables): reconoce el tipo de producto, 
 | AB-117 | Cebolla · arroba 11,5 kg | otra presentación |
 | AB-118 | Ajo · 1 kg | otra presentación |
 | AB-119 | Bolsas plásticas medianas · paquete de 100 | foto genérica |
+| AB-120 | Envase de plastoformo con tapa · paquete de 100 | foto de tienda web (parecida) |
 | AB-121 | Servilletas · paquete de 500 | ★ marca exacta |
 | AB-122 | Vasos descartables 250 ml · paquete de 100 | ★ marca exacta |
 | AB-123 | Azúcar · arroba 11,5 kg | ★ marca exacta |
 | AB-124 | Almidón de yuca · arroba 11,5 kg | otra presentación |
+| AB-125 | Almidón de yuca 1 kg | foto de tienda web (parecida) |
+| AB-126 | Fécula de maíz (maicena) 1 kg | foto de tienda web (parecida) |
 | AB-127 | Pan molido 1 kg | otra presentación |
 | AB-128 | Esencia de vainilla 500 ml | otra presentación |
 | AB-129 | Gelatina sin sabor 500 g | otra presentación |
+| AB-130 | Manteca Karina 1 kg | foto de tienda web (parecida) |
 | AB-131 | Margarina Regia 1 kg | otra presentación |
+| AB-132 | Aceite vegetal · bidón 20 L | foto de tienda web (parecida) |
 | AB-133 | Maní crudo pelado 1 kg | otra presentación |
 | AB-134 | Arveja seca 1 kg | otra presentación |
+| AB-135 | Sal fina · bolsa 25 kg | foto de tienda web (parecida) |
 | AB-136 | Urucú (achiote) molido 500 g | foto genérica |
 | AB-137 | Ajo en polvo 500 g | otra presentación |
+| AB-138 | Vinagre · bidón 5 L | foto de tienda web (parecida) |
 | AB-139 | Aceitunas verdes · balde 5 kg | otra presentación |
 | AB-140 | Pasas de uva 1 kg | foto genérica |
 | AB-141 | Mayonesa · balde 3 kg | otra presentación |
@@ -325,8 +335,11 @@ Wikimedia Commons (carne, verdura, descartables): reconoce el tipo de producto, 
 | AB-150 | Plátano verde · bolsa de 20 | foto genérica |
 | AB-151 | Plátano maduro · bolsa de 20 | foto genérica |
 | AB-152 | Lechuga · bolsa de 12 | ★ marca exacta |
+| AB-153 | Charque de res · 1 kg | foto de tienda web (parecida) |
+| AB-154 | Carne de res para guiso · 1 kg | foto de tienda web (parecida) |
 | AB-155 | Carne molida de res · 1 kg | otra presentación |
 | AB-156 | Lomo de res · 1 kg | foto genérica |
+| AB-157 | Corazón de res · 1 kg | foto de tienda web (parecida) |
 | AB-158 | Pollo entero | otra presentación |
 | AB-159 | Patas de pollo · 1 kg | foto genérica |
 | AB-161 | Chorizo · 1 kg | ★ marca exacta |
@@ -334,6 +347,7 @@ Wikimedia Commons (carne, verdura, descartables): reconoce el tipo de producto, 
 | AB-163 | Pan de hamburguesa · bolsa de 50 | ★ marca exacta |
 | AB-164 | Palitos de anticucho · paquete de 100 | foto genérica |
 | AB-165 | Bolsas de papel para pan · paquete de 500 | foto genérica |
+| AB-166 | Harina de maíz 1 kg | foto de tienda web (parecida) |
 | AB-167 | Canela molida 250 g | otra presentación |
 | AB-168 | Cacao en polvo 500 g | foto genérica |
 | AB-169 | Coco rallado 500 g | otra presentación |
@@ -343,8 +357,10 @@ Wikimedia Commons (carne, verdura, descartables): reconoce el tipo de producto, 
 | AB-173 | Crema de leche 1 L | otra presentación |
 | AB-174 | Dulce de leche · balde 5 kg | otra presentación |
 | AB-175 | Mantequilla sin sal · 1 kg | otra presentación |
+| AB-176 | Queso menonita · 1 kg | foto de tienda web (parecida) |
 | AB-177 | Frejol rojo 1 kg | foto genérica |
 | AB-178 | Lenteja 1 kg | otra presentación |
+| AB-179 | Mote de maíz pelado 1 kg | foto de tienda web (parecida) |
 | AB-180 | Quinua real 1 kg | otra presentación |
 | AB-181 | Avena en hojuelas 1 kg | otra presentación |
 | AB-182 | Fideo macarrón · bolsa 5 kg | foto genérica |
@@ -362,19 +378,23 @@ Wikimedia Commons (carne, verdura, descartables): reconoce el tipo de producto, 
 | AB-194 | Repollo | otra presentación |
 | AB-195 | Pechuga de pollo · 1 kg | foto genérica |
 | AB-196 | Alitas de pollo · 1 kg | foto genérica |
+| AB-197 | Costilla de res · 1 kg | foto de tienda web (parecida) |
 | AB-198 | Costilla de cerdo · 1 kg | otra presentación |
 | AB-199 | Papas prefritas congeladas · bolsa 2,5 kg | ★ marca exacta |
 | AB-200 | Carbón vegetal · bolsa 5 kg | otra presentación |
 | AB-201 | Guantes descartables · caja de 100 | otra presentación |
+| AB-202 | Papel para hornear · paquete de 100 | foto de tienda web (parecida) |
 | AB-203 | Cajas para torta · paquete de 25 | foto genérica |
+| AB-204 | Cajas para pollo · paquete de 100 | foto de tienda web (parecida) |
 | AB-205 | Cucharas descartables · paquete de 100 | otra presentación |
 | AB-206 | Papel aluminio · rollo de 30 m | otra presentación |
+| AB-207 | Jabón en barra para ropa · paquete de 6 | foto de tienda web (parecida) |
 | AB-208 | Lavavajilla líquido 1 L | otra presentación |
 | AB-209 | Esponja de cocina · paquete de 6 | otra presentación |
 | AB-210 | Fósforos · paquete de 10 | otra presentación |
 | AB-211 | Velas · paquete de 6 | otra presentación |
 
-Sin foto real todavía (21): Harina de trigo · quintal 46 kg; Harina de trigo · arroba 11,5 kg; Arroz · arroba 11,5 kg; Envase de plastoformo con tapa · paquete de 100; Almidón de yuca 1 kg; Fécula de maíz (maicena) 1 kg; Manteca Karina 1 kg; Aceite vegetal · bidón 20 L; Sal fina · bolsa 25 kg; Vinagre · bidón 5 L; Charque de res · 1 kg; Carne de res para guiso · 1 kg; Corazón de res · 1 kg; Gallina criolla; Harina de maíz 1 kg; Queso menonita · 1 kg; Mote de maíz pelado 1 kg; Costilla de res · 1 kg; Papel para hornear · paquete de 100; Cajas para pollo · paquete de 100; Jabón en barra para ropa · paquete de 6.
+Sin foto real todavía (1): Gallina criolla.
 
 ### Recetas (escribe en «Pídelo con tus palabras»)
 
@@ -423,7 +443,7 @@ estimadas.
 | Lomo montado | 10 platos | «lomo montado» | IA (estimada) |
 | Humintas | 24 humintas | «humitas» | IA (estimada) |
 
-Generada el 03/11 desde `apps/app/assets/modelos/` y las recetas de `apps/app/src/ia/entender/recetas.ts`: si cambian, hay que actualizarla.
+Esta sección se vuelve a escribir con el script de `que_probar` cuando cambian los modelos o las recetas.
 
 <!-- que-probar:fin -->
 
@@ -435,3 +455,4 @@ Generada el 03/11 desde `apps/app/assets/modelos/` y las recetas de `apps/app/sr
 | 02/11/2026 | Fotos de referencia de los 49 productos de Abasto (todavía sin indexar) | Fidalga, Amarket y Guabirá | 31 listos para indexar, 16 dudosos, 2 necesitan foto propia (§5) |
 | 02/11/2026 | Vectores de 5 platos bolivianos | 78 fotos de Wikimedia Commons (15 aparte para prueba) | top-1 12/15 = 80 % |
 | 02/11/2026 | Vectores y clasificador de 117 de los 138 productos (`catalogo-imagenet-v2`) | 27 fotos de tienda + 128 de referencia (76 exactas, 52 parecidas revisadas a mano) + 43 de Commons revisadas | top-1 702/702 (simuladas); falta medir con fotos de celular reales |
+| 03/11/2026 | Vectores y clasificador de 137 de los 138 productos | + 50 fotos de tiendas web revisadas a mano para 20 productos (`ml/fotos-web.csv`; las imágenes no van al repo). Fuera: gallina criolla (en foto es igual al pollo entero) | top-1 822/822 (simuladas); vector solo 97,9 % |

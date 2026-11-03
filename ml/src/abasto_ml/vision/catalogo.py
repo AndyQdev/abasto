@@ -18,6 +18,7 @@ Requiere `uv sync --group vision`. Uso: uv run python -m abasto_ml.vision.catalo
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 from pathlib import Path
 
@@ -29,18 +30,38 @@ from abasto_ml.vision.entrenar import ML, SALIDA_POR_DEFECTO, TAMANO, a_tflite, 
 FOTOS_DEL_CATALOGO = ML.parent / "services" / "catalogo" / "database" / "fotos-abasto"
 FOTOS_DE_REFERENCIA = ML / "datos" / "fotos-referencia"
 ATRIBUCIONES_COMMONS = ML / "atribuciones-productos.csv"
+# Fotos de tiendas y sitios web para los productos sin foto de referencia, revisadas a mano (03/11). Las imágenes no
+# van al repo (licencia desconocida, solo para entrenar en local): el índice con la fuente de cada una sí.
+FOTOS_WEB = ML / "fotos-web.csv"
 NOMBRE_DEL_MODELO = "catalogo-imagenet-v2"
 EXTENSIONES = {".webp", ".jpg", ".jpeg", ".png"}
 RECORTES = (1.0, 0.85, 0.7)
 
 
+def fotos_web(indice: Path, raiz: Path = ML.parent) -> dict[str, list[Path]]:
+    """Código → fotos web revisadas (`ml/fotos-web.csv`) que están en disco. Las que no se bajaron se saltan."""
+    if not indice.is_file():
+        return {}
+    fotos: dict[str, list[Path]] = {}
+    with indice.open(encoding="utf-8") as archivo:
+        for fila in csv.DictReader(archivo):
+            ruta = raiz / fila["archivo"]
+            if ruta.is_file():
+                fotos.setdefault(fila["codigo"], []).append(ruta)
+    return fotos
+
+
 def leer_fotos(
-    carpeta: Path, referencia: Path | None = FOTOS_DE_REFERENCIA, commons: Path | None = ATRIBUCIONES_COMMONS
+    carpeta: Path,
+    referencia: Path | None = FOTOS_DE_REFERENCIA,
+    commons: Path | None = ATRIBUCIONES_COMMONS,
+    web: Path | None = FOTOS_WEB,
 ) -> dict[str, list[Path]]:
     """Código de producto → sus fotos reales.
 
     Del catálogo solo cuentan las fotos de tienda (`FOTOS_DE_TIENDA`): las ilustraciones 3D genéricas no le enseñan
-    fotos reales al modelo. Se suman las fotos de referencia de tiendas bolivianas (`fotos_referencia.py`).
+    fotos reales al modelo. Se suman las fotos de referencia de tiendas bolivianas (`fotos_referencia.py`), las de
+    Wikimedia Commons aprobadas y las de la web revisadas a mano (`ml/fotos-web.csv`).
     """
     from abasto_ml.vision.fotos_referencia import FOTOS_DE_TIENDA
 
@@ -61,6 +82,9 @@ def leer_fotos(
         from abasto_ml.vision.productos_wikimedia import aprobadas
 
         for codigo, fs in aprobadas(commons).items():
+            fotos.setdefault(codigo, []).extend(fs)
+    if web is not None:
+        for codigo, fs in fotos_web(web).items():
             fotos.setdefault(codigo, []).extend(fs)
     return {c: fs for c, fs in sorted(fotos.items()) if fs}
 

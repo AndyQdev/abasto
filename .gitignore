@@ -34,6 +34,7 @@ __pycache__/
 .ruff_cache/
 ml/datos/fotos/
 ml/datos/fotos-referencia/
+ml/datos/fotos-web/
 ml/datos/platos/
 ml/modelos/entrenados/
 

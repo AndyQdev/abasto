@@ -75,7 +75,7 @@ def test_el_catalogo_toma_el_codigo_del_nombre_de_cada_foto(tmp_path):
 
     for nombre in ["AB-002.webp", "AB-001.JPG", "LEEME.md", "notas.txt"]:
         (tmp_path / nombre).write_bytes(b"")
-    assert list(catalogo.leer_fotos(tmp_path, referencia=None, commons=None)) == ["AB-001", "AB-002"]
+    assert list(catalogo.leer_fotos(tmp_path, referencia=None, commons=None, web=None)) == ["AB-001", "AB-002"]
 
 
 def test_el_catalogo_suma_fotos_de_referencia_y_salta_las_ilustraciones(tmp_path, monkeypatch):
@@ -90,11 +90,29 @@ def test_el_catalogo_suma_fotos_de_referencia_y_salta_las_ilustraciones(tmp_path
     for archivo in ["AB-001/a.jpg", "AB-101/b.jpg", "AB-101/c.png"]:
         (ref / archivo).parent.mkdir(parents=True, exist_ok=True)
         (ref / archivo).write_bytes(b"")
-    fotos = catalogo.leer_fotos(tienda, referencia=ref, commons=None)
+    fotos = catalogo.leer_fotos(tienda, referencia=ref, commons=None, web=None)
     assert {c: [f.name for f in fs] for c, fs in fotos.items()} == {
         "AB-001": ["AB-001.webp", "a.jpg"],
         "AB-101": ["b.jpg", "c.png"],
     }
+
+
+def test_el_catalogo_suma_las_fotos_web_revisadas_que_estan_en_disco(tmp_path):
+    from abasto_ml.vision import catalogo
+
+    (tmp_path / "ml/datos/fotos-web/AB-153").mkdir(parents=True)
+    (tmp_path / "ml/datos/fotos-web/AB-153/AB-153-01.jpg").write_bytes(b"")
+    indice = tmp_path / "fotos-web.csv"
+    indice.write_text(
+        "codigo,archivo,url_imagen,url_pagina,sitio,licencia,nota\n"
+        "AB-153,ml/datos/fotos-web/AB-153/AB-153-01.jpg,https://x/1.jpg,https://x,x,desconocida,parecida\n"
+        # Una que no se bajó en esta máquina no rompe nada
+        "AB-153,ml/datos/fotos-web/AB-153/AB-153-02.jpg,https://x/2.jpg,https://x,x,desconocida,parecida\n",
+        encoding="utf-8",
+    )
+    fotos = catalogo.fotos_web(indice, raiz=tmp_path)
+    assert {c: [f.name for f in fs] for c, fs in fotos.items()} == {"AB-153": ["AB-153-01.jpg"]}
+    assert catalogo.fotos_web(tmp_path / "no-existe.csv") == {}
 
 
 def test_las_vistas_de_una_foto_son_del_tamano_del_modelo_y_la_oscura_tiene_menos_luz():
