@@ -1,6 +1,7 @@
 import { AlmacenEnMemoria, Bandeja } from '@abasto/outbox-offline';
 import { describe, expect, it } from 'vitest';
 import { CODIGO_EN_COLA, claveDeConsulta, duenoDelToken, esMutacion, respuestaEnCola } from './graphql';
+import { esArchivoDeModelo, esLibreriaConVersion } from './ia-local';
 import { enviarAlRouter } from './sincronizar';
 
 const tokenDe = (carga: Record<string, string>) => `Bearer x.${btoa(JSON.stringify(carga))}.y`;
@@ -88,5 +89,25 @@ describe('Panel sin señal: sincronizar la bandeja', () => {
     const [op] = await almacen.todas();
     expect(op.estado).toBe('rechazada');
     expect(op.error).toBe('El pedido ya fue confirmado');
+  });
+});
+
+describe('IA local del navegador en la PWA', () => {
+  const u = (texto: string) => new URL(texto);
+
+  it('los modelos de Hugging Face los guarda la librería, no el service worker (si no, quedan dos veces)', () => {
+    expect(esArchivoDeModelo(u('https://huggingface.co/onnx-community/whisper-base/resolve/main/onnx/encoder_model_quantized.onnx'))).toBe(true);
+    expect(esArchivoDeModelo(u('https://cas-bridge.xethub.hf.co/xet-bridge-us/abc'))).toBe(true);
+    expect(esArchivoDeModelo(u('http://localhost:5172/src/voz/transcriptor.ts'))).toBe(false);
+  });
+
+  it('la librería del CDN con versión exacta se guarda una vez; sin versión fija, no', () => {
+    expect(esLibreriaConVersion(u('https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.1/dist/transformers.min.js'))).toBe(true);
+    expect(
+      esLibreriaConVersion(u('https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.0-dev.20260914-8d85527a0/dist/ort-wasm-simd-threaded.asyncify.wasm')),
+    ).toBe(true);
+    expect(esLibreriaConVersion(u('https://cdn.jsdelivr.net/npm/@huggingface/transformers@4/dist/transformers.min.js'))).toBe(false);
+    expect(esLibreriaConVersion(u('https://cdn.jsdelivr.net/npm/@huggingface/transformers/dist/transformers.min.js'))).toBe(false);
+    expect(esLibreriaConVersion(u('https://fonts.gstatic.com/s/plusjakartasans/v12/a.woff2'))).toBe(false);
   });
 });

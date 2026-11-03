@@ -111,6 +111,7 @@ const TRAZOS = {
     </>
   ),
   cerrar: <path d="M18 6 6 18M6 6l12 12" />,
+  instalar: <path d="M12 3v12M7 10l5 5 5-5M5 21h14" />,
 } as const;
 
 export type NombreDeIcono = keyof typeof TRAZOS;

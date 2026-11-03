@@ -40,6 +40,19 @@ Eventos `CustomEvent` con `bubbles: true` y `composed: true` (para que atraviese
 
 Además, al navegar desde el buscador el Shell deja la búsqueda en la URL (`/productos?q=arroz`). El atributo `ruta` sigue llegando sin la búsqueda.
 
+## IA local del navegador en la PWA (agregado el 03/11)
+
+Requisito del ingeniero: el navegador tiene su IA local y funciona sin internet. El Panel instalado (PWA) lo cumple así; lo hace el service worker del Shell, el remoto no tiene que registrar nada:
+
+| Qué | Cómo llega | Dónde queda sin señal |
+|---|---|---|
+| La librería que corre el modelo (hoy `@huggingface/transformers` y su runtime `onnxruntime-web`) | De `cdn.jsdelivr.net`, `unpkg.com` o `esm.sh` con la **versión exacta** en la ruta (`@4.3.1`, nunca `@4` ni `@latest`) | Caché `abasto-ia-local` del service worker (se guarda una vez) |
+| Los modelos (Hugging Face) | Los baja la librería | En la caché de la propia librería (`transformers-cache`). El service worker los deja pasar sin guardarlos para que no queden dos veces |
+
+- El Shell le pide al navegador almacenamiento persistente (`navigator.storage.persist()`) para que no borre los modelos cuando le falte espacio.
+- Si la IA usa otra librería u otro host para los modelos, se agrega en `apps/panel-shell/src/offline/ia-local.ts` (con su prueba en `offline.spec.ts`).
+- Probar: `pnpm dev:panel:pwa` (el Shell construido con service worker y los remotos en desarrollo) y `IA_NAVEGADOR=1 pnpm e2e -- ia-navegador-sin-senal` (baja Whisper una vez, corta la red, recarga y vuelve a transcribir).
+
 ## Reglas
 
 - Cada remoto vive en su **Shadow DOM**: sus estilos no se escapan y los del Shell no lo pisan.

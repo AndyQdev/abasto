@@ -4,13 +4,15 @@
  * - El Shell queda precacheado; los remotos (Gestión e Inteligencia) se guardan la primera vez que se abren.
  * - Las consultas GraphQL salen a la red y, sin señal, se contestan con la última respuesta guardada.
  * - Las mutaciones sin señal quedan en la bandeja (IndexedDB) y el Shell las manda al volver la señal.
- * Las reglas están en offline/graphql.ts, que se prueba sin service worker.
+ * - La IA local del navegador (Whisper hoy): su librería del CDN se guarda una vez; los modelos los guarda la
+ *   librería en su propia caché y aquí no se tocan (offline/ia-local.ts).
+ * Las reglas están en offline/graphql.ts y offline/ia-local.ts, que se prueban sin service worker.
  */
 import { AlmacenIndexedDB, Bandeja } from '@abasto/outbox-offline';
 import { clientsClaim } from 'workbox-core';
 import { cleanupOutdatedCaches, createHandlerBoundToURL, precacheAndRoute } from 'workbox-precaching';
 import { NavigationRoute, registerRoute } from 'workbox-routing';
-import { NetworkFirst, NetworkOnly, StaleWhileRevalidate } from 'workbox-strategies';
+import { CacheFirst, NetworkFirst, NetworkOnly, StaleWhileRevalidate } from 'workbox-strategies';
 import { BANDEJA_DEL_PANEL, ROUTER_URL } from './offline/config';
 import {
   ESPERA_DE_RED_MS,
@@ -20,6 +22,7 @@ import {
   respuestaSinDatos,
   type CuerpoGraphQL,
 } from './offline/graphql';
+import { CACHE_IA_LOCAL, esArchivoDeModelo, esLibreriaConVersion } from './offline/ia-local';
 
 declare global {
   // El tsconfig del Shell usa la librería DOM, donde self es Window
@@ -46,9 +49,13 @@ const bandeja = new Bandeja(new AlmacenIndexedDB(BANDEJA_DEL_PANEL), async () =>
 // Keycloak nunca se guarda: la sesión siempre se valida contra el servidor
 registerRoute(({ url }) => url.port === '8180', new NetworkOnly());
 registerRoute(({ url }) => url.pathname === '/remotos.json', new NetworkFirst({ cacheName: 'abasto-remotos', networkTimeoutSeconds: 3 }));
-// Scripts y estilos de Gestión (5171) e Inteligencia (5172): se usan al instante y se actualizan de fondo
+// IA local del navegador: la librería con versión fija no cambia nunca, se guarda una vez
+registerRoute(({ url, request }) => request.method === 'GET' && esLibreriaConVersion(url), new CacheFirst({ cacheName: CACHE_IA_LOCAL }));
+// Scripts y estilos de Gestión (5171) e Inteligencia (5172): se usan al instante y se actualizan de fondo.
+// Los modelos (Hugging Face) quedan afuera: los guarda la librería de IA y aquí quedarían dos veces
 registerRoute(
-  ({ url, request }) => request.method === 'GET' && url.origin !== sw.location.origin && url.origin !== router.origin,
+  ({ url, request }) =>
+    request.method === 'GET' && url.origin !== sw.location.origin && url.origin !== router.origin && !esArchivoDeModelo(url),
   new StaleWhileRevalidate({ cacheName: 'abasto-remotos' }),
 );
 

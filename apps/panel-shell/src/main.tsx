@@ -10,8 +10,11 @@ import { seguirLaEscala } from './escala';
 import { Registro } from './Registro';
 
 // El service worker (PWA) solo existe en el build; en pnpm dev:panel no se registra
-if (import.meta.env.PROD) void import('virtual:pwa-register').then(({ registerSW }) => registerSW({ immediate: true }));
-else void soltarServiceWorkerViejo();
+if (import.meta.env.PROD) {
+  void import('virtual:pwa-register').then(({ registerSW }) => registerSW({ immediate: true }));
+  // Que el navegador no borre lo guardado (datos sin señal y los modelos de la IA local) cuando le falta espacio
+  void navigator.storage?.persist?.().catch(() => false);
+} else void soltarServiceWorkerViejo();
 
 /**
  * Si en este navegador se abrió alguna vez el build (pnpm pwa o la prueba sin señal), su service worker sigue

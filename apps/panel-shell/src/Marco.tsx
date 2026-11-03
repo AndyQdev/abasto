@@ -4,6 +4,7 @@ import { APPS, type Usuario } from '@abasto/sesion';
 import type { Alerta } from './alertas';
 import { Icono, Simbolo } from './iconos';
 import { ACCESOS_DEL_DOCK, DE_MAS, PRINCIPALES, destinoDeBusqueda, type Modulo } from './navegacion';
+import { usePuedeInstalarse } from './offline/instalar';
 
 /** Cierra un menú desplegable al tocar afuera o con Escape. */
 function useCerrarAfuera(abierto: boolean, cerrar: () => void) {
@@ -110,6 +111,7 @@ export function Marco({ usuario, modulo, alertas, navegar, salir, children }: Pr
     }
   });
   const [busqueda, setBusqueda] = useState('');
+  const instalar = usePuedeInstalarse();
   // La silueta del header se dibuja con el ancho real del header y del menú
   const halo = useRef<HTMLElement>(null);
   const menu = useRef<HTMLElement>(null);
@@ -233,6 +235,11 @@ export function Marco({ usuario, modulo, alertas, navegar, salir, children }: Pr
                     <a className="opcion" href={APPS.superadmin} role="menuitem">
                       <Icono nombre="apps" tamano={18} /> Ir al Superadmin
                     </a>
+                  )}
+                  {instalar && (
+                    <button className="opcion" role="menuitem" onClick={instalar}>
+                      <Icono nombre="instalar" tamano={18} /> Instalar el Panel
+                    </button>
                   )}
                   <button className="opcion" role="menuitem" onClick={salir}>
                     <Icono nombre="salir" tamano={18} /> Salir

@@ -40,7 +40,7 @@ export default defineConfig({
       filename: 'sw.ts',
       registerType: 'autoUpdate',
       injectRegister: false,
-      injectManifest: { globPatterns: ['**/*.{js,css,html,svg,json}'] },
+      injectManifest: { globPatterns: ['**/*.{js,css,html,svg,json,png}'] },
       manifest: {
         name: 'Abasto · Panel Mayorista',
         short_name: 'Abasto Panel',
@@ -48,9 +48,15 @@ export default defineConfig({
         lang: 'es-BO',
         start_url: '/',
         display: 'standalone',
-        theme_color: '#197052',
-        background_color: '#ffffff',
-        icons: [{ src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' }],
+        // Identidad v7 «Halo»: verde bosque y fondo crema
+        theme_color: '#182D25',
+        background_color: '#F2F7EB',
+        icons: [
+          { src: '/icono-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: '/icono-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: '/icono-mascara-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          { src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+        ],
       },
     }),
   ],

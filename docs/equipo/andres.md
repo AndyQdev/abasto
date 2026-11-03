@@ -28,12 +28,14 @@
 >
 > Tus tareas están en Trello, en la tarjeta «LEER PRIMERO · Reparto nuevo» y en las que tienen tu nombre. El prompt para tu Claude está en `docs/PROMPT-JHOEL.md`.
 
-Actualizado: 02/11/2026 · en main (los dos trabajamos ahí)
+Actualizado: 03/11/2026 · en main (los dos trabajamos ahí)
 
 ## Estoy en
-La app de clientes en el emulador Android. Después: registro de tiendas desde la app (CU-15) y el cobro contra entrega (CU-09).
+Las fases que faltan del Panel web: Cuentas por cobrar (CU-09) y Conecta, que siguen «en construcción». Después: registro de tiendas desde la app (CU-15).
 
 ## Terminé
+- **Panel PWA lista para la IA local del navegador (03/11, lo pidió el ingeniero: «el navegador debe tener su IA local» y «ambos deben funcionar offline»):** probé el Panel construido sin señal con el diseño v7 (e2e `panel-sin-senal` en verde) y Whisper sin internet (e2e nuevo `ia-navegador-sin-senal`, con `IA_NAVEGADOR=1`). El service worker guardaba el modelo dos veces (en su caché y en la de transformers.js): ahora deja pasar Hugging Face y guarda una vez la librería del CDN con versión fija (`abasto-ia-local`). Manifiesto e íconos con la identidad v7, «Instalar el Panel» en el menú del perfil y almacenamiento persistente.
+  **Jhoel:** `pnpm dev:panel:pwa` levanta el Panel como PWA (Shell construido en 5170 + Gestión e Inteligencia en desarrollo); con `pnpm dev:panel` no hay service worker. Para sumar otra IA en el navegador: librería del CDN con versión exacta en la URL y modelos guardados por la librería; si usa otro host, se agrega en `apps/panel-shell/src/offline/ia-local.ts`. Agregué una sección en `contracts/microfrontends.md` («IA local del navegador en la PWA»), sin cambiar nada de lo que ya existía.
 - **Panel web, versión 7 «Halo» (02/11):** header verde bosque con la curva que abraza al menú blanco flotante, dock derecho (Alertas, Agentes, Reportes, Tableros y Ayuda), buscador que lleva al pedido o al producto, y Pedidos (tablero de tres columnas con detalle al costado), Compras (checklist por puesto e imprimir), Productos (tarjetas, activar o pausar, crear y editar con foto) y Clientes («Te compran») rehechos. Aviso a Jhoel: Inteligencia toma los colores nuevos sola (son variables del Shell); su título sigue en mayúsculas con su estilo. En `contracts/microfrontends.md` solo agregué el evento `abasto:buscar`.
 - Infra, Pedidos (saga, outbox, inbox, plazos), Conecta, n8n, CI y e2e.
 - Cobros en la saga: autorizar y liberar crédito, QR que vence a los 30 min, pagarQrDePrueba y Pedido.cobro por federación.
@@ -64,6 +66,7 @@ La app de clientes en el emulador Android. Después: registro de tiendas desde l
 - e2e: 22 pruebas en verde (02/11).
 
 ## Cambié en contratos
+- 03/11 · `contracts/microfrontends.md`: sección nueva «IA local del navegador en la PWA» (qué guarda el service worker y qué guarda la librería de IA). Aditivo: Inteligencia no tiene que cambiar nada.
 - 02/11 · Catálogo: `Producto.usos: [String!]!` (a quién se muestra en el Inicio), `usos` en `CrearProductoEntrada` y `EditarProductoEntrada`, y `Mayorista.dePrueba: Boolean!`. Subtipos del productor: se suman `horneados`, `polleria` y `puesto`. Todo aditivo; subgrafo y supergrafo regenerados. **Jhoel:** nada que tocar; después de `git pull`, `pnpm semilla` para ver los 138 productos.
 - 02/11 · Tiempo real: Conecta abre el WebSocket `/v1/tiempo-real` (OpenAPI de Conecta) y escucha `pedido.*` y `cobro.*` con una cola exclusiva propia. AsyncAPI: `cobro.qr_generado` (aditivo; Cobros lo publica al crear el QR). **Jhoel:** el proyector de Asistente recibe `cobro.qr_generado` y lo ignora (cae en `default`); no hay que tocar nada.
 - 01/11 · «Mi negocio» en Cobros (esquema `negocio`): `miNegocio(desde)` y `sincronizarMiNegocio(cambios)` en el subgrafo de Cobros (supergrafo regenerado). AsyncAPI: `DatosPedido.lineas` (aditivo; Pedidos lo manda en todos los `pedido.*`) y la cola nueva `cobros.mi-negocio` (solo `pedido.entregado`). Keycloak: cuenta de servicio `cobros-servicio` (`infra/keycloak/al-dia.mjs`). **Jhoel:** el proyector de Asistente recibe `lineas` de más en `pedido.*`; no cambia nada de lo que ya lee.

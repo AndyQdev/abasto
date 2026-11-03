@@ -15,6 +15,7 @@
     "tablas": "node infra/dynamodb/crear-tablas.mjs",
     "supergrafo": "rover supergraph compose --config infra/router/supergraph.yaml --output infra/router/supergraph.graphql --elv2-license accept",
     "dev:panel": "pnpm --parallel --filter @abasto/panel-shell --filter @abasto/panel-gestion --filter @abasto/panel-inteligencia dev",
+    "dev:panel:pwa": "node scripts/panel-pwa.mjs",
     "dev:superadmin": "pnpm --filter @abasto/superadmin dev",
     "dev:cobros": "pnpm --filter @abasto/cobros start:dev",
     "dev:conecta": "pnpm --filter @abasto/conecta start:dev",
