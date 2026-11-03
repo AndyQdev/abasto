@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { GraphQL } from '../graphql';
-import { aCentavos, alternarUso, codigoSiguiente, etiquetaDeEscala, filtrarPorUso, partesDelNombre, VistaProductos, type ProductoFila } from './productos';
+import { aCentavos, alternarUso, codigoSiguiente, etiquetaDeEscala, filtrarPorUso, iconoDeRubro, partesDelNombre, VistaProductos, type ProductoFila } from './productos';
 
 const producto = (id: string, nombre: string, usos: string[]): ProductoFila => ({
   id,
@@ -64,10 +64,16 @@ describe('Productos: la tarjeta y el formulario', () => {
     expect(partesDelNombre({ nombre: 'Coca-Cola 2 L', rubro: 'Bebidas' })).toEqual({ titulo: 'Coca-Cola 2 L', detalle: 'Bebidas' });
   });
 
-  it('la cápsula de volumen dice cuánto trae', () => {
+  it('la cápsula de volumen dice desde cuántas unidades vale el precio', () => {
     expect(etiquetaDeEscala({ presentacion: 'UNIDAD', cantidad: 1 })).toBe('Unidad');
-    expect(etiquetaDeEscala({ presentacion: 'DOCENA', cantidad: 12 })).toBe('Docena');
-    expect(etiquetaDeEscala({ presentacion: 'CAJA', cantidad: 24 })).toBe('Caja ×24');
+    expect(etiquetaDeEscala({ presentacion: 'DOCENA', cantidad: 12 })).toBe('12+');
+    expect(etiquetaDeEscala({ presentacion: 'CAJA', cantidad: 24 })).toBe('24+');
+  });
+
+  it('el icono del rubro sale de su nombre', () => {
+    expect(iconoDeRubro('Aceites y grasas')).toBe('gota');
+    expect(iconoDeRubro('Bebidas')).toBe('botella');
+    expect(iconoDeRubro('Algo nuevo')).toBe('caja');
   });
 
   it('entiende los montos como los escribe la gente', () => {

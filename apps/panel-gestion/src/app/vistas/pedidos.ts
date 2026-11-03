@@ -117,7 +117,7 @@ const POR_COLUMNA = 6;
   styles: [
     ESTILOS_BASE,
     `
-      .orden { font: inherit; font-size: 1rem; color: inherit; height: 46px; border-radius: 999px; border: 0; padding: 0 2.6rem 0 1.3rem; font-weight: 600; background: hsl(var(--superficie)); box-shadow: var(--sombra-menor); appearance: none; cursor: pointer;
+      .orden { font: inherit; font-size: 1.12rem; color: inherit; height: 48px; border-radius: 999px; border: 0; padding: 0 2.6rem 0 1.3rem; font-weight: 600; background: hsl(var(--superficie)); box-shadow: var(--sombra-menor); appearance: none; cursor: pointer;
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23182D25' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
         background-repeat: no-repeat; background-position: right 1rem center; }
       .buscando { display: inline-flex; align-items: center; gap: 0.4rem; height: 40px; padding: 0 0.5rem 0 1rem; border-radius: 999px; background: hsl(var(--tinta)); color: #fff; font-weight: 700; }
@@ -125,7 +125,7 @@ const POR_COLUMNA = 6;
 
       .tablero { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 1.25rem; align-items: start; }
       .columna { min-width: 0; background: hsl(var(--superficie) / 0.55); border-radius: 32px; padding: 0.7rem; display: grid; gap: 0.85rem; box-shadow: inset 0 0 0 1px hsl(var(--borde) / 0.7); }
-      .columna-cabeza { display: flex; align-items: center; gap: 0.75rem; height: 56px; padding: 0 1.25rem; border-radius: 999px; font-size: 1.3rem; font-weight: 800; letter-spacing: -0.02em; }
+      .columna-cabeza { display: flex; align-items: center; gap: 0.75rem; height: 58px; padding: 0 1.4rem; border-radius: 999px; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; }
       .columna-cabeza.ambar { background: hsl(var(--ambar)); }
       .columna-cabeza.lima { background: hsl(var(--primary)); }
       .columna-cabeza.menta { background: hsl(var(--menta)); }
@@ -139,17 +139,17 @@ const POR_COLUMNA = 6;
       .pedido-arriba { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.75rem; }
       .quien { min-width: 0; display: grid; gap: 0.15rem; }
       .codigo-fila { display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap; }
-      .codigo { font-size: 1.45rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; }
+      .codigo { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; }
       .hace { font-size: 0.8125rem; color: hsl(var(--texto-3)); font-weight: 600; }
       .hace.urgente { color: hsl(28 90% 38%); }
-      .tienda { font-size: 1.05rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .zona { display: flex; align-items: center; gap: 0.3rem; color: hsl(var(--texto-2)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .tienda { font-size: 1.15rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .zona { display: flex; align-items: center; gap: 0.3rem; font-size: 1.05rem; color: hsl(var(--texto-2)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .cuanto { display: grid; justify-items: end; align-content: start; gap: 0.45rem; padding-left: 0.85rem; border-left: 2px solid hsl(var(--borde)); }
-      .cuanto strong { font-size: 1.2rem; font-weight: 800; letter-spacing: -0.02em; white-space: nowrap; }
+      .cuanto strong { font-size: 1.3rem; font-weight: 800; letter-spacing: -0.02em; white-space: nowrap; }
       .pedido-abajo { display: flex; align-items: center; flex-wrap: wrap; gap: 0.6rem; }
       .fotos { display: flex; }
       .fotos .mini + .mini { margin-left: -12px; }
-      .mas-productos { padding: 0.35rem 0.7rem; border-radius: 999px; background: hsl(var(--tenue)); font-size: 0.8125rem; font-weight: 700; white-space: nowrap; }
+      .mas-productos { padding: 0.4rem 0.8rem; border-radius: 999px; background: hsl(var(--tenue)); font-size: 0.9rem; font-weight: 700; white-space: nowrap; }
       .pedido-abajo .boton-primario { margin-left: auto; }
       .estado-chico { font-size: 0.75rem; padding: 0.15rem 0.55rem; }
 

@@ -46,7 +46,7 @@
 
   --ancho-menu: min(840px, calc(100vw - 600px));
   --ancho-dock: 92px;
-  --hueco-dock: calc(var(--ancho-dock) + 44px);
+  --hueco-dock: calc(var(--ancho-dock) + 34px);
 }
 
 html,
@@ -66,19 +66,19 @@ body {
 
 .arriba {
   position: relative;
-  height: 214px;
+  height: 198px;
 }
 
 /* El header: una pieza verde bosque con la curva de abajo que abraza al menú blanco */
 .halo {
   position: relative;
   isolation: isolate;
-  height: 150px;
+  height: 146px;
   display: grid;
-  grid-template-columns: minmax(240px, 1fr) minmax(280px, 520px) minmax(240px, 1fr);
+  grid-template-columns: minmax(240px, 1fr) minmax(280px, 512px) minmax(240px, 1fr);
   align-items: start;
   column-gap: 24px;
-  padding: 12px 34px 0 40px;
+  padding: 6px 34px 0 40px;
 }
 .halo-forma {
   position: absolute;
@@ -93,8 +93,8 @@ body {
   z-index: -1;
   top: calc(100% - 1px);
   left: 50%;
-  width: calc(var(--ancho-menu) + 200px);
-  height: 40px;
+  width: calc(var(--ancho-menu) + 240px);
+  height: 16px;
   transform: translateX(-50%);
   fill: hsl(var(--tinta));
 }
@@ -106,9 +106,9 @@ body {
   justify-self: start;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  margin-top: 8px;
-  padding: 12px 30px 12px 20px;
+  gap: 12px;
+  margin-top: 0;
+  padding: 14px 36px 14px 22px;
   color: hsl(var(--tinta));
   text-decoration: none;
 }
@@ -138,13 +138,13 @@ body {
   line-height: 1;
 }
 .halo .marca-texto strong {
-  font-size: 2.1rem;
+  font-size: 2.55rem;
   font-weight: 800;
   letter-spacing: -0.035em;
 }
 .halo .marca-texto small {
   margin-top: 4px;
-  font-size: 0.95rem;
+  font-size: 1.08rem;
   font-weight: 700;
   letter-spacing: -0.01em;
 }
@@ -156,7 +156,7 @@ body {
   align-items: center;
   gap: 12px;
   height: 48px;
-  margin-top: 26px;
+  margin-top: 22px;
   padding: 0 22px;
   border-radius: 999px;
   background: hsl(60 40% 96%);
@@ -173,7 +173,7 @@ body {
   border: 0;
   outline: none;
   background: transparent;
-  font-size: 1.05rem;
+  font-size: 1.18rem;
   color: hsl(var(--texto));
 }
 .buscador-halo input::placeholder {
@@ -185,8 +185,8 @@ body {
   justify-self: end;
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-top: 26px;
+  gap: 18px;
+  margin-top: 20px;
   color: #fff;
 }
 .halo-derecha .separador {
@@ -224,8 +224,8 @@ body {
 }
 .perfil {
   padding-right: 10px;
-  font-size: 1.05rem;
-  font-weight: 700;
+  font-size: 1.2rem;
+  font-weight: 800;
 }
 .avatar {
   display: grid;
@@ -247,7 +247,7 @@ body {
 .menu-flotante {
   position: absolute;
   z-index: 5;
-  top: 106px;
+  top: 104px;
   left: 50%;
   transform: translateX(-50%);
   width: var(--ancho-menu);
@@ -274,9 +274,9 @@ body {
   border-radius: 999px;
   background: transparent;
   color: hsl(var(--tinta));
-  font-size: 1.05rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  font-size: 1.36rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
   text-decoration: none;
   white-space: nowrap;
   transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
@@ -407,7 +407,7 @@ body {
   position: fixed;
   z-index: 40;
   right: 14px;
-  top: max(222px, calc(50% - 300px));
+  top: max(208px, calc(50% - 300px));
   width: var(--ancho-dock);
   isolation: isolate;
 }
@@ -417,8 +417,8 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
-  padding: 30px 0 34px;
+  gap: 30px;
+  padding: 38px 0 44px;
   background: hsl(var(--tinta));
   border-radius: 46px;
   box-shadow: 0 30px 50px -26px rgba(24, 45, 37, 0.6);
@@ -521,7 +521,7 @@ body {
 
 /* ---------- Contenido ---------- */
 .contenido {
-  padding: 4px var(--hueco-dock) 56px 36px;
+  padding: 0 var(--hueco-dock) 56px 18px;
   transition: padding 0.25s;
 }
 .dock-plegado .contenido {
@@ -545,7 +545,7 @@ body {
   }
   .menu-flotante > a,
   .menu-flotante .mas > button {
-    font-size: 0.95rem;
+    font-size: 1.05rem;
   }
   .halo {
     grid-template-columns: auto minmax(220px, 1fr) auto;

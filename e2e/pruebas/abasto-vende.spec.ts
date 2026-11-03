@@ -182,6 +182,7 @@ test('Panel de Abasto: filtra los productos por área y decide a quién se muest
   // Un toque en «Panadería» del yogurt lo prende: queda en Catálogo
   await areas.getByRole('button', { name: /^Tienda/ }).click();
   const yogurt = page.getByRole('article', { name: 'Yogurt bebible PIL durazno 1 L' });
+  await yogurt.getByRole('button', { name: 'Cambiar a quién se muestra' }).click();
   await yogurt.getByRole('button', { name: 'Panadería' }).click();
   await expect.poll(() => usosDe('AB-018')).toEqual(['hogar', 'tienda', 'panaderia']);
   await yogurt.getByRole('button', { name: 'Panadería' }).click();

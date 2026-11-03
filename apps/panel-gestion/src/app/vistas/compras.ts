@@ -103,10 +103,10 @@ const TONOS = ['menta', 'ambar', 'lima'];
       .puesto-cabeza.menta { background: hsl(var(--menta)); }
       .puesto-cabeza.ambar { background: hsl(var(--ambar) / 0.75); }
       .puesto-cabeza.lima { background: hsl(var(--primary) / 0.8); }
-      .puesto-cabeza h2 { margin: 0; font-size: 1.3rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; }
-      .puesto-cabeza p { margin: 0.1rem 0 0; font-size: 1rem; }
+      .puesto-cabeza h2 { margin: 0; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; }
+      .puesto-cabeza p { margin: 0.1rem 0 0; font-size: 1.12rem; }
       .avance { padding: 0.2rem 0.5rem 0; display: grid; gap: 0.45rem; }
-      .avance strong { font-size: 1.05rem; }
+      .avance strong { font-size: 1.15rem; }
       .barra-avance { height: 14px; border-radius: 999px; background: hsl(var(--tenue)); overflow: hidden; }
       .barra-avance span { display: block; height: 100%; border-radius: 999px; background: hsl(var(--primary)); transition: width 0.3s ease; }
 
@@ -119,18 +119,18 @@ const TONOS = ['menta', 'ambar', 'lima'];
       .foto { width: 62px; height: 62px; border-radius: 18px; background: hsl(var(--tenue)); display: grid; place-items: center; overflow: hidden; font-weight: 800; color: hsl(var(--texto-3)); font-size: 1.3rem; }
       .foto img { width: 100%; height: 100%; object-fit: contain; }
       .nombre { min-width: 0; display: grid; gap: 0.3rem; }
-      .nombre strong { font-size: 1rem; font-weight: 700; line-height: 1.25; }
+      .nombre strong { font-size: 1.08rem; font-weight: 700; line-height: 1.25; }
       .detalles-linea { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; color: hsl(var(--texto-2)); font-size: 0.9rem; }
       .codigo { padding: 0.15rem 0.6rem; border-radius: 999px; background: hsl(var(--primary-suave)); font-weight: 700; font-size: 0.8125rem; color: hsl(var(--tinta)); }
       .importe { display: grid; justify-items: end; gap: 0.3rem; text-align: right; }
-      .importe strong { font-size: 1.1rem; font-weight: 800; white-space: nowrap; }
+      .importe strong { font-size: 1.2rem; font-weight: 800; white-space: nowrap; }
       .sin-costo { color: hsl(var(--texto-3)); font-weight: 600; }
       .margen-negativo { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.2rem 0.6rem; border-radius: 999px; background: hsl(var(--error-suave)); color: hsl(var(--error-suave-texto)); font-size: 0.75rem; font-weight: 700; white-space: nowrap; }
       .mas-detalle { grid-column: 3 / -1; display: grid; gap: 0.2rem; padding: 0.6rem 0.8rem; border-radius: 14px; background: hsl(var(--tenue)); font-size: 0.875rem; }
       .mas-detalle .fila { display: flex; justify-content: space-between; gap: 1rem; }
 
       .puesto-pie { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.6rem 0.5rem 0; border-top: 1px solid hsl(var(--borde)); margin: 0 0.3rem; }
-      .subtotal { font-size: 1.1rem; }
+      .subtotal { font-size: 1.2rem; }
       .subtotal strong { font-weight: 800; }
 
       @media print {

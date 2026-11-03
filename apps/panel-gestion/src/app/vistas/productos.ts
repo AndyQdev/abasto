@@ -77,12 +77,24 @@ export function partesDelNombre(p: Pick<ProductoFila, 'nombre' | 'rubro'>): { ti
 /** «Granos y cereales» → «Granos» para el chip */
 export const rubroCorto = (rubro: string) => rubro.split(/\s+y\s+|\s+/)[0];
 
-/** La cápsula de volumen de cada escala: «Unidad», «Docena», «Caja ×24» */
+/** La cápsula de volumen de cada escala: «Unidad» o desde cuántas unidades vale ese precio («12+») */
 export function etiquetaDeEscala(e: { presentacion: string; cantidad: number }): string {
-  if (e.presentacion === 'UNIDAD') return 'Unidad';
-  if (e.presentacion === 'DOCENA' && e.cantidad === 12) return 'Docena';
-  const nombre = e.presentacion.charAt(0) + e.presentacion.slice(1).toLowerCase();
-  return `${nombre} ×${e.cantidad}`;
+  return e.cantidad <= 1 ? 'Unidad' : `${e.cantidad}+`;
+}
+
+/** El icono del rubro, en el disco junto al nombre */
+export function iconoDeRubro(rubro: string): string {
+  const r = rubro.toLowerCase();
+  if (r.includes('aceite') || r.includes('grasa')) return 'gota';
+  if (r.includes('bebida')) return 'botella';
+  if (r.includes('harina') || r.includes('pan')) return 'saco';
+  if (r.includes('grano') || r.includes('cereal') || r.includes('abarrote')) return 'bol';
+  if (r.includes('carne') || r.includes('pollo')) return 'polleria';
+  if (r.includes('huevo') || r.includes('lácteo') || r.includes('lacteo')) return 'huevo';
+  if (r.includes('verdura') || r.includes('tubérculo') || r.includes('fruta')) return 'zanahoria';
+  if (r.includes('limpieza') || r.includes('higiene')) return 'burbujas';
+  if (r.includes('galleta') || r.includes('dulce')) return 'horneados';
+  return 'caja';
 }
 
 /** «15,40», «15.4» o «Bs 1.540,00» → centavos. Null si no es un monto. */
@@ -181,46 +193,60 @@ function achicarFoto(archivo: File): Promise<string> {
   styles: [
     ESTILOS_BASE,
     `
-      .rubros { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; max-width: calc(100% - 560px); }
-      .areas .segmento { padding: 0 0.62rem; font-size: 0.92rem; gap: 0.3rem; }
-      .rubros::-webkit-scrollbar { display: none; }
+      .rubros { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; max-width: calc(100% - 320px); }
+      .rubros::-webkit-scrollbar, .areas::-webkit-scrollbar { display: none; }
+      .areas { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; max-width: calc(100% - 360px); }
+      .areas .segmento { height: 36px; padding: 0 0.85rem; font-size: 0.98rem; gap: 0.45rem; }
+      .areas .segmento + .segmento::before { height: 18px; }
+      .areas .etiqueta-grupo { font-size: 1.05rem; }
+      .vista .segmento { height: 36px; font-size: 1rem; }
       .buscando { display: inline-flex; align-items: center; gap: 0.4rem; height: 40px; padding: 0 0.5rem 0 1rem; border-radius: 999px; background: hsl(var(--tinta)); color: #fff; font-weight: 700; margin-bottom: 1rem; }
       .buscando button { border: 0; background: rgba(255,255,255,0.15); color: #fff; border-radius: 50%; width: 28px; height: 28px; display: grid; place-items: center; }
-      .boton-nuevo { height: 54px; padding: 0 1.8rem; font-size: 1.15rem; }
+      .boton-nuevo { height: 54px; padding: 0 2rem; font-size: 1.4rem; }
+      .barra-arriba { margin-bottom: 1rem; }
 
-      .catalogo { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(380px, 100%), 1fr)); gap: 1.25rem; }
-      .producto { background: hsl(var(--superficie)); border-radius: 30px; box-shadow: var(--sombra-carta); padding: 0.9rem; display: grid; gap: 0.7rem; align-content: start; }
-      .producto-arriba { display: grid; grid-template-columns: 136px minmax(0, 1fr); gap: 1rem; }
-      .producto-foto { height: 168px; border-radius: 22px; background: hsl(var(--tenue)); display: grid; place-items: center; overflow: hidden; font-size: 2.6rem; font-weight: 800; color: hsl(var(--texto-3)); }
-      .producto-foto img { width: 100%; height: 100%; object-fit: contain; padding: 0.5rem; mix-blend-mode: multiply; }
-      .producto-info { min-width: 0; display: grid; gap: 0.6rem; align-content: start; padding-top: 0.2rem; }
-      .titulo-fila { display: grid; justify-items: start; gap: 0.45rem; }
-      .titulo-fila strong { display: block; font-size: 1.15rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.2; }
-      .titulo-fila span.detalle { display: block; color: hsl(var(--texto-2)); margin-top: 0.15rem; }
-      .escalas { display: grid; grid-template-columns: auto 1fr; gap: 0.35rem 0.8rem; align-items: center; }
-      .volumen { justify-self: start; padding: 0.15rem 0.7rem; border-radius: 999px; background: hsl(var(--primary)); font-size: 0.8125rem; font-weight: 700; white-space: nowrap; }
-      .volumen:first-child { background: hsl(var(--primary-suave)); }
-      .precio { font-size: 1.1rem; font-weight: 800; white-space: nowrap; }
-      .precio small { font-weight: 600; color: hsl(var(--texto-3)); font-size: 0.75rem; margin-left: 0.2rem; }
+      .catalogo { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(410px, 100%), 1fr)); gap: 1rem; }
+      .producto { position: relative; background: hsl(var(--superficie)); border-radius: 30px; box-shadow: var(--sombra-carta); padding: 0.85rem 0.9rem 0.75rem; display: grid; gap: 0.55rem; align-content: start; }
+      .producto-arriba { display: grid; grid-template-columns: 146px minmax(0, 1fr); gap: 0.9rem; }
+      .producto-foto { height: 186px; border-radius: 22px; background: hsl(60 20% 96%); display: grid; place-items: center; overflow: hidden; font-size: 2.6rem; font-weight: 800; color: hsl(var(--texto-3)); }
+      .producto-foto img { width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; }
+      .producto-info { min-width: 0; display: grid; gap: 0.55rem; align-content: start; padding-top: 0.15rem; }
+      .titulo-fila { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; gap: 0.6rem; }
+      .rubro-disco { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: hsl(var(--primary-suave)); }
+      .titulo-fila strong { display: block; font-size: 1.22rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; }
+      .titulo-fila .detalle { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; color: hsl(var(--texto)); margin-top: 0.2rem; font-size: 1.02rem; }
+      .titulo-fila .insignia { font-size: 0.9rem; padding: 0.3rem 0.75rem; }
+      .por-revisar { font-size: 0.78rem !important; padding: 0.2rem 0.6rem !important; background: hsl(var(--ambar) / 0.55); color: hsl(var(--tinta)); }
+      .escalas { display: grid; grid-template-columns: 78px auto; gap: 0.3rem 1rem; align-items: center; justify-content: start; padding-left: 0.2rem; }
+      .volumen { text-align: center; padding: 0.12rem 0.4rem; border-radius: 999px; background: hsl(var(--primary)); font-size: 0.92rem; font-weight: 700; white-space: nowrap; }
+      .volumen.primera { background: hsl(var(--primary-suave)); font-weight: 600; }
+      .precio { font-size: 1.28rem; font-weight: 800; letter-spacing: -0.02em; white-space: nowrap; }
       .sin-precio { color: hsl(var(--texto-3)); grid-column: 1 / -1; }
 
-      .usos { display: flex; align-items: center; gap: 0.3rem; flex-wrap: wrap; padding: 0.15rem 0.2rem; }
-      .usos > span { font-size: 0.8125rem; font-weight: 700; color: hsl(var(--texto-2)); margin-right: 0.2rem; }
-      .uso { width: 34px; height: 34px; border-radius: 12px; border: 1.5px dashed hsl(var(--borde-fuerte)); background: transparent; display: grid; place-items: center; color: hsl(var(--texto-3)); padding: 0; transition: background 0.15s; }
-      .uso:hover { border-color: hsl(var(--tinta)); color: hsl(var(--tinta)); }
-      .uso.prendido { border: 0; background: hsl(var(--primary-suave)); color: hsl(var(--tinta)); }
+      /* A quién se muestra: solo los iconos prendidos (como la maqueta); «+» abre los demás para prenderlos */
+      .usos { display: flex; align-items: center; gap: 0.15rem; flex-wrap: wrap; padding-left: 0.2rem; }
+      .uso { position: relative; width: 32px; height: 32px; border-radius: 10px; border: 0; background: transparent; display: grid; place-items: center; color: hsl(var(--tinta)); padding: 0; }
+      .uso + .uso::before { content: ''; position: absolute; left: -1px; top: 7px; height: 18px; width: 1.5px; background: hsl(var(--borde-fuerte)); }
+      .uso:hover { background: hsl(var(--primary-suave)); }
+      .uso.apagado { color: hsl(var(--texto-3)); opacity: 0.55; }
+      .uso.prendido.editando { background: hsl(var(--primary-suave)); }
       .uso:disabled { opacity: 0.5; cursor: wait; }
+      .uso.abrir { color: hsl(var(--texto-3)); }
+      .uso.abrir::before { display: none; }
 
-      .producto-pie { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.7rem 0.4rem 0.1rem; border-top: 1px solid hsl(var(--borde)); }
-      .interruptor { display: inline-flex; align-items: center; gap: 0.6rem; border: 0; background: transparent; font-weight: 700; font-size: 1rem; padding: 0.25rem; }
-      .riel { width: 52px; height: 30px; border-radius: 999px; background: hsl(var(--borde-fuerte)); position: relative; transition: background 0.15s; }
-      .riel::after { content: ''; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: transform 0.15s; }
-      .interruptor[aria-checked="true"] .riel { background: hsl(140 55% 38%); }
+      .producto-pie { display: grid; grid-template-columns: 146px auto 1fr; align-items: center; gap: 0.9rem; padding-top: 0.2rem; }
+      .producto-pie .raya { width: 1.5px; height: 30px; background: hsl(var(--borde-fuerte)); }
+      .producto-pie .boton-contorno { justify-self: end; height: 40px; padding: 0 1.4rem; font-size: 1.05rem; }
+      .interruptor { display: inline-flex; align-items: center; justify-content: center; gap: 0.6rem; border: 0; background: transparent; font-weight: 600; font-size: 1.1rem; padding: 0.25rem; }
+      .riel { width: 50px; height: 28px; border-radius: 999px; background: hsl(var(--borde-fuerte)); position: relative; transition: background 0.15s; }
+      .riel::after { content: ''; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: transform 0.15s; }
+      .interruptor[aria-checked="true"] .riel { background: hsl(140 50% 36%); }
       .interruptor[aria-checked="true"] .riel::after { transform: translateX(22px); }
 
       .producto.apagado .producto-foto img { filter: grayscale(1); opacity: 0.55; }
       .producto.apagado .precio, .producto.apagado .titulo-fila strong { color: hsl(var(--texto-3)); }
       .producto.apagado .volumen { background: hsl(var(--tenue)); color: hsl(var(--texto-3)); }
+      .producto.apagado .rubro-disco { background: hsl(var(--tenue)); }
 
       .tabla { padding: 0.5rem; }
       .tabla td .usos { padding: 0; }
@@ -239,8 +265,8 @@ function achicarFoto(archivo: File): Promise<string> {
       .elegir-foto { position: relative; overflow: hidden; }
       .elegir-foto input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 
-      @media (max-width: 1300px) { .rubros { max-width: 100%; } }
-      @media (max-width: 520px) { .catalogo { grid-template-columns: minmax(0, 1fr); } .producto-arriba { grid-template-columns: 100px minmax(0, 1fr); } .producto-foto { height: 130px; } .dos, .escala-fila { grid-template-columns: 1fr 1fr; } }
+      @media (max-width: 1300px) { .rubros, .areas { max-width: 100%; } }
+      @media (max-width: 520px) { .catalogo { grid-template-columns: minmax(0, 1fr); } .producto-arriba { grid-template-columns: 100px minmax(0, 1fr); } .producto-pie { grid-template-columns: auto auto; justify-content: space-between; } .producto-pie .raya { display: none; } .producto-foto { height: 130px; } .dos, .escala-fila { grid-template-columns: 1fr 1fr; } }
     `,
   ],
   template: `
@@ -249,34 +275,33 @@ function achicarFoto(archivo: File): Promise<string> {
         <h1 class="titulo-pantalla">Productos</h1>
         <p class="subtitulo">Tu catálogo mayorista, siempre actualizado</p>
       </div>
-      <span class="capsula-contador"><abasto-icono nombre="caja" [tamano]="22" /> {{ productos().length }} productos · {{ sinStock() }} sin stock</span>
+      <span class="capsula-contador"><abasto-icono nombre="calendario" [tamano]="24" /> {{ productos().length }} productos · {{ sinStock() }} sin stock</span>
     </div>
 
-    <div class="barra">
+    <div class="barra barra-arriba">
       <div class="segmentos rubros" role="group" aria-label="Filtrar por categoría">
         <button class="segmento" [class.elegido]="rubro() === ''" (click)="rubro.set('')">Todos</button>
         @for (r of rubros(); track r) {
           <button class="segmento" [class.elegido]="rubro() === r" [attr.title]="r" (click)="rubro.set(r)">{{ corto(r) }}</button>
         }
       </div>
-      <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap">
-        <div class="segmentos" role="group" aria-label="Cómo ver">
-          <button class="segmento oscuro" [class.elegido]="vista() === 'cuadricula'" [attr.aria-pressed]="vista() === 'cuadricula'" (click)="verComo('cuadricula')"><abasto-icono nombre="cuadricula" [tamano]="20" /> Cuadrícula</button>
-          <button class="segmento oscuro" [class.elegido]="vista() === 'lista'" [attr.aria-pressed]="vista() === 'lista'" (click)="verComo('lista')"><abasto-icono nombre="lista" [tamano]="20" /> Lista</button>
-        </div>
-        <button class="boton-primario boton-nuevo" (click)="nuevo()"><abasto-icono nombre="mas" [tamano]="24" [grosor]="2.6" /> Nuevo producto</button>
-      </div>
+      <button class="boton-primario boton-nuevo" (click)="nuevo()"><abasto-icono nombre="mas" [tamano]="26" [grosor]="2.8" /> Nuevo producto</button>
     </div>
 
     <div class="barra">
       <div class="segmentos areas" role="group" aria-label="Filtrar por área">
         <span class="etiqueta-grupo">Mostrar a:</span>
         @for (a of areas(); track a.clave) {
-          <button class="segmento" [class.elegido]="uso() === a.clave" [attr.aria-pressed]="uso() === a.clave" (click)="uso.set(a.clave)">
-            @if (a.clave !== 'todos' && a.clave !== 'ninguno') { <abasto-icono [nombre]="a.clave" [tamano]="18" /> }
-            {{ a.nombre }}<small>{{ a.cuantos }}</small>
+          <button class="segmento" [class.elegido]="uso() === a.clave" [attr.aria-pressed]="uso() === a.clave"
+            [attr.title]="a.cuantos + ' productos'" (click)="uso.set(uso() === a.clave ? 'todos' : a.clave)">
+            @if (a.clave !== 'ninguno') { <abasto-icono [nombre]="a.clave" [tamano]="20" /> }
+            {{ a.nombre }}
           </button>
         }
+      </div>
+      <div class="segmentos vista" role="group" aria-label="Cómo ver">
+        <button class="segmento oscuro" [class.elegido]="vista() === 'cuadricula'" [attr.aria-pressed]="vista() === 'cuadricula'" (click)="verComo('cuadricula')"><abasto-icono nombre="cuadricula" [tamano]="22" /> Cuadrícula</button>
+        <button class="segmento oscuro" [class.elegido]="vista() === 'lista'" [attr.aria-pressed]="vista() === 'lista'" (click)="verComo('lista')"><abasto-icono nombre="lista" [tamano]="22" /> Lista</button>
       </div>
     </div>
 
@@ -299,37 +324,47 @@ function achicarFoto(archivo: File): Promise<string> {
               </div>
               <div class="producto-info">
                 <div class="titulo-fila">
-                  <div><strong>{{ partes(p).titulo }}</strong><span class="detalle">{{ partes(p).detalle }}</span></div>
-                  @if (p.precioPorConfirmar) {
-                    <span class="insignia advertencia">Precio por revisar</span>
-                  } @else {
-                    <span class="insignia" [class]="'insignia ' + estado(p).clase">{{ estado(p).texto }}</span>
-                  }
+                  <span class="rubro-disco" [attr.title]="p.rubro"><abasto-icono [nombre]="iconoRubro(p.rubro)" [tamano]="22" /></span>
+                  <div>
+                    <strong>{{ partes(p).titulo }}</strong>
+                    <span class="detalle">{{ partes(p).detalle }}
+                      @if (p.precioPorConfirmar) { <span class="insignia por-revisar">Precio por revisar</span> }
+                    </span>
+                  </div>
+                  <span class="insignia" [class]="'insignia ' + estado(p).clase">{{ estado(p).texto }}</span>
                 </div>
                 <div class="escalas">
-                  @for (e of p.escalas; track $index) {
-                    <span class="volumen">{{ escala(e) }}</span>
-                    <span class="precio">{{ e.precioUnitario?.texto ?? '—' }}<small>c/u</small></span>
+                  @for (e of p.escalas; track $index; let primera = $first) {
+                    <span class="volumen" [class.primera]="primera">{{ escala(e) }}</span>
+                    <span class="precio">{{ e.precioUnitario?.texto ?? '—' }}</span>
                   } @empty {
                     <span class="sin-precio">Sin precio cargado</span>
                   }
                 </div>
+                <div class="usos" role="group" [attr.aria-label]="'A quién se muestra ' + p.nombre">
+                  @for (u of todosLosUsos; track u.clave) {
+                    @if (p.usos.includes(u.clave) || abiertoUsos() === p.id) {
+                      <button class="uso" [class.prendido]="p.usos.includes(u.clave)" [class.apagado]="!p.usos.includes(u.clave)"
+                        [class.editando]="abiertoUsos() === p.id" [disabled]="guardando() === p.id"
+                        [attr.aria-pressed]="p.usos.includes(u.clave)" [attr.aria-label]="u.nombre"
+                        [attr.title]="(p.usos.includes(u.clave) ? 'Se muestra a ' : 'Mostrar a ') + u.nombre" (click)="alternar(p, u.clave)">
+                        <abasto-icono [nombre]="u.clave" [tamano]="20" />
+                      </button>
+                    }
+                  }
+                  <button class="uso abrir" [attr.aria-expanded]="abiertoUsos() === p.id" aria-label="Cambiar a quién se muestra"
+                    [attr.title]="abiertoUsos() === p.id ? 'Listo' : 'Cambiar a quién se muestra'" (click)="abiertoUsos.set(abiertoUsos() === p.id ? null : p.id)">
+                    <abasto-icono [nombre]="abiertoUsos() === p.id ? 'check' : 'mas'" [tamano]="18" />
+                  </button>
+                </div>
               </div>
-            </div>
-            <div class="usos" role="group" [attr.aria-label]="'A quién se muestra ' + p.nombre">
-              <span>Mostrar a</span>
-              @for (u of todosLosUsos; track u.clave) {
-                <button class="uso" [class.prendido]="p.usos.includes(u.clave)" [disabled]="guardando() === p.id"
-                  [attr.aria-pressed]="p.usos.includes(u.clave)" [attr.aria-label]="u.nombre" [attr.title]="u.nombre" (click)="alternar(p, u.clave)">
-                  <abasto-icono [nombre]="u.clave" [tamano]="18" />
-                </button>
-              }
             </div>
             <div class="producto-pie">
               <button class="interruptor" role="switch" [attr.aria-checked]="p.estado !== 'PAUSADO'" [disabled]="guardando() === p.id"
                 [attr.aria-label]="(p.estado === 'PAUSADO' ? 'Activar ' : 'Pausar ') + p.nombre" (click)="activar(p)">
                 <span class="riel"></span> {{ p.estado === 'PAUSADO' ? 'Pausado' : 'Activo' }}
               </button>
+              <span class="raya" aria-hidden="true"></span>
               <button class="boton-contorno boton-chico" (click)="editar(p)"><abasto-icono nombre="lapiz" [tamano]="18" /> Editar</button>
             </div>
           </article>
@@ -475,6 +510,7 @@ export class VistaProductos implements OnInit, OnDestroy {
   readonly busqueda = signal(busquedaDeLaUrl());
   readonly vista = signal<'cuadricula' | 'lista'>(this.vistaGuardada());
   readonly guardando = signal<string | null>(null);
+  readonly abiertoUsos = signal<string | null>(null);
   readonly borrador = signal<Borrador | null>(null);
   readonly errorDelEditor = signal<string | null>(null);
   readonly guardandoEditor = signal(false);
@@ -489,7 +525,6 @@ export class VistaProductos implements OnInit, OnDestroy {
   readonly areas = computed(() => {
     const lista = this.productos();
     return [
-      { clave: 'todos', nombre: 'Todos', cuantos: lista.length },
       ...USOS.map((u) => ({ ...u, cuantos: filtrarPorUso(lista, u.clave).length })),
       { clave: 'ninguno', nombre: 'Sin mostrar', cuantos: filtrarPorUso(lista, 'ninguno').length },
     ];
@@ -511,6 +546,7 @@ export class VistaProductos implements OnInit, OnDestroy {
   apagado = (p: ProductoFila) => p.estado === 'PAUSADO' || p.estado === 'SIN_STOCK';
   partes = partesDelNombre;
   escala = etiquetaDeEscala;
+  iconoRubro = iconoDeRubro;
   corto = rubroCorto;
   letra = inicial;
 

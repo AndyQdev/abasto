@@ -8,10 +8,10 @@ export const ESTILOS_BASE = `
   button { font: inherit; color: inherit; cursor: pointer; }
 
   /* Cabecera de cada sección: título grande bosque, subtítulo corto y un contador en cápsula blanca */
-  .cabecera { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem 1.5rem; flex-wrap: wrap; margin: 0.25rem 0 1.25rem; }
-  .titulo-pantalla { font-family: var(--fuente-titulo); font-size: clamp(2.2rem, 3.4vw, 3.1rem); font-weight: 800; letter-spacing: -0.045em; line-height: 1; margin: 0; color: hsl(var(--tinta)); }
-  .subtitulo { margin: 0.4rem 0 0; font-size: 1.15rem; color: hsl(var(--texto-2)); font-weight: 500; }
-  .capsula-contador { display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.7rem 1.3rem; border-radius: 999px; background: hsl(var(--superficie)); box-shadow: var(--sombra-menor); font-size: 1.2rem; font-weight: 800; letter-spacing: -0.02em; white-space: nowrap; }
+  .cabecera { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem 1.5rem; flex-wrap: wrap; margin: 0 0 1.4rem; padding-left: 1rem; }
+  .titulo-pantalla { font-family: var(--fuente-titulo); font-size: clamp(2.4rem, 3.6vw, 3.4rem); font-weight: 800; letter-spacing: -0.045em; line-height: 1; margin: 0; color: hsl(var(--tinta)); }
+  .subtitulo { margin: 0.5rem 0 0; font-size: 1.4rem; color: hsl(var(--texto-2)); font-weight: 500; }
+  .capsula-contador { display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.75rem 1.4rem; font-size: 1.3rem; border-radius: 999px; background: hsl(var(--superficie)); box-shadow: var(--sombra-menor); font-weight: 800; letter-spacing: -0.02em; white-space: nowrap; }
 
   /* Tres cifras grandes en tarjetas */
   .cifras { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; margin-bottom: 1.25rem; }
@@ -21,8 +21,8 @@ export const ESTILOS_BASE = `
   button.cifra-carta.elegida { box-shadow: 0 0 0 3px hsl(var(--primary)), var(--sombra-carta); }
   .cifra-carta .linea-v { width: 2px; align-self: stretch; margin: 0.4rem 0; background: hsl(var(--borde)); border-radius: 2px; }
   .cifra-carta strong { display: block; font-size: clamp(1.8rem, 2.6vw, 2.6rem); font-weight: 800; letter-spacing: -0.04em; line-height: 1; white-space: nowrap; }
-  .cifra-carta div > span { display: block; margin-top: 0.3rem; font-size: 1.15rem; color: hsl(var(--texto)); font-weight: 500; }
-  .disco { flex: none; display: grid; place-items: center; width: 60px; height: 60px; border-radius: 20px; color: hsl(var(--tinta)); }
+  .cifra-carta div > span { display: block; margin-top: 0.35rem; font-size: 1.4rem; color: hsl(var(--texto)); font-weight: 500; }
+  .disco { flex: none; display: grid; place-items: center; width: 64px; height: 64px; border-radius: 20px; color: hsl(var(--tinta)); }
   .disco.ambar { background: hsl(var(--ambar)); }
   .disco.lima { background: hsl(var(--primary)); }
   .disco.menta { background: hsl(var(--menta)); }
@@ -31,9 +31,12 @@ export const ESTILOS_BASE = `
 
   /* Barra de filtros: un grupo de opciones en cápsula blanca; la elegida, lima */
   .barra { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
-  .segmentos { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 2px; padding: 5px; border-radius: 30px; background: hsl(var(--superficie)); box-shadow: var(--sombra-menor); max-width: 100%; }
-  .segmentos > .etiqueta-grupo { padding: 0 0.6rem 0 0.9rem; font-weight: 800; }
-  .segmento { display: inline-flex; align-items: center; gap: 0.45rem; height: 40px; padding: 0 1.15rem; border: 0; border-radius: 999px; background: transparent; font-weight: 600; font-size: 1rem; white-space: nowrap; color: hsl(var(--texto)); }
+  .segmentos { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 0; padding: 5px; border-radius: 30px; background: hsl(var(--superficie)); box-shadow: var(--sombra-menor); max-width: 100%; }
+  .segmentos > .etiqueta-grupo { padding: 0 0.6rem 0 0.9rem; font-weight: 800; white-space: nowrap; }
+  .segmento { position: relative; display: inline-flex; align-items: center; gap: 0.45rem; height: 42px; padding: 0 1.3rem; border: 0; border-radius: 999px; background: transparent; font-weight: 500; font-size: 1.15rem; white-space: nowrap; color: hsl(var(--texto)); }
+  /* La rayita fina entre opciones; se esconde junto a la elegida */
+  .segmento + .segmento::before { content: ''; position: absolute; left: 0; top: 50%; width: 1.5px; height: 22px; transform: translateY(-50%); background: hsl(var(--borde-fuerte)); }
+  .segmento.elegido::before, .segmento.elegido + .segmento::before, .segmento:hover::before, .segmento:hover + .segmento::before { display: none; }
   .segmento:hover { background: hsl(var(--primary-suave)); }
   .segmento.elegido { background: hsl(var(--primary)); font-weight: 800; box-shadow: 0 8px 16px -10px hsl(77 70% 40% / 0.9); }
   .segmento.oscuro.elegido { background: hsl(var(--tinta)); color: #fff; box-shadow: none; }
@@ -41,8 +44,8 @@ export const ESTILOS_BASE = `
 
   /* Botones: todos en cápsula */
   .boton-primario, .boton-secundario, .boton-oscuro, .boton-contorno, .boton-suave, .boton-peligro {
-    display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; height: 46px; padding: 0 1.4rem;
-    border-radius: 999px; font-weight: 800; font-size: 1rem; letter-spacing: -0.01em; white-space: nowrap; border: 0; text-decoration: none;
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.55rem; height: 48px; padding: 0 1.5rem;
+    border-radius: 999px; font-weight: 800; font-size: 1.12rem; letter-spacing: -0.01em; white-space: nowrap; border: 0; text-decoration: none;
     transition: transform 0.12s, box-shadow 0.15s, background 0.15s;
   }
   .boton-primario { background: hsl(var(--primary)); color: hsl(var(--tinta)); box-shadow: var(--sombra-marca); }
@@ -56,7 +59,7 @@ export const ESTILOS_BASE = `
   .boton-secundario { background: hsl(var(--superficie)); color: hsl(var(--texto-2)); box-shadow: inset 0 0 0 1.5px hsl(var(--borde-fuerte)); }
   .boton-secundario:hover:not(:disabled) { color: hsl(var(--texto)); }
   .boton-peligro { background: hsl(var(--error-suave)); color: hsl(var(--error-suave-texto)); }
-  .boton-chico { height: 38px; padding: 0 1.05rem; font-size: 0.9rem; }
+  .boton-chico { height: 42px; padding: 0 1.2rem; font-size: 1.05rem; }
   button:disabled { opacity: 0.55; cursor: progress; }
 
   .carta { background: hsl(var(--superficie)); border-radius: 30px; box-shadow: var(--sombra-carta); padding: 1.4rem; }

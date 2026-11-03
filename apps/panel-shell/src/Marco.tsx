@@ -131,13 +131,13 @@ export function Marco({ usuario, modulo, alertas, navegar, salir, children }: Pr
       <div className="arriba">
         <header className="halo">
           <div className="halo-forma" aria-hidden="true" />
-          <svg className="halo-abrazo" viewBox="0 0 1040 40" preserveAspectRatio="none" aria-hidden="true">
-            <path d="M0 0C62 0 66 40 132 40H908C974 40 978 0 1040 0Z" />
+          <svg className="halo-abrazo" viewBox="0 0 1040 16" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M0 0C70 0 80 16 150 16H890C960 16 970 0 1040 0Z" />
           </svg>
 
           <a className="marca" href="/inicio" onClick={ir('inicio')} aria-label="Abasto, ir al inicio">
             <span className="marca-brillo" aria-hidden="true" />
-            <Simbolo />
+            <Simbolo tamano={60} />
             <span className="marca-texto">
               <strong>Abasto</strong>
               <small>Panel Mayorista</small>
@@ -173,7 +173,7 @@ export function Marco({ usuario, modulo, alertas, navegar, salir, children }: Pr
                   aria-expanded={abierto}
                   aria-label={pendientes ? `Alertas: ${pendientes} esperando` : 'Alertas'}
                 >
-                  <Icono nombre="alertas" tamano={24} />
+                  <Icono nombre="alertas" tamano={28} />
                   {pendientes > 0 && <span className="punto-lima" />}
                 </button>
               )}
@@ -219,7 +219,7 @@ export function Marco({ usuario, modulo, alertas, navegar, salir, children }: Pr
               aria-current={m.ruta === modulo.ruta ? 'page' : undefined}
               onClick={ir(m.ruta)}
             >
-              <Icono nombre={m.icono} tamano={24} />
+              <Icono nombre={m.icono} tamano={28} />
               <span>{m.titulo}</span>
             </a>
           ))}
@@ -227,7 +227,7 @@ export function Marco({ usuario, modulo, alertas, navegar, salir, children }: Pr
             clase="mas"
             boton={(abierto, alternar) => (
               <button className={enMas ? 'activo' : undefined} onClick={alternar} aria-expanded={abierto}>
-                <Icono nombre={enMas ? modulo.icono : 'mas'} tamano={24} />
+                <Icono nombre={enMas ? modulo.icono : 'mas'} tamano={28} />
                 <span>{enMas ? modulo.titulo.split(' ')[0] : 'Más'}</span>
               </button>
             )}
@@ -261,7 +261,7 @@ export function Marco({ usuario, modulo, alertas, navegar, salir, children }: Pr
           aria-label={plegado ? 'Mostrar los accesos rápidos' : 'Esconder los accesos rápidos'}
           aria-expanded={!plegado}
         >
-          <Icono nombre={plegado ? 'desplegar' : 'plegar'} tamano={20} />
+          <Icono nombre="desplegar" tamano={22} />
         </button>
         <div className="dock-cuerpo">
           <Desplegable
