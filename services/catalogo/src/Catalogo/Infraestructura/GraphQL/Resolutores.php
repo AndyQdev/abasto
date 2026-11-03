@@ -10,6 +10,7 @@ use Catalogo\Aplicacion\CargarProducto;
 use Catalogo\Aplicacion\ConsultarCatalogo;
 use Catalogo\Aplicacion\CrearProducto;
 use Catalogo\Aplicacion\EditarProducto;
+use Catalogo\Aplicacion\ElegirTipoDeNegocio;
 use Catalogo\Aplicacion\EntrarConTelefono;
 use Catalogo\Aplicacion\GestionarClientes;
 use Catalogo\Aplicacion\RegistrarOrganizacion;
@@ -47,6 +48,7 @@ final readonly class Resolutores
         private EntrarConTelefono $entrada,
         private RegistrarOrganizacion $registro,
         private VerificarMayorista $verificacion,
+        private ElegirTipoDeNegocio $tipoDeNegocio,
     ) {
     }
 
@@ -101,7 +103,35 @@ final readonly class Resolutores
             'tipo' => $o->tipo,
             'estadoVerificacion' => $o->verificacion->value,
             'motivoRechazo' => $o->motivoRechazo,
+            'negocio' => Vistas::negocio($o->negocio),
         ];
+    }
+
+    // ------------------------------------------------------------------ app de clientes: para qué compra (docs/plan-mi-negocio.md)
+
+    /** @return array<string, mixed>|null */
+    public function miTipoDeNegocio(): ?array
+    {
+        $orgId = Usuario::actual()->orgId;
+
+        return Vistas::negocio($this->conErrores(fn () => $this->tipoDeNegocio->actual($orgId)));
+    }
+
+    /**
+     * @param array<string, mixed> $args
+     *
+     * @return array<string, mixed>
+     */
+    public function elegirTipoDeNegocio(mixed $_, array $args): array
+    {
+        $orgId = Usuario::actual()->orgId;
+        $cliente = $this->conErrores(fn () => $this->tipoDeNegocio->elegir(
+            $orgId,
+            (string) $args['tipo'],
+            isset($args['subtipo']) ? (string) $args['subtipo'] : null,
+        ));
+
+        return Vistas::negocio($cliente->negocio) ?? throw new Error('No se pudo guardar el tipo de negocio');
     }
 
     /**
@@ -330,6 +360,7 @@ final readonly class Resolutores
                 (int) $e['stock'],
                 self::escalas($e['escalas']),
                 ...self::abastecimiento($e),
+                usos: self::usos($e),
             );
 
             return $this->vistaDe($producto->id, $usuario->orgId);
@@ -356,6 +387,7 @@ final readonly class Resolutores
                 isset($e['escalas']) ? self::escalas($e['escalas']) : null,
                 isset($e['estado']) ? EstadoProducto::from((string) $e['estado']) : null,
                 ...self::abastecimiento($e),
+                usos: self::usos($e),
             );
 
             return $this->vistaDe($producto->id, $usuario->orgId);
@@ -415,6 +447,18 @@ final readonly class Resolutores
             (int) $e['unidades'],
             (int) $e['precioUnitarioCentavos'],
         ), $entradas);
+    }
+
+    /**
+     * A quién se muestra el producto; null si no vino (al editar, no se toca).
+     *
+     * @param array<string, mixed> $e
+     *
+     * @return list<string>|null
+     */
+    private static function usos(array $e): ?array
+    {
+        return isset($e['usos']) ? array_values(array_map('strval', (array) $e['usos'])) : null;
     }
 
     /**

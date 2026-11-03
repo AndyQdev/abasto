@@ -120,18 +120,20 @@ it('la semilla de Abasto: códigos únicos, escalas válidas y siempre con marge
     $catalogo = SembrarAbasto::catalogo();
     $codigos = array_column($catalogo, 'codigo');
 
-    expect($catalogo)->toHaveCount(49)
-        ->and(array_unique($codigos))->toHaveCount(49);
+    expect($catalogo)->toHaveCount(138)
+        ->and(array_unique($codigos))->toHaveCount(138);
     foreach ($catalogo as $p) {
-        // Construirlo valida las escalas (más volumen, más unidades y precio que no sube)
-        new Producto($p['codigo'], 'abasto', $p['codigo'], $p['nombre'], $p['rubro'], '', 0, EstadoProducto::ACTIVO, $p['escalas']);
+        // Construirlo valida las escalas (más volumen, más unidades y precio que no sube) y los usos
+        new Producto($p['codigo'], 'abasto', $p['codigo'], $p['nombre'], $p['rubro'], '', 0, EstadoProducto::ACTIVO, $p['escalas'], usos: $p['usos']);
         $masBarato = min(array_map(static fn (EscalaDePrecio $e) => $e->precioUnitarioCentavos, $p['escalas']));
-        expect($p['costo'])->toBeLessThan($masBarato, "{$p['nombre']} se vendería a pérdida");
+        expect($p['costo'])->toBeLessThan($masBarato, "{$p['nombre']} se vendería a pérdida")
+            ->and($p['usos'])->not->toBeEmpty("{$p['nombre']} no se mostraría en ningún Inicio")
+            // Ningún producto sin imagen: foto real o ilustración 3D (02/11)
+            ->and(is_file(__DIR__."/../../database/fotos-abasto/{$p['codigo']}.webp"))->toBeTrue("{$p['nombre']} no tiene foto");
         if ($p['super'] === null) {
-            // Nicho de cocina (01/11): precio de demostración, todavía sin foto ni comparación con el súper
+            // Nicho de cocina (01/11) y catálogo real (02/11): precio de demostración, sin comparación con el súper
             continue;
         }
-        expect(is_file(__DIR__."/../../database/fotos-abasto/{$p['codigo']}.webp"))->toBeTrue("{$p['nombre']} no tiene foto");
         // «Más barato que en el súper» tiene que ser verdad para todo lo que vende Abasto
         $masCaro = max(array_map(static fn (EscalaDePrecio $e) => $e->precioUnitarioCentavos, $p['escalas']));
         expect($masCaro)->toBeLessThan($p['super'][0], "{$p['nombre']} sale más caro que en el súper");
@@ -158,4 +160,23 @@ it('la vista del producto trae la marca y el precio del súper', function () {
         ->and($vista['marcaBoliviana'])->toBeTrue()
         ->and($vista['precioEnSuper'])->toMatchArray(['donde' => 'Fidalga', 'fecha' => '2026-10-30'])
         ->and($vista['precioEnSuper']['precio']['texto'])->toBe('Bs 19,00');
+});
+
+it('cada cliente ve lo suyo: el panadero no ve yogurt y la tienda no ve el balde de manteca', function () {
+    $usosDe = array_column(SembrarAbasto::catalogo(), 'usos', 'codigo');
+
+    expect($usosDe['AB-018'])->toBe(['hogar', 'tienda'])
+        ->and($usosDe['AB-104'])->toBe(['panaderia'])
+        ->and($usosDe['AB-106'])->not->toContain('tienda')
+        ->and($usosDe['AB-115'])->toBe(Producto::USOS)
+        // Las 6 áreas, la tienda y el hogar tienen productos
+        ->and(array_values(array_unique(array_merge(...array_values($usosDe)))))->toEqualCanonicalizing(Producto::USOS);
+});
+
+it('los usos se validan y quedan sin repetidos, en el orden de siempre', function () {
+    $producto = arrozDeAbasto();
+    $producto->cambiarUsos(['Tienda', 'hogar', 'tienda']);
+
+    expect($producto->usos())->toBe(['hogar', 'tienda'])
+        ->and(fn () => $producto->cambiarUsos(['carniceria']))->toThrow(ErrorDeDominio::class);
 });

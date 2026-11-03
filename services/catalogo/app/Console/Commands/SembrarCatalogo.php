@@ -35,9 +35,9 @@ final class SembrarCatalogo extends Command
         // La semilla escribe `verificacion` y también el booleano `verificado` de siempre,
         // para no romper lo que aún lo lee mientras tanto.
         $lista = [
-            ['_id' => 'lp', 'nombre' => 'Distribuidora Los Pozos', 'tipo' => 'mayorista', 'ciudad' => 'Santa Cruz', 'verificacion' => EstadoVerificacion::VERIFICADO->value, 'verificado' => true, 'nit' => '1023456027'],
-            ['_id' => 'lr', 'nombre' => 'Importadora La Ramada', 'tipo' => 'mayorista', 'ciudad' => 'Santa Cruz', 'verificacion' => EstadoVerificacion::VERIFICADO->value, 'verificado' => true, 'nit' => '2034567018'],
-            ['_id' => 'mc', 'nombre' => 'Mayorista Central', 'tipo' => 'mayorista', 'ciudad' => 'Santa Cruz', 'verificacion' => EstadoVerificacion::PENDIENTE->value, 'verificado' => false],
+            ['_id' => 'lp', 'nombre' => 'Distribuidora Los Pozos', 'tipo' => 'mayorista', 'ciudad' => 'Santa Cruz', 'verificacion' => EstadoVerificacion::VERIFICADO->value, 'verificado' => true, 'nit' => '1023456027', 'de_prueba' => true],
+            ['_id' => 'lr', 'nombre' => 'Importadora La Ramada', 'tipo' => 'mayorista', 'ciudad' => 'Santa Cruz', 'verificacion' => EstadoVerificacion::VERIFICADO->value, 'verificado' => true, 'nit' => '2034567018', 'de_prueba' => true],
+            ['_id' => 'mc', 'nombre' => 'Mayorista Central', 'tipo' => 'mayorista', 'ciudad' => 'Santa Cruz', 'verificacion' => EstadoVerificacion::PENDIENTE->value, 'verificado' => false, 'de_prueba' => true],
             ['_id' => 'dr', 'nombre' => 'Tienda Doña Rosa', 'tipo' => 'tienda', 'ciudad' => 'Santa Cruz', 'verificacion' => EstadoVerificacion::VERIFICADO->value, 'verificado' => true],
             ['_id' => 'ec', 'nombre' => 'Minimarket El Cruce', 'tipo' => 'tienda', 'ciudad' => 'Santa Cruz', 'verificacion' => EstadoVerificacion::VERIFICADO->value, 'verificado' => true],
             ['_id' => 'am', 'nombre' => 'Almacén Mery', 'tipo' => 'tienda', 'ciudad' => 'Santa Cruz', 'verificacion' => EstadoVerificacion::VERIFICADO->value, 'verificado' => true],

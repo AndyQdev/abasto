@@ -1,3 +1,5 @@
+import { urlDeLaRed } from './config';
+
 /**
  * Las ilustraciones «Gibby» de la app (3D tipo película animada, con la paleta de Abasto).
  * Se generan una sola vez con `scripts/ilustraciones` (ver apps/app/ilustraciones.json); la app nunca llama a Gemini.
@@ -21,6 +23,13 @@ export const ILUSTRACION = {
   // El repartidor del banner de entrega sirve también para «en camino»
   pedidoEnCamino: require('../assets/ilustraciones/banner-entrega.webp'),
   pedidoEntregado: require('../assets/ilustraciones/pedido-entregado.webp'),
+  pagoExitoso: require('../assets/ilustraciones/pago-exitoso.webp'),
+  // Las escenas animadas de cada estado de la compra (02/11)
+  escenaPagar: require('../assets/ilustraciones/escena-pagar.webp'),
+  escenaRevisa: require('../assets/ilustraciones/escena-revisa.webp'),
+  escenaPrepara: require('../assets/ilustraciones/escena-prepara.webp'),
+  escenaCamino: require('../assets/ilustraciones/escena-camino.webp'),
+  estanteInventario: require('../assets/ilustraciones/estante-inventario.webp'),
   sinSenal: require('../assets/ilustraciones/sin-senal.webp'),
   comprarOtraVez: require('../assets/ilustraciones/comprar-otra-vez.webp'),
   cabeceraMercado: require('../assets/ilustraciones/cabecera-mercado.webp'),
@@ -29,6 +38,9 @@ export const ILUSTRACION = {
   negocioTienda: require('../assets/ilustraciones/negocio-tienda.webp'),
   negocioProductor: require('../assets/ilustraciones/negocio-productor.webp'),
   inventarioVacio: require('../assets/ilustraciones/inventario-vacio.webp'),
+  portadaBienvenida: require('../assets/ilustraciones/portada-bienvenida.webp'),
+  portadaCodigo: require('../assets/ilustraciones/portada-codigo.webp'),
+  portadaNombre: require('../assets/ilustraciones/portada-nombre.webp'),
 } satisfies Record<string, Recurso>;
 
 const PRESENTACIONES: Record<string, Recurso> = {
@@ -57,8 +69,11 @@ const RUBROS: Record<string, Recurso> = {
   'Granos y cereales': require('../assets/ilustraciones/rubro-abarrotes.webp'),
   Condimentos: require('../assets/ilustraciones/rubro-condimentos.webp'),
   'Huevos y lácteos': require('../assets/ilustraciones/rubro-lacteos.webp'),
-  'Verduras secas': require('../assets/ilustraciones/rubro-verduras.webp'),
+  'Verduras y tubérculos': require('../assets/ilustraciones/rubro-verduras.webp'),
   Descartables: require('../assets/ilustraciones/rubro-descartables.webp'),
+  // Catálogo real por área (02/11)
+  Carnes: require('../assets/ilustraciones/rubro-carnes.webp'),
+  'Conservas y desayuno': require('../assets/ilustraciones/rubro-abarrotes.webp'),
 };
 
 /** La imagen del rubro; si es un rubro nuevo, la de Varios. */
@@ -68,7 +83,7 @@ export function imagenDeRubro(rubro: string): Recurso {
 
 /** La foto real del producto; si todavía no tiene, la ilustración de su rubro. */
 export function fotoDe(producto: { rubro: string; foto?: string | null }): Imagen {
-  return producto.foto ? { uri: producto.foto } : imagenDeRubro(producto.rubro);
+  return producto.foto ? { uri: urlDeLaRed(producto.foto) } : imagenDeRubro(producto.rubro);
 }
 
 /** Nombre corto del rubro para las tarjetas («Higiene y cuidado personal» → «Higiene»). */
@@ -82,7 +97,8 @@ export function rubroCorto(rubro: string): string {
       'Aceites y grasas': 'Aceites',
       'Granos y cereales': 'Granos',
       'Huevos y lácteos': 'Huevos',
-      'Verduras secas': 'Verduras',
+      'Verduras y tubérculos': 'Verduras',
+      'Conservas y desayuno': 'Conservas',
     }[rubro] ?? rubro
   );
 }

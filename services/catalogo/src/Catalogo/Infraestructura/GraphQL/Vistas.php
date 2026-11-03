@@ -7,6 +7,7 @@ namespace Catalogo\Infraestructura\GraphQL;
 use Catalogo\Aplicacion\VistaDeProducto;
 use Catalogo\Dominio\EscalaDePrecio;
 use Catalogo\Dominio\EstadoVerificacion;
+use Catalogo\Dominio\NegocioDelCliente;
 use Catalogo\Dominio\Organizacion;
 use Catalogo\Dominio\RelacionComercial;
 
@@ -67,6 +68,7 @@ final class Vistas
                 'fecha' => $p->precioEnSuper->fecha,
             ],
             'precioPorConfirmar' => $p->precioPorConfirmar,
+            'usos' => $p->usos(),
         ];
     }
 
@@ -81,7 +83,14 @@ final class Vistas
             'estadoVerificacion' => ($o->verificacion ?? EstadoVerificacion::PENDIENTE)->value,
             'relacion' => $relacion,
             'deLaCasa' => $o->deLaCasa ?? false,
+            'dePrueba' => $o->dePrueba ?? false,
         ];
+    }
+
+    /** @return array{tipo: string, subtipo: string|null, elegidoEn: string}|null */
+    public static function negocio(?NegocioDelCliente $n): ?array
+    {
+        return $n === null ? null : ['tipo' => $n->tipo, 'subtipo' => $n->subtipo, 'elegidoEn' => $n->elegidoEn];
     }
 
     /** @return array<string, mixed> */
@@ -104,7 +113,7 @@ final class Vistas
     /** @return array<string, mixed> */
     public static function tienda(?Organizacion $o, string $id): array
     {
-        return ['id' => $id, 'nombre' => $o->nombre ?? $id, 'ciudad' => $o->ciudad ?? ''];
+        return ['id' => $id, 'nombre' => $o->nombre ?? $id, 'ciudad' => $o->ciudad ?? '', 'negocio' => self::negocio($o?->negocio)];
     }
 
     /** @return array<string, mixed> */

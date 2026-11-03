@@ -73,7 +73,7 @@ export function CabeceraInicio({
             </View>
           </Tocable>
         </Aparecer>
-        <Tocable onPress={alVerPedidos} style={e.campana} accessibilityRole="button" accessibilityLabel={pendientes ? `${pendientes} pedidos en curso` : 'Mis pedidos'}>
+        <Tocable onPress={alVerPedidos} style={e.campana} accessibilityRole="button" accessibilityLabel={pendientes ? `${pendientes} compras en curso` : 'Mis compras'}>
           <Icono nombre="notifications" tamano={20} color="#FFFFFF" />
           {pendientes > 0 && (
             <View style={e.puntoRojo}>

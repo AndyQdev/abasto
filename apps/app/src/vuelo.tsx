@@ -1,6 +1,7 @@
 /**
  * «Vuela al carrito»: al agregar algo, su miniatura se eleva un poco y se desliza hasta el carrito
- * de las pestañas, achicándose, con una vibración suave. Se dibuja encima de toda la app.
+ * de las pestañas (o a otro destino, como el carrito de «Vender»), achicándose, con una vibración suave. Se
+ * dibuja encima de toda la app.
  */
 import { Image } from 'expo-image';
 import { createContext, useCallback, useContext, useRef, useState, type ComponentRef, type ReactNode, type RefObject } from 'react';
@@ -12,7 +13,7 @@ import type { Imagen } from './ilustraciones';
 /** La vista desde donde sale (la foto del producto) */
 export type Origen = RefObject<ComponentRef<typeof View> | null>;
 
-type Volar = (origen: Origen, imagen: Imagen) => void;
+type Volar = (origen: Origen, imagen: Imagen, destino?: Origen) => void;
 
 const Contexto = createContext<Volar>(() => undefined);
 
@@ -23,6 +24,8 @@ interface Vuelo {
   y: number;
   lado: number;
   avance: Animated.Value;
+  /** Adónde va (el centro); null: la pestaña Carrito */
+  hacia: { x: number; y: number } | null;
 }
 
 export function ProveedorDeVuelo({ children }: { children: ReactNode }) {
@@ -31,17 +34,20 @@ export function ProveedorDeVuelo({ children }: { children: ReactNode }) {
   const abajo = useSafeAreaInsets().bottom;
   const siguiente = useRef(0);
 
-  const volar = useCallback<Volar>((origen, imagen) => {
+  const volar = useCallback<Volar>((origen, imagen, destino) => {
     vibrar.toque();
-    origen.current?.measureInWindow((x: number, y: number, ancho: number, alto: number) => {
-      const lado = Math.min(ancho, alto, 120);
-      const vuelo: Vuelo = { id: siguiente.current++, imagen, x: x + (ancho - lado) / 2, y: y + (alto - lado) / 2, lado, avance: new Animated.Value(0) };
-      setVuelos((v) => [...v, vuelo]);
-      Animated.timing(vuelo.avance, { toValue: 1, duration: 720, easing: Easing.inOut(Easing.cubic), useNativeDriver: true }).start(() => {
-        setVuelos((v) => v.filter((w) => w.id !== vuelo.id));
-        vibrar.exito();
+    const despegar = (hacia: Vuelo['hacia']) =>
+      origen.current?.measureInWindow((x: number, y: number, ancho: number, alto: number) => {
+        const lado = Math.min(ancho, alto, 120);
+        const vuelo: Vuelo = { id: siguiente.current++, imagen, x: x + (ancho - lado) / 2, y: y + (alto - lado) / 2, lado, avance: new Animated.Value(0), hacia };
+        setVuelos((v) => [...v, vuelo]);
+        Animated.timing(vuelo.avance, { toValue: 1, duration: 720, easing: Easing.inOut(Easing.cubic), useNativeDriver: true }).start(() => {
+          setVuelos((v) => v.filter((w) => w.id !== vuelo.id));
+          vibrar.exito();
+        });
       });
-    });
+    if (!destino?.current) return despegar(null);
+    destino.current.measureInWindow((x: number, y: number, ancho: number, alto: number) => despegar({ x: x + ancho / 2, y: y + alto / 2 }));
   }, []);
 
   // El carrito es la pestaña del medio
@@ -53,8 +59,8 @@ export function ProveedorDeVuelo({ children }: { children: ReactNode }) {
       {children}
       <View pointerEvents="none" style={StyleSheet.absoluteFill}>
         {vuelos.map((v) => {
-          const dx = destinoX - (v.x + v.lado / 2);
-          const dy = destinoY - (v.y + v.lado / 2);
+          const dx = (v.hacia?.x ?? destinoX) - (v.x + v.lado / 2);
+          const dy = (v.hacia?.y ?? destinoY) - (v.y + v.lado / 2);
           return (
             <Animated.View
               key={v.id}

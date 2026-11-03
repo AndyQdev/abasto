@@ -197,6 +197,10 @@ services:
       # En la demo la tienda «paga» el QR con un botón; con un banco real se apaga
       QR_DE_PRUEBA: ${QR_DE_PRUEBA:-si}
       QR_VIGENCIA_MINUTOS: ${QR_VIGENCIA_MINUTOS:-30}
+      # «Mi negocio»: al entregarse un pedido, Cobros pide el nombre de los productos a Catálogo con su cuenta de servicio
+      CATALOGO_URL: http://catalogo:8082/graphql
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_COBROS_SECRETO: ${KEYCLOAK_COBROS_SECRETO:-cobros-servicio-local}
     ports: ["8083:8083"]
     depends_on:
       postgres: { condition: service_healthy }
@@ -214,8 +218,10 @@ services:
       ROUTER_URL: http://router:4000/
       KEYCLOAK_JWKS_URL: http://keycloak:8080/realms/abasto/protocol/openid-connect/certs
       ORIGENES_PERMITIDOS: http://localhost:8090,http://localhost:5174
+      # Tiempo real (WebSocket /v1/tiempo-real): escucha pedido.* y cobro.* de abasto.eventos
+      RABBITMQ_URL: amqp://abasto:abasto@rabbitmq:5672
     ports: ["8084:8084"]
-    depends_on: [dynamodb]
+    depends_on: [dynamodb, rabbitmq]
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8084/salud"]
       <<: *salud

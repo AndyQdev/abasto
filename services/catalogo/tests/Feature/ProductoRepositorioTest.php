@@ -37,3 +37,12 @@ it('fijar el stock sí reemplaza el stock y su estado', function () {
     expect($ahora->stock)->toBe(0)
         ->and($ahora->estado)->toBe(EstadoProducto::SIN_STOCK);
 });
+
+it('guarda y lee los usos; un producto de antes no tiene ninguno', function () {
+    expect($this->repositorio->porId('p1')->usos())->toBe([]);
+    $producto = $this->repositorio->porId('p1');
+    $producto->cambiarUsos(['panaderia', 'tienda']);
+    $this->repositorio->guardar($producto);
+
+    expect($this->repositorio->porId('p1')->usos())->toBe(['tienda', 'panaderia']);
+});

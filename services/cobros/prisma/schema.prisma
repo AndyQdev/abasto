@@ -2,9 +2,9 @@
 // Los asientos de dinero nunca se borran: una devolución es un asiento inverso.
 
 generator client {
-  provider     = "prisma-client"
-  output       = "../src/infraestructura/persistencia/generado"
-  moduleFormat = "esm"
+  provider               = "prisma-client"
+  output                 = "../src/infraestructura/persistencia/generado"
+  moduleFormat           = "esm"
   // Fijo: si no, en Docker (sin tsconfig todavía) genera imports con .ts que Node no puede cargar
   importFileExtension    = "js"
   generatedFileExtension = "ts"
@@ -13,6 +13,8 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  // public: los cobros de la saga. negocio: «Mi negocio» del cliente (docs/plan-mi-negocio.md), aparte y extraíble.
+  schemas  = ["public", "negocio"]
 }
 
 model LineaDeCredito {
@@ -26,6 +28,7 @@ model LineaDeCredito {
 
   @@unique([tiendaId, mayoristaId])
   @@map("lineas_de_credito")
+  @@schema("public")
 }
 
 model ReservaDeCredito {
@@ -37,6 +40,7 @@ model ReservaDeCredito {
 
   @@id([lineaId, pedidoId])
   @@map("reservas_de_credito")
+  @@schema("public")
 }
 
 /// Eventos por publicar en RabbitMQ. Se escriben en la misma transacción que el cambio.
@@ -49,6 +53,7 @@ model Outbox {
 
   @@index([publicadoEn])
   @@map("outbox")
+  @@schema("public")
 }
 
 /// Mensajes ya procesados: un mensaje repetido no se aplica dos veces.
@@ -57,6 +62,7 @@ model MensajeProcesado {
   procesadoEn DateTime @default(now()) @map("procesado_en")
 
   @@map("mensajes_procesados")
+  @@schema("public")
 }
 
 /// El cobro por QR de un pedido (paso 3 de la saga). Uno por pedido.
@@ -74,4 +80,218 @@ model CobroQr {
 
   @@index([estado, venceEn])
   @@map("cobros_qr")
+  @@schema("public")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────
+// «Mi negocio» (esquema negocio, módulo src/mi-negocio). Todo lleva org_id (el del token) y recibido_en (marca del
+// servidor para bajar lo nuevo con miNegocio(desde)). Montos en centavos; cantidades en numeric(14,6): 10 kg de un
+// quintal de 46 kg son 0,217391 quintales. Lo que solo se agrega nunca se edita; lo editable gana si actualizado_en
+// es igual o más nuevo. Borrar es marcar eliminado.
+// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+/// Lo que el cliente tiene: comprado (insumo, mercadería, despensa) o hecho. La existencia es la suma de movimientos.
+model NegocioArticulo {
+  orgId               String   @map("org_id")
+  id                  String
+  nombre              String
+  detalle             String?
+  rubro               String?
+  envase              String
+  porEnvase           Decimal? @map("por_envase") @db.Decimal(14, 6)
+  unidad              String
+  clase               String
+  origen              String
+  productoId          String?  @map("producto_id")
+  proveedor           String?
+  precioVentaCentavos Int?     @map("precio_venta_centavos")
+  stockMinimo         Decimal? @map("stock_minimo") @db.Decimal(14, 6)
+  creadoEn            DateTime @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn       DateTime @map("actualizado_en") @db.Timestamptz(3)
+  eliminado           Boolean  @default(false)
+  recibidoEn          DateTime @default(now()) @map("recibido_en") @db.Timestamptz(3)
+
+  @@id([orgId, id])
+  @@index([orgId, recibidoEn])
+  @@map("articulo")
+  @@schema("negocio")
+}
+
+/// El libro (kardex): todo lo que entra y sale. Solo se agrega.
+model NegocioMovimiento {
+  orgId                 String   @map("org_id")
+  id                    String
+  articuloId            String   @map("articulo_id")
+  tipo                  String
+  cantidad              Decimal  @db.Decimal(14, 6)
+  costoUnitarioCentavos Int?     @map("costo_unitario_centavos")
+  origen                String
+  claveUnica            String   @map("clave_unica")
+  fecha                 DateTime @db.Timestamptz(3)
+  nota                  String?
+  ventaId               String?  @map("venta_id")
+  tandaId               String?  @map("tanda_id")
+  recibidoEn            DateTime @default(now()) @map("recibido_en") @db.Timestamptz(3)
+
+  @@id([orgId, id])
+  @@unique([orgId, claveUnica])
+  @@index([orgId, recibidoEn])
+  @@index([orgId, articuloId])
+  @@map("movimiento")
+  @@schema("negocio")
+}
+
+/// Lo que vende la tienda o el productor. Solo se agrega.
+model NegocioVenta {
+  orgId         String              @map("org_id")
+  id            String
+  fecha         DateTime            @db.Timestamptz(3)
+  totalCentavos Int                 @map("total_centavos")
+  costoCentavos Int                 @map("costo_centavos")
+  forma         String
+  clienteId     String?             @map("cliente_id")
+  anulada       Boolean             @default(false)
+  recibidoEn    DateTime            @default(now()) @map("recibido_en") @db.Timestamptz(3)
+  lineas        NegocioVentaLinea[]
+
+  @@id([orgId, id])
+  @@index([orgId, recibidoEn])
+  @@map("venta")
+  @@schema("negocio")
+}
+
+model NegocioVentaLinea {
+  orgId                  String       @map("org_id")
+  ventaId                String       @map("venta_id")
+  numero                 Int
+  articuloId             String       @map("articulo_id")
+  cantidad               Decimal      @db.Decimal(14, 6)
+  precioUnitarioCentavos Int          @map("precio_unitario_centavos")
+  costoUnitarioCentavos  Int?         @map("costo_unitario_centavos")
+  venta                  NegocioVenta @relation(fields: [orgId, ventaId], references: [orgId, id], onDelete: Cascade)
+
+  @@id([orgId, ventaId, numero])
+  @@map("venta_linea")
+  @@schema("negocio")
+}
+
+/// A quién le fía la tienda. Se edita.
+model NegocioClienteFiado {
+  orgId         String   @map("org_id")
+  id            String
+  nombre        String
+  telefono      String?
+  creadoEn      DateTime @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn DateTime @map("actualizado_en") @db.Timestamptz(3)
+  eliminado     Boolean  @default(false)
+  recibidoEn    DateTime @default(now()) @map("recibido_en") @db.Timestamptz(3)
+
+  @@id([orgId, id])
+  @@index([orgId, recibidoEn])
+  @@map("cliente_fiado")
+  @@schema("negocio")
+}
+
+/// El cuaderno de fiado: DEBE suma, PAGA resta. Solo se agrega.
+model NegocioFiado {
+  orgId         String   @map("org_id")
+  id            String
+  clienteId     String   @map("cliente_id")
+  tipo          String
+  montoCentavos Int      @map("monto_centavos")
+  ventaId       String?  @map("venta_id")
+  fecha         DateTime @db.Timestamptz(3)
+  nota          String?
+  recibidoEn    DateTime @default(now()) @map("recibido_en") @db.Timestamptz(3)
+
+  @@id([orgId, id])
+  @@index([orgId, recibidoEn])
+  @@map("fiado")
+  @@schema("negocio")
+}
+
+/// «100 salteñas = 5 kg de harina…». Se edita.
+model NegocioReceta {
+  orgId         String                @map("org_id")
+  id            String
+  articuloId    String                @map("articulo_id")
+  nombre        String
+  rinde         Decimal               @db.Decimal(14, 6)
+  actualizadoEn DateTime              @map("actualizado_en") @db.Timestamptz(3)
+  eliminado     Boolean               @default(false)
+  recibidoEn    DateTime              @default(now()) @map("recibido_en") @db.Timestamptz(3)
+  insumos       NegocioRecetaInsumo[]
+
+  @@id([orgId, id])
+  @@index([orgId, recibidoEn])
+  @@map("receta")
+  @@schema("negocio")
+}
+
+model NegocioRecetaInsumo {
+  orgId      String        @map("org_id")
+  recetaId   String        @map("receta_id")
+  numero     Int
+  articuloId String        @map("articulo_id")
+  cantidad   Decimal       @db.Decimal(14, 6)
+  receta     NegocioReceta @relation(fields: [orgId, recetaId], references: [orgId, id], onDelete: Cascade)
+
+  @@id([orgId, recetaId, numero])
+  @@map("receta_insumo")
+  @@schema("negocio")
+}
+
+/// Lo que se hizo con una receta. Solo se agrega.
+model NegocioTanda {
+  orgId              String   @map("org_id")
+  id                 String
+  recetaId           String   @map("receta_id")
+  articuloId         String   @map("articulo_id")
+  planificado        Decimal  @db.Decimal(14, 6)
+  obtenido           Decimal  @db.Decimal(14, 6)
+  costoTotalCentavos Int      @map("costo_total_centavos")
+  fecha              DateTime @db.Timestamptz(3)
+  recibidoEn         DateTime @default(now()) @map("recibido_en") @db.Timestamptz(3)
+
+  @@id([orgId, id])
+  @@index([orgId, recibidoEn])
+  @@map("tanda")
+  @@schema("negocio")
+}
+
+/// Ingresos y gastos (la casa) y gastos del negocio. Solo se agrega.
+model NegocioAnotacion {
+  orgId         String   @map("org_id")
+  id            String
+  tipo          String
+  montoCentavos Int      @map("monto_centavos")
+  categoria     String
+  nota          String?
+  origen        String
+  claveUnica    String   @map("clave_unica")
+  fecha         DateTime @db.Timestamptz(3)
+  recibidoEn    DateTime @default(now()) @map("recibido_en") @db.Timestamptz(3)
+
+  @@id([orgId, id])
+  @@unique([orgId, claveUnica])
+  @@index([orgId, recibidoEn])
+  @@map("anotacion")
+  @@schema("negocio")
+}
+
+/// La compra de cada semana del hogar. Se edita.
+model NegocioListaFija {
+  orgId         String   @map("org_id")
+  id            String
+  productoId    String   @map("producto_id")
+  presentacion  String
+  cantidad      Decimal  @db.Decimal(14, 6)
+  actualizadoEn DateTime @map("actualizado_en") @db.Timestamptz(3)
+  eliminado     Boolean  @default(false)
+  recibidoEn    DateTime @default(now()) @map("recibido_en") @db.Timestamptz(3)
+
+  @@id([orgId, id])
+  @@index([orgId, recibidoEn])
+  @@map("lista_fija")
+  @@schema("negocio")
 }

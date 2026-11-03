@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Catalogo\Infraestructura\Mongo;
 
 use Catalogo\Dominio\EstadoVerificacion;
+use Catalogo\Dominio\NegocioDelCliente;
 use Catalogo\Dominio\Organizacion;
 use Catalogo\Dominio\Puertos\OrganizacionRepositorio;
 use MongoDB\BSON\Regex;
@@ -46,11 +47,17 @@ final readonly class MongoOrganizacionRepositorio implements OrganizacionReposit
             'verificado' => $organizacion->estaVerificada(),
             'nit' => $organizacion->nit,
             'de_la_casa' => $organizacion->deLaCasa,
+            'de_prueba' => $organizacion->dePrueba,
             'representante' => $organizacion->representante,
             'telefono' => $organizacion->telefono,
             'correo' => $organizacion->correo,
             'motivo_rechazo' => $organizacion->motivoRechazo,
             'registrada_en' => $organizacion->registradaEn,
+            'negocio' => $organizacion->negocio === null ? null : [
+                'tipo' => $organizacion->negocio->tipo,
+                'subtipo' => $organizacion->negocio->subtipo,
+                'elegido_en' => $organizacion->negocio->elegidoEn,
+            ],
         ]], ['upsert' => true]);
     }
 
@@ -99,6 +106,26 @@ final readonly class MongoOrganizacionRepositorio implements OrganizacionReposit
             correo: self::texto($doc, 'correo'),
             motivoRechazo: self::texto($doc, 'motivo_rechazo'),
             registradaEn: self::texto($doc, 'registrada_en'),
+            negocio: self::negocio($doc['negocio'] ?? null),
+            dePrueba: (bool) ($doc['de_prueba'] ?? false),
+        );
+    }
+
+    /** El tipo de negocio guardado; un documento sin él (mayoristas, clientes que no eligieron) da null */
+    private static function negocio(mixed $guardado): ?NegocioDelCliente
+    {
+        if ($guardado === null) {
+            return null;
+        }
+        $n = (array) $guardado;
+        if (!isset($n['tipo'])) {
+            return null;
+        }
+
+        return NegocioDelCliente::elegir(
+            (string) $n['tipo'],
+            isset($n['subtipo']) ? (string) $n['subtipo'] : null,
+            (string) ($n['elegido_en'] ?? ''),
         );
     }
 

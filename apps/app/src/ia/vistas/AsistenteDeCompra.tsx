@@ -8,7 +8,7 @@ import { proponerCompra, type Propuesta } from '../entender/asistente';
 import type { LineaPropuesta } from '../entender/catalogar';
 import { useIaLocal } from '../local/estado';
 import { NOMBRES_DE_PLATOS } from '../entender/foto';
-import { reconocerFoto } from '../reconocer';
+import { reconocerFoto } from '../perezoso';
 
 const EJEMPLOS = [
   'Necesito 3 cajas de aceite, 2 fardos de arroz y 5 docenas de leche',

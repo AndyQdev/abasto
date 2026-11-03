@@ -112,7 +112,11 @@ public class Pedido {
         return siguiente;
     }
 
-    /** Lo que viaja en los eventos pedido.* (contracts/asyncapi.yaml, DatosPedido). */
+    /**
+     * Lo que viaja en los eventos pedido.* (contracts/asyncapi.yaml, DatosPedido). Desde el 01/11 lleva también las
+     * líneas (producto, presentación, unidades y lo que se pagó): con pedido.entregado, Cobros arma el inventario de
+     * «Mi negocio» del cliente sin que la app tenga que estar abierta.
+     */
     public Map<String, Object> datosDelEvento() {
         return Map.of(
                 "pedidoId", id.toString(),
@@ -120,7 +124,15 @@ public class Pedido {
                 "tiendaId", tiendaId,
                 "mayoristaId", mayoristaId,
                 "metodoPago", metodoPago.name().toLowerCase(),
-                "totalCentavos", total().centavos());
+                "totalCentavos", total().centavos(),
+                "lineas", lineas.stream()
+                        .map(l -> Map.<String, Object>of(
+                                "productoId", l.productoId(),
+                                "presentacion", l.presentacion().name(),
+                                "cantidad", l.cantidad(),
+                                "unidades", l.unidades(),
+                                "subtotalCentavos", l.subtotal().centavos()))
+                        .toList());
     }
 
     public Dinero total() {

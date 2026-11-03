@@ -1,0 +1,660 @@
+/* Panel Mayorista · versión 7 «Halo» (docs/ABASTO_V7_Guia_Visual_Claude_Code.md y docs/uix-mockup/image1-3.png).
+   El Panel toma la identidad de la app: lima #C9F45A, bosque #182D25, ámbar #FFB454 y fondo #F2F7EB.
+   Los tokens se pisan acá (no en packages/ui) para no cambiar el Superadmin. Las variables atraviesan el Shadow DOM,
+   así que Gestión e Inteligencia los toman solos. */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --marca-h: 77;
+  --marca-s: 87%;
+  --marca-l: 65%;
+
+  --fondo: 85 48% 94%;
+  --superficie: 60 33% 99.5%;
+  --texto: 157 30% 12%;
+  --texto-2: 157 12% 30%;
+  --texto-3: 150 6% 44%;
+  --tinta: 157 30% 14%;
+  --tinta-texto: 0 0% 100%;
+
+  --primary: var(--marca-h) var(--marca-s) var(--marca-l);
+  --primary-texto: 157 30% 14%;
+  --primary-fuerte: 77 70% 52%;
+  --primary-suave: 80 80% 90%;
+  --primary-suave-texto: 157 45% 20%;
+
+  --tenue: 85 30% 95%;
+  --borde: 90 18% 88%;
+  --borde-fuerte: 90 14% 76%;
+  --cabecera-tabla: 85 35% 97%;
+  --anillo: 157 30% 14%;
+
+  --exito-suave: 140 45% 88%;
+  --exito-suave-texto: 155 60% 22%;
+  --advertencia-suave: 35 100% 88%;
+  --advertencia-suave-texto: 28 80% 28%;
+  --ambar: 35 100% 66%;
+  --menta: 140 45% 84%;
+
+  --sombra-carta: 0 1px 2px rgba(24, 45, 37, 0.05), 0 18px 40px -26px rgba(24, 45, 37, 0.32);
+  --sombra-menor: 0 1px 2px rgba(24, 45, 37, 0.05), 0 10px 24px -18px rgba(24, 45, 37, 0.3);
+  --sombra-marca: 0 12px 24px -14px hsl(77 70% 45% / 0.9);
+
+  --fuente-titulo: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --fuente-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+
+  --ancho-menu: min(1080px, calc(100% - 640px));
+  --ancho-dock: 92px;
+  --hueco-dock: calc(var(--ancho-dock) + 34px);
+}
+
+html,
+body {
+  overflow-x: clip;
+}
+body {
+  background: hsl(var(--fondo));
+  font-size: 0.9375rem;
+}
+
+/* ---------- Marco ---------- */
+.marco {
+  min-height: 100vh;
+  padding: 12px 14px 0;
+}
+
+.arriba {
+  position: relative;
+  height: 176px;
+}
+
+/* El header: una pieza verde bosque con la curva de abajo que abraza al menú blanco */
+.halo {
+  position: relative;
+  height: 104px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  column-gap: 24px;
+  padding: 4px 40px 0 26px;
+}
+.halo-silueta {
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  left: 0;
+  overflow: visible;
+  fill: hsl(var(--tinta));
+  filter: drop-shadow(0 18px 22px rgba(24, 45, 37, 0.28));
+}
+.halo-forma {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: hsl(var(--tinta));
+  border-radius: 52px;
+  box-shadow: 0 24px 50px -30px rgba(24, 45, 37, 0.55);
+}
+
+/* La marca: cápsula blanca montada sobre el verde, con un brillo lima que asoma abajo */
+.halo .marca {
+  position: relative;
+  z-index: 2;
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 0;
+  padding: 12px 32px 12px 20px;
+  color: hsl(var(--tinta));
+  text-decoration: none;
+}
+.halo .marca::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: #fff;
+  border-radius: 40px;
+  box-shadow: 0 14px 26px -16px rgba(0, 0, 0, 0.45);
+}
+.halo .marca::before {
+  content: '';
+  position: absolute;
+  z-index: -2;
+  left: -12px;
+  bottom: -14px;
+  width: 74%;
+  height: 70%;
+  background: hsl(var(--primary));
+  border-radius: 44px 30px 44px 60px;
+  transform: rotate(-5deg);
+}
+.halo .marca-texto {
+  display: grid;
+  line-height: 1;
+}
+.halo .marca-texto strong {
+  font-size: 2.3rem;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+}
+.halo .marca-texto small {
+  margin-top: 3px;
+  font-size: 0.98rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* Buscador: un icono junto a la campana; al tocarlo baja una cápsula para escribir */
+.flotante.buscador-flotante {
+  width: 420px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 58px;
+  padding: 0 22px;
+  border-radius: 999px;
+  color: hsl(var(--tinta));
+}
+.buscador-flotante:focus-within {
+  box-shadow: 0 0 0 3px hsl(var(--primary)), 0 30px 60px -24px rgba(24, 45, 37, 0.45);
+}
+.buscador-flotante input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font-size: 1.08rem;
+  color: hsl(var(--texto));
+}
+.buscador-flotante input::placeholder {
+  color: hsl(var(--texto-2));
+}
+
+/* Por encima del menú flotante: el buscador y las alertas bajan sobre él */
+.halo-derecha {
+  position: relative;
+  z-index: 8;
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 0;
+  color: #fff;
+}
+.halo-derecha .separador {
+  width: 1px;
+  height: 34px;
+  background: rgba(255, 255, 255, 0.3);
+}
+.campana,
+.perfil {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  border-radius: 999px;
+  padding: 8px;
+}
+.campana {
+  position: relative;
+}
+.campana:hover,
+.perfil:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+.punto-lima {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: hsl(var(--primary));
+  box-shadow: 0 0 0 3px hsl(var(--tinta));
+}
+.perfil {
+  padding-right: 10px;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #fff;
+  color: hsl(var(--tinta));
+}
+.perfil-nombre {
+  max-width: 200px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ---------- Menú flotante ---------- */
+.menu-flotante {
+  position: absolute;
+  z-index: 5;
+  top: 92px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: var(--ancho-menu);
+  height: 76px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 20px;
+  background: hsl(60 40% 99%);
+  border-radius: 999px;
+  box-shadow: 0 2px 4px rgba(24, 45, 37, 0.06), 0 22px 40px -20px rgba(24, 45, 37, 0.45);
+}
+.menu-flotante > a,
+.menu-flotante .mas > button {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  height: 62px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: hsl(var(--tinta));
+  font-size: 1.12rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+.menu-flotante .mas {
+  flex: 1;
+  display: flex;
+}
+.menu-flotante .mas > button {
+  width: 100%;
+}
+.menu-flotante > a:hover,
+.menu-flotante .mas > button:hover {
+  background: hsl(var(--primary-suave));
+}
+/* La sección activa: una pestaña lima levantada que sobresale del menú */
+.menu-flotante > a.activo,
+.menu-flotante .mas > button.activo {
+  height: 82px;
+  background: hsl(var(--primary));
+  box-shadow: 0 16px 26px -14px hsl(77 70% 40% / 0.85), inset 0 -3px 0 hsl(77 70% 55%);
+}
+
+.menu-mas .solo-telefono {
+  display: none;
+}
+
+/* ---------- Desplegables ---------- */
+.desplegable {
+  position: relative;
+}
+.flotante {
+  position: absolute;
+  z-index: 60;
+  top: calc(100% + 12px);
+  right: 0;
+  width: 320px;
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+  background: hsl(var(--superficie));
+  color: hsl(var(--texto));
+  border-radius: 24px;
+  box-shadow: 0 2px 6px rgba(24, 45, 37, 0.08), 0 30px 60px -24px rgba(24, 45, 37, 0.45);
+  text-align: left;
+}
+.flotante-titulo {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+.flotante-vacio {
+  margin: 0;
+  color: hsl(var(--texto-2));
+  font-size: 0.875rem;
+}
+.flotante ul {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.alerta {
+  width: 100%;
+  display: grid;
+  gap: 2px;
+  padding: 10px 14px;
+  border: 0;
+  border-left: 5px solid hsl(var(--ambar));
+  border-radius: 14px;
+  background: hsl(var(--tenue));
+  text-align: left;
+}
+.alerta.lima {
+  border-left-color: hsl(var(--primary));
+}
+.alerta:hover {
+  background: hsl(var(--primary-suave));
+}
+.alerta span {
+  color: hsl(var(--texto-2));
+  font-size: 0.8125rem;
+}
+.flotante-pie {
+  margin-top: 4px;
+  height: 40px;
+  border: 0;
+  border-radius: 999px;
+  background: hsl(var(--primary));
+  font-weight: 700;
+}
+.opcion {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  color: hsl(var(--texto));
+  font-weight: 600;
+  text-decoration: none;
+  text-align: left;
+}
+.opcion:hover,
+.opcion.elegida {
+  background: hsl(var(--primary-suave));
+}
+.menu-mas {
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  width: 250px;
+}
+.ayuda dl {
+  margin: 4px 0;
+  display: grid;
+  gap: 10px;
+}
+.ayuda dt {
+  font-weight: 800;
+}
+.ayuda dd {
+  margin: 2px 0 0;
+  color: hsl(var(--texto-2));
+  font-size: 0.875rem;
+}
+
+/* ---------- Dock derecho ---------- */
+.dock {
+  position: fixed;
+  z-index: 40;
+  right: 14px;
+  top: max(186px, calc(50% - 300px));
+  width: var(--ancho-dock);
+  isolation: isolate;
+  /* Plegado, su caja invisible no tapa nada: solo reciben toques la lengüeta y el cuerpo abierto */
+  pointer-events: none;
+}
+.dock .lengueta,
+.dock .dock-cuerpo {
+  pointer-events: auto;
+}
+.dock-cuerpo {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+  padding: 38px 0 44px;
+  background: hsl(var(--tinta));
+  border-radius: 46px;
+  box-shadow: 0 30px 50px -26px rgba(24, 45, 37, 0.6);
+  transition: transform 0.25s ease, opacity 0.2s;
+}
+.acceso {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+.disco {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: hsl(var(--primary));
+  color: hsl(var(--tinta));
+  box-shadow: inset 0 -3px 0 hsl(77 70% 52%), 0 0 0 4px hsl(var(--primary) / 0.18);
+  transition: transform 0.15s;
+}
+.acceso:hover .disco {
+  transform: translateY(-2px);
+}
+.acceso.activo .disco {
+  background: #fff;
+  box-shadow: 0 0 0 4px hsl(var(--primary));
+}
+.etiqueta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.etiqueta::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: hsl(var(--primary));
+}
+.burbuja {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: hsl(30 100% 55%);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 800;
+  box-shadow: 0 0 0 3px hsl(var(--tinta));
+}
+.dock .flotante {
+  top: 0;
+  right: calc(100% + 16px);
+}
+/* La lengüeta lima que asoma a la izquierda: pliega y despliega el dock */
+.lengueta {
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  left: -24px;
+  width: 44px;
+  height: 84px;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center start;
+  padding-left: 2px;
+  border: 0;
+  border-radius: 42px 0 0 42px;
+  background: hsl(var(--primary));
+  color: hsl(var(--tinta));
+  box-shadow: -6px 8px 18px -10px rgba(24, 45, 37, 0.4);
+}
+.dock-plegado .dock-cuerpo {
+  transform: translateX(calc(100% + 30px));
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: transform 0.25s ease, opacity 0.2s, visibility 0s 0.25s;
+}
+.dock-plegado .lengueta {
+  left: auto;
+  right: -14px;
+  width: 34px;
+  place-items: center;
+}
+
+/* ---------- Contenido ---------- */
+.contenido {
+  padding: 0 var(--hueco-dock) 56px 18px;
+  transition: padding 0.25s;
+}
+.dock-plegado .contenido {
+  padding-right: 48px;
+}
+.contenido > .sin-senal,
+.contenido > .verificacion {
+  margin: 0 0 16px;
+  border-radius: 999px;
+}
+
+.aviso {
+  z-index: 80;
+  font-weight: 600;
+}
+
+/* ---------- Pantallas más angostas ----------
+   En escritorio el Panel se achica entero con zoom (escala.ts): siempre se diseña sobre 1680 px o más,
+   así que no hacen falta cortes intermedios. Abajo de 860 px va el diseño de teléfono, sin zoom. */
+@media (max-width: 860px) {
+  .marco {
+    padding: 8px 8px 0;
+  }
+  .arriba {
+    height: auto;
+  }
+  .halo {
+    height: auto;
+    grid-template-columns: 1fr auto;
+    grid-template-areas: 'marca derecha';
+    padding: 12px 14px 44px;
+  }
+  .halo-forma {
+    display: block;
+    border-radius: 34px;
+  }
+  .halo-silueta {
+    display: none;
+  }
+  .halo .marca {
+    grid-area: marca;
+    margin-top: 0;
+    padding: 8px 20px 8px 12px;
+  }
+  .halo .marca svg {
+    width: 32px;
+    height: 32px;
+  }
+  .halo .marca-texto strong {
+    font-size: 1.35rem;
+  }
+  .halo .marca-texto small {
+    font-size: 0.75rem;
+  }
+  .halo-derecha {
+    grid-area: derecha;
+    margin-top: 0;
+    gap: 6px;
+  }
+  .halo-derecha .separador,
+  .perfil-nombre,
+  .menu-flotante > a.solo-escritorio {
+    display: none;
+  }
+  .menu-mas .solo-telefono {
+    display: flex;
+  }
+  .menu-flotante .menu-mas {
+    left: auto;
+    right: 0;
+    transform: none;
+  }
+  .menu-flotante {
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    width: auto;
+    height: 68px;
+    margin: -32px 6px 0;
+    padding: 0 6px;
+    gap: 0;
+  }
+  .menu-flotante > a,
+  .menu-flotante .mas > button {
+    min-width: 0;
+    height: 56px;
+    font-size: 0.6875rem;
+    gap: 2px;
+  }
+  .menu-flotante > a.activo,
+  .menu-flotante .mas > button.activo {
+    height: 70px;
+  }
+  .menu-flotante svg {
+    width: 20px;
+    height: 20px;
+  }
+  .flotante {
+    width: min(320px, calc(100vw - 32px));
+  }
+  .dock {
+    top: auto;
+    bottom: 90px;
+  }
+  .contenido,
+  .dock-plegado .contenido {
+    padding: 18px 8px 40px;
+  }
+}
+
+/* ---------- Imprimir (la lista de compras) ---------- */
+@media print {
+  body {
+    background: #fff;
+  }
+  .arriba,
+  .dock,
+  .aviso,
+  .sin-senal,
+  .verificacion {
+    display: none !important;
+  }
+  .marco,
+  .contenido,
+  .dock-plegado .contenido {
+    padding: 0;
+  }
+}

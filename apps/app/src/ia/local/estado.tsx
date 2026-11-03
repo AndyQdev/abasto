@@ -3,7 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { borrarModelo, cancelarDescarga, descargarModelo, estaInstalado, type Progreso } from './descargas';
 import { capacidadesDelTelefono, nombreDelTelefono } from './dispositivo';
 import type { Interprete } from './motor';
-import { cargarLlama } from './motor-llama';
+import { cargarLlama } from '../perezoso';
 import { manifiesto, modeloRecomendado, modelosPosibles, nivelDelDispositivo, type Capacidades, type ModeloLocal, type Nivel } from './modelos';
 
 /** El modelo elegido sobrevive a cerrar la app */

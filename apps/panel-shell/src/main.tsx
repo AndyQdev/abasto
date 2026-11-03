@@ -4,11 +4,29 @@ import { APPS, appQueLeToca, crearSesion } from '@abasto/sesion';
 import '@abasto/ui/tokens.css';
 import '@abasto/ui/base.css';
 import './panel.css';
+import './halo.css';
 import { App } from './App';
+import { seguirLaEscala } from './escala';
 import { Registro } from './Registro';
 
 // El service worker (PWA) solo existe en el build; en pnpm dev:panel no se registra
 if (import.meta.env.PROD) void import('virtual:pwa-register').then(({ registerSW }) => registerSW({ immediate: true }));
+else void soltarServiceWorkerViejo();
+
+/**
+ * Si en este navegador se abrió alguna vez el build (pnpm pwa o la prueba sin señal), su service worker sigue
+ * sirviendo el Shell viejo en localhost:5170 aunque corra pnpm dev:panel. En desarrollo se lo saca y se recarga.
+ */
+async function soltarServiceWorkerViejo() {
+  if (!('serviceWorker' in navigator)) return;
+  const registros = await navigator.serviceWorker.getRegistrations();
+  if (!registros.length) return;
+  await Promise.all(registros.map((r) => r.unregister()));
+  for (const clave of await caches.keys()) await caches.delete(clave);
+  if (navigator.serviceWorker.controller) window.location.reload();
+}
+
+seguirLaEscala();
 
 const sesion = crearSesion({ clientId: 'abasto-panel' });
 const raiz = createRoot(document.getElementById('raiz')!);

@@ -17,7 +17,7 @@ Tareas: Trello https://trello.com/b/ABo8gFFG/abasto · Código: GitHub, los dos 
 - Las apps leen y escriben por el **Apollo Router** (GraphQL federado, puerto 4000). REST solo en Conecta (API pública) y Asistente (reportes, MCP).
 - Sesión única con **Keycloak** (OIDC + PKCE, `packages/sesion`): entrar en una app abre las otras sin volver a pedir la contraseña.
 - Interfaz en español de Bolivia con **tuteo, nunca voseo**. Montos «Bs 1.728,00», fechas dd/mm/aaaa, cantidades siempre con unidad («2 cajas · 96 u.»).
-- Las pantallas web salen de las maquetas de `docs/uix-mockup/` (ver su README) y usan los tokens de `packages/ui` (verde bosque `hsl(158 64% 28%)`).
+- Las pantallas web salen de las maquetas de `docs/uix-mockup/` (ver su README) y usan los tokens de `packages/ui`. **El Panel Mayorista (02/11) va con la versión 7 «Halo»** (`docs/ABASTO_V7_Guia_Visual_Claude_Code.md` e `image1-3.png`): la identidad de la app (lima, bosque, ámbar, fondo `#F2F7EB`, Plus Jakarta Sans), pisada en `apps/panel-shell/src/halo.css` para no cambiar el Superadmin.
 - **La app de clientes tiene identidad propia (30/10):** lima `#C9F45A`, bosque `#182D25`, ámbar `#FFB454` (ofertas) y fondo `#F2F7EB`. Nada de menta ni azul. Tipografía Plus Jakarta Sans e ilustraciones 3D recortadas que sobresalen de las tarjetas. Los tokens están en `apps/app/src/tema.ts`.
 
 ## Dueños

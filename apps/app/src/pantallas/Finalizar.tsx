@@ -66,19 +66,34 @@ export function Finalizar({ navigation }: PantallaDePila<'Finalizar'>) {
       latitud: elegida.latitud,
       longitud: elegida.longitud,
     };
+    const claves: string[] = [];
     for (const g of grupos) {
-      await bandeja.agregar('pedido.crear', {
+      const op = await bandeja.agregar('pedido.crear', {
         mayoristaId: g.mayoristaId,
         metodoPago: metodo,
         lineas: g.items.map((i) => ({ productoId: i.productoId, presentacion: i.presentacion, cantidad: i.cantidad })),
         entrega,
       });
+      claves.push(op.clave);
     }
     cambiarCarrito([]);
-    if (enLinea) void bandeja.sincronizar();
+    // Con señal y un solo vendedor, se va directo al seguimiento de esa compra: si es por QR, el QR sale ahí mismo
+    // (02/11, pedido de Andrés: menos pasos). Si no, a Compras, donde está todo
+    let creado: string | null = null;
+    if (enLinea) {
+      await bandeja.sincronizar();
+      if (claves.length === 1) {
+        const op = await bandeja.operacion(claves[0]);
+        const id = (op?.respuesta as { id?: unknown } | undefined)?.id;
+        if (op?.estado === 'aplicada' && typeof id === 'string') creado = id;
+      }
+    }
     setEnviando(false);
     vibrar.exito();
-    navigation.navigate('Pestanas', { screen: 'Pedidos' });
+    navigation.reset({
+      index: creado ? 1 : 0,
+      routes: creado ? [{ name: 'Pestanas', params: { screen: 'Pedidos' } }, { name: 'Seguimiento', params: { id: creado } }] : [{ name: 'Pestanas', params: { screen: 'Pedidos' } }],
+    });
   }
 
   return (
@@ -200,7 +215,7 @@ export function Finalizar({ navigation }: PantallaDePila<'Finalizar'>) {
         </View>
         <Boton
           tipo="oscuro"
-          texto={!elegida ? 'Elige dónde entregar' : enLinea ? `Hacer ${grupos.length === 1 ? 'el pedido' : `los ${grupos.length} pedidos`}` : 'Guardar pedido · sale al volver la señal'}
+          texto={!elegida ? 'Elige dónde entregar' : !enLinea ? 'Guardar pedido · sale al volver la señal' : grupos.length > 1 ? `Hacer los ${grupos.length} pedidos` : metodo === 'QR' ? `Pedir y pagar con QR · ${bs(total)}` : `Hacer el pedido · ${bs(total)}`}
           icono={enLinea ? 'bag-check' : 'time-outline'}
           cargando={enviando}
           deshabilitado={!grupos.length || !elegida || creditoNoAlcanza}

@@ -21,7 +21,10 @@ final readonly class CrearProducto
     {
     }
 
-    /** @param list<EscalaDePrecio> $escalas */
+    /**
+     * @param list<EscalaDePrecio> $escalas
+     * @param list<string>|null    $usos
+     */
     public function ejecutar(
         string $mayoristaId,
         string $codigo,
@@ -34,6 +37,7 @@ final readonly class CrearProducto
         ?int $entregaHoras = null,
         ?int $costoUnitarioCentavos = null,
         ?string $proveedor = null,
+        ?array $usos = null,
     ): Producto {
         $codigo = strtoupper(trim($codigo));
         if ($codigo === '') {
@@ -56,6 +60,7 @@ final readonly class CrearProducto
             stock: $stock,
             estado: $stock > 0 ? EstadoProducto::ACTIVO : EstadoProducto::SIN_STOCK,
             escalas: $escalas,
+            usos: $usos ?? [],
         );
         // Bajo pedido queda a la venta aunque empiece en 0 (cambiarAbastecimiento lo pasa a ACTIVO)
         $producto->cambiarAbastecimiento($abastecimiento ?? Abastecimiento::STOCK, $entregaHoras, $costoUnitarioCentavos, $proveedor);

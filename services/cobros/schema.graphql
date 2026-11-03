@@ -8,6 +8,11 @@ type Query {
   lineaDeCredito(tiendaId: ID!, mayoristaId: ID!): LineaDeCredito
   "El cobro por QR de un pedido. Solo lo ven la tienda que compra y el mayorista que vende."
   cobroDePedido(pedidoId: ID!): CobroQr
+  """
+  «Mi negocio» del cliente con sesión (docs/plan-mi-negocio.md): todo (desde vacío, por ejemplo un celular nuevo)
+  o lo recibido después de la marca `desde`, que es el `hasta` de la bajada anterior.
+  """
+  miNegocio(desde: String): MiNegocio!
 }
 
 type Mutation {
@@ -18,6 +23,11 @@ type Mutation {
   Con un banco real, el pago lo avisa el banco.
   """
   pagarQrDePrueba(pedidoId: ID!): CobroQr!
+  """
+  El teléfono sube lo que hizo (sin señal o con señal). Todo o nada, y repetirlo no duplica: lo que solo se agrega
+  entra una vez y lo editable gana si su actualizadoEn es igual o más nuevo.
+  """
+  sincronizarMiNegocio(cambios: CambiosDeNegocioEntrada!): ResultadoDeSincronizacion!
 }
 
 input AutorizarCreditoEntrada {
@@ -79,4 +89,326 @@ type Dinero @shareable {
 "La tienda es de Catálogo; aquí solo se referencia."
 type Tienda @key(fields: "id", resolvable: false) {
   id: ID!
+}
+
+# ─── «Mi negocio» (módulo src/mi-negocio, esquema negocio). Los campos son los de packages/comercio/src/mi-negocio/modelo.ts.
+# Montos en centavos (Int); cantidades en Float (en la base, numeric(14,6)); fechas en ISO 8601.
+
+type MiNegocio {
+  articulos: [ArticuloDeNegocio!]!
+  movimientos: [MovimientoDeNegocio!]!
+  ventas: [VentaDeNegocio!]!
+  clientes: [ClienteDeFiado!]!
+  fiados: [MovimientoDeFiado!]!
+  recetas: [RecetaDeNegocio!]!
+  tandas: [TandaDeNegocio!]!
+  anotaciones: [AnotacionDeNegocio!]!
+  lista: [ItemDeListaFija!]!
+  "La marca para la próxima bajada: miNegocio(desde: hasta)"
+  hasta: String!
+}
+
+type ResultadoDeSincronizacion {
+  recibidos: Int!
+  hasta: String!
+}
+
+enum ClaseDeArticulo {
+  COMPRADO
+  HECHO
+}
+
+enum OrigenDeArticulo {
+  ABASTO
+  OTRO_PROVEEDOR
+}
+
+enum TipoDeMovimiento {
+  ENTRADA
+  SALIDA
+  AJUSTE
+  CONSUMO
+  PRODUCCION
+  VENTA
+  MERMA
+}
+
+enum OrigenDeMovimiento {
+  ABASTO
+  OTRO_PROVEEDOR
+  MANUAL
+  VENTA
+  TANDA
+}
+
+enum FormaDeCobro {
+  CONTADO
+  FIADO
+}
+
+enum TipoDeFiado {
+  DEBE
+  PAGA
+}
+
+enum TipoDeAnotacion {
+  INGRESO
+  GASTO
+}
+
+enum OrigenDeAnotacion {
+  MANUAL
+  ABASTO
+}
+
+"En qué se cuenta: 1 quintal = 46 kg; porEnvase es null si no se sabe"
+type MedidaDeNegocio {
+  envase: String!
+  porEnvase: Float
+  unidad: String!
+}
+
+type ArticuloDeNegocio {
+  id: ID!
+  nombre: String!
+  detalle: String
+  rubro: String
+  medida: MedidaDeNegocio!
+  clase: ClaseDeArticulo!
+  origen: OrigenDeArticulo!
+  productoId: String
+  proveedor: String
+  precioVentaCentavos: Int
+  stockMinimo: Float
+  creadoEn: String!
+  actualizadoEn: String!
+  eliminado: Boolean!
+}
+
+type MovimientoDeNegocio {
+  id: ID!
+  articuloId: String!
+  tipo: TipoDeMovimiento!
+  "En envases del artículo y con signo: + entra, − sale"
+  cantidad: Float!
+  costoUnitarioCentavos: Int
+  origen: OrigenDeMovimiento!
+  claveUnica: String!
+  fecha: String!
+  nota: String
+  ventaId: String
+  tandaId: String
+}
+
+type LineaDeVentaDeNegocio {
+  articuloId: String!
+  cantidad: Float!
+  precioUnitarioCentavos: Int!
+  costoUnitarioCentavos: Int
+}
+
+type VentaDeNegocio {
+  id: ID!
+  fecha: String!
+  lineas: [LineaDeVentaDeNegocio!]!
+  totalCentavos: Int!
+  costoCentavos: Int!
+  forma: FormaDeCobro!
+  clienteId: String
+  anulada: Boolean!
+}
+
+type ClienteDeFiado {
+  id: ID!
+  nombre: String!
+  telefono: String
+  creadoEn: String!
+  actualizadoEn: String!
+  eliminado: Boolean!
+}
+
+type MovimientoDeFiado {
+  id: ID!
+  clienteId: String!
+  tipo: TipoDeFiado!
+  montoCentavos: Int!
+  ventaId: String
+  fecha: String!
+  nota: String
+}
+
+type InsumoDeReceta {
+  articuloId: String!
+  cantidad: Float!
+}
+
+type RecetaDeNegocio {
+  id: ID!
+  articuloId: String!
+  nombre: String!
+  rinde: Float!
+  insumos: [InsumoDeReceta!]!
+  actualizadoEn: String!
+  eliminado: Boolean!
+}
+
+type TandaDeNegocio {
+  id: ID!
+  recetaId: String!
+  articuloId: String!
+  planificado: Float!
+  obtenido: Float!
+  costoTotalCentavos: Int!
+  fecha: String!
+}
+
+type AnotacionDeNegocio {
+  id: ID!
+  tipo: TipoDeAnotacion!
+  montoCentavos: Int!
+  categoria: String!
+  nota: String
+  origen: OrigenDeAnotacion!
+  claveUnica: String!
+  fecha: String!
+}
+
+type ItemDeListaFija {
+  id: ID!
+  productoId: String!
+  presentacion: String!
+  cantidad: Float!
+  actualizadoEn: String!
+  eliminado: Boolean!
+}
+
+input CambiosDeNegocioEntrada {
+  articulos: [ArticuloDeNegocioEntrada!]
+  movimientos: [MovimientoDeNegocioEntrada!]
+  ventas: [VentaDeNegocioEntrada!]
+  clientes: [ClienteDeFiadoEntrada!]
+  fiados: [MovimientoDeFiadoEntrada!]
+  recetas: [RecetaDeNegocioEntrada!]
+  tandas: [TandaDeNegocioEntrada!]
+  anotaciones: [AnotacionDeNegocioEntrada!]
+  lista: [ItemDeListaFijaEntrada!]
+}
+
+input MedidaDeNegocioEntrada {
+  envase: String!
+  porEnvase: Float
+  unidad: String!
+}
+
+input ArticuloDeNegocioEntrada {
+  id: ID!
+  nombre: String!
+  detalle: String
+  rubro: String
+  medida: MedidaDeNegocioEntrada!
+  clase: ClaseDeArticulo!
+  origen: OrigenDeArticulo!
+  productoId: String
+  proveedor: String
+  precioVentaCentavos: Int
+  stockMinimo: Float
+  creadoEn: String!
+  actualizadoEn: String!
+  eliminado: Boolean!
+}
+
+input MovimientoDeNegocioEntrada {
+  id: ID!
+  articuloId: String!
+  tipo: TipoDeMovimiento!
+  cantidad: Float!
+  costoUnitarioCentavos: Int
+  origen: OrigenDeMovimiento!
+  claveUnica: String!
+  fecha: String!
+  nota: String
+  ventaId: String
+  tandaId: String
+}
+
+input LineaDeVentaDeNegocioEntrada {
+  articuloId: String!
+  cantidad: Float!
+  precioUnitarioCentavos: Int!
+  costoUnitarioCentavos: Int
+}
+
+input VentaDeNegocioEntrada {
+  id: ID!
+  fecha: String!
+  lineas: [LineaDeVentaDeNegocioEntrada!]!
+  totalCentavos: Int!
+  costoCentavos: Int!
+  forma: FormaDeCobro!
+  clienteId: String
+  anulada: Boolean!
+}
+
+input ClienteDeFiadoEntrada {
+  id: ID!
+  nombre: String!
+  telefono: String
+  creadoEn: String!
+  actualizadoEn: String!
+  eliminado: Boolean!
+}
+
+input MovimientoDeFiadoEntrada {
+  id: ID!
+  clienteId: String!
+  tipo: TipoDeFiado!
+  montoCentavos: Int!
+  ventaId: String
+  fecha: String!
+  nota: String
+}
+
+input InsumoDeRecetaEntrada {
+  articuloId: String!
+  cantidad: Float!
+}
+
+input RecetaDeNegocioEntrada {
+  id: ID!
+  articuloId: String!
+  nombre: String!
+  rinde: Float!
+  insumos: [InsumoDeRecetaEntrada!]!
+  actualizadoEn: String!
+  eliminado: Boolean!
+}
+
+input TandaDeNegocioEntrada {
+  id: ID!
+  recetaId: String!
+  articuloId: String!
+  planificado: Float!
+  obtenido: Float!
+  costoTotalCentavos: Int!
+  fecha: String!
+}
+
+input AnotacionDeNegocioEntrada {
+  id: ID!
+  tipo: TipoDeAnotacion!
+  montoCentavos: Int!
+  categoria: String!
+  nota: String
+  origen: OrigenDeAnotacion!
+  claveUnica: String!
+  fecha: String!
+}
+
+input ItemDeListaFijaEntrada {
+  id: ID!
+  productoId: String!
+  presentacion: String!
+  cantidad: Float!
+  actualizadoEn: String!
+  eliminado: Boolean!
 }

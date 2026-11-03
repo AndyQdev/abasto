@@ -98,7 +98,8 @@ describe('Cobros en la saga de compra', () => {
     expect(qr?.id).toBe('qr1');
 
     await new PagarQr(cobros, reloj).ejecutar('p1', 'dr');
-    expect(eventos()).toEqual(['cobro.qr_pagado']);
+    // Una sola vez cobro.qr_generado aunque el comando llegue dos veces (el orden entre outboxes no importa)
+    expect(eventos().sort()).toEqual(['cobro.qr_generado', 'cobro.qr_pagado'].sort());
   });
 
   it('solo la tienda que compró puede pagar el QR', async () => {
@@ -112,7 +113,7 @@ describe('Cobros en la saga de compra', () => {
     await atender.ejecutar(comando('m1', 'cobros.generar_qr', 23280));
     ahora = new Date('2026-10-28T14:31:00Z');
     expect(await new VencerQrs(cobros, reloj).ejecutar()).toBe(1);
-    expect(eventos()).toEqual(['cobro.rechazado']);
+    expect(eventos().sort()).toEqual(['cobro.qr_generado', 'cobro.rechazado'].sort());
   });
 
   it('la compensación de un QR pagado lo devuelve', async () => {
@@ -120,7 +121,7 @@ describe('Cobros en la saga de compra', () => {
     await atender.ejecutar(comando('m1', 'cobros.generar_qr', 23280));
     await new PagarQr(cobros, reloj).ejecutar('p1', 'dr');
     await atender.ejecutar(comando('m2', 'cobros.devolver_qr'));
-    expect(eventos()).toEqual(['cobro.qr_pagado', 'cobro.qr_devuelto']);
+    expect(eventos().sort()).toEqual(['cobro.qr_generado', 'cobro.qr_pagado', 'cobro.qr_devuelto'].sort());
     expect((await cobros.porPedido('p1'))?.estado).toBe('DEVUELTO');
   });
 

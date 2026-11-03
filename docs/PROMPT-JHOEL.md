@@ -1,6 +1,32 @@
 # Prompt para el Claude de Jhoel
 
-Actualizado el 29/10. Si ya tienes el repo, pega en Claude Code el prompt de «Retomar». Si es una máquina nueva, haz primero «Desde cero».
+Actualizado el 01/11. Si ya tienes el repo, pega en Claude Code el prompt de «Retomar (01/11)». Si es una máquina nueva, haz primero «Desde cero». El de 29/10 queda abajo como historia.
+
+## Retomar (01/11: enfoque nuevo de la app)
+
+```text
+Soy Jhoel. Trabajo con Andrés en Abasto (2º parcial de Ingeniería de Software II, ICONIX, Grupo #13). La entrega pasó al 10/11/2026 (Andrés lo confirma). Háblame en español con tuteo. Andrés lleva lo comercial y yo la IA; trabajamos los dos directo en main.
+
+Entre el 31/10 y el 01/11 Andrés cambió el enfoque de la app de clientes. Antes de tocar nada:
+
+1. Baja todo: git switch main && git pull --rebase origin main, pnpm install y, dentro de apps/app, npm install (hay dependencias nuevas de prueba). Después pnpm todo y pnpm semilla (el catálogo ahora tiene 49 productos).
+2. Lee, en este orden: el bloque «Jhoel, empieza aquí» de docs/equipo/andres.md, docs/plan-mi-negocio.md (el plan nuevo) y apps/app/CLAUDE.md.
+3. Explícame en 10 líneas el enfoque nuevo con estas ideas, y dime qué le sirve a mi parte (IA y ML):
+   - Abasto es su propio mayorista y la promesa es «no vuelvas a ir al mercado». Los clientes son tres tipos: Hogar (la familia que compra al por mayor), Tienda (abarrotes que revende) y Productor (salteñería, panadería o pensión: compra insumos y vende algo hecho).
+   - Al registrarse, el cliente elige su tipo (obligatorio) y el Inicio le muestra lo suyo.
+   - «Mi negocio»: una pestaña (Mi casa / Mi tienda / Producción) con el inventario que se llena solo con lo que compra en Abasto. Siguen la caja para vender, el cuaderno de fiado, las recetas con costo por unidad, el planificador («quiero hacer 300 salteñas»), las cuentas de la casa y el respaldo de todo en la base de datos del servidor (sin señal, en el teléfono, y se sube solo).
+4. Cambio en mi carpeta: Andrés tocó solo apps/app/src/ia/index.ts para que la app abra en Expo Go (iPhone): ML Kit y TFLite se cargan recién al usarlos y, en Expo Go, la IA queda apagada con un aviso. En Android no cambia nada. Revisa que mi parte siga bien con pnpm test y, en el emulador, con el diagnóstico de la IA (Cuenta → Probar la IA del teléfono).
+5. Propón (no implementes todavía, espera mi sí) cómo la IA puede aprovechar lo nuevo, por ejemplo:
+   - Reconocer el producto por foto también en la caja rápida de la tienda (vender sin tipear).
+   - Estimar «se te acaba el aceite en ~5 días» con los movimientos del inventario (ml/ de demanda).
+   - Segmentar clientes por tipo de negocio en Inteligencia.
+
+Reglas de siempre:
+- Trabajo directo en main: git pull --rebase origin main al empezar y antes de cada push, commits chicos, nunca --force, nunca borro trabajo de Andrés.
+- No toco carpetas de Andrés (mira .github/CODEOWNERS). Si necesito algo, lo escribo en docs/equipo/jhoel.md, en «Necesito del otro».
+- Toda funcionalidad nueva lleva su prueba. En apps/app las pruebas de pantallas usan React Native Testing Library 14: render y fireEvent son asíncronos (await).
+- Para probar la app en el emulador sigue «Correr» de apps/app/CLAUDE.md. Si al arrancar sale un APK viejo, es la instantánea del emulador: está explicado ahí.
+```
 
 ## Retomar (29/10: reparto nuevo, todo en main)
 

@@ -32,6 +32,14 @@ Eventos `CustomEvent` con `bubbles: true` y `composed: true` (para que atraviese
 | `abasto:navegar` | `{ ruta: string }` | Cambia de pantalla (y de remoto si hace falta) |
 | `abasto:aviso` | `{ texto: string }` | Muestra un aviso abajo por 4 segundos |
 
+## Lo que el Shell le avisa a los remotos (agregado el 02/11)
+
+| Evento en `document` | `detail` | Para qué |
+|---|---|---|
+| `abasto:buscar` | `{ texto: string }` | El buscador del header. Si la vista ya estaba abierta, filtra con ese texto. |
+
+Además, al navegar desde el buscador el Shell deja la búsqueda en la URL (`/productos?q=arroz`). El atributo `ruta` sigue llegando sin la búsqueda.
+
 ## Reglas
 
 - Cada remoto vive en su **Shadow DOM**: sus estilos no se escapan y los del Shell no lo pisan.

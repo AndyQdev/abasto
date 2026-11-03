@@ -138,7 +138,8 @@ Subject: ${img.tema}
 
 ${CIERRE_OBJETO}`;
   }
-  return `${ESTILO} ${FONDO_ESCENA}
+  // «ambiente»: la escena trae su propio lugar (calle, tienda) en vez del fondo de estudio (portadas del registro, 02/11)
+  return `${ESTILO} ${img.ambiente ? "" : FONDO_ESCENA}
 
 Scene: ${img.tema}
 

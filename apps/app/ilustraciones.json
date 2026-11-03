@@ -2,6 +2,30 @@
   "estilo": "Gibby: 3D estilizado tipo película animada, con la paleta de ABASTO (lima, bosque y ámbar). Todas son objetos recortados para que sobresalgan de las tarjetas. El texto del estilo está en scripts/ilustraciones/generar.mjs.",
   "imagenes": [
     {
+      "nombre": "portada-nombre",
+      "tipo": "escena",
+      "ambiente": true,
+      "proporcion": "3:4",
+      "uso": "Acceso: nombre (portada a sangre)",
+      "tema": "A cheerful young Bolivian delivery rider in a deep forest-green polo shirt and cap with lime-green details, walking toward the viewer with a big smile, holding a deep forest-green plastic crate full of wholesale groceries: a white rice sack, a tray of brown eggs, a golden cooking-oil bottle and a flour bag. Behind him on the left, a lime-green scooter is parked with a forest-green delivery box; on the right, the open door of a warm neighborhood grocery store with terracotta roof tiles, hanging lanterns and shelves of products; a cream colonial church tower and palm trees in the soft-focus background, tropical plants framing the corners. Full-bleed illustrated environment that fills the whole frame edge to edge, no border, no frame, no studio backdrop. Composition for a phone screen: the main subject sits in the upper 60% of the image; the lower 35% is a calm, plain sunny cobblestone sidewalk with nothing important on it. Warm golden-hour light, soft lime-green and cream tones, gentle depth of field in the background."
+    },
+    {
+      "nombre": "portada-codigo",
+      "tipo": "escena",
+      "ambiente": true,
+      "proporcion": "3:4",
+      "uso": "Acceso: código (portada a sangre)",
+      "tema": "A big cute glossy cream-white smartphone floating and slightly tilted in the center, its screen showing a large lime-green chat bubble with a thick white check mark; a small lime chat bubble and a small amber chat bubble with three dots float around it, plus a few lime sparkle dashes. Behind it, a sunny colonial street of Santa Cruz, Bolivia: a grocery store with a forest-green awning and fruit crates on the left, palm trees and a warm cream colonial church tower in the soft-focus distance on the right. On the lower right, a forest-green plastic crate with a tray of brown eggs, a golden oil bottle and a white rice bag. Full-bleed illustrated environment that fills the whole frame edge to edge, no border, no frame, no studio backdrop. Composition for a phone screen: the main subject sits in the upper 60% of the image; the lower 35% is a calm, plain sunny cobblestone sidewalk with nothing important on it. Warm golden-hour light, soft lime-green and cream tones, gentle depth of field in the background."
+    },
+    {
+      "nombre": "portada-bienvenida",
+      "tipo": "escena",
+      "ambiente": true,
+      "proporcion": "3:4",
+      "uso": "Acceso: celular. NO REGENERAR: es contracts/onboarding/image1.png (la referencia de Andrés) editada con Gemini solo para quitar la barra de estado y la rueda; trae el logo y el lema dentro de la imagen (02/11)",
+      "tema": "A cheerful young Bolivian delivery rider in a deep forest-green polo shirt and cap with lime-green details, riding a cute rounded lime-green scooter straight toward the viewer in a front three-quarter view, his face turned fully to the camera, looking directly into the camera and making eye contact with the viewer, big warm smile, raising one open hand high to wave hello AT THE VIEWER. Behind him on the scooter, a deep forest-green delivery box overflowing with wholesale groceries: a white rice sack, a white flour sack, golden cooking-oil bottles and a tray of brown eggs. On the right, a cozy neighborhood corner grocery store from Santa Cruz, Bolivia, with a terracotta tile roof, a lime-and-cream striped awning, wooden shelves full of colorful products, crates of fresh fruit and potted plants; a leafy tree and soft blue sky with a small cloud on the left. The rider is the big hero in the center, filling the upper two thirds of the frame. Full-bleed illustrated environment that fills the whole frame edge to edge, no border, no frame, no studio backdrop. Warm golden-hour light, soft lime-green and cream tones, gentle depth of field in the background."
+    },
+    {
       "nombre": "negocio-productor",
       "tipo": "objeto",
       "lado": 1024,
@@ -166,7 +190,7 @@
       "nombre": "rubro-verduras",
       "tipo": "objeto",
       "lado": 512,
-      "uso": "Rubro Verduras secas (01/11)",
+      "uso": "Rubro Verduras y tubérculos (01/11)",
       "tema": "A small group of market vegetables: a few brown potatoes, a red onion, a white onion and a garlic bulb next to a small woven mesh sack, no writing. Inanimate objects: no faces, no eyes. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
     },
     {
@@ -194,8 +218,8 @@
       "nombre": "pedido-entregado",
       "tipo": "objeto",
       "lado": 768,
-      "uso": "Seguimiento: entregado",
-      "tema": "A smiling store owner woman holding a stack of kraft cardboard boxes next to a delivery rider in a deep forest-green polo giving a thumbs up, small lime confetti around. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
+      "uso": "Seguimiento y Compras: entregado (02/11 regenerada sin blancos)",
+      "tema": "A smiling store owner woman in a lime-green shirt and a deep forest-green apron (no white clothing) holding a stack of kraft cardboard boxes, next to a delivery rider in a deep forest-green polo and cap giving a thumbs up. Solid, fully opaque colors everywhere, no white patches, no purple, pink or magenta anywhere. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
     },
     {
       "nombre": "sin-senal",
@@ -239,6 +263,55 @@
       "uso": "Inicio: la composición 3D del encabezado, entre la dirección y la campana",
       "tema": "A rich, abundant pile of wholesale groceries, full and generous but tidy: a big glossy lime-green map pin rising from the middle, several kraft cardboard boxes (one open with products peeking out, one tied with a lime ribbon), golden cooking-oil bottles, colorful soda bottles, plain white cloth sacks with absolutely no letters or print, an egg tray, a bunch of bananas, red tomatoes, a fresh lettuce, pasta packs without writing and glossy green leaves tucked around the pile. Three-quarter view, the pile is wider than tall and fills the frame from side to side. Floating in the air with nothing under it. Absolutely no floor, no ground plane, no shadow under the objects.",
       "proporcion": "4:3"
+    },
+    {
+      "nombre": "rubro-carnes",
+      "tipo": "objeto",
+      "lado": 512,
+      "uso": "Rubro Carnes (02/11)",
+      "tema": "A small wooden board with grilled meats: a juicy brown grilled steak, a golden roasted chicken and grilled chorizo sausages, with a sprig of green parsley. No purple, pink or magenta anywhere. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
+    },
+    {
+      "nombre": "pago-exitoso",
+      "tipo": "objeto",
+      "lado": 768,
+      "uso": "Pago recibido: efecto a pantalla completa (02/11)",
+      "tema": "A big glossy lime-green 3D badge with a thick deep forest-green check mark in the center, bursting with lime and amber confetti, small coins and sparkles flying out around it. Inanimate objects: no faces, no eyes. No purple, pink or magenta anywhere. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
+    },
+    {
+      "nombre": "escena-pagar",
+      "tipo": "objeto",
+      "lado": 768,
+      "uso": "Compras y Seguimiento: por pagar con QR, animada (02/11)",
+      "tema": "A chunky cute smartphone standing upright, its screen glowing lime-green and showing a big abstract square pattern made only of deep forest-green squares (like a QR code, no letters), with three shiny golden coins floating around it. Inanimate objects: no faces, no eyes. Solid, fully opaque colors everywhere, no white patches, no purple, pink or magenta anywhere. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
+    },
+    {
+      "nombre": "escena-revisa",
+      "tipo": "objeto",
+      "lado": 768,
+      "uso": "Compras y Seguimiento: el vendedor revisa el pedido, animada (02/11)",
+      "tema": "Waist-up view of a friendly Bolivian wholesale seller man with a mustache, wearing a lime-green shirt and a deep forest-green apron and cap, smiling while checking a forest-green clipboard with a pencil in his other hand, a small stack of kraft cardboard boxes beside him. Solid, fully opaque colors everywhere, no white patches, no purple, pink or magenta anywhere. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
+    },
+    {
+      "nombre": "escena-prepara",
+      "tipo": "objeto",
+      "lado": 768,
+      "uso": "Compras y Seguimiento: en preparación, animada (02/11)",
+      "tema": "A cheerful young Bolivian warehouse worker woman in a deep forest-green polo shirt and cap with lime-green details, packing groceries into an open kraft cardboard box: a white rice sack, a golden cooking-oil bottle and a bunch of bananas peeking out of the box. Three-quarter view, full body, slightly leaning over the box. Solid, fully opaque colors everywhere, no white patches, no purple, pink or magenta anywhere. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
+    },
+    {
+      "nombre": "escena-camino",
+      "tipo": "objeto",
+      "lado": 768,
+      "uso": "Compras y Seguimiento: en camino, moto animada (02/11)",
+      "tema": "Exact side view (profile) of a cheerful young Bolivian delivery rider riding a chunky lime-green scooter moving to the RIGHT, wearing a deep forest-green polo, a deep forest-green helmet with lime details, a big forest-green delivery box strapped on the back of the scooter, both wheels fully visible and round, the rider smiling and looking forward to the right. Solid, fully opaque colors everywhere, no white patches, no purple, pink or magenta anywhere. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
+    },
+    {
+      "nombre": "estante-inventario",
+      "tipo": "objeto",
+      "lado": 768,
+      "uso": "Entregado: el estante donde caen los productos (02/11)",
+      "tema": "A cute chunky wooden store shelf unit with two shelves, seen from the front, holding a few groceries: a white rice sack, golden cooking-oil bottles, a kraft cardboard box and colorful soda bottles; lime-green and deep forest-green painted trim on the wood. Inanimate objects: no faces, no eyes. Solid, fully opaque colors everywhere, no white patches, no purple, pink or magenta anywhere. Floating in the air with nothing under it, big and filling most of the frame. Absolutely no floor, no ground plane, no shadow under the objects."
     }
   ]
 }

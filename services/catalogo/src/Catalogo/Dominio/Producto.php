@@ -38,9 +38,49 @@ final class Producto
         public ?PrecioDeReferencia $precioEnSuper = null,
         /** El precio es de demostración: todavía no se cotizó en el mercado. La app lo avisa en la tarjeta */
         public bool $precioPorConfirmar = false,
+        /**
+         * A quién se le muestra en el Inicio de la app (USOS): hogar, tienda o un área del productor. Buscar encuentra todo;
+         * esto solo decide qué ve primero cada uno (un panadero no ve yogurt). Lo edita Abasto en el Panel.
+         *
+         * @var list<string>
+         */
+        private array $usos = [],
     ) {
         self::validarEscalas($escalas);
         self::validarCosto($costoUnitarioCentavos);
+        $this->usos = self::validarUsos($usos);
+    }
+
+    /** Hogar, tienda y las 6 áreas del productor (las mismas claves que NegocioDelCliente::SUBTIPOS). */
+    public const USOS = ['hogar', 'tienda', 'salteneria', 'panaderia', 'horneados', 'pension', 'polleria', 'puesto'];
+
+    /** @return list<string> en el orden de USOS */
+    public function usos(): array
+    {
+        return $this->usos;
+    }
+
+    /** @param list<string> $usos */
+    public function cambiarUsos(array $usos): void
+    {
+        $this->usos = self::validarUsos($usos);
+    }
+
+    /**
+     * @param list<string> $usos
+     *
+     * @return list<string> sin repetidos y en el orden de USOS
+     */
+    private static function validarUsos(array $usos): array
+    {
+        $limpios = array_map(static fn (string $u) => strtolower(trim($u)), $usos);
+        foreach ($limpios as $u) {
+            if (! in_array($u, self::USOS, true)) {
+                throw new ErrorDeDominio('USO_INVALIDO', "«{$u}» no es un uso: tiene que ser ".implode(', ', self::USOS));
+            }
+        }
+
+        return array_values(array_filter(self::USOS, static fn (string $u) => in_array($u, $limpios, true)));
     }
 
     public function bajoPedido(): bool

@@ -1,6 +1,7 @@
 import * as SecureStore from 'expo-secure-store';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Platform } from 'react-native';
+import { guardado } from './guardado';
 import { cerrarEnKeycloak, renovar, SesionVencida, type Tokens } from './keycloak';
 
 /** Lo que la app sabe de quien entró, sacado del token de Keycloak. */
@@ -130,6 +131,9 @@ export function ProveedorDeSesion({ children }: { children: ReactNode }) {
       iniciar: guardar,
       salir: async () => {
         const refresco = tokensRef.current?.refresco;
+        // Lo que es de la persona y vive en el teléfono sin dueño: si entra otra cuenta, empieza de cero.
+        // «Mi negocio» y el tipo de negocio van por usuario (y están en la base de datos): no se tocan.
+        await Promise.all(['direcciones', 'direccion-elegida', 'carrito', 'pedidos', 'busquedas'].map((k) => guardado.borrar(k)));
         await guardar(null);
         if (refresco) await cerrarEnKeycloak(refresco);
       },

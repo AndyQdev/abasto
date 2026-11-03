@@ -34,6 +34,9 @@ input CrearProductoEntrada {
 
   "Dónde lo compra (puesto, mercado o distribuidora). Solo lo ve el mayorista"
   proveedor: String
+
+  "A quién se le muestra en el Inicio de la app (ver Producto.usos)"
+  usos: [String!]
 }
 
 "Edición de un producto por el mayorista: solo cambia lo que envía."
@@ -59,6 +62,9 @@ input EditarProductoEntrada {
 
   "Dónde lo compra (puesto, mercado o distribuidora). Solo lo ve el mayorista"
   proveedor: String
+
+  "Deja los usos en estos (lista vacía: no se muestra en ningún Inicio)"
+  usos: [String!]
 }
 
 "Una escala de precio: cuántas unidades trae la presentación y cuánto valdrá cada una."
@@ -112,6 +118,9 @@ type Producto @key(fields: "id") {
 
   "El precio es de demostración: todavía no se cotizó en el mercado"
   precioPorConfirmar: Boolean!
+
+  "A quién se le muestra en el Inicio de la app: hogar, tienda, salteneria, panaderia, horneados, pension, polleria o puesto. Buscar encuentra todo"
+  usos: [String!]!
 }
 
 "Un precio al público tomado de un supermercado, con dónde y cuándo"
@@ -153,6 +162,9 @@ type Mayorista @key(fields: "id") {
 
   "Abasto mismo vendiendo: cualquier tienda registrada ve sus precios sin pedir ser cliente"
   deLaCasa: Boolean!
+
+  "Mayorista de demostración (e2e y casos de uso del parcial): la app de clientes no lo muestra"
+  dePrueba: Boolean!
 }
 
 "Lo que recibe la app al pedir el código."
@@ -189,6 +201,21 @@ type MiOrganizacion {
   "PENDIENTE, VERIFICADO o RECHAZADO"
   estadoVerificacion: String!
   motivoRechazo: String
+
+  "Solo clientes de la app: para qué compra. Null en los mayoristas y en quien no eligió."
+  negocio: NegocioDelCliente
+}
+
+"Para qué compra el cliente de la app (docs/plan-mi-negocio.md). Queda en su organización: se lee en cualquier celular."
+type NegocioDelCliente {
+  "hogar, tienda o productor"
+  tipo: String!
+
+  "Solo productor: salteneria, panaderia, horneados, pension, polleria o puesto"
+  subtipo: String
+
+  "Cuándo lo eligió o lo cambió (ISO 8601)"
+  elegidoEn: String!
 }
 
 "Un mayorista tal como lo revisa Abasto en el Superadmin."
@@ -223,6 +250,9 @@ type Tienda @key(fields: "id") {
   id: ID!
   nombre: String!
   ciudad: String!
+
+  "Para qué compra (hogar, tienda o productor). Null si todavía no eligió."
+  negocio: NegocioDelCliente
 }
 
 type RelacionComercial {
@@ -336,6 +366,9 @@ type Query {
   "La empresa de la sesión, con su verificación (el Panel muestra «en revisión» o el motivo del rechazo)."
   miOrganizacion: MiOrganizacion!
 
+  "App de clientes: para qué compra (hogar, tienda o productor). Null si todavía no eligió."
+  miTipoDeNegocio: NegocioDelCliente
+
   "Solo admin (Superadmin): mayoristas en ese estado, los registrados más recientemente primero."
   mayoristasPorVerificar(estado: String = "PENDIENTE"): [SolicitudDeMayorista!]!
 }
@@ -346,6 +379,9 @@ type Mutation {
 
   "Público. Con el código correcto entra; la primera vez pide el nombre (error NECESITA_NOMBRE) y crea la cuenta."
   entrarConCodigo(telefono: String!, codigo: String!, nombre: String): SesionDeCliente!
+
+  "App de clientes: elige o cambia para qué compra. tipo: hogar, tienda o productor; subtipo (solo productor): salteneria, panaderia, horneados, pension, polleria o puesto."
+  elegirTipoDeNegocio(tipo: String!, subtipo: String): NegocioDelCliente!
 
   "Público. Un mayorista se registra (CU-01) y queda PENDIENTE hasta que Abasto lo verifica."
   registrarMayorista(entrada: RegistrarMayoristaEntrada!): SolicitudDeMayorista!

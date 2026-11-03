@@ -3,16 +3,20 @@ import {
   SUBTIPOS_DE_PRODUCTOR,
   TIPOS,
   TIPOS_DE_NEGOCIO,
+  ELEGIR_TIPO_DE_NEGOCIO,
+  MI_TIPO_DE_NEGOCIO,
   leerNegocio,
+  type RespuestaTipoDeNegocio,
   type NegocioElegido,
   type PedidoDeLaSemana,
   type SubtipoProductor,
   type TipoDeNegocio,
 } from '@abasto/comercio';
 import { Image } from 'expo-image';
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Flotar, Tocable } from './animacion';
+import { graphql } from './api';
 import { Boton, Icono, Texto, type NombreDeIcono } from './componentes';
 import { guardado } from './guardado';
 import { ILUSTRACION } from './ilustraciones';
@@ -24,7 +28,7 @@ import { COLOR, FUENTE, SOMBRA } from './tema';
  * mostrar primero lo suyo. Se guarda en el teléfono; lo de antes («masas», «cocina») se traduce solo.
  */
 export const ICONO_DE_NEGOCIO: Record<TipoDeNegocio, NombreDeIcono> = { hogar: 'home', tienda: 'storefront', productor: 'restaurant' };
-export const ICONO_DE_SUBTIPO: Record<SubtipoProductor, NombreDeIcono> = { salteneria: 'flame', panaderia: 'pizza', pension: 'restaurant' };
+export const ICONO_DE_SUBTIPO: Record<SubtipoProductor, NombreDeIcono> = { salteneria: 'flame', panaderia: 'pizza', horneados: 'bonfire', pension: 'restaurant', polleria: 'fast-food', puesto: 'storefront' };
 
 /** La ilustración 3D de cada tipo, para el registro */
 export const IMAGEN_DE_NEGOCIO: Record<TipoDeNegocio, number> = {
@@ -37,25 +41,116 @@ interface EstadoDeNegocio {
   negocio: NegocioElegido | null;
   /** false mientras se lee del teléfono: evita mostrar la pregunta un instante a quien ya eligió */
   leido: boolean;
-  elegir: (n: NegocioElegido) => void;
+  /** En el registro: true hasta que arma (o salta) su primera receta o su primer estante */
+  primerPaso: boolean;
+  /** Elegir o cambiar el negocio. `registro`: es la primera vez, sigue el primer paso (tienda y productor) */
+  elegir: (n: NegocioElegido, opciones?: { registro?: boolean }) => void;
+  terminarPrimerPaso: () => void;
 }
 
 const Contexto = createContext<EstadoDeNegocio | null>(null);
 
-export function ProveedorDeNegocio({ children }: { children: ReactNode }) {
+/**
+ * El tipo de negocio vive en la base de datos (Catálogo, `organizaciones.negocio`): se lee al entrar, así un celular
+ * nuevo no vuelve a preguntar. El teléfono guarda una copia por usuario para abrir sin señal; si se eligió sin señal,
+ * queda marcado y se sube la próxima vez.
+ */
+export function ProveedorDeNegocio({ children, dueno, servidor = graphql }: { children: ReactNode; dueno: string; servidor?: typeof graphql }) {
   const [negocio, setNegocio] = useState<NegocioElegido | null>(null);
   const [leido, setLeido] = useState(false);
+  const [primerPaso, setPrimerPaso] = useState(false);
+  const clave = `negocio:${dueno}`;
+  const marca = `negocio-por-subir:${dueno}`;
+  // Por dónde va el registro (no es un dato del negocio): si cierra la app a mitad, vuelve al primer paso
+  const pasoPendiente = `primer-paso:${dueno}`;
+
+  const subir = useCallback(
+    async (n: NegocioElegido) => {
+      try {
+        await servidor(ELEGIR_TIPO_DE_NEGOCIO, { tipo: n.tipo, subtipo: n.subtipo ?? null });
+        await guardado.borrar(marca);
+      } catch {
+        await guardado.escribir(marca, true);
+      }
+    },
+    [servidor, marca],
+  );
+
   useEffect(() => {
-    void guardado.leer<unknown>('negocio').then((v) => {
-      setNegocio(leerNegocio(v));
+    let vivo = true;
+    void (async () => {
+      // Lo guardado por usuario. Los teléfonos de antes del 01/11 lo tenían sin usuario: se pasa al primero que entra
+      // y se borra, para que otra cuenta en el mismo celular no lo herede
+      let local = leerNegocio(await guardado.leer<unknown>(clave));
+      const viejo = await guardado.leer<unknown>('negocio');
+      if (viejo !== null) {
+        await guardado.borrar('negocio');
+        if (!local && leerNegocio(viejo)) {
+          local = leerNegocio(viejo);
+          await guardado.escribir(clave, local);
+        }
+      }
+      const porSubir = (await guardado.leer<boolean>(marca)) === true;
+      if (vivo && (await guardado.leer<boolean>(pasoPendiente)) === true) setPrimerPaso(true);
+      if (vivo && local) {
+        setNegocio(local);
+        setLeido(true);
+      }
+      let delServidor: NegocioElegido | null = null;
+      let respondio = false;
+      try {
+        const r = await conLimite(servidor<RespuestaTipoDeNegocio>(MI_TIPO_DE_NEGOCIO), 6000);
+        delServidor = leerNegocio(r.miTipoDeNegocio);
+        respondio = true;
+      } catch {
+        // Sin señal: queda lo del teléfono
+      }
+      if (!vivo) return;
+      if (local && (porSubir || (respondio && !delServidor))) {
+        // Se eligió sin señal o es de antes de guardarse en la cuenta: se sube
+        void subir(local);
+      } else if (delServidor) {
+        setNegocio(delServidor);
+        void guardado.escribir(clave, delServidor);
+      }
       setLeido(true);
-    });
-  }, []);
-  const elegir = (n: NegocioElegido) => {
+    })();
+    return () => {
+      vivo = false;
+    };
+  }, [clave, marca, pasoPendiente, servidor, subir]);
+
+  const elegir = (n: NegocioElegido, opciones?: { registro?: boolean }) => {
+    if (opciones?.registro && n.tipo !== 'hogar') {
+      setPrimerPaso(true);
+      void guardado.escribir(pasoPendiente, true);
+    }
     setNegocio(n);
-    void guardado.escribir('negocio', n);
+    void guardado.escribir(clave, n);
+    void subir(n);
   };
-  return <Contexto.Provider value={{ negocio, leido, elegir }}>{children}</Contexto.Provider>;
+  const terminarPrimerPaso = () => {
+    setPrimerPaso(false);
+    void guardado.borrar(pasoPendiente);
+  };
+  return <Contexto.Provider value={{ negocio, leido, primerPaso, elegir, terminarPrimerPaso }}>{children}</Contexto.Provider>;
+}
+
+/** Espera la respuesta hasta un límite: sin señal, la app no se queda esperando para abrir */
+function conLimite<T>(promesa: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolver, rechazar) => {
+    const t = setTimeout(() => rechazar(new Error('sin respuesta')), ms);
+    promesa.then(
+      (v) => {
+        clearTimeout(t);
+        resolver(v);
+      },
+      (e: unknown) => {
+        clearTimeout(t);
+        rechazar(e);
+      },
+    );
+  });
 }
 
 export function useNegocio() {
@@ -80,7 +175,7 @@ export function Chips<T extends string>({ opciones, elegido, alElegir }: { opcio
           <Tocable
             key={o.valor}
             onPress={() => alElegir(o.valor)}
-            exterior={{ flex: 1 }}
+            exterior={{ flexGrow: 1, flexBasis: opciones.length > 3 ? '30%' : 0 }}
             style={[e.chip, activo && e.chipActivo]}
             accessibilityRole="radio"
             accessibilityState={{ selected: activo }}
@@ -98,7 +193,7 @@ export function Chips<T extends string>({ opciones, elegido, alElegir }: { opcio
 }
 
 export const OPCIONES_DE_TIPO: Opcion<TipoDeNegocio>[] = TIPOS_DE_NEGOCIO.map((t) => ({ valor: t, texto: TIPOS[t].corto, icono: ICONO_DE_NEGOCIO[t] }));
-export const OPCIONES_DE_SUBTIPO: Opcion<SubtipoProductor>[] = SUBTIPOS_DE_PRODUCTOR.map((t) => ({ valor: t, texto: SUBTIPOS[t].nombre, icono: ICONO_DE_SUBTIPO[t] }));
+export const OPCIONES_DE_SUBTIPO: Opcion<SubtipoProductor>[] = SUBTIPOS_DE_PRODUCTOR.map((t) => ({ valor: t, texto: SUBTIPOS[t].corto, icono: ICONO_DE_SUBTIPO[t] }));
 
 /** En Cuenta: el tipo y, si es productor, qué hace */
 export function CambiarNegocio() {
@@ -164,7 +259,7 @@ export function PedidoDeLaSemanaCarta({ pedido, alRepetir }: { pedido: PedidoDeL
 const e = StyleSheet.create({
   carta: { gap: 12, padding: 16, borderRadius: 24, backgroundColor: COLOR.superficie, ...SOMBRA },
   pregunta: { fontFamily: FUENTE.negra, fontSize: 19, color: COLOR.texto, letterSpacing: -0.5 },
-  chips: { flexDirection: 'row', gap: 8 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, height: 42, borderRadius: 21, backgroundColor: COLOR.superficie, borderWidth: 1, borderColor: COLOR.borde },
   chipActivo: { backgroundColor: COLOR.bosque, borderColor: COLOR.bosque },
   textoChip: { fontFamily: FUENTE.fuerte, fontSize: 13, color: COLOR.bosque },

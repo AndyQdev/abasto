@@ -88,6 +88,7 @@ final readonly class MongoProductoRepositorio implements ProductoRepositorio
                     'fecha' => $producto->precioEnSuper->fecha,
                 ],
                 'precio_por_confirmar' => $producto->precioPorConfirmar,
+                'usos' => $producto->usos(),
             ],
             '$setOnInsert' => ['stock' => $producto->stock],
         ], ['upsert' => true]);
@@ -179,6 +180,8 @@ final readonly class MongoProductoRepositorio implements ProductoRepositorio
             marcaBoliviana: (bool) ($doc['marca_boliviana'] ?? false),
             precioEnSuper: self::referencia($doc['precio_en_super'] ?? null),
             precioPorConfirmar: (bool) ($doc['precio_por_confirmar'] ?? false),
+            // Un producto de antes de los usos (02/11) no se muestra a nadie en el Inicio, pero se encuentra al buscar
+            usos: array_values(array_map('strval', (array) ($doc['usos'] ?? []))),
         );
     }
 

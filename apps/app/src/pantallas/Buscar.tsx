@@ -1,22 +1,50 @@
-import { useEspacioBarra } from '../BarraInferior';
 import { filtrar, filtrarMayoristas, nombreCorto, opcionesDeCompra, ordenarMayoristas, rubros, textoDeStock, type Producto } from '@abasto/comercio';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState, type ComponentRef } from 'react';
 import { FlatList, Pressable, StyleSheet, TextInput, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { BotonMas, Chip, Foto, Icono, Iniciales, Insignia, SinPrecio, Tarjeta, Texto, Vacio, Boton } from '../componentes';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Chip, Foto, Icono, Iniciales, Insignia, SinPrecio, Tarjeta, Texto, Vacio, Boton } from '../componentes';
+import { BotonAgregar } from '../BotonAgregar';
 import { useEstado } from '../estado';
-import type { PantallaDePestana } from '../navegacion';
+import { guardado } from '../guardado';
+import type { PantallaDePila } from '../navegacion';
 import { COLOR } from '../tema';
 
 const fecha = (iso: string) => new Date(iso).toLocaleDateString('es-BO', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
-/** Busca sobre el catálogo guardado en el teléfono: anda igual sin señal. Nunca se ordena por precio. */
-export function Buscar({ navigation, route }: PantallaDePestana<'Buscar'>) {
-  const espacio = useEspacioBarra();
+/**
+ * Busca sobre el catálogo guardado en el teléfono: anda igual sin señal. Nunca se ordena por precio.
+ * Desde el 01/11 se abre encima de las pestañas (desde el buscador del Inicio), con su botón para volver.
+ */
+export function Buscar({ navigation, route }: PantallaDePila<'Buscar'>) {
+  const espacio = useSafeAreaInsets().bottom + 24;
   const { catalogo, enLinea, agregarRapido } = useEstado();
   const [texto, setTexto] = useState('');
   const [rubro, setRubro] = useState<string | null>(route.params?.rubro ?? null);
   const [modo, setModo] = useState<'productos' | 'vendedores'>(route.params?.modo ?? 'productos');
+  const campo = useRef<ComponentRef<typeof TextInput>>(null);
+  const [recientes, setRecientes] = useState<string[]>([]);
+
+  // Desde el buscador del Inicio se entra a escribir: el teclado se abre solo (02/11, pedido del usuario)
+  useEffect(() => {
+    void guardado.leer<string[]>('busquedas').then((b) => setRecientes(b ?? []));
+    if (route.params?.rubro || route.params?.modo) return;
+    const t = setTimeout(() => campo.current?.focus(), 350);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /** Las últimas 8 búsquedas, la más nueva primero y sin repetir */
+  const recordar = (t: string) => {
+    const limpio = t.trim();
+    if (limpio.length < 2) return;
+    const nuevas = [limpio, ...recientes.filter((r) => r.toLowerCase() !== limpio.toLowerCase())].slice(0, 8);
+    setRecientes(nuevas);
+    void guardado.escribir('busquedas', nuevas);
+  };
+  const olvidar = () => {
+    setRecientes([]);
+    void guardado.borrar('busquedas');
+  };
 
   // Al entrar desde un rubro o desde «Ver todos» de Inicio
   useEffect(() => {
@@ -31,12 +59,17 @@ export function Buscar({ navigation, route }: PantallaDePestana<'Buscar'>) {
   const cabecera = (
     <View style={{ gap: 12 }}>
       <View style={e.filaBuscador}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Volver" onPress={() => navigation.goBack()} style={e.volver}>
+          <Icono nombre="arrow-back" color={COLOR.bosque} tamano={22} />
+        </Pressable>
         <View style={e.caja}>
           <Icono nombre="search" color={COLOR.texto3} />
           <TextInput
             accessibilityLabel="Buscar productos o vendedores"
             value={texto}
+            ref={campo}
             onChangeText={setTexto}
+            onSubmitEditing={() => recordar(texto)}
             placeholder="Buscar productos o vendedores..."
             placeholderTextColor={COLOR.texto3}
             style={e.entrada}
@@ -74,6 +107,27 @@ export function Buscar({ navigation, route }: PantallaDePestana<'Buscar'>) {
         />
       )}
 
+      {!texto && !rubro && recientes.length > 0 && (
+        <View style={e.recientes}>
+          <View style={e.filaRecientes}>
+            <Texto v="fuerte">Tus últimas búsquedas</Texto>
+            <Pressable onPress={olvidar} accessibilityRole="button" hitSlop={8}>
+              <Texto v="chico" style={{ color: COLOR.bosque }}>
+                Borrar
+              </Texto>
+            </Pressable>
+          </View>
+          <View style={e.chipsRecientes}>
+            {recientes.map((r) => (
+              <Pressable key={r} onPress={() => setTexto(r)} style={e.reciente} accessibilityRole="button" accessibilityLabel={`Buscar ${r}`}>
+                <Icono nombre="time-outline" tamano={15} color={COLOR.texto3} />
+                <Texto style={{ fontSize: 14 }}>{r}</Texto>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      )}
+
       <Texto v="gris">
         <Texto v="fuerte">{resultados}</Texto> {resultados === 1 ? 'resultado' : 'resultados'}
       </Texto>
@@ -101,7 +155,8 @@ export function Buscar({ navigation, route }: PantallaDePestana<'Buscar'>) {
               />
             </Vacio>
           }
-          renderItem={({ item }) => <Resultado producto={item} alAbrir={() => navigation.navigate('Producto', { id: item.id })} alVendedor={() => navigation.navigate('Vendedor', { id: item.mayorista.id })} alAgregar={agregarRapido} />}
+          keyboardShouldPersistTaps="handled"
+          renderItem={({ item }) => <Resultado producto={item} alAbrir={() => { recordar(texto); navigation.navigate('Producto', { id: item.id }); }} alVendedor={() => navigation.navigate('Vendedor', { id: item.mayorista.id })} alAgregar={agregarRapido} />}
         />
       ) : (
         <FlatList
@@ -157,7 +212,7 @@ function Resultado({ producto: p, alAbrir, alVendedor, alAgregar }: { producto: 
                   </View>
                 ))}
               </View>
-              <BotonMas producto={p} alAgregar={alAgregar} />
+              <BotonAgregar producto={p} alAgregar={alAgregar} oscuro={false} />
             </View>
             <Texto v="chico">Precio por unidad · {stock.texto}</Texto>
           </>
@@ -171,6 +226,11 @@ function Resultado({ producto: p, alAbrir, alVendedor, alAgregar }: { producto: 
 
 const e = StyleSheet.create({
   pantalla: { flex: 1, backgroundColor: COLOR.fondo },
+  recientes: { gap: 8 },
+  filaRecientes: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  chipsRecientes: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  reciente: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, height: 36, borderRadius: 18, backgroundColor: COLOR.superficie, borderWidth: 1, borderColor: COLOR.borde },
+  volver: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: COLOR.superficie },
   contenido: { padding: 16, gap: 10, paddingBottom: 32 },
   filaBuscador: { flexDirection: 'row', gap: 8, alignItems: 'center' },
   caja: { flex: 1, flexDirection: 'row', alignItems: 'center', height: 48, borderRadius: 15, borderWidth: 1, borderColor: COLOR.borde, backgroundColor: COLOR.superficie, paddingLeft: 12 },

@@ -22,7 +22,7 @@ export function PantallaAsistente({ navigation }: PantallaDePila<'Asistente'>) {
           productos={catalogo.productos}
           negocio={paraQue}
           alAgregar={(items) => {
-            items.forEach(agregarAlCarrito);
+            items.forEach((item) => agregarAlCarrito(item));
             avisar(`Agregaste ${items.length} ${items.length === 1 ? 'producto' : 'productos'} al carrito`);
             navigation.navigate('Pestanas', { screen: 'Carrito' });
           }}

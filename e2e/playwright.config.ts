@@ -9,6 +9,8 @@ export default defineConfig({
   globalSetup: './preparar.ts',
   timeout: 60_000,
   fullyParallel: false,
+  // Un solo proceso: varios archivos crean pedidos y refrescan la misma lista del Panel; en paralelo se pisan
+  workers: 1,
   retries: process.env.CI ? 1 : 0,
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {

@@ -73,6 +73,11 @@ export class Bandeja {
       .sort((a, b) => a.creadaEn.localeCompare(b.creadaEn));
   }
 
+  /** Una operación por su clave, con lo que respondió Conecta (el id del pedido creado, por ejemplo) */
+  async operacion(clave: string): Promise<OperacionLocal | null> {
+    return (await this.almacen.todas()).find((o) => o.clave === clave) ?? null;
+  }
+
   /** Manda lo pendiente en orden. Si ya hay una sincronización en curso, espera esa en vez de empezar otra. */
   sincronizar(): Promise<void> {
     this.sincronizando ??= this.enviarPendientes().finally(() => {

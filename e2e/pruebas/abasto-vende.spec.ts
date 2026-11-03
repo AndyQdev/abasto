@@ -156,11 +156,35 @@ test('Panel de Abasto: la lista de compras por puesto y preparar un pedido confi
   await page.goto('http://localhost:5170/compras');
   await entrarComo(page, 'ventas@abasto.bo');
   await expect(page.getByText('vas a gastar')).toBeVisible();
-  await expect(page.getByRole('heading', { name: /Mercado Mutualista/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Mutualista' })).toBeVisible();
   await expect(page.getByText('Sal fina Lobos 1 kg')).toBeVisible();
 
   await page.getByRole('link', { name: 'Pedidos' }).click();
-  const fila = page.getByRole('row').filter({ hasText: crearPedido.codigo });
-  await fila.getByRole('button', { name: 'Preparar' }).click();
-  await expect(fila.getByText('En preparación')).toBeVisible();
+  const tarjeta = page.getByRole('article', { name: `Pedido ${crearPedido.codigo}` });
+  await tarjeta.getByRole('button', { name: 'Preparar' }).click();
+  await expect(tarjeta.getByText('En preparación')).toBeVisible();
+});
+
+test('Panel de Abasto: filtra los productos por área y decide a quién se muestra cada uno (usos)', async ({ page, request }) => {
+  const abasto = await grafoDe(request, 'ventas@abasto.bo');
+  const usosDe = async (id: string) => (await abasto<{ producto: { usos: string[] } }>(`query($id: ID!) { producto(id: $id) { usos } }`, { id })).producto.usos;
+  // El yogurt es de la tienda y el hogar; el panadero no lo ve
+  await abasto(`mutation { editarProducto(id: "AB-018", entrada: { usos: ["hogar", "tienda"] }) { id } }`);
+
+  await page.goto('http://localhost:5170/productos');
+  await entrarComo(page, 'ventas@abasto.bo');
+  const areas = page.getByRole('group', { name: 'Filtrar por área' });
+  await areas.getByRole('button', { name: /^Panadería/ }).click();
+  await expect(page.getByText('Levadura seca instantánea 500 g')).toBeVisible();
+  await expect(page.getByText('Yogurt bebible PIL durazno 1 L')).toHaveCount(0);
+  await page.screenshot({ path: 'test-results/panel-usos.png', fullPage: false });
+
+  // Un toque en «Panadería» del yogurt lo prende: queda en Catálogo
+  await areas.getByRole('button', { name: /^Tienda/ }).click();
+  const yogurt = page.getByRole('article', { name: 'Yogurt bebible PIL durazno 1 L' });
+  await yogurt.getByRole('button', { name: 'Cambiar a quién se muestra' }).click();
+  await yogurt.getByRole('button', { name: 'Panadería' }).click();
+  await expect.poll(() => usosDe('AB-018')).toEqual(['hogar', 'tienda', 'panaderia']);
+  await yogurt.getByRole('button', { name: 'Panadería' }).click();
+  await expect.poll(() => usosDe('AB-018')).toEqual(['hogar', 'tienda']);
 });

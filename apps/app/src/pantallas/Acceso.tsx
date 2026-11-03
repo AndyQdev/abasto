@@ -1,11 +1,11 @@
 import { Image } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
-import { Animated, KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+import { Animated, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { entrarConCodigo, ErrorDeAcceso, esCelular, formatoCelular, pedirCodigo, soloDigitos, type EnvioDeCodigo } from '../acceso';
-import { Aparecer, Flotar, Tocable, useSacudida, vibrar } from '../animacion';
-import { Boton, Falla, Icono, Logo, Texto } from '../componentes';
+import { Aparecer, HojaInferior, Tocable, useSacudida, vibrar } from '../animacion';
+import { Boton, Falla, Icono, Texto } from '../componentes';
 import { ILUSTRACION } from '../ilustraciones';
 import { useSesion } from '../sesion';
 import { COLOR, FUENTE, SOMBRA } from '../tema';
@@ -15,6 +15,11 @@ type Paso = 'telefono' | 'codigo' | 'nombre';
 /**
  * Entrar como en PedidosYa: celular → código → (solo la primera vez) nombre. Nada de correo ni contraseña.
  * Después la sesión queda guardada y la app no vuelve a pedir nada de esto.
+ *
+ * Diseño (02/11, referencias en contracts/onboarding/): cada paso tiene su escena 3D a sangre arriba
+ * (`portada-bienvenida`, `portada-codigo`, `portada-nombre`) y una tarjeta blanca con las esquinas de arriba muy
+ * redondeadas que se monta sobre la escena. La bienvenida es la referencia de Andrés tal cual (contracts/onboarding/
+ * image1.png sin la barra de estado): trae el logo y el lema dentro de la imagen y se muestra entera.
  */
 export function Acceso() {
   const { iniciar } = useSesion();
@@ -77,164 +82,222 @@ export function Acceso() {
     setPaso(paso === 'nombre' ? 'codigo' : 'telefono');
   };
 
-  const heroe = paso === 'codigo' ? ILUSTRACION.codigo : ILUSTRACION.bienvenida;
+  const { height } = useWindowDimensions();
+  const arriba = useSafeAreaInsets().top;
+  const abajo = useSafeAreaInsets().bottom;
+  const portada = paso === 'telefono' ? ILUSTRACION.portadaBienvenida : paso === 'codigo' ? ILUSTRACION.portadaCodigo : ILUSTRACION.portadaNombre;
+  const teclado = useTecladoAbierto();
+  const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
+  const [paises, setPaises] = useState(false);
+  // Con el teclado abierto la pantalla baja lo justo para que el formulario quede encima: la escena no cambia de tamaño
+  useEffect(() => {
+    if (!teclado) return;
+    const t = setTimeout(() => scroll.current?.scrollToEnd({ animated: true }), 60);
+    return () => clearTimeout(t);
+  }, [teclado, paso]);
+  const altoPortada = Math.round(height * (paso === 'codigo' ? 0.52 : 0.62));
+  const codigoListo = codigo.length === 6;
 
   return (
-    <View style={{ flex: 1 }}>
-      <LinearGradient colors={['#DDF4A0', '#EEF8D5', COLOR.fondo]} locations={[0, 0.5, 1]} style={StyleSheet.absoluteFill} />
-      {/* Círculos lima de fondo, para que no sea plano */}
-      <View style={[e.burbuja, { width: 260, height: 260, top: -60, right: -80 }]} />
-      <View style={[e.burbuja, { width: 180, height: 180, top: 220, left: -70, opacity: 0.5 }]} />
-      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
-          <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" bounces={false}>
-            <View style={e.arriba}>
-              {paso !== 'telefono' && (
-                <Tocable onPress={atras} style={e.atras} exterior={e.atrasLugar} accessibilityRole="button" accessibilityLabel="Atrás">
-                  <Icono nombre="arrow-back" tamano={22} color={COLOR.verde} />
-                </Tocable>
-              )}
-              <Aparecer desde={-10}>
-                <Flotar alto={8}>
-                  <Image source={heroe} style={paso === 'telefono' ? e.heroe : e.heroeChico} contentFit="contain" transition={300} accessibilityIgnoresInvertColors />
-                </Flotar>
-              </Aparecer>
+    <View style={e.pantalla}>
+      <StatusBar style="dark" />
+      {/* La app va de borde a borde: ni Android ni iPhone achican la ventana con el teclado, así que se deja el espacio */}
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
+        <ScrollView ref={scroll} contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" bounces={false} showsVerticalScrollIndicator={false}>
+          {/* Bienvenida: la imagen entera (trae el logo y el lema) */}
+          <View style={paso === 'telefono' ? { aspectRatio: PROPORCION_BIENVENIDA } : { height: altoPortada }}>
+            <Image
+              source={portada}
+              style={StyleSheet.absoluteFill}
+              contentFit="cover"
+              contentPosition="top"
+              transition={300}
+              accessibilityLabel={paso === 'telefono' ? 'ABASTO. Tu mayorista, siempre más cerca.' : undefined}
+              accessibilityIgnoresInvertColors
+            />
+            {paso !== 'telefono' && (
+              <Tocable onPress={atras} style={e.atras} exterior={[e.atrasLugar, { top: arriba + 10 }]} accessibilityRole="button" accessibilityLabel="Atrás">
+                <Icono nombre="arrow-back" tamano={22} color={COLOR.bosque} />
+              </Tocable>
+            )}
+          </View>
+
+          <Aparecer orden={2} desde={60} style={{ flexGrow: 1 }}>
+            <View style={[e.tarjeta, paso === 'telefono' ? e.tarjetaBajoElLema : e.tarjetaMontada, { paddingBottom: 24 + abajo }]}>
               {paso === 'telefono' && (
-                <Aparecer orden={1} style={{ alignItems: 'center', gap: 6 }}>
-                  <Logo tamano={40} />
-                  <Texto style={e.lema}>Tu mayorista, siempre más cerca.</Texto>
-                </Aparecer>
+                <>
+                  <View style={{ gap: 4 }}>
+                    <Texto style={e.titulo}>Ingresa tu número de celular</Texto>
+                    <Texto v="gris">Te enviaremos un código por WhatsApp.</Texto>
+                  </View>
+                  <View style={[e.campoTelefono, esCelular(telefono) && { borderColor: COLOR.bosque, backgroundColor: COLOR.superficie }]}>
+                    <Pressable onPress={() => setPaises(true)} style={e.prefijo} accessibilityRole="button" accessibilityLabel="País: Bolivia, +591">
+                      <BanderaDeBolivia />
+                      <Texto v="fuerte" style={{ fontSize: 17 }}>
+                        +591
+                      </Texto>
+                      <Icono nombre="chevron-down" tamano={14} color={COLOR.texto3} />
+                    </Pressable>
+                    <TextInput
+                      accessibilityLabel="Tu número de celular"
+                      value={formatoCelular(telefono)}
+                      onChangeText={(t) => setTelefono(soloDigitos(t))}
+                      placeholder="712 34 567"
+                      placeholderTextColor={COLOR.texto3}
+                      keyboardType="phone-pad"
+                      textContentType="telephoneNumber"
+                      autoComplete="tel"
+                      maxLength={10}
+                      style={e.entradaTelefono}
+                      returnKeyType="done"
+                      onSubmitEditing={() => esCelular(telefono) && void mandarCodigo()}
+                    />
+                    {esCelular(telefono) && <Icono nombre="checkmark-circle" color={COLOR.bosque} tamano={24} />}
+                  </View>
+                  {error && <Falla texto={error} />}
+                  <Boton texto="Enviar código por WhatsApp" icono="logo-whatsapp" deshabilitado={!esCelular(telefono)} cargando={ocupado} alTocar={() => void mandarCodigo()} />
+                  <View style={e.nota}>
+                    <Icono nombre="lock-closed" tamano={13} color={COLOR.texto3} />
+                    <Texto v="chico">Es rápido, seguro y gratis. Sin contraseñas.</Texto>
+                  </View>
+                </>
+              )}
+
+              {paso === 'codigo' && envio && (
+                <>
+                  <View style={{ gap: 4 }}>
+                    <Texto style={e.titulo}>Escribe el código</Texto>
+                    <Texto v="gris">Te lo mandamos por WhatsApp al +591 {formatoCelular(telefono)}</Texto>
+                  </View>
+                  <Animated.View style={{ transform: [{ translateX: x }] }}>
+                    <CajitasDeCodigo
+                      valor={codigo}
+                      conError={!!error}
+                      alCambiar={(v) => {
+                        setCodigo(v);
+                        setError(null);
+                        if (v.length === 6) void entrar(v);
+                      }}
+                      deshabilitado={ocupado}
+                    />
+                  </Animated.View>
+                  {envio.codigoDePrueba && (
+                    <Tocable onPress={() => void entrar(envio.codigoDePrueba!)} style={e.prueba} accessibilityRole="button" accessibilityLabel={`Usar el código de prueba ${envio.codigoDePrueba}`}>
+                      <View style={e.icoPrueba}>
+                        <Icono nombre="flask" color={COLOR.bosque} tamano={20} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Texto v="chico" style={{ color: COLOR.limaTexto }}>
+                          Modo prueba · todavía sin WhatsApp
+                        </Texto>
+                        <Texto style={e.codigoPrueba}>{envio.codigoDePrueba}</Texto>
+                      </View>
+                      <Texto v="fuerte" style={{ color: COLOR.bosque, fontSize: 16 }}>
+                        Usar
+                      </Texto>
+                    </Tocable>
+                  )}
+                  {error && <Falla texto={error} />}
+                  <Boton
+                    tipo="oscuro"
+                    texto={ocupado ? 'Verificando…' : 'Verificar'}
+                    icono="shield-checkmark"
+                    cargando={ocupado}
+                    deshabilitado={!codigoListo}
+                    alTocar={() => void entrar(codigo)}
+                  />
+                  <Pressable disabled={espera > 0 || ocupado} onPress={() => void mandarCodigo()} accessibilityRole="button" style={{ alignSelf: 'center', padding: 6 }}>
+                    <Texto v="fuerte" style={{ color: espera > 0 ? COLOR.texto3 : COLOR.bosque }}>
+                      {espera > 0 ? `Reenviar código en 0:${String(espera).padStart(2, '0')}` : 'Reenviar código'}
+                    </Texto>
+                  </Pressable>
+                </>
+              )}
+
+              {paso === 'nombre' && (
+                <>
+                  <View style={{ gap: 4 }}>
+                    <Texto style={e.titulo}>¡Bienvenido a ABASTO!</Texto>
+                    <Texto v="gris">¿Cómo te llamas? Así te saluda quien te lleva tu pedido.</Texto>
+                  </View>
+                  <View style={[e.campo, nombre.trim().length > 1 && { borderColor: COLOR.bosque, backgroundColor: COLOR.superficie }]}>
+                    <Icono nombre="person" color={COLOR.bosque} />
+                    <TextInput
+                      accessibilityLabel="Tu nombre"
+                      value={nombre}
+                      onChangeText={setNombre}
+                      placeholder="Tu nombre"
+                      placeholderTextColor={COLOR.texto3}
+                      autoCapitalize="words"
+                      autoComplete="name"
+                      textContentType="name"
+                      autoFocus
+                      style={e.entrada}
+                      returnKeyType="go"
+                      onSubmitEditing={() => nombre.trim().length > 1 && void entrar(codigo || envio?.codigoDePrueba || '', nombre)}
+                    />
+                  </View>
+                  {error && <Falla texto={error} />}
+                  <Boton
+                    tipo="oscuro"
+                    texto="Continuar"
+                    icono="arrow-forward"
+                    deshabilitado={nombre.trim().length < 2}
+                    cargando={ocupado}
+                    alTocar={() => void entrar(codigo || envio?.codigoDePrueba || '', nombre)}
+                  />
+                </>
               )}
             </View>
+          </Aparecer>
+        </ScrollView>
+      </KeyboardAvoidingView>
+      <HojaInferior visible={paises} alCerrar={() => setPaises(false)}>
+        <View style={{ gap: 14 }}>
+          <Texto style={e.titulo}>Tu país</Texto>
+          <View style={e.pais}>
+            <BanderaDeBolivia />
+            <Texto v="fuerte" style={{ flex: 1, fontSize: 17 }}>
+              Bolivia
+            </Texto>
+            <Texto v="gris">+591</Texto>
+            <Icono nombre="checkmark-circle" tamano={22} color={COLOR.bosque} />
+          </View>
+          <Texto v="gris">Por ahora Abasto entrega solo en Bolivia. Usa tu celular de 8 dígitos (empieza con 6 o 7).</Texto>
+          <Boton tipo="oscuro" texto="Entendido" alTocar={() => setPaises(false)} />
+        </View>
+      </HojaInferior>
+    </View>
+  );
+}
 
-            <Aparecer orden={2} desde={60}>
-              <View style={e.tarjeta}>
-                {paso === 'telefono' && (
-                  <>
-                    <View style={{ gap: 4 }}>
-                      <Texto v="t2">Ingresa tu número de celular</Texto>
-                      <Texto v="gris">Te enviaremos un código por WhatsApp.</Texto>
-                    </View>
-                    <View style={[e.campoTelefono, esCelular(telefono) && { borderColor: COLOR.bosque }]}>
-                      <View style={e.prefijo}>
-                        <Texto style={{ fontSize: 18 }}>🇧🇴</Texto>
-                        <Texto v="fuerte">+591</Texto>
-                      </View>
-                      <TextInput
-                        accessibilityLabel="Tu número de celular"
-                        value={formatoCelular(telefono)}
-                        onChangeText={(t) => setTelefono(soloDigitos(t))}
-                        placeholder="712 34 567"
-                        placeholderTextColor={COLOR.texto3}
-                        keyboardType="phone-pad"
-                        textContentType="telephoneNumber"
-                        autoComplete="tel"
-                        maxLength={10}
-                        style={e.entradaTelefono}
-                        returnKeyType="done"
-                        onSubmitEditing={() => esCelular(telefono) && void mandarCodigo()}
-                      />
-                      {esCelular(telefono) && <Icono nombre="checkmark-circle" color={COLOR.bosque} tamano={24} />}
-                    </View>
-                    {error && <Falla texto={error} />}
-                    <Boton texto="Enviar código por WhatsApp" icono="logo-whatsapp" deshabilitado={!esCelular(telefono)} cargando={ocupado} alTocar={() => void mandarCodigo()} />
-                    <View style={e.nota}>
-                      <Icono nombre="lock-closed" tamano={13} color={COLOR.texto3} />
-                      <Texto v="chico">Es rápido, seguro y gratis. Sin contraseñas.</Texto>
-                    </View>
-                  </>
-                )}
+/** Si el teclado está abierto (para bajar la pantalla lo justo) */
+function useTecladoAbierto() {
+  const [abierto, setAbierto] = useState(false);
+  useEffect(() => {
+    const a = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow', () => setAbierto(true));
+    const b = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide', () => setAbierto(false));
+    return () => {
+      a.remove();
+      b.remove();
+    };
+  }, []);
+  return abierto;
+}
 
-                {paso === 'codigo' && envio && (
-                  <>
-                    <View style={{ gap: 4 }}>
-                      <Texto v="t2">Escribe el código</Texto>
-                      <Texto v="gris">Te lo mandamos por WhatsApp al +591 {formatoCelular(telefono)}</Texto>
-                    </View>
-                    <Animated.View style={{ transform: [{ translateX: x }] }}>
-                      <CajitasDeCodigo
-                        valor={codigo}
-                        alCambiar={(v) => {
-                          setCodigo(v);
-                          setError(null);
-                          if (v.length === 6) void entrar(v);
-                        }}
-                        deshabilitado={ocupado}
-                      />
-                    </Animated.View>
-                    {envio.codigoDePrueba && (
-                      <Tocable onPress={() => void entrar(envio.codigoDePrueba!)} style={e.prueba} accessibilityRole="button">
-                        <View style={e.icoPrueba}>
-                          <Icono nombre="flask" color={COLOR.verde} tamano={18} />
-                        </View>
-                        <View style={{ flex: 1 }}>
-                          <Texto v="chico" style={{ color: COLOR.limaTexto }}>
-                            Modo prueba · todavía sin WhatsApp
-                          </Texto>
-                          <Texto v="fuerte" style={{ color: COLOR.verde, letterSpacing: 5, fontSize: 20 }}>
-                            {envio.codigoDePrueba}
-                          </Texto>
-                        </View>
-                        <Texto v="fuerte" style={{ color: COLOR.verde }}>
-                          Usar
-                        </Texto>
-                      </Tocable>
-                    )}
-                    {error && <Falla texto={error} />}
-                    {ocupado && <Boton texto="Verificando…" cargando alTocar={() => undefined} />}
-                    <Pressable disabled={espera > 0 || ocupado} onPress={() => void mandarCodigo()} accessibilityRole="button" style={{ alignSelf: 'center', padding: 6 }}>
-                      <Texto v="fuerte" style={{ color: espera > 0 ? COLOR.texto3 : COLOR.verde }}>
-                        {espera > 0 ? `Reenviar código en 0:${String(espera).padStart(2, '0')}` : 'Reenviar código'}
-                      </Texto>
-                    </Pressable>
-                  </>
-                )}
-
-                {paso === 'nombre' && (
-                  <>
-                    <View style={{ gap: 4 }}>
-                      <Texto v="t2">¡Bienvenido a ABASTO!</Texto>
-                      <Texto v="gris">¿Cómo te llamas? Así te saluda quien te lleva tu pedido.</Texto>
-                    </View>
-                    <View style={e.campo}>
-                      <Icono nombre="person" color={COLOR.bosque} />
-                      <TextInput
-                        accessibilityLabel="Tu nombre"
-                        value={nombre}
-                        onChangeText={setNombre}
-                        placeholder="Tu nombre"
-                        placeholderTextColor={COLOR.texto3}
-                        autoCapitalize="words"
-                        autoComplete="name"
-                        textContentType="name"
-                        autoFocus
-                        style={e.entrada}
-                        returnKeyType="go"
-                        onSubmitEditing={() => nombre.trim().length > 1 && void entrar(codigo || envio?.codigoDePrueba || '', nombre)}
-                      />
-                    </View>
-                    {error && <Falla texto={error} />}
-                    <Boton
-                      tipo="oscuro"
-                      texto="Continuar"
-                      icono="arrow-forward"
-                      deshabilitado={nombre.trim().length < 2}
-                      cargando={ocupado}
-                      alTocar={() => void entrar(codigo || envio?.codigoDePrueba || '', nombre)}
-                    />
-                  </>
-                )}
-              </View>
-            </Aparecer>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
+/** La bandera de Bolivia dibujada (rojo, amarillo y verde): sin emojis, se ve igual en todos los teléfonos */
+function BanderaDeBolivia() {
+  return (
+    <View style={e.bandera} accessibilityLabel="Bolivia">
+      <View style={{ flex: 1, backgroundColor: '#D52B1E' }} />
+      <View style={{ flex: 1, backgroundColor: '#F9E300' }} />
+      <View style={{ flex: 1, backgroundColor: '#007934' }} />
     </View>
   );
 }
 
 /** Seis cajitas: el teclado escribe en un campo invisible y las cajitas muestran cada dígito. */
-function CajitasDeCodigo({ valor, alCambiar, deshabilitado }: { valor: string; alCambiar: (v: string) => void; deshabilitado: boolean }) {
+function CajitasDeCodigo({ valor, alCambiar, deshabilitado, conError }: { valor: string; alCambiar: (v: string) => void; deshabilitado: boolean; conError?: boolean }) {
   const campo = useRef<ComponentRef<typeof TextInput>>(null);
   useEffect(() => {
     const t = setTimeout(() => campo.current?.focus(), 350);
@@ -245,7 +308,7 @@ function CajitasDeCodigo({ valor, alCambiar, deshabilitado }: { valor: string; a
       {Array.from({ length: 6 }, (_, i) => {
         const activa = i === valor.length && !deshabilitado;
         return (
-          <View key={i} style={[e.cajita, valor[i] ? e.cajitaLlena : null, activa ? e.cajitaActiva : null]}>
+          <View key={i} style={[e.cajita, valor[i] ? e.cajitaLlena : null, activa ? e.cajitaActiva : null, conError ? e.cajitaError : null]}>
             <Texto style={e.digito}>{valor[i] ?? ''}</Texto>
           </View>
         );
@@ -266,23 +329,30 @@ function CajitasDeCodigo({ valor, alCambiar, deshabilitado }: { valor: string; a
   );
 }
 
+/** El ancho sobre el alto de `portada-bienvenida` (832 × 1248): se muestra entera */
+const PROPORCION_BIENVENIDA = 832 / 1248;
+
 const e = StyleSheet.create({
-  arriba: { flex: 1, minHeight: 300, alignItems: 'center', justifyContent: 'center', paddingTop: 12, paddingBottom: 20, gap: 4 },
-  atrasLugar: { position: 'absolute', top: 8, left: 16, zIndex: 2 },
-  atras: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.85)', alignItems: 'center', justifyContent: 'center' },
-  heroe: { width: 300, height: 300 },
-  heroeChico: { width: 230, height: 230 },
-  lema: { fontFamily: FUENTE.fuerte, fontSize: 17, color: COLOR.verde, textAlign: 'center' },
+  pantalla: { flex: 1, backgroundColor: COLOR.fondo },
+  atrasLugar: { position: 'absolute', left: 16, zIndex: 2 },
+  atras: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', ...SOMBRA, shadowOpacity: 0.16 },
+  titulo: { fontFamily: FUENTE.negra, fontSize: 23, color: COLOR.texto, letterSpacing: -0.6 },
   tarjeta: {
+    flexGrow: 1,
     backgroundColor: COLOR.superficie,
-    borderTopLeftRadius: 34,
-    borderTopRightRadius: 34,
-    padding: 24,
-    paddingBottom: 30,
+    borderTopLeftRadius: 36,
+    borderTopRightRadius: 36,
+    paddingHorizontal: 24,
+    paddingTop: 28,
     gap: 16,
     ...SOMBRA,
-    shadowOffset: { width: 0, height: -6 },
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: -8 },
   },
+  // La tarjeta se monta sobre el borde de abajo de la escena
+  tarjetaMontada: { marginTop: -30 },
+  // En la bienvenida el lema está al pie de la imagen: la tarjeta apenas la toca
+  tarjetaBajoElLema: { marginTop: -8 },
   campoTelefono: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -292,15 +362,17 @@ const e = StyleSheet.create({
     borderWidth: 2,
     borderColor: COLOR.borde,
     paddingRight: 14,
-    height: 60,
+    height: 62,
   },
   prefijo: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, height: '60%', borderRightWidth: 1.5, borderRightColor: COLOR.borde },
-  entradaTelefono: { flex: 1, fontSize: 20, fontFamily: FUENTE.fuerte, color: COLOR.texto, letterSpacing: 1 },
+  pais: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 18, backgroundColor: COLOR.limaSuave, borderWidth: 2, borderColor: COLOR.bosque },
+  bandera: { width: 26, height: 18, borderRadius: 4, overflow: 'hidden' },
+  entradaTelefono: { flex: 1, fontSize: 21, fontFamily: FUENTE.fuerte, color: COLOR.texto, letterSpacing: 1 },
   nota: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
   cajitas: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
   cajita: {
     flex: 1,
-    height: 60,
+    height: 62,
     borderRadius: 16,
     borderWidth: 2,
     borderColor: COLOR.borde,
@@ -308,13 +380,14 @@ const e = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cajitaLlena: { borderColor: COLOR.limaFuerte, backgroundColor: COLOR.limaSuave },
+  cajitaLlena: { borderColor: COLOR.lima, backgroundColor: COLOR.limaSuave },
   cajitaActiva: { borderColor: COLOR.bosque, backgroundColor: COLOR.superficie },
-  burbuja: { position: 'absolute', borderRadius: 999, backgroundColor: COLOR.lima, opacity: 0.35 },
-  digito: { fontSize: 26, fontFamily: FUENTE.negra, color: COLOR.texto },
+  cajitaError: { borderColor: COLOR.rojo, backgroundColor: COLOR.rojoSuave },
+  digito: { fontSize: 28, fontFamily: FUENTE.negra, color: COLOR.texto },
   invisible: { position: 'absolute', opacity: 0, width: 1, height: 1 },
-  prueba: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 18, backgroundColor: COLOR.lima },
-  icoPrueba: { width: 38, height: 38, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.6)', alignItems: 'center', justifyContent: 'center' },
+  prueba: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 20, backgroundColor: COLOR.lima },
+  icoPrueba: { width: 44, height: 44, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.65)', alignItems: 'center', justifyContent: 'center' },
+  codigoPrueba: { fontFamily: FUENTE.negra, fontSize: 22, letterSpacing: 6, color: COLOR.bosque },
   campo: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -324,7 +397,7 @@ const e = StyleSheet.create({
     borderColor: COLOR.borde,
     borderRadius: 18,
     paddingHorizontal: 16,
-    height: 58,
+    height: 60,
   },
   entrada: { flex: 1, fontSize: 17, fontFamily: FUENTE.semi, color: COLOR.texto },
 });

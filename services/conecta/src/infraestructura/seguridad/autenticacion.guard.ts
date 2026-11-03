@@ -14,6 +14,8 @@ export interface Usuario {
   correo?: string;
   orgId: string;
   roles: string[];
+  /** Cuándo vence el token (ms desde 1970); el canal en tiempo real cierra ahí para que la app entre con uno nuevo */
+  venceEn?: number;
 }
 
 const PUBLICO = 'abasto:publico';
@@ -36,6 +38,7 @@ export async function verificarToken(token: string): Promise<Usuario> {
     correo: payload.email as string | undefined,
     orgId: typeof payload.org_id === 'string' ? payload.org_id : '',
     roles: acceso?.roles ?? [],
+    venceEn: typeof payload.exp === 'number' ? payload.exp * 1000 : undefined,
   };
 }
 

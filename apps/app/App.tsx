@@ -18,6 +18,7 @@ import { PantallaAsistente, PantallaIaLocal, ProveedorDeIaLocal } from './src/ia
 import type { Pestanas, Pila } from './src/navegacion';
 import { BarraInferior } from './src/BarraInferior';
 import { ProveedorDeDirecciones, useDirecciones } from './src/direcciones-estado';
+import { VigiaDeEntregas } from './src/entregas';
 import { ProveedorDeInventario } from './src/inventario';
 import { ProveedorDeNegocio, useNegocio } from './src/NegocioInicio';
 import { Acceso } from './src/pantallas/Acceso';
@@ -29,6 +30,7 @@ import { Finalizar } from './src/pantallas/Finalizar';
 import { Inicio } from './src/pantallas/Inicio';
 import { MiNegocio } from './src/pantallas/MiNegocio';
 import { Negocio } from './src/pantallas/Negocio';
+import { PrimerPaso } from './src/pantallas/PrimerPaso';
 import { Pedidos } from './src/pantallas/Pedidos';
 import { Producto } from './src/pantallas/Producto';
 import { Seguimiento } from './src/pantallas/Seguimiento';
@@ -36,6 +38,8 @@ import { Ubicacion } from './src/pantallas/Ubicacion';
 import { Vendedor } from './src/pantallas/Vendedor';
 import { ProveedorDeSesion, useSesion } from './src/sesion';
 import { ProveedorDeVuelo } from './src/vuelo';
+import { HojaDelCarrito } from './src/HojaDelCarrito';
+import { navegacion } from './src/navegar';
 import { COLOR } from './src/tema';
 
 /**
@@ -51,7 +55,6 @@ function PestanasDeAbajo() {
   return (
     <Tab.Navigator screenOptions={{ headerShown: false }} tabBar={(props) => <BarraInferior {...props} />}>
       <Tab.Screen name="Inicio" component={Inicio} />
-      <Tab.Screen name="Buscar" component={Buscar} />
       <Tab.Screen name="Carrito" component={Carrito} />
       <Tab.Screen name="MiNegocio" component={MiNegocio} />
       <Tab.Screen name="Pedidos" component={Pedidos} />
@@ -71,18 +74,27 @@ function Navegacion() {
   }
   // Como PedidosYa: sin sesión, celular y código; con sesión, nunca más se pide
   if (!usuario) return <Acceso />;
+  // El catálogo y el inventario se cargan desde el registro: el primer paso (receta o estante) los necesita
   return (
-    <ProveedorDeNegocio>
-      <ConNegocio />
+    <ProveedorDeNegocio dueno={usuario.id}>
+      <ProveedorDeEstado>
+        <ConInventario>
+          <ConNegocio />
+        </ConInventario>
+      </ProveedorDeEstado>
     </ProveedorDeNegocio>
   );
 }
 
-/** Registro (01/11): después del celular, obligatorio, para qué compra (hogar, tienda o productor). Después, la dirección. */
+/**
+ * Registro (01/11): después del celular, obligatorio, para qué compra (hogar, tienda o productor). Desde el 02/11 la
+ * tienda arma su primer estante y el productor su primera receta (se pueden saltar). Después, la dirección.
+ */
 function ConNegocio() {
-  const { negocio, leido } = useNegocio();
+  const { negocio, leido, primerPaso } = useNegocio();
   if (!leido) return <View style={e.centro} />;
   if (!negocio) return <Negocio />;
+  if (primerPaso) return <PrimerPaso />;
   return (
     <ProveedorDeDirecciones>
       <ConDireccion />
@@ -96,17 +108,16 @@ function ConDireccion() {
   if (cargando) return <View style={e.centro} />;
   if (!lista.length) return <Ubicacion />;
   return (
-    <ProveedorDeEstado>
-      <ConInventario>
-      <ProveedorDeVuelo>
+    <ProveedorDeVuelo>
       <ProveedorDeIaLocal>
-      <NavigationContainer theme={TEMA}>
+      <NavigationContainer theme={TEMA} ref={navegacion}>
         <Stack.Navigator screenOptions={{ headerTintColor: COLOR.texto, headerTitleStyle: { fontWeight: '800' }, headerShadowVisible: false, headerStyle: { backgroundColor: COLOR.fondo } }}>
           <Stack.Screen name="Pestanas" component={PestanasDeAbajo} options={{ headerShown: false }} />
           <Stack.Screen name="Producto" component={Producto} options={{ headerShown: false }} />
+          <Stack.Screen name="Buscar" component={Buscar} options={{ headerShown: false, animation: 'fade_from_bottom' }} />
           <Stack.Screen name="Vendedor" component={Vendedor} options={{ headerShown: false }} />
           <Stack.Screen name="Finalizar" component={Finalizar} options={{ title: 'Finalizar pedido' }} />
-          <Stack.Screen name="Seguimiento" component={Seguimiento} options={{ title: 'Pedido' }} />
+          <Stack.Screen name="Seguimiento" component={Seguimiento} options={{ headerShown: false }} />
           <Stack.Screen name="BuscarPorFoto" component={BuscarPorFoto} options={{ title: 'Buscar con una foto' }} />
           <Stack.Screen name="Asistente" component={PantallaAsistente} options={{ title: 'Pídelo con tus palabras' }} />
           <Stack.Screen name="IaLocal" component={PantallaIaLocal} options={{ title: 'IA en tu teléfono' }} />
@@ -115,21 +126,22 @@ function ConDireccion() {
           </Stack.Screen>
         </Stack.Navigator>
       </NavigationContainer>
+      <HojaDelCarrito />
+      <VigiaDeEntregas />
       <Aviso />
       </ProveedorDeIaLocal>
-      </ProveedorDeVuelo>
-      </ConInventario>
-    </ProveedorDeEstado>
+    </ProveedorDeVuelo>
   );
 }
 
 /** El inventario de «Mi negocio» es de quien entró; avisa cuando entran compras nuevas */
 function ConInventario({ children }: { children: ReactNode }) {
   const { usuario } = useSesion();
-  const { avisar } = useEstado();
+  const { avisar, enLinea } = useEstado();
   return (
     <ProveedorDeInventario
       dueno={usuario?.id ?? 'sin-sesion'}
+      enLinea={enLinea}
       alEntrar={(n) => avisar(n === 1 ? 'Entró 1 producto a tu inventario' : `Entraron ${n} productos a tu inventario`)}
     >
       {children}
