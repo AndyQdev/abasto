@@ -59,3 +59,20 @@ describe('escala del Panel', () => {
     expect(escalaPara(390)).toBe(1);
   });
 });
+
+describe('silueta del header', () => {
+  it('dibuja un path cerrado que abraza al menú, también en pantallas angostas', async () => {
+    const { formaDelHalo, ALTO_PANZA } = await import('./forma-del-halo');
+    for (const [ancho, menu] of [[2000, 1080], [1300, 660]]) {
+      const d = formaDelHalo(ancho, menu);
+      expect(d.startsWith('M')).toBe(true);
+      expect(d.endsWith('Z')).toBe(true);
+      expect(d).not.toContain('NaN');
+      // Todas las x quedan dentro del header
+      const numeros = d.match(/-?\d+(\.\d+)?/g)!.map(Number);
+      expect(Math.min(...numeros)).toBeGreaterThanOrEqual(0);
+      expect(Math.max(...numeros)).toBeLessThanOrEqual(ancho);
+      expect(d).toContain(`${ALTO_PANZA}`);
+    }
+  });
+});

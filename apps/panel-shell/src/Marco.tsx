@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
+import { ALTO_PANZA, formaDelHalo } from './forma-del-halo';
 import { APPS, type Usuario } from '@abasto/sesion';
 import type { Alerta } from './alertas';
 import { Icono, Simbolo } from './iconos';
@@ -109,6 +110,18 @@ export function Marco({ usuario, modulo, alertas, navegar, salir, children }: Pr
     }
   });
   const [busqueda, setBusqueda] = useState('');
+  // La silueta del header se dibuja con el ancho real del header y del menú
+  const halo = useRef<HTMLElement>(null);
+  const menu = useRef<HTMLElement>(null);
+  const [medidas, setMedidas] = useState({ ancho: 0, menu: 0 });
+  useEffect(() => {
+    const medir = () => setMedidas({ ancho: halo.current?.offsetWidth ?? 0, menu: menu.current?.offsetWidth ?? 0 });
+    medir();
+    const observador = new ResizeObserver(medir);
+    if (halo.current) observador.observe(halo.current);
+    if (menu.current) observador.observe(menu.current);
+    return () => observador.disconnect();
+  }, []);
   const enMas = DE_MAS.some((m) => m.ruta === modulo.ruta);
   const pendientes = alertas.length;
 
@@ -129,15 +142,23 @@ export function Marco({ usuario, modulo, alertas, navegar, salir, children }: Pr
   return (
     <div className={`marco ${plegado ? 'dock-plegado' : ''}`}>
       <div className="arriba">
-        <header className="halo">
+        <header className="halo" ref={halo}>
           <div className="halo-forma" aria-hidden="true" />
-          <svg className="halo-abrazo" viewBox="0 0 1040 28" preserveAspectRatio="none" aria-hidden="true">
-            <path d="M0 0C92 0 104 28 190 28H850C936 28 948 0 1040 0Z" />
-          </svg>
+          {medidas.ancho > 0 && (
+            <svg
+              className="halo-silueta"
+              width={medidas.ancho}
+              height={ALTO_PANZA}
+              viewBox={`0 0 ${medidas.ancho} ${ALTO_PANZA}`}
+              aria-hidden="true"
+            >
+              <path d={formaDelHalo(medidas.ancho, medidas.menu)} />
+            </svg>
+          )}
 
           <a className="marca" href="/inicio" onClick={ir('inicio')} aria-label="Abasto, ir al inicio">
             <span className="marca-brillo" aria-hidden="true" />
-            <Simbolo tamano={46} />
+            <Simbolo tamano={54} />
             <span className="marca-texto">
               <strong>Abasto</strong>
               <small>Panel Mayorista</small>
@@ -222,12 +243,12 @@ export function Marco({ usuario, modulo, alertas, navegar, salir, children }: Pr
           </div>
         </header>
 
-        <nav className="menu-flotante" aria-label="Secciones">
+        <nav className="menu-flotante" aria-label="Secciones" ref={menu}>
           {PRINCIPALES.map((m) => (
             <a
               key={m.ruta}
               href={`/${m.ruta}`}
-              className={m.ruta === modulo.ruta ? 'activo' : undefined}
+              className={[m.ruta === modulo.ruta ? 'activo' : '', m.soloEscritorio ? 'solo-escritorio' : ''].join(' ').trim() || undefined}
               aria-current={m.ruta === modulo.ruta ? 'page' : undefined}
               onClick={ir(m.ruta)}
             >
@@ -246,10 +267,10 @@ export function Marco({ usuario, modulo, alertas, navegar, salir, children }: Pr
           >
             {(cerrar) => (
               <div className="flotante menu-mas" role="menu">
-                {DE_MAS.map((m) => (
+                {[...PRINCIPALES.filter((m) => m.soloEscritorio), ...DE_MAS].map((m) => (
                   <a
                     key={m.ruta}
-                    className={`opcion ${m.ruta === modulo.ruta ? 'elegida' : ''}`}
+                    className={`opcion ${m.ruta === modulo.ruta ? 'elegida' : ''} ${m.soloEscritorio ? 'solo-telefono' : ''}`}
                     href={`/${m.ruta}`}
                     role="menuitem"
                     onClick={(e) => {
@@ -299,7 +320,7 @@ export function Marco({ usuario, modulo, alertas, navegar, salir, children }: Pr
               <span className="disco">
                 <Icono nombre={m.icono} />
               </span>
-              <span className="etiqueta">{m.titulo}</span>
+              <span className="etiqueta">{m.corto ?? m.titulo}</span>
             </a>
           ))}
           <Desplegable

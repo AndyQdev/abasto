@@ -44,7 +44,7 @@
   --fuente-titulo: 'Plus Jakarta Sans', system-ui, sans-serif;
   --fuente-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
 
-  --ancho-menu: min(780px, calc(100% - 700px));
+  --ancho-menu: min(1080px, calc(100% - 640px));
   --ancho-dock: 92px;
   --hueco-dock: calc(var(--ancho-dock) + 34px);
 }
@@ -66,7 +66,7 @@ body {
 
 .arriba {
   position: relative;
-  height: 150px;
+  height: 176px;
 }
 
 /* El header: una pieza verde bosque con la curva de abajo que abraza al menú blanco */
@@ -77,25 +77,25 @@ body {
   grid-template-columns: auto 1fr auto;
   align-items: center;
   column-gap: 24px;
-  padding: 0 30px 6px 30px;
+  padding: 4px 40px 0 26px;
+}
+.halo-silueta {
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  left: 0;
+  overflow: visible;
+  fill: hsl(var(--tinta));
+  filter: drop-shadow(0 18px 22px rgba(24, 45, 37, 0.28));
 }
 .halo-forma {
+  display: none;
   position: absolute;
   inset: 0;
   z-index: -1;
   background: hsl(var(--tinta));
   border-radius: 52px;
   box-shadow: 0 24px 50px -30px rgba(24, 45, 37, 0.55);
-}
-.halo-abrazo {
-  position: absolute;
-  z-index: -1;
-  top: calc(100% - 1px);
-  left: 50%;
-  width: min(calc(var(--ancho-menu) + 360px), 100%);
-  height: 26px;
-  transform: translateX(-50%);
-  fill: hsl(var(--tinta));
 }
 
 /* La marca: cápsula blanca montada sobre el verde, con un brillo lima que asoma abajo */
@@ -105,9 +105,9 @@ body {
   justify-self: start;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   margin-top: 0;
-  padding: 10px 28px 10px 16px;
+  padding: 12px 32px 12px 20px;
   color: hsl(var(--tinta));
   text-decoration: none;
 }
@@ -137,13 +137,13 @@ body {
   line-height: 1;
 }
 .halo .marca-texto strong {
-  font-size: 2rem;
+  font-size: 2.3rem;
   font-weight: 800;
   letter-spacing: -0.035em;
 }
 .halo .marca-texto small {
   margin-top: 3px;
-  font-size: 0.88rem;
+  font-size: 0.98rem;
   font-weight: 700;
   letter-spacing: -0.01em;
 }
@@ -244,7 +244,7 @@ body {
 .menu-flotante {
   position: absolute;
   z-index: 5;
-  top: 58px;
+  top: 92px;
   left: 50%;
   transform: translateX(-50%);
   width: var(--ancho-menu);
@@ -295,6 +295,10 @@ body {
   height: 82px;
   background: hsl(var(--primary));
   box-shadow: 0 16px 26px -14px hsl(77 70% 40% / 0.85), inset 0 -3px 0 hsl(77 70% 55%);
+}
+
+.menu-mas .solo-telefono {
+  display: none;
 }
 
 /* ---------- Desplegables ---------- */
@@ -404,9 +408,15 @@ body {
   position: fixed;
   z-index: 40;
   right: 14px;
-  top: max(170px, calc(50% - 300px));
+  top: max(186px, calc(50% - 300px));
   width: var(--ancho-dock);
   isolation: isolate;
+  /* Plegado, su caja invisible no tapa nada: solo reciben toques la lengüeta y el cuerpo abierto */
+  pointer-events: none;
+}
+.dock .lengueta,
+.dock .dock-cuerpo {
+  pointer-events: auto;
 }
 .dock-cuerpo {
   position: relative;
@@ -552,9 +562,10 @@ body {
     padding: 12px 14px 44px;
   }
   .halo-forma {
+    display: block;
     border-radius: 34px;
   }
-  .halo-abrazo {
+  .halo-silueta {
     display: none;
   }
   .halo .marca {
@@ -578,8 +589,17 @@ body {
     gap: 6px;
   }
   .halo-derecha .separador,
-  .perfil-nombre {
+  .perfil-nombre,
+  .menu-flotante > a.solo-escritorio {
     display: none;
+  }
+  .menu-mas .solo-telefono {
+    display: flex;
+  }
+  .menu-flotante .menu-mas {
+    left: auto;
+    right: 0;
+    transform: none;
   }
   .menu-flotante {
     position: relative;

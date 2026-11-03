@@ -7,8 +7,12 @@ export interface Modulo {
   titulo: string;
   remoto: NombreDeRemoto;
   icono: NombreDeIcono;
-  /** Los cinco de todos los días van en el menú flotante; el resto, bajo «Más» */
+  /** El nombre corto para el dock */
+  corto?: string;
+  /** Los de todos los días van en el menú flotante; el resto, bajo «Más» */
   principal?: boolean;
+  /** En el teléfono no entra en el menú: pasa a «Más» */
+  soloEscritorio?: boolean;
 }
 
 export const MODULOS: Modulo[] = [
@@ -18,10 +22,10 @@ export const MODULOS: Modulo[] = [
   // Lista de compras: Abasto compra bajo pedido (modelo de lanzamiento, 29/10)
   { ruta: 'compras', titulo: 'Compras', remoto: 'gestion', icono: 'compras', principal: true },
   { ruta: 'clientes', titulo: 'Clientes', remoto: 'gestion', icono: 'clientes', principal: true },
-  { ruta: 'cuentas', titulo: 'Cuentas por cobrar', remoto: 'gestion', icono: 'cuentas' },
+  { ruta: 'cuentas', titulo: 'Cuentas por cobrar', corto: 'Cuentas', remoto: 'gestion', icono: 'cuentas' },
   { ruta: 'agentes', titulo: 'Agentes', remoto: 'inteligencia', icono: 'agentes' },
-  { ruta: 'reportes', titulo: 'Reportes', remoto: 'inteligencia', icono: 'reportes' },
-  { ruta: 'tableros', titulo: 'Tableros', remoto: 'inteligencia', icono: 'tableros' },
+  { ruta: 'reportes', titulo: 'Reportes', remoto: 'inteligencia', icono: 'reportes', principal: true, soloEscritorio: true },
+  { ruta: 'tableros', titulo: 'Tableros', remoto: 'inteligencia', icono: 'tableros', principal: true, soloEscritorio: true },
   { ruta: 'conecta', titulo: 'Conecta', remoto: 'gestion', icono: 'conecta' },
 ];
 
@@ -29,7 +33,7 @@ export const PRINCIPALES = MODULOS.filter((m) => m.principal);
 export const DE_MAS = MODULOS.filter((m) => !m.principal);
 
 /** Accesos rápidos del dock derecho (además de Alertas y Ayuda, que abren su panel). */
-export const ACCESOS_DEL_DOCK = MODULOS.filter((m) => ['agentes', 'reportes', 'tableros'].includes(m.ruta));
+export const ACCESOS_DEL_DOCK = MODULOS.filter((m) => ['agentes', 'cuentas', 'conecta'].includes(m.ruta));
 
 /** La ruta sin la búsqueda: «productos?q=arroz» → «productos». */
 export function moduloDe(ruta: string): Modulo {
