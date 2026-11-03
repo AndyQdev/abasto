@@ -50,12 +50,12 @@ describe('buscador del header', () => {
 });
 
 describe('escala del Panel', () => {
-  it('en escritorio se achica para verse como en 1680 px; en pantallas grandes y en el teléfono no', async () => {
+  it('en escritorio se achica para verse como en 2000 px; en pantallas grandes y en el teléfono no', async () => {
     const { escalaPara } = await import('./escala');
-    expect(escalaPara(1260)).toBe(0.75);
-    expect(escalaPara(1536)).toBe(0.91);
-    expect(escalaPara(1920)).toBe(1);
-    expect(escalaPara(1000)).toBe(0.7);
+    expect(escalaPara(1520)).toBe(0.76);
+    expect(escalaPara(1920)).toBe(0.96);
+    expect(escalaPara(2200)).toBe(1);
+    expect(escalaPara(1260)).toBe(0.7);
     expect(escalaPara(390)).toBe(1);
   });
 });

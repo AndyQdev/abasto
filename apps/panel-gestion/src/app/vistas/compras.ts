@@ -97,7 +97,7 @@ const TONOS = ['menta', 'ambar', 'lima'];
       .ganancia strong { color: hsl(var(--exito-suave-texto)); }
       .perdida strong { color: hsl(var(--error-suave-texto)); }
 
-      .puestos { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(440px, 100%), 1fr)); gap: 1.25rem; align-items: start; }
+      .puestos { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(520px, 100%), 1fr)); gap: 1.25rem; align-items: start; }
       .puesto { background: hsl(var(--superficie)); border-radius: 32px; box-shadow: var(--sombra-carta); padding: 0.7rem 0.7rem 1rem; display: grid; gap: 0.6rem; }
       .puesto-cabeza { display: flex; align-items: center; gap: 0.9rem; padding: 0.8rem 1.1rem; border-radius: 26px; }
       .puesto-cabeza.menta { background: hsl(var(--menta)); }

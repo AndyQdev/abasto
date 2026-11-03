@@ -205,7 +205,7 @@ function achicarFoto(archivo: File): Promise<string> {
       .boton-nuevo { height: 54px; padding: 0 2rem; font-size: 1.4rem; }
       .barra-arriba { margin-bottom: 1rem; }
 
-      .catalogo { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(440px, 100%), 1fr)); gap: 1rem; }
+      .catalogo { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(520px, 100%), 1fr)); gap: 1rem; }
       .producto { position: relative; background: hsl(var(--superficie)); border-radius: 30px; box-shadow: var(--sombra-carta); padding: 0.85rem 0.9rem 0.75rem; display: grid; grid-template-rows: 1fr auto; gap: 0.55rem; }
       .producto-arriba { display: grid; grid-template-columns: 146px minmax(0, 1fr); gap: 0.9rem; }
       .producto-foto { height: 186px; border-radius: 22px; background: hsl(60 20% 96%); display: grid; place-items: center; overflow: hidden; font-size: 2.6rem; font-weight: 800; color: hsl(var(--texto-3)); }

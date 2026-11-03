@@ -1,9 +1,10 @@
 /**
  * El Panel se diseñó sobre la maqueta v7 (pantalla ancha). En una laptop con menos ancho útil se veía todo
  * agrandado y había que bajar el zoom del navegador al 75 %. Ahora el Panel se achica solo: en escritorio
- * siempre se ve como en una pantalla de 1680 px, y en el teléfono (860 px o menos) no se toca.
+ * siempre se ve como en una pantalla de 2000 px (Andrés lo validó: 1520 px útiles + zoom 75 %), y en el teléfono
+ * (860 px o menos) no se toca. Abajo de 0,7 no baja para que el texto se siga leyendo.
  */
-export const ANCHO_DE_DISENO = 1680;
+export const ANCHO_DE_DISENO = 2000;
 export const ESCALA_MINIMA = 0.7;
 export const ANCHO_DE_TELEFONO = 860;
 
