@@ -1,18 +1,19 @@
-import { buscarReceta, escalarReceta, RECETAS } from './recetas';
+import { PLANTILLAS } from '@abasto/comercio';
+import { buscarReceta, desdePlantilla, escalarReceta, RECETAS } from './recetas';
 
 describe('Recetas de referencia', () => {
   it('encuentra la receta por cómo se la nombra, con o sin tilde', () => {
-    expect(buscarReceta('quiero hacer 300 salteñas')?.id).toBe('saltena');
-    expect(buscarReceta('para mis saltenas del sábado')?.id).toBe('saltena');
+    expect(buscarReceta('quiero hacer 300 salteñas')?.id).toBe('saltena-carne');
+    expect(buscarReceta('para mis saltenas del sábado')?.id).toBe('saltena-carne');
     expect(buscarReceta('100 empanadas de queso')?.id).toBe('empanada-queso');
     expect(buscarReceta('una torta para 20 personas')?.id).toBe('torta-vainilla');
     expect(buscarReceta('algo rico')).toBeNull();
   });
 
-  it('escala con aritmética: 300 salteñas es el triple de la referencia de 100', () => {
-    const saltena = RECETAS.find((r) => r.id === 'saltena')!;
+  it('escala con aritmética: 300 salteñas es seis veces la plantilla de 50', () => {
+    const saltena = RECETAS.find((r) => r.id === 'saltena-carne')!;
     const { items, supuestos } = escalarReceta(saltena, 300);
-    expect(items.find((i) => i.nombre === 'harina de trigo')).toEqual({ nombre: 'harina de trigo', cantidad: 12, unidad: 'kg', envase: null });
+    expect(items.find((i) => i.nombre === 'harina de trigo')).toMatchObject({ nombre: 'harina de trigo', cantidad: 12, unidad: 'kg', envase: null });
     expect(supuestos[0]).toContain('receta de referencia');
   });
 
@@ -33,5 +34,20 @@ describe('Recetas de referencia', () => {
       expect(r.ingredientes.length).toBeGreaterThan(0);
       for (const i of r.ingredientes) expect(i.cantidad).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('Una sola lista de recetas: las plantillas de Mi negocio y las nuestras', () => {
+  it('cada plantilla entra con los códigos del catálogo y sin lo que no se compra (el agua)', () => {
+    const saltena = desdePlantilla(PLANTILLAS.find((p) => p.clave === 'saltena-carne')!);
+    expect(saltena.plato).toBe('saltena');
+    expect(saltena.alias).toEqual(expect.arrayContaining(['salteña de carne', 'salteñas de carne', 'salteñas']));
+    expect(saltena.ingredientes.find((i) => i.nombre === 'agua')).toBeUndefined();
+    expect(saltena.ingredientes.find((i) => i.nombre === 'huevo')?.cantidad).toBe(12);
+    for (const p of PLANTILLAS) for (const i of desdePlantilla(p).ingredientes) expect(i.codigos?.length).toBeGreaterThan(0);
+  });
+
+  it('no hay dos recetas con el mismo id', () => {
+    expect(new Set(RECETAS.map((r) => r.id)).size).toBe(RECETAS.length);
   });
 });

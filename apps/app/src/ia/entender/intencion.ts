@@ -16,6 +16,8 @@ export interface ItemPedido {
   unidad: Unidad | null;
   /** Envase o presentación, si la dijo: «caja», «fardo», «docena», «quintal», «arroba», «maple», «bolsa» */
   envase: string | null;
+  /** Códigos del catálogo que lo venden (de la presentación más chica a la más grande), cuando sale de una receta */
+  codigos?: string[];
 }
 
 export type TipoDeIntencion =

@@ -1,5 +1,5 @@
 import type { Escala, Mayorista, Producto } from '@abasto/comercio';
-import { candidatos, catalogarItem, contenidoDe, parecidoDeNombre } from './catalogar';
+import { candidatos, catalogarItem, contenidoDe, parecidoDeNombre, porCodigos } from './catalogar';
 import type { ItemPedido } from './intencion';
 
 const abasto: Mayorista = { id: 'abasto', nombre: 'Abasto', ciudad: 'Santa Cruz', verificado: true, relacion: 'NINGUNA', deLaCasa: true };
@@ -93,5 +93,23 @@ describe('Convertir lo pedido en presentaciones del catálogo', () => {
 
   it('lo que no está en el catálogo se dice, nunca se inventa', () => {
     expect(catalogarItem(pide('chocolate blanco', 1), catalogo)).toMatchObject({ producto: null, certeza: 'sin_producto', cantidad: 0 });
+  });
+});
+
+describe('Insumos de una receta con códigos del catálogo', () => {
+  const arroba = producto('AB-102', 'Harina de trigo · arroba 11,5 kg', 'Harinas y panificación', [escala('UNIDAD', 1, 9000)]);
+  const quintal = producto('AB-101', 'Harina de trigo · quintal 46 kg', 'Harinas y panificación', [escala('UNIDAD', 1, 32000)]);
+  const conHarinas = [...catalogo, arroba, quintal];
+  const deReceta = (cantidad: number): ItemPedido => ({ nombre: 'harina de trigo', cantidad, unidad: 'kg', envase: null, codigos: ['AB-102', 'AB-101'] });
+
+  it('elige la presentación más grande que no se pasa de lo pedido', () => {
+    expect(porCodigos(deReceta(12), conHarinas).map((p) => p.codigo)).toEqual(['AB-102', 'AB-101']);
+    expect(porCodigos(deReceta(60), conHarinas)[0].codigo).toBe('AB-101');
+    expect(porCodigos(deReceta(2), conHarinas)[0].codigo).toBe('AB-102');
+  });
+
+  it('usa el código antes que el nombre y, si el código no está a la venta, vuelve al nombre', () => {
+    expect(catalogarItem(deReceta(12), conHarinas).producto?.codigo).toBe('AB-102');
+    expect(catalogarItem(deReceta(12), catalogo).producto?.codigo).toBe('AB-050');
   });
 });

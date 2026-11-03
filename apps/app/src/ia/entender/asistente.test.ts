@@ -70,11 +70,11 @@ describe('Asistente de compra', () => {
   it('«300 salteñas» usa la receta de referencia, escala con aritmética y dice lo que supuso', async () => {
     const interprete = interpreteQueDevuelve({ tipo: 'receta', items: [], preparacion: 'salteñas', rinde: 300, supuestos: [] });
     const p = await proponerCompra({ texto: 'quiero hacer 300 salteñas' }, catalogo, { interprete });
-    expect(p.receta?.id).toBe('saltena');
-    // 4 kg por cada 100 salteñas → 12 kg → 1 quintal de 46 kg
+    expect(p.receta?.id).toBe('saltena-carne');
+    // 2 kg por cada 50 salteñas (plantilla de Mi negocio) → 12 kg → 1 quintal de 46 kg
     expect(p.lineas.find((l) => l.producto?.codigo === 'AB-050')).toMatchObject({ cantidad: 1, nota: 'Pediste 12 kg: con esto llevas 46 kg' });
-    // 10 huevos por cada 100 → 30 → 1 maple
-    expect(p.lineas.find((l) => l.producto?.codigo === 'AB-060')?.cantidad).toBe(1);
+    // 4 en la masa + 8 duros en el relleno por cada 50 → 72 → 3 maples de 30
+    expect(p.lineas.find((l) => l.producto?.codigo === 'AB-060')?.cantidad).toBe(3);
     expect(p.supuestos.some((s) => s.includes('receta de referencia'))).toBe(true);
     // Lo que no vendemos (carne, papa…) se dice, no se inventa
     expect(p.lineas.some((l) => l.certeza === 'sin_producto' && l.pedido.nombre === 'carne de res')).toBe(true);
@@ -116,10 +116,10 @@ describe('Asistente de compra', () => {
   it('una foto de salchipapa: dice que parece, usa su receta y ofrece las otras formas de prepararla', async () => {
     const p = await proponerCompra({ ...foto, texto: 'para 8 personas' }, catalogo, vio([], [{ codigo: 'salchipapa', confianza: 0.88 }, { codigo: 'silpancho', confianza: 0.7 }]));
     expect(p.mensaje).toContain('Parece salchipapa (88 %)');
-    expect(p.variantes.map((r) => r.id)).toEqual(['salchipapa-clasica', 'salchipapa-huevo']);
-    expect(p.receta?.id).toBe('salchipapa-clasica');
-    // 1 L de aceite para 4 → 2 L para 8 → 3 botellas de 900 ml
-    expect(p.lineas.find((l) => l.producto?.codigo === 'AB-005')?.cantidad).toBe(3);
+    expect(p.variantes.map((r) => r.id)).toEqual(['salchipapa', 'salchipapa-huevo']);
+    expect(p.receta?.id).toBe('salchipapa');
+    // 3 L de aceite para 20 porciones → 1,2 L para 8 → 2 botellas de 900 ml
+    expect(p.lineas.find((l) => l.producto?.codigo === 'AB-005')?.cantidad).toBe(2);
   });
 
   it('si duda entre dos platos, pregunta «¿Es esto?» y no arma nada hasta que la persona elija', async () => {

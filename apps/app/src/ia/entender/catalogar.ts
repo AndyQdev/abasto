@@ -111,9 +111,28 @@ const numero = (n: number) => new Intl.NumberFormat('es-BO', { maximumFractionDi
 /** La escala más chica con precio (la que deja comprar lo justo) */
 const escalaMasChica = (p: Producto) => escalasConPrecio(p)[0] ?? null;
 
-/** Una línea del pedido contra el catálogo. */
+/**
+ * Los productos de los códigos que trae el insumo de una receta. Va primero la presentación más grande que no se pasa
+ * de lo pedido (12 kg de harina → la arroba de 11,5 kg, no 12 bolsas de 1 kg).
+ */
+export function porCodigos(pedido: ItemPedido, productos: Producto[]): Producto[] {
+  const venta = comprables(productos);
+  const enCatalogo = (pedido.codigos ?? []).map((c) => venta.find((p) => p.codigo === c)).filter((p): p is Producto => !!p);
+  if (enCatalogo.length < 2 || !pedido.unidad || pedido.cantidad === null) return enCatalogo;
+  const base = BASE[pedido.unidad];
+  const pedidoEnBase = pedido.cantidad * base.factor;
+  const entran = enCatalogo.filter((p) => {
+    const c = contenidoDe(p);
+    return !!c && c.unidad === base.unidad && c.cantidad <= pedidoEnBase + 1e-9;
+  });
+  const elegido = entran.at(-1) ?? enCatalogo[0]!;
+  return [elegido, ...enCatalogo.filter((p) => p !== elegido)];
+}
+
+/** Una línea del pedido contra el catálogo. Si viene de una receta, usa los códigos del insumo antes que el nombre. */
 export function catalogarItem(pedido: ItemPedido, productos: Producto[]): LineaPropuesta {
-  const [producto, ...resto] = candidatos(pedido.nombre, productos);
+  const deLaReceta = porCodigos(pedido, productos);
+  const [producto, ...resto] = deLaReceta.length ? deLaReceta : candidatos(pedido.nombre, productos);
   const alternativas = resto.slice(0, 3);
   const cantidad = pedido.cantidad ?? 1;
   if (!producto) {

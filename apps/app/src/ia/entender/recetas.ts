@@ -2,6 +2,7 @@
  * Recetas de referencia y su escalado. Una foto o un nombre no dicen la receta exacta: por eso se parte de una
  * receta conocida, se escala con aritmética (nunca la estima el modelo) y se avisa qué se supuso.
  */
+import { PLANTILLAS, insumosDePlantilla, type PlantillaDeReceta } from '@abasto/comercio';
 import type { ItemPedido, Unidad } from './intencion';
 import { normalizar } from './catalogar';
 import DATOS from './recetas.json';
@@ -10,6 +11,8 @@ export interface Ingrediente {
   nombre: string;
   cantidad: number;
   unidad: Unidad;
+  /** Productos del catálogo que lo venden, de la presentación más chica a la más grande */
+  codigos?: string[];
 }
 
 export interface RecetaDeReferencia {
@@ -23,7 +26,48 @@ export interface RecetaDeReferencia {
   ingredientes: Ingrediente[];
 }
 
-export const RECETAS = DATOS.recetas as RecetaDeReferencia[];
+/** Las plantillas de Andrés (packages/comercio) que son un plato que reconoce la foto */
+const PLATO_DE_PLANTILLA: Record<string, string> = {
+  'saltena-carne': 'saltena',
+  'saltena-pollo': 'saltena',
+  'pique-macho': 'pique-macho',
+  salchipapa: 'salchipapa',
+  majadito: 'majadito',
+};
+
+/**
+ * Una plantilla de «Mi negocio» como receta del asistente: así hay una sola lista de recetas y cada insumo ya trae
+ * los códigos del catálogo que lo venden. Lo que no se compra (el agua) no entra.
+ */
+export function desdePlantilla(p: PlantillaDeReceta): RecetaDeReferencia {
+  const nombre = p.nombre.toLowerCase();
+  const [primera, ...resto] = nombre.split(' ');
+  const plural = primera === p.unidad.una.toLowerCase() ? [p.unidad.varias.toLowerCase(), ...resto].join(' ') : nombre;
+  // «Salteña de carne» también responde a «salteñas»; «Pan batido» no responde a «pan» (es demasiado general)
+  const corto = resto[0] === 'de' ? [p.unidad.una.toLowerCase(), p.unidad.varias.toLowerCase()] : [];
+  const ingredientes: Ingrediente[] = [];
+  for (const i of insumosDePlantilla(p)) {
+    if (!i.codigos.length) continue;
+    const igual = ingredientes.find((x) => x.nombre === i.nombre.toLowerCase() && x.unidad === i.unidad);
+    if (igual) igual.cantidad = Math.round((igual.cantidad + i.cantidad) * 1000) / 1000;
+    else ingredientes.push({ nombre: i.nombre.toLowerCase(), cantidad: i.cantidad, unidad: i.unidad, codigos: i.codigos });
+  }
+  return {
+    id: p.clave,
+    plato: PLATO_DE_PLANTILLA[p.clave],
+    nombre: p.nombre,
+    alias: [...new Set([nombre, plural, ...corto])],
+    rinde: p.rinde,
+    unidadDeRinde: p.unidad.varias,
+    ingredientes,
+  };
+}
+
+/** Las plantillas de Andrés primero (con códigos del catálogo) y después las nuestras que no están ahí */
+export const RECETAS: RecetaDeReferencia[] = [
+  ...PLANTILLAS.map(desdePlantilla),
+  ...(DATOS.recetas as RecetaDeReferencia[]),
+];
 
 /** La receta cuyo alias aparece en lo que se pidió; gana el alias más largo («empanadas de queso» antes que «empanadas»). */
 export function buscarReceta(texto: string | null, recetas = RECETAS): RecetaDeReferencia | null {
@@ -53,6 +97,7 @@ export function escalarReceta(receta: RecetaDeReferencia, rinde: number | null):
       cantidad: i.unidad === 'u.' ? Math.ceil(i.cantidad * factor) : redondear(i.cantidad * factor),
       unidad: i.unidad,
       envase: null,
+      ...(i.codigos ? { codigos: i.codigos } : {}),
     })),
     supuestos,
   };
