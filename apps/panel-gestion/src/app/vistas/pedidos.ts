@@ -117,7 +117,7 @@ const POR_COLUMNA = 6;
   styles: [
     ESTILOS_BASE,
     `
-      .orden { font: inherit; font-size: 1.12rem; color: inherit; height: 48px; border-radius: 999px; border: 0; padding: 0 2.6rem 0 1.3rem; font-weight: 600; background: hsl(var(--superficie)); box-shadow: var(--sombra-menor); appearance: none; cursor: pointer;
+      .orden { font: inherit; font-size: 0.98rem; color: inherit; height: 42px; border-radius: 999px; border: 0; padding: 0 2.6rem 0 1.3rem; font-weight: 600; background: hsl(var(--superficie)); box-shadow: var(--sombra-menor); appearance: none; cursor: pointer;
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23182D25' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
         background-repeat: no-repeat; background-position: right 1rem center; }
       .buscando { display: inline-flex; align-items: center; gap: 0.4rem; height: 40px; padding: 0 0.5rem 0 1rem; border-radius: 999px; background: hsl(var(--tinta)); color: #fff; font-weight: 700; }
@@ -125,7 +125,7 @@ const POR_COLUMNA = 6;
 
       .tablero { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 1.25rem; align-items: start; }
       .columna { min-width: 0; background: hsl(var(--superficie) / 0.55); border-radius: 32px; padding: 0.7rem; display: grid; gap: 0.85rem; box-shadow: inset 0 0 0 1px hsl(var(--borde) / 0.7); }
-      .columna-cabeza { display: flex; align-items: center; gap: 0.75rem; height: 58px; padding: 0 1.4rem; border-radius: 999px; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; }
+      .columna-cabeza { display: flex; align-items: center; gap: 0.7rem; height: 50px; padding: 0 1.3rem; border-radius: 999px; font-size: 1.28rem; font-weight: 800; letter-spacing: -0.02em; }
       .columna-cabeza.ambar { background: hsl(var(--ambar)); }
       .columna-cabeza.lima { background: hsl(var(--primary)); }
       .columna-cabeza.menta { background: hsl(var(--menta)); }

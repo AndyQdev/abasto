@@ -131,40 +131,52 @@ export function Marco({ usuario, modulo, alertas, navegar, salir, children }: Pr
       <div className="arriba">
         <header className="halo">
           <div className="halo-forma" aria-hidden="true" />
-          <svg className="halo-abrazo" viewBox="0 0 1040 16" preserveAspectRatio="none" aria-hidden="true">
-            <path d="M0 0C70 0 80 16 150 16H890C960 16 970 0 1040 0Z" />
+          <svg className="halo-abrazo" viewBox="0 0 1040 28" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M0 0C92 0 104 28 190 28H850C936 28 948 0 1040 0Z" />
           </svg>
 
           <a className="marca" href="/inicio" onClick={ir('inicio')} aria-label="Abasto, ir al inicio">
             <span className="marca-brillo" aria-hidden="true" />
-            <Simbolo tamano={60} />
+            <Simbolo tamano={46} />
             <span className="marca-texto">
               <strong>Abasto</strong>
               <small>Panel Mayorista</small>
             </span>
           </a>
 
-          <form
-            className="buscador-halo"
-            role="search"
-            onSubmit={(e) => {
-              e.preventDefault();
-              const destino = destinoDeBusqueda(busqueda);
-              if (!destino) return;
-              navegar(destino);
-              document.dispatchEvent(new CustomEvent('abasto:buscar', { detail: { texto: busqueda.trim() } }));
-            }}
-          >
-            <Icono nombre="buscar" />
-            <input
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-              placeholder="Buscar en Abasto"
-              aria-label="Buscar productos o un pedido por su código"
-            />
-          </form>
-
           <div className="halo-derecha">
+            <Desplegable
+              boton={(abierto, alternar) => (
+                <button className="campana" onClick={alternar} aria-expanded={abierto} aria-label="Buscar en Abasto" title="Buscar">
+                  <Icono nombre="buscar" tamano={26} />
+                </button>
+              )}
+            >
+              {(cerrar) => (
+                <form
+                  className="flotante buscador-flotante"
+                  role="search"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const destino = destinoDeBusqueda(busqueda);
+                    if (!destino) return;
+                    navegar(destino);
+                    document.dispatchEvent(new CustomEvent('abasto:buscar', { detail: { texto: busqueda.trim() } }));
+                    setBusqueda('');
+                    cerrar();
+                  }}
+                >
+                  <Icono nombre="buscar" />
+                  <input
+                    autoFocus
+                    value={busqueda}
+                    onChange={(e) => setBusqueda(e.target.value)}
+                    placeholder="Un producto o un pedido (A-1342)"
+                    aria-label="Buscar productos o un pedido por su código"
+                  />
+                </form>
+              )}
+            </Desplegable>
             <Desplegable
               boton={(abierto, alternar) => (
                 <button
@@ -173,7 +185,7 @@ export function Marco({ usuario, modulo, alertas, navegar, salir, children }: Pr
                   aria-expanded={abierto}
                   aria-label={pendientes ? `Alertas: ${pendientes} esperando` : 'Alertas'}
                 >
-                  <Icono nombre="alertas" tamano={28} />
+                  <Icono nombre="alertas" tamano={26} />
                   {pendientes > 0 && <span className="punto-lima" />}
                 </button>
               )}
@@ -219,7 +231,7 @@ export function Marco({ usuario, modulo, alertas, navegar, salir, children }: Pr
               aria-current={m.ruta === modulo.ruta ? 'page' : undefined}
               onClick={ir(m.ruta)}
             >
-              <Icono nombre={m.icono} tamano={28} />
+              <Icono nombre={m.icono} tamano={24} />
               <span>{m.titulo}</span>
             </a>
           ))}
@@ -227,7 +239,7 @@ export function Marco({ usuario, modulo, alertas, navegar, salir, children }: Pr
             clase="mas"
             boton={(abierto, alternar) => (
               <button className={enMas ? 'activo' : undefined} onClick={alternar} aria-expanded={abierto}>
-                <Icono nombre={enMas ? modulo.icono : 'mas'} tamano={28} />
+                <Icono nombre={enMas ? modulo.icono : 'mas'} tamano={24} />
                 <span>{enMas ? modulo.titulo.split(' ')[0] : 'Más'}</span>
               </button>
             )}

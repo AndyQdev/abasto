@@ -193,16 +193,16 @@ function achicarFoto(archivo: File): Promise<string> {
   styles: [
     ESTILOS_BASE,
     `
-      .rubros { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; max-width: calc(100% - 320px); }
+      .rubros { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; max-width: calc(100% - 240px); }
       .rubros::-webkit-scrollbar, .areas::-webkit-scrollbar { display: none; }
       .areas { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; max-width: calc(100% - 360px); }
-      .areas .segmento { height: 36px; padding: 0 0.85rem; font-size: 0.98rem; gap: 0.45rem; }
+      .areas .segmento { height: 34px; padding: 0 0.8rem; font-size: 0.95rem; gap: 0.4rem; }
       .areas .segmento + .segmento::before { height: 18px; }
       .areas .etiqueta-grupo { font-size: 1.05rem; }
       .vista .segmento { height: 36px; font-size: 1rem; }
       .buscando { display: inline-flex; align-items: center; gap: 0.4rem; height: 40px; padding: 0 0.5rem 0 1rem; border-radius: 999px; background: hsl(var(--tinta)); color: #fff; font-weight: 700; margin-bottom: 1rem; }
       .buscando button { border: 0; background: rgba(255,255,255,0.15); color: #fff; border-radius: 50%; width: 28px; height: 28px; display: grid; place-items: center; }
-      .boton-nuevo { height: 54px; padding: 0 2rem; font-size: 1.4rem; }
+      .boton-nuevo { height: 44px; padding: 0 1.4rem; font-size: 1.02rem; }
       .barra-arriba { margin-bottom: 1rem; }
 
       .catalogo { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(520px, 100%), 1fr)); gap: 1rem; }
@@ -236,7 +236,7 @@ function achicarFoto(archivo: File): Promise<string> {
 
       .producto-pie { display: grid; grid-template-columns: 146px auto 1fr; align-items: center; gap: 0.9rem; padding-top: 0.2rem; }
       .producto-pie .raya { width: 1.5px; height: 30px; background: hsl(var(--borde-fuerte)); }
-      .producto-pie .boton-contorno { justify-self: end; height: 40px; padding: 0 1.4rem; font-size: 1.05rem; }
+      .producto-pie .boton-contorno { justify-self: end; height: 36px; padding: 0 1.1rem; font-size: 0.95rem; }
       .interruptor { display: inline-flex; align-items: center; justify-content: center; gap: 0.6rem; border: 0; background: transparent; font-weight: 600; font-size: 1.1rem; padding: 0.25rem; }
       .riel { width: 50px; height: 28px; border-radius: 999px; background: hsl(var(--borde-fuerte)); position: relative; transition: background 0.15s; }
       .riel::after { content: ''; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: transform 0.15s; }
@@ -285,7 +285,7 @@ function achicarFoto(archivo: File): Promise<string> {
           <button class="segmento" [class.elegido]="rubro() === r" [attr.title]="r" (click)="rubro.set(r)">{{ corto(r) }}</button>
         }
       </div>
-      <button class="boton-primario boton-nuevo" (click)="nuevo()"><abasto-icono nombre="mas" [tamano]="26" [grosor]="2.8" /> Nuevo producto</button>
+      <button class="boton-primario boton-nuevo" (click)="nuevo()"><abasto-icono nombre="mas" [tamano]="20" [grosor]="2.6" /> Nuevo producto</button>
     </div>
 
     <div class="barra">
