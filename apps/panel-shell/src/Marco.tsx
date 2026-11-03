@@ -158,7 +158,7 @@ export function Marco({ usuario, modulo, alertas, navegar, salir, children }: Pr
 
           <a className="marca" href="/inicio" onClick={ir('inicio')} aria-label="Abasto, ir al inicio">
             <span className="marca-brillo" aria-hidden="true" />
-            <Simbolo tamano={54} />
+            <Simbolo tamano={50} />
             <span className="marca-texto">
               <strong>Abasto</strong>
               <small>Panel Mayorista</small>
@@ -252,7 +252,7 @@ export function Marco({ usuario, modulo, alertas, navegar, salir, children }: Pr
               aria-current={m.ruta === modulo.ruta ? 'page' : undefined}
               onClick={ir(m.ruta)}
             >
-              <Icono nombre={m.icono} tamano={24} />
+              <Icono nombre={m.icono} tamano={23} />
               <span>{m.titulo}</span>
             </a>
           ))}
@@ -260,7 +260,7 @@ export function Marco({ usuario, modulo, alertas, navegar, salir, children }: Pr
             clase="mas"
             boton={(abierto, alternar) => (
               <button className={enMas ? 'activo' : undefined} onClick={alternar} aria-expanded={abierto}>
-                <Icono nombre={enMas ? modulo.icono : 'mas'} tamano={24} />
+                <Icono nombre={enMas ? modulo.icono : 'mas'} tamano={23} />
                 <span>{enMas ? modulo.titulo.split(' ')[0] : 'Más'}</span>
               </button>
             )}

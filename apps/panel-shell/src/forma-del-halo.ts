@@ -1,13 +1,19 @@
 /**
- * La silueta del header «Halo» (maqueta v7, image3.png): una banda verde con los dos extremos redondeados
- * (el del logo y el del perfil), un «cuello» que sube entre cada extremo y el menú, y una panza que baja
- * a abrazar el menú flotante. No sale con border-radius: se dibuja con un path según el ancho real.
+ * La silueta del header «Halo», calcada de la maqueta v7 (image3.png, midiendo el borde columna por columna):
+ * - los extremos del logo y del perfil son redondos y bajan hasta ALTO_EXTREMOS;
+ * - entre cada extremo y el menú el verde sube apenas (ALTO_CUELLO) en una curva ancha y suave;
+ * - junto al menú vuelve a bajar despacio (unos 100 px de curva) y se mete detrás de él (ALTO_PANZA).
+ * No sale con border-radius: se dibuja con un path según el ancho real del header y del menú.
  */
-export const ALTO_EXTREMOS = 124; // donde terminan el lado del logo y el del perfil (dos «bulbos» redondos)
-export const ALTO_CUELLO = 96; // la curva que sube entre cada extremo y el menú
-export const ALTO_PANZA = 132; // lo que baja el verde detrás del menú
-const RADIO = 60; // esquinas de arriba
-const BULBO = 64; // esquinas de abajo: más redondas, como la maqueta
+export const ALTO_EXTREMOS = 116; // fondo de los extremos redondos
+export const ALTO_CUELLO = 101; // lo más alto de la curva entre el extremo y el menú
+export const ALTO_PANZA = 134; // donde el verde toca el costado del menú
+const ESQUINA = 56; // esquinas de arriba
+const BULBO = 92; // la curva del extremo, de costado hasta el fondo
+
+// Distancias horizontales desde el borde del menú, medidas en la maqueta
+const HASTA_EL_CUELLO = 116;
+const HASTA_EL_EXTREMO = 275;
 
 const r = (n: number) => Math.round(n * 10) / 10;
 
@@ -16,29 +22,32 @@ export function formaDelHalo(ancho: number, menu: number): string {
   const c = ancho / 2;
   const izq = c - menu / 2;
   const der = c + menu / 2;
-  // Lo que queda entre la esquina y el menú: si es poco, las curvas se acortan para no cruzarse
-  const lado = Math.max(40, Math.min(240, izq - BULBO - 20));
-  const k = lado / 240;
-  const [a, b, d] = [r(240 * k), r(170 * k), r(110 * k)];
-  const p = [
-    `M${RADIO} 0`,
-    `H${r(ancho - RADIO)}`,
-    `C${r(ancho - RADIO * 0.45)} 0 ${ancho} ${r(RADIO * 0.45)} ${ancho} ${RADIO}`,
-    `V${ALTO_EXTREMOS - BULBO}`,
-    `C${ancho} ${r(ALTO_EXTREMOS - BULBO * 0.45)} ${r(ancho - BULBO * 0.45)} ${ALTO_EXTREMOS} ${r(ancho - BULBO)} ${ALTO_EXTREMOS}`,
-    // Lado del perfil → cuello → panza
-    `H${r(der + a)}`,
-    `C${r(der + b)} ${ALTO_EXTREMOS} ${r(der + d + 30)} ${ALTO_CUELLO} ${r(der + d)} ${ALTO_CUELLO}`,
-    `C${r(der + 36)} ${ALTO_CUELLO} ${r(der + 26)} ${ALTO_PANZA} ${r(der - 34)} ${ALTO_PANZA}`,
-    `H${r(izq + 34)}`,
-    // Panza → cuello → lado del logo
-    `C${r(izq - 26)} ${ALTO_PANZA} ${r(izq - 36)} ${ALTO_CUELLO} ${r(izq - d)} ${ALTO_CUELLO}`,
-    `C${r(izq - d - 30)} ${ALTO_CUELLO} ${r(izq - b)} ${ALTO_EXTREMOS} ${r(izq - a)} ${ALTO_EXTREMOS}`,
+  // Si queda poco lugar entre el extremo y el menú, las curvas se encogen en proporción para no cruzarse
+  const k = Math.max(0.3, Math.min(1, (izq - BULBO - 10) / HASTA_EL_EXTREMO));
+  const cuello = HASTA_EL_CUELLO * k;
+  const extremo = HASTA_EL_EXTREMO * k;
+  const medio = (cuello + extremo) / 2;
+  const bajaBulbo = ALTO_EXTREMOS - ESQUINA; // tramo vertical que cubre la curva del extremo
+
+  return [
+    `M${ESQUINA} 0`,
+    `H${r(ancho - ESQUINA)}`,
+    // Esquina de arriba a la derecha
+    `C${r(ancho - ESQUINA * 0.45)} 0 ${ancho} ${r(ESQUINA * 0.45)} ${ancho} ${ESQUINA}`,
+    // El extremo del perfil: una curva ancha hasta su fondo
+    `C${ancho} ${r(ESQUINA + bajaBulbo * 0.55)} ${r(ancho - BULBO * 0.45)} ${ALTO_EXTREMOS} ${r(ancho - BULBO)} ${ALTO_EXTREMOS}`,
+    `H${r(der + extremo)}`,
+    // Sube suave hasta el cuello…
+    `C${r(der + medio)} ${ALTO_EXTREMOS} ${r(der + medio)} ${ALTO_CUELLO} ${r(der + cuello)} ${ALTO_CUELLO}`,
+    // …y baja despacio hasta tocar el costado del menú
+    `C${r(der + cuello * 0.45)} ${ALTO_CUELLO} ${r(der + 12 * k)} ${r(ALTO_PANZA - 13)} ${r(der - 6)} ${ALTO_PANZA}`,
+    `H${r(izq + 6)}`,
+    // El mismo camino del lado del logo
+    `C${r(izq - 12 * k)} ${r(ALTO_PANZA - 13)} ${r(izq - cuello * 0.45)} ${ALTO_CUELLO} ${r(izq - cuello)} ${ALTO_CUELLO}`,
+    `C${r(izq - medio)} ${ALTO_CUELLO} ${r(izq - medio)} ${ALTO_EXTREMOS} ${r(izq - extremo)} ${ALTO_EXTREMOS}`,
     `H${BULBO}`,
-    `C${r(BULBO * 0.45)} ${ALTO_EXTREMOS} 0 ${r(ALTO_EXTREMOS - BULBO * 0.45)} 0 ${ALTO_EXTREMOS - BULBO}`,
-    `V${RADIO}`,
-    `C0 ${r(RADIO * 0.45)} ${r(RADIO * 0.45)} 0 ${RADIO} 0`,
+    `C${r(BULBO * 0.45)} ${ALTO_EXTREMOS} 0 ${r(ESQUINA + bajaBulbo * 0.55)} 0 ${ESQUINA}`,
+    `C0 ${r(ESQUINA * 0.45)} ${r(ESQUINA * 0.45)} 0 ${ESQUINA} 0`,
     'Z',
-  ];
-  return p.join(' ');
+  ].join(' ');
 }

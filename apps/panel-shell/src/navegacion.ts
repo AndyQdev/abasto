@@ -25,7 +25,7 @@ export const MODULOS: Modulo[] = [
   { ruta: 'cuentas', titulo: 'Cuentas por cobrar', corto: 'Cuentas', remoto: 'gestion', icono: 'cuentas' },
   { ruta: 'agentes', titulo: 'Agentes', remoto: 'inteligencia', icono: 'agentes' },
   { ruta: 'reportes', titulo: 'Reportes', remoto: 'inteligencia', icono: 'reportes', principal: true, soloEscritorio: true },
-  { ruta: 'tableros', titulo: 'Tableros', remoto: 'inteligencia', icono: 'tableros', principal: true, soloEscritorio: true },
+  { ruta: 'tableros', titulo: 'Tableros', remoto: 'inteligencia', icono: 'tableros' },
   { ruta: 'conecta', titulo: 'Conecta', remoto: 'gestion', icono: 'conecta' },
 ];
 

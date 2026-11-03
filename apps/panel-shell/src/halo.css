@@ -44,7 +44,7 @@
   --fuente-titulo: 'Plus Jakarta Sans', system-ui, sans-serif;
   --fuente-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
 
-  --ancho-menu: min(1080px, calc(100% - 640px));
+  --ancho-menu: min(1060px, calc(100% - 640px));
   --ancho-dock: 92px;
   --hueco-dock: calc(var(--ancho-dock) + 34px);
 }
@@ -66,18 +66,18 @@ body {
 
 .arriba {
   position: relative;
-  height: 176px;
+  height: 166px;
 }
 
 /* El header: una pieza verde bosque con la curva de abajo que abraza al menú blanco */
 .halo {
   position: relative;
-  height: 104px;
+  height: 96px;
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
   column-gap: 24px;
-  padding: 4px 40px 0 26px;
+  padding: 4px 46px 0 26px;
 }
 .halo-silueta {
   position: absolute;
@@ -107,7 +107,7 @@ body {
   align-items: center;
   gap: 12px;
   margin-top: 0;
-  padding: 12px 32px 12px 20px;
+  padding: 10px 30px 10px 18px;
   color: hsl(var(--tinta));
   text-decoration: none;
 }
@@ -137,13 +137,13 @@ body {
   line-height: 1;
 }
 .halo .marca-texto strong {
-  font-size: 2.3rem;
+  font-size: 2.2rem;
   font-weight: 800;
   letter-spacing: -0.035em;
 }
 .halo .marca-texto small {
   margin-top: 3px;
-  font-size: 0.98rem;
+  font-size: 0.95rem;
   font-weight: 700;
   letter-spacing: -0.01em;
 }
@@ -221,7 +221,7 @@ body {
 }
 .perfil {
   padding-right: 10px;
-  font-size: 1.05rem;
+  font-size: 1.15rem;
   font-weight: 800;
 }
 .avatar {
@@ -244,11 +244,11 @@ body {
 .menu-flotante {
   position: absolute;
   z-index: 5;
-  top: 92px;
+  top: 86px;
   left: 50%;
   transform: translateX(-50%);
   width: var(--ancho-menu);
-  height: 76px;
+  height: 74px;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -265,13 +265,13 @@ body {
   align-items: center;
   justify-content: center;
   gap: 3px;
-  height: 62px;
+  height: 60px;
   padding: 0 6px;
   border: 0;
   border-radius: 999px;
   background: transparent;
   color: hsl(var(--tinta));
-  font-size: 1.12rem;
+  font-size: 1.15rem;
   font-weight: 800;
   letter-spacing: -0.02em;
   text-decoration: none;
@@ -292,7 +292,7 @@ body {
 /* La sección activa: una pestaña lima levantada que sobresale del menú */
 .menu-flotante > a.activo,
 .menu-flotante .mas > button.activo {
-  height: 82px;
+  height: 80px;
   background: hsl(var(--primary));
   box-shadow: 0 16px 26px -14px hsl(77 70% 40% / 0.85), inset 0 -3px 0 hsl(77 70% 55%);
 }
@@ -408,7 +408,7 @@ body {
   position: fixed;
   z-index: 40;
   right: 14px;
-  top: max(186px, calc(50% - 300px));
+  top: max(176px, calc(50% - 300px));
   width: var(--ancho-dock);
   isolation: isolate;
   /* Plegado, su caja invisible no tapa nada: solo reciben toques la lengüeta y el cuerpo abierto */
