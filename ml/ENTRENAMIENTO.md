@@ -231,6 +231,202 @@ Las fotos de referencia son sólo para el modelo local; no se publican en la app
 
 <!-- estado-fotos:fin -->
 
+<!-- que-probar:inicio -->
+## 6. Qué reconoce hoy y qué recetas sabe (para probar en el celular)
+
+Al 03/11/2026: **117 productos** y **5 platos** por foto, y **38 recetas** por texto.
+
+### Platos por foto
+
+Sácale foto al plato servido. Si está seguro dice «Es…», si duda pregunta «¿Es esto?», y después ofrece sus recetas.
+
+| Plato | Recetas que ofrece |
+|---|---|
+| Salchipapa | Salchipapa, Salchipapa con huevo frito |
+| Pique macho | Pique macho |
+| Silpancho | Silpancho |
+| Majadito | Majadito |
+| Salteña | Salteña de carne, Salteña de pollo |
+
+### Productos por foto
+
+Para probar, mejor los **★ marca exacta**: el modelo vio esa misma marca y envase. «Otra presentación» vio el mismo
+producto en otro tamaño (la bolsa de 1 kg de lo que Abasto vende por quintal). «Foto genérica» vio fotos de
+Wikimedia Commons (carne, verdura, descartables): reconoce el tipo de producto, no la marca.
+
+| Código | Producto | Qué vio el modelo |
+|---|---|---|
+| AB-001 | Arroz Caisy Grano de Oro 1 kg | ★ marca exacta |
+| AB-002 | Azúcar Guabirá 1 kg | ★ marca exacta |
+| AB-003 | Fideo spaghetti Don Vittorio 500 g | ★ marca exacta |
+| AB-004 | Harina Famosa 1 kg | ★ marca exacta |
+| AB-005 | Aceite Fino 900 ml | ★ marca exacta |
+| AB-007 | Sal fina Lobos 1 kg | ★ marca exacta |
+| AB-014 | Coca-Cola 2 L | ★ marca exacta |
+| AB-015 | Agua Vital sin gas 2 L | ★ marca exacta |
+| AB-016 | Simba piña 2 L | ★ marca exacta |
+| AB-037 | Mendocina papaya 3 L | ★ marca exacta |
+| AB-038 | Cerveza Paceña lata 269 ml | ★ marca exacta |
+| AB-017 | Leche PIL fresca 900 ml | ★ marca exacta |
+| AB-019 | Leche PIL enriquecida 800 ml | ★ marca exacta |
+| AB-018 | Yogurt bebible PIL durazno 1 L | ★ marca exacta |
+| AB-039 | Biogurt PIL frutilla 1 L | ★ marca exacta |
+| AB-040 | Mantequilla PIL con sal 200 g | ★ marca exacta |
+| AB-027 | Lavandina Mr. Cloro 1 L | ★ marca exacta |
+| AB-025 | Detergente Skip 700 g | ★ marca exacta |
+| AB-026 | Limpia baños Ola Maximus 890 ml | ★ marca exacta |
+| AB-029 | Papel higiénico Elite Plus · 24 rollos | ★ marca exacta |
+| AB-041 | Papel higiénico Nacional · 12 rollos | ★ marca exacta |
+| AB-031 | Pasta dental Colgate Triple Acción 180 g | ★ marca exacta |
+| AB-030 | Jabón Protex Avena · 3 de 110 g | ★ marca exacta |
+| AB-032 | Shampoo Sedal Zero Caspa 340 ml | ★ marca exacta |
+| AB-020 | Galleta wafer Mabel's chocolate 100 g | ★ marca exacta |
+| AB-021 | Galletas Mabel's Cremositas Max 216 g | ★ marca exacta |
+| AB-023 | Chocolate Para Ti blanco 100 g | ★ marca exacta |
+| AB-103 | Azúcar · quintal 46 kg | ★ marca exacta |
+| AB-104 | Levadura seca instantánea 500 g | otra presentación |
+| AB-105 | Polvo de hornear 1 kg | otra presentación |
+| AB-106 | Manteca vegetal · balde 15 kg | otra presentación |
+| AB-107 | Aceite vegetal · bidón 5 L | otra presentación |
+| AB-108 | Arroz · quintal 46 kg | otra presentación |
+| AB-110 | Fideo tallarín · bolsa 5 kg | otra presentación |
+| AB-111 | Ají colorado molido 1 kg | otra presentación |
+| AB-112 | Comino molido 500 g | otra presentación |
+| AB-113 | Pimienta negra molida 500 g | otra presentación |
+| AB-114 | Orégano seco 500 g | otra presentación |
+| AB-115 | Huevo · maple de 30 | ★ marca exacta |
+| AB-116 | Papa · arroba 11,5 kg | foto genérica |
+| AB-117 | Cebolla · arroba 11,5 kg | otra presentación |
+| AB-118 | Ajo · 1 kg | otra presentación |
+| AB-119 | Bolsas plásticas medianas · paquete de 100 | foto genérica |
+| AB-121 | Servilletas · paquete de 500 | ★ marca exacta |
+| AB-122 | Vasos descartables 250 ml · paquete de 100 | ★ marca exacta |
+| AB-123 | Azúcar · arroba 11,5 kg | ★ marca exacta |
+| AB-124 | Almidón de yuca · arroba 11,5 kg | otra presentación |
+| AB-127 | Pan molido 1 kg | otra presentación |
+| AB-128 | Esencia de vainilla 500 ml | otra presentación |
+| AB-129 | Gelatina sin sabor 500 g | otra presentación |
+| AB-131 | Margarina Regia 1 kg | otra presentación |
+| AB-133 | Maní crudo pelado 1 kg | otra presentación |
+| AB-134 | Arveja seca 1 kg | otra presentación |
+| AB-136 | Urucú (achiote) molido 500 g | foto genérica |
+| AB-137 | Ajo en polvo 500 g | otra presentación |
+| AB-139 | Aceitunas verdes · balde 5 kg | otra presentación |
+| AB-140 | Pasas de uva 1 kg | foto genérica |
+| AB-141 | Mayonesa · balde 3 kg | otra presentación |
+| AB-142 | Salsa de tomate (kétchup) · bidón 3 kg | foto genérica |
+| AB-143 | Mostaza · bidón 3 kg | otra presentación |
+| AB-144 | Queso criollo · 1 kg | otra presentación |
+| AB-145 | Tomate · arroba 11,5 kg | foto genérica |
+| AB-146 | Zanahoria · arroba 11,5 kg | otra presentación |
+| AB-147 | Pimentón · 5 kg | otra presentación |
+| AB-148 | Locoto · 1 kg | otra presentación |
+| AB-149 | Yuca · arroba 11,5 kg | foto genérica |
+| AB-150 | Plátano verde · bolsa de 20 | foto genérica |
+| AB-151 | Plátano maduro · bolsa de 20 | foto genérica |
+| AB-152 | Lechuga · bolsa de 12 | ★ marca exacta |
+| AB-155 | Carne molida de res · 1 kg | otra presentación |
+| AB-156 | Lomo de res · 1 kg | foto genérica |
+| AB-158 | Pollo entero | otra presentación |
+| AB-159 | Patas de pollo · 1 kg | foto genérica |
+| AB-161 | Chorizo · 1 kg | ★ marca exacta |
+| AB-162 | Salchicha Viena · 1 kg | ★ marca exacta |
+| AB-163 | Pan de hamburguesa · bolsa de 50 | ★ marca exacta |
+| AB-164 | Palitos de anticucho · paquete de 100 | foto genérica |
+| AB-165 | Bolsas de papel para pan · paquete de 500 | foto genérica |
+| AB-167 | Canela molida 250 g | otra presentación |
+| AB-168 | Cacao en polvo 500 g | foto genérica |
+| AB-169 | Coco rallado 500 g | otra presentación |
+| AB-170 | Azúcar impalpable 1 kg | foto genérica |
+| AB-171 | Leche condensada 395 g | ★ marca exacta |
+| AB-172 | Leche en polvo 400 g | otra presentación |
+| AB-173 | Crema de leche 1 L | otra presentación |
+| AB-174 | Dulce de leche · balde 5 kg | otra presentación |
+| AB-175 | Mantequilla sin sal · 1 kg | otra presentación |
+| AB-177 | Frejol rojo 1 kg | foto genérica |
+| AB-178 | Lenteja 1 kg | otra presentación |
+| AB-180 | Quinua real 1 kg | otra presentación |
+| AB-181 | Avena en hojuelas 1 kg | otra presentación |
+| AB-182 | Fideo macarrón · bolsa 5 kg | foto genérica |
+| AB-183 | Laurel seco 100 g | otra presentación |
+| AB-184 | Salsa de soya · botella 1 L | ★ marca exacta |
+| AB-185 | Caldo de gallina en cubitos · caja de 100 | otra presentación |
+| AB-186 | Sal gruesa parrillera 1 kg | otra presentación |
+| AB-187 | Mermelada de frutilla 500 g | ★ marca exacta |
+| AB-188 | Café molido 500 g | ★ marca exacta |
+| AB-189 | Té en bolsitas · caja de 100 | otra presentación |
+| AB-190 | Atún en lata 170 g | foto genérica |
+| AB-191 | Sardina en lata 425 g | ★ marca exacta |
+| AB-192 | Limón · bolsa 5 kg | foto genérica |
+| AB-193 | Choclo · bolsa de 12 | ★ marca exacta |
+| AB-194 | Repollo | otra presentación |
+| AB-195 | Pechuga de pollo · 1 kg | foto genérica |
+| AB-196 | Alitas de pollo · 1 kg | foto genérica |
+| AB-198 | Costilla de cerdo · 1 kg | otra presentación |
+| AB-199 | Papas prefritas congeladas · bolsa 2,5 kg | ★ marca exacta |
+| AB-200 | Carbón vegetal · bolsa 5 kg | otra presentación |
+| AB-201 | Guantes descartables · caja de 100 | otra presentación |
+| AB-203 | Cajas para torta · paquete de 25 | foto genérica |
+| AB-205 | Cucharas descartables · paquete de 100 | otra presentación |
+| AB-206 | Papel aluminio · rollo de 30 m | otra presentación |
+| AB-208 | Lavavajilla líquido 1 L | otra presentación |
+| AB-209 | Esponja de cocina · paquete de 6 | otra presentación |
+| AB-210 | Fósforos · paquete de 10 | otra presentación |
+| AB-211 | Velas · paquete de 6 | otra presentación |
+
+Sin foto real todavía (21): Harina de trigo · quintal 46 kg; Harina de trigo · arroba 11,5 kg; Arroz · arroba 11,5 kg; Envase de plastoformo con tapa · paquete de 100; Almidón de yuca 1 kg; Fécula de maíz (maicena) 1 kg; Manteca Karina 1 kg; Aceite vegetal · bidón 20 L; Sal fina · bolsa 25 kg; Vinagre · bidón 5 L; Charque de res · 1 kg; Carne de res para guiso · 1 kg; Corazón de res · 1 kg; Gallina criolla; Harina de maíz 1 kg; Queso menonita · 1 kg; Mote de maíz pelado 1 kg; Costilla de res · 1 kg; Papel para hornear · paquete de 100; Cajas para pollo · paquete de 100; Jabón en barra para ropa · paquete de 6.
+
+### Recetas (escribe en «Pídelo con tus palabras»)
+
+Escribe el nombre y cuántas, por ejemplo «quiero hacer 300 salteñas» o «picante de pollo para 10». El asistente
+escala la receta y arma el carrito con los productos del catálogo. Las de Mi negocio tienen fuentes; las demás son
+estimadas.
+
+| Receta | Rinde | Cómo pedirla | De dónde |
+|---|---|---|---|
+| Salteña de carne | 50 salteñas | «salteñas» | Mi negocio (Andrés) |
+| Salteña de pollo | 50 salteñas | «salteñas» | Mi negocio (Andrés) |
+| Empanada de queso | 50 empanadas | «empanadas» | Mi negocio (Andrés) |
+| Pan batido | 300 panes | «panes batido» | Mi negocio (Andrés) |
+| Queque | 40 porciones | «queque» | Mi negocio (Andrés) |
+| Cuñapé | 50 cuñapés | «cuñapés» | Mi negocio (Andrés) |
+| Sonso | 20 porciones | «sonso» | Mi negocio (Andrés) |
+| Masaco de plátano | 20 porciones | «porciones» | Mi negocio (Andrés) |
+| Majadito | 20 platos | «majadito» | Mi negocio (Andrés) |
+| Sopa de maní | 20 platos | «platos» | Mi negocio (Andrés) |
+| Locro de gallina | 20 platos | «platos» | Mi negocio (Andrés) |
+| Keperí | 20 platos | «keperí» | Mi negocio (Andrés) |
+| Rapi al jugo | 20 platos | «rapi al jugo» | Mi negocio (Andrés) |
+| Pique macho | 20 platos | «pique macho» | Mi negocio (Andrés) |
+| Pollo frito | 40 porciones | «pollo frito» | Mi negocio (Andrés) |
+| Hamburguesa | 50 hamburguesas | «hamburguesas» | Mi negocio (Andrés) |
+| Salchipapa | 20 porciones | «salchipapa» | Mi negocio (Andrés) |
+| Anticucho | 30 palitos | «anticucho» | Mi negocio (Andrés) |
+| Asadito con yuca | 40 asaditos | «asaditos con yuca» | Mi negocio (Andrés) |
+| Pacumuto | 20 porciones | «pacumuto» | Mi negocio (Andrés) |
+| Pan de batalla | 100 panes | «marraqueta» | IA (estimada) |
+| Torta de vainilla con relleno | 20 porciones | «torta de vainilla» | IA (estimada) |
+| Almuerzo de pensión (sopa y segundo de pollo con arroz) | 50 platos | «platos» | IA (estimada) |
+| Salchipapa con huevo frito | 4 porciones | «salchipapa con huevo» | IA (estimada) |
+| Silpancho | 4 porciones | «silpanchos» | IA (estimada) |
+| Picante de pollo | 10 platos | «picante» | IA (estimada) |
+| Fricasé | 8 platos | «fricasé de cerdo» | IA (estimada) |
+| Chairo | 10 platos | «sopa de chairo» | IA (estimada) |
+| Sopa de fideo | 10 platos | «sopa de fideos» | IA (estimada) |
+| Sopa de quinua | 10 platos | «sopa de quinoa» | IA (estimada) |
+| Sopa de lenteja | 10 platos | «sopa de lentejas» | IA (estimada) |
+| Arroz con leche | 20 vasos | «arroz con leche» | IA (estimada) |
+| Tucumanas | 40 tucumanas | «tucumanas» | IA (estimada) |
+| Buñuelos | 50 buñuelos | «buñuelos» | IA (estimada) |
+| Milanesa de pollo | 10 platos | «milanesa de pollo» | IA (estimada) |
+| Falso conejo | 10 platos | «falso conejo» | IA (estimada) |
+| Lomo montado | 10 platos | «lomo montado» | IA (estimada) |
+| Humintas | 24 humintas | «humitas» | IA (estimada) |
+
+Generada el 03/11 desde `apps/app/assets/modelos/` y las recetas de `apps/app/src/ia/entender/recetas.ts`: si cambian, hay que actualizarla.
+
+<!-- que-probar:fin -->
+
 ## Historial
 
 | Fecha | Qué | Datos | Resultado |
