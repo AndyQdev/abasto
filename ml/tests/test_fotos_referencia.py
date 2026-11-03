@@ -126,8 +126,15 @@ def test_leer_catalogo(tmp_path) -> None:
     assert productos[1].nombre == "Galleta wafer Mabel's chocolate 100 g"
 
 
-def test_catalogo_real_tiene_49_productos() -> None:
-    assert len(leer_catalogo()) == 49
+def test_catalogo_real_tiene_138_productos() -> None:
+    assert len(leer_catalogo()) == 138
+
+
+def test_las_ilustraciones_3d_no_cuentan_como_foto_real() -> None:
+    con_foto = fr.codigos_con_foto()
+    assert len(con_foto) == 27
+    assert "AB-001" in con_foto
+    assert "AB-101" not in con_foto  # harina por quintal: ilustración genérica
 
 
 def test_lee_sitemap_de_productos() -> None:

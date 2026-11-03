@@ -27,14 +27,34 @@ from abasto_ml.vision import vectores
 from abasto_ml.vision.entrenar import ML, SALIDA_POR_DEFECTO, TAMANO, a_tflite, construir
 
 FOTOS_DEL_CATALOGO = ML.parent / "services" / "catalogo" / "database" / "fotos-abasto"
-NOMBRE_DEL_MODELO = "catalogo-imagenet-v1"
+FOTOS_DE_REFERENCIA = ML / "datos" / "fotos-referencia"
+NOMBRE_DEL_MODELO = "catalogo-imagenet-v2"
 EXTENSIONES = {".webp", ".jpg", ".jpeg", ".png"}
 RECORTES = (1.0, 0.85, 0.7)
 
 
-def leer_fotos(carpeta: Path) -> dict[str, Path]:
-    """Código de producto → foto. El código es el nombre del archivo."""
-    return {f.stem: f for f in sorted(carpeta.iterdir()) if f.is_file() and f.suffix.lower() in EXTENSIONES}
+def leer_fotos(carpeta: Path, referencia: Path | None = FOTOS_DE_REFERENCIA) -> dict[str, list[Path]]:
+    """Código de producto → sus fotos reales.
+
+    Del catálogo solo cuentan las fotos de tienda (`FOTOS_DE_TIENDA`): las ilustraciones 3D genéricas no le enseñan
+    fotos reales al modelo. Se suman las fotos de referencia de tiendas bolivianas (`fotos_referencia.py`).
+    """
+    from abasto_ml.vision.fotos_referencia import FOTOS_DE_TIENDA
+
+    fotos: dict[str, list[Path]] = {}
+    for f in sorted(carpeta.iterdir()):
+        if (
+            f.is_file()
+            and f.suffix.lower() in EXTENSIONES
+            and (carpeta != FOTOS_DEL_CATALOGO or f.stem in FOTOS_DE_TIENDA)
+        ):
+            fotos.setdefault(f.stem, []).append(f)
+    if referencia is not None and referencia.is_dir():
+        for sub in sorted(d for d in referencia.iterdir() if d.is_dir()):
+            fotos.setdefault(sub.name, []).extend(
+                f for f in sorted(sub.iterdir()) if f.is_file() and f.suffix.lower() in EXTENSIONES
+            )
+    return {c: fs for c, fs in sorted(fotos.items()) if fs}
 
 
 def a_entrada(imagen) -> np.ndarray:
@@ -80,7 +100,8 @@ def entrenar_clasificador(vectores_de, imagenes, codigos, rng, por_producto: int
 
     x, y = [], []
     for i, codigo in enumerate(codigos):
-        x.append(vectores_de([como_foto_de_celular(imagenes[codigo], rng) for _ in range(por_producto)]))
+        fotos = imagenes[codigo]
+        x.append(vectores_de([como_foto_de_celular(fotos[k % len(fotos)], rng) for k in range(por_producto)]))
         y += [i] * por_producto
     x, y = np.concatenate(x), np.array(y)
     orden = rng.permutation(
@@ -121,8 +142,11 @@ def generar(fotos: Path, salida: Path, pruebas_por_producto: int = 6, semilla: i
     def vectores_de(lote: list[np.ndarray]) -> np.ndarray:
         return salidas_de(lote)[0]
 
-    imagenes = {c: Image.open(f) for c, f in archivos.items()}
-    por_codigo = {c: vectores.normalizar(vectores_de(vistas(im)).mean(axis=0)) for c, im in imagenes.items()}
+    imagenes = {c: [Image.open(f).convert("RGB") for f in fs] for c, fs in archivos.items()}
+    por_codigo = {
+        c: vectores.normalizar(vectores_de([v for im in ims for v in vistas(im)]).mean(axis=0))
+        for c, ims in imagenes.items()
+    }
 
     rng = np.random.default_rng(semilla)
     pesos, precision_validacion = entrenar_clasificador(vectores_de, imagenes, codigos, rng)
@@ -142,7 +166,10 @@ def generar(fotos: Path, salida: Path, pruebas_por_producto: int = 6, semilla: i
     aciertos_3 = total = 0
     for i, codigo in enumerate(codigos):
         vecs, probs = salidas_de(
-            [como_foto_de_celular(imagenes[codigo], rng) for _ in range(pruebas_por_producto)]
+            [
+                como_foto_de_celular(imagenes[codigo][k % len(imagenes[codigo])], rng)
+                for k in range(pruebas_por_producto)
+            ]
         )
         parecidos = np.clip(vectores.normalizar(vecs) @ matriz.T, 0, 1)
         juntos = mezclar(parecidos, probs)
@@ -155,6 +182,7 @@ def generar(fotos: Path, salida: Path, pruebas_por_producto: int = 6, semilla: i
     metricas = {
         "modelo": NOMBRE_DEL_MODELO,
         "productos": len(codigos),
+        "fotos_reales": sum(len(fs) for fs in archivos.values()),
         "precision_validacion_clasificador": round(precision_validacion, 3),
         "fotos_de_prueba": total,
         "top1_vector": round(aciertos["vector"] / total, 3),

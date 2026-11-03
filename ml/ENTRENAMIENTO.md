@@ -11,8 +11,8 @@ sin internet).
 
 | Qué reconoce | Archivo en la app | Cómo se generó | Datos | Resultado |
 |---|---|---|---|---|
-| **27 productos** del catálogo de Abasto | `vectores.json`, `etiquetas.json` | `ml/src/abasto_ml/vision/catalogo.py` | 1 foto oficial por producto (`services/catalogo/database/fotos-abasto/`) + 6 vistas por foto (recortes y menos luz) | top-1 162/162 con fotos de celular **simuladas** (optimista: salen de la misma foto) |
-| Clasificador de los 27 productos (deep learning, TensorFlow) | dentro de `productos.tflite` | `catalogo.py` › `entrenar_clasificador` (transfer learning: base congelada, capa densa entrenada) | 40 fotos de celular simuladas por producto (giro, recorte, luz, desenfoque) | validación 100 % (mismo aviso) |
+| **95 de los 138 productos** del catálogo de Abasto | `vectores.json`, `etiquetas.json` | `ml/src/abasto_ml/vision/catalogo.py` | 155 fotos reales: las 27 fotos de tienda del catálogo + fotos de referencia (§5); las ilustraciones 3D genéricas **no** se usan. 6 vistas por foto | top-1 570/570 con fotos de celular **simuladas** (optimista: salen de las mismas fotos) |
+| Clasificador de los 95 productos (deep learning, TensorFlow) | dentro de `productos.tflite` | `catalogo.py` › `entrenar_clasificador` (transfer learning: base congelada, capa densa entrenada) | 40 fotos de celular simuladas por producto (giro, recorte, luz, desenfoque) | validación 100 % (mismo aviso) |
 | **5 platos** bolivianos | `platos.json`, `metricas-platos.json` | `ml/src/abasto_ml/vision/platos.py` (vector promedio por plato) | **Wikimedia Commons**, ver §2 | **top-1 12/15 = 80 %** con fotos reales que no se usaron |
 
 Detalle de los platos (02/11/2026):
@@ -73,7 +73,7 @@ Generado por `ml/src/abasto_ml/vision/fotos_referencia.py` el 2026-11-02.
 | Sitio | Resultado |
 | --- | --- |
 | Fidalga | 868 productos con imagen |
-| Amarket | 11922 productos con imagen |
+| Amarket | 11918 productos con imagen |
 | Hipermaxi | no se pudo usar: HTTP Error 404: Not Found (la home redirige a validate.perfdrive.com (Radware)) |
 | PIL | 0 fotos de producto (sin banners); sólo publica banners de categoría, no fotos de envase |
 | Guabirá | 21 presentaciones con imagen |
@@ -113,29 +113,121 @@ Generado por `ml/src/abasto_ml/vision/fotos_referencia.py` el 2026-11-02.
 | AB-101 | Harina de trigo · quintal 46 kg | no | 0 (1 dudosa) | dudoso |
 | AB-102 | Harina de trigo · arroba 11,5 kg | no | 0 (1 dudosa) | dudoso |
 | AB-103 | Azúcar · quintal 46 kg | no | 1 | listo para indexar |
-| AB-104 | Levadura seca instantánea 500 g | no | 0 (1 dudosa) | dudoso |
-| AB-105 | Polvo de hornear 1 kg | no | 0 (1 dudosa) | dudoso |
-| AB-106 | Manteca vegetal · balde 15 kg | no | 0 (1 dudosa) | dudoso |
-| AB-107 | Aceite vegetal · bidón 5 L | no | 0 (1 dudosa) | dudoso |
-| AB-108 | Arroz · quintal 46 kg | no | 0 (1 dudosa) | dudoso |
+| AB-104 | Levadura seca instantánea 500 g | no | 1 | listo para indexar |
+| AB-105 | Polvo de hornear 1 kg | no | 1 | listo para indexar |
+| AB-106 | Manteca vegetal · balde 15 kg | no | 1 | listo para indexar |
+| AB-107 | Aceite vegetal · bidón 5 L | no | 1 | listo para indexar |
+| AB-108 | Arroz · quintal 46 kg | no | 1 | listo para indexar |
 | AB-109 | Arroz · arroba 11,5 kg | no | 0 (1 dudosa) | dudoso |
-| AB-110 | Fideo tallarín · bolsa 5 kg | no | 0 (1 dudosa) | dudoso |
-| AB-111 | Ají colorado molido 1 kg | no | 0 (1 dudosa) | dudoso |
-| AB-112 | Comino molido 500 g | no | 0 (1 dudosa) | dudoso |
-| AB-113 | Pimienta negra molida 500 g | no | 0 (1 dudosa) | dudoso |
-| AB-114 | Orégano seco 500 g | no | 0 (1 dudosa) | dudoso |
+| AB-110 | Fideo tallarín · bolsa 5 kg | no | 1 | listo para indexar |
+| AB-111 | Ají colorado molido 1 kg | no | 1 | listo para indexar |
+| AB-112 | Comino molido 500 g | no | 1 | listo para indexar |
+| AB-113 | Pimienta negra molida 500 g | no | 1 | listo para indexar |
+| AB-114 | Orégano seco 500 g | no | 1 | listo para indexar |
 | AB-115 | Huevo · maple de 30 | no | 3 | listo para indexar |
 | AB-116 | Papa · arroba 11,5 kg | no | 0 (1 dudosa) | dudoso |
-| AB-117 | Cebolla · arroba 11,5 kg | no | 0 (1 dudosa) | dudoso |
-| AB-118 | Ajo · 1 kg | no | 0 (1 dudosa) | dudoso |
+| AB-117 | Cebolla · arroba 11,5 kg | no | 1 | listo para indexar |
+| AB-118 | Ajo · 1 kg | no | 1 | listo para indexar |
 | AB-119 | Bolsas plásticas medianas · paquete de 100 | no | 0 | necesita foto propia |
 | AB-120 | Envase de plastoformo con tapa · paquete de 100 | no | 0 | necesita foto propia |
 | AB-121 | Servilletas · paquete de 500 | no | 3 | listo para indexar |
 | AB-122 | Vasos descartables 250 ml · paquete de 100 | no | 1 | listo para indexar |
+| AB-123 | Azúcar · arroba 11,5 kg | no | 1 | listo para indexar |
+| AB-124 | Almidón de yuca · arroba 11,5 kg | no | 1 | listo para indexar |
+| AB-125 | Almidón de yuca 1 kg | no | 0 (1 dudosa) | dudoso |
+| AB-126 | Fécula de maíz (maicena) 1 kg | no | 0 (1 dudosa) | dudoso |
+| AB-127 | Pan molido 1 kg | no | 1 | listo para indexar |
+| AB-128 | Esencia de vainilla 500 ml | no | 1 | listo para indexar |
+| AB-129 | Gelatina sin sabor 500 g | no | 1 | listo para indexar |
+| AB-130 | Manteca Karina 1 kg | no | 0 (1 dudosa) | dudoso |
+| AB-131 | Margarina Regia 1 kg | no | 1 | listo para indexar |
+| AB-132 | Aceite vegetal · bidón 20 L | no | 0 (1 dudosa) | dudoso |
+| AB-133 | Maní crudo pelado 1 kg | no | 1 | listo para indexar |
+| AB-134 | Arveja seca 1 kg | no | 1 | listo para indexar |
+| AB-135 | Sal fina · bolsa 25 kg | no | 0 (1 dudosa) | dudoso |
+| AB-136 | Urucú (achiote) molido 500 g | no | 0 | necesita foto propia |
+| AB-137 | Ajo en polvo 500 g | no | 1 | listo para indexar |
+| AB-138 | Vinagre · bidón 5 L | no | 0 (1 dudosa) | dudoso |
+| AB-139 | Aceitunas verdes · balde 5 kg | no | 1 | listo para indexar |
+| AB-140 | Pasas de uva 1 kg | no | 0 (1 dudosa) | dudoso |
+| AB-141 | Mayonesa · balde 3 kg | no | 1 | listo para indexar |
+| AB-142 | Salsa de tomate (kétchup) · bidón 3 kg | no | 0 (1 dudosa) | dudoso |
+| AB-143 | Mostaza · bidón 3 kg | no | 1 | listo para indexar |
+| AB-144 | Queso criollo · 1 kg | no | 1 | listo para indexar |
+| AB-145 | Tomate · arroba 11,5 kg | no | 0 (1 dudosa) | dudoso |
+| AB-146 | Zanahoria · arroba 11,5 kg | no | 1 | listo para indexar |
+| AB-147 | Pimentón · 5 kg | no | 1 | listo para indexar |
+| AB-148 | Locoto · 1 kg | no | 1 | listo para indexar |
+| AB-149 | Yuca · arroba 11,5 kg | no | 0 (1 dudosa) | dudoso |
+| AB-150 | Plátano verde · bolsa de 20 | no | 0 (1 dudosa) | dudoso |
+| AB-151 | Plátano maduro · bolsa de 20 | no | 0 (1 dudosa) | dudoso |
+| AB-152 | Lechuga · bolsa de 12 | no | 1 | listo para indexar |
+| AB-153 | Charque de res · 1 kg | no | 0 (1 dudosa) | dudoso |
+| AB-154 | Carne de res para guiso · 1 kg | no | 0 (1 dudosa) | dudoso |
+| AB-155 | Carne molida de res · 1 kg | no | 1 | listo para indexar |
+| AB-156 | Lomo de res · 1 kg | no | 0 (1 dudosa) | dudoso |
+| AB-157 | Corazón de res · 1 kg | no | 0 (1 dudosa) | dudoso |
+| AB-158 | Pollo entero | no | 1 | listo para indexar |
+| AB-159 | Patas de pollo · 1 kg | no | 0 (1 dudosa) | dudoso |
+| AB-160 | Gallina criolla | no | 0 (1 dudosa) | dudoso |
+| AB-161 | Chorizo · 1 kg | no | 3 | listo para indexar |
+| AB-162 | Salchicha Viena · 1 kg | no | 3 | listo para indexar |
+| AB-163 | Pan de hamburguesa · bolsa de 50 | no | 1 | listo para indexar |
+| AB-164 | Palitos de anticucho · paquete de 100 | no | 0 (1 dudosa) | dudoso |
+| AB-165 | Bolsas de papel para pan · paquete de 500 | no | 0 (1 dudosa) | dudoso |
+| AB-166 | Harina de maíz 1 kg | no | 0 (1 dudosa) | dudoso |
+| AB-167 | Canela molida 250 g | no | 1 | listo para indexar |
+| AB-168 | Cacao en polvo 500 g | no | 0 (1 dudosa) | dudoso |
+| AB-169 | Coco rallado 500 g | no | 1 | listo para indexar |
+| AB-170 | Azúcar impalpable 1 kg | no | 0 (1 dudosa) | dudoso |
+| AB-171 | Leche condensada 395 g | no | 2 | listo para indexar |
+| AB-172 | Leche en polvo 400 g | no | 1 | listo para indexar |
+| AB-173 | Crema de leche 1 L | no | 1 | listo para indexar |
+| AB-174 | Dulce de leche · balde 5 kg | no | 1 | listo para indexar |
+| AB-175 | Mantequilla sin sal · 1 kg | no | 1 | listo para indexar |
+| AB-176 | Queso menonita · 1 kg | no | 0 (1 dudosa) | dudoso |
+| AB-177 | Frejol rojo 1 kg | no | 0 (1 dudosa) | dudoso |
+| AB-178 | Lenteja 1 kg | no | 1 | listo para indexar |
+| AB-179 | Mote de maíz pelado 1 kg | no | 0 | necesita foto propia |
+| AB-180 | Quinua real 1 kg | no | 1 | listo para indexar |
+| AB-181 | Avena en hojuelas 1 kg | no | 1 | listo para indexar |
+| AB-182 | Fideo macarrón · bolsa 5 kg | no | 0 (1 dudosa) | dudoso |
+| AB-183 | Laurel seco 100 g | no | 1 | listo para indexar |
+| AB-184 | Salsa de soya · botella 1 L | no | 3 | listo para indexar |
+| AB-185 | Caldo de gallina en cubitos · caja de 100 | no | 1 | listo para indexar |
+| AB-186 | Sal gruesa parrillera 1 kg | no | 1 | listo para indexar |
+| AB-187 | Mermelada de frutilla 500 g | no | 3 | listo para indexar |
+| AB-188 | Café molido 500 g | no | 3 | listo para indexar |
+| AB-189 | Té en bolsitas · caja de 100 | no | 1 | listo para indexar |
+| AB-190 | Atún en lata 170 g | no | 0 (1 dudosa) | dudoso |
+| AB-191 | Sardina en lata 425 g | no | 1 | listo para indexar |
+| AB-192 | Limón · bolsa 5 kg | no | 0 (1 dudosa) | dudoso |
+| AB-193 | Choclo · bolsa de 12 | no | 1 | listo para indexar |
+| AB-194 | Repollo | no | 1 | listo para indexar |
+| AB-195 | Pechuga de pollo · 1 kg | no | 0 (1 dudosa) | dudoso |
+| AB-196 | Alitas de pollo · 1 kg | no | 0 | necesita foto propia |
+| AB-197 | Costilla de res · 1 kg | no | 0 (1 dudosa) | dudoso |
+| AB-198 | Costilla de cerdo · 1 kg | no | 1 | listo para indexar |
+| AB-199 | Papas prefritas congeladas · bolsa 2,5 kg | no | 1 | listo para indexar |
+| AB-200 | Carbón vegetal · bolsa 5 kg | no | 1 | listo para indexar |
+| AB-201 | Guantes descartables · caja de 100 | no | 1 | listo para indexar |
+| AB-202 | Papel para hornear · paquete de 100 | no | 0 (1 dudosa) | dudoso |
+| AB-203 | Cajas para torta · paquete de 25 | no | 0 | necesita foto propia |
+| AB-204 | Cajas para pollo · paquete de 100 | no | 0 | necesita foto propia |
+| AB-205 | Cucharas descartables · paquete de 100 | no | 1 | listo para indexar |
+| AB-206 | Papel aluminio · rollo de 30 m | no | 1 | listo para indexar |
+| AB-207 | Jabón en barra para ropa · paquete de 6 | no | 0 (1 dudosa) | dudoso |
+| AB-208 | Lavavajilla líquido 1 L | no | 1 | listo para indexar |
+| AB-209 | Esponja de cocina · paquete de 6 | no | 1 | listo para indexar |
+| AB-210 | Fósforos · paquete de 10 | no | 1 | listo para indexar |
+| AB-211 | Velas · paquete de 6 | no | 1 | listo para indexar |
 
-Las fotos dudosas no se descargan: el enlace queda en `ml/fotos-referencia.csv`.
+Las fotos dudosas no se descargan: el enlace queda en `ml/fotos-referencia.csv`. Las revisadas a mano que son el
+mismo producto en otra presentación o marca (`PARECIDAS_ACEPTADAS`) se descargan como «parecida».
+Las ilustraciones 3D del catálogo no cuentan como foto: son genéricas y no le enseñan fotos reales al modelo.
 Los productos dudosos sin foto de catálogo siguen necesitando foto propia o del proveedor para indexarse.
 Las fotos de referencia son sólo para el modelo local; no se publican en la app.
+
 <!-- estado-fotos:fin -->
 
 ## Historial
@@ -145,3 +237,4 @@ Las fotos de referencia son sólo para el modelo local; no se publican en la app
 | 31/10/2026 | Vectores y clasificador de 27 productos | Fotos del catálogo + simuladas | top-1 162/162 (simuladas) |
 | 02/11/2026 | Fotos de referencia de los 49 productos de Abasto (todavía sin indexar) | Fidalga, Amarket y Guabirá | 31 listos para indexar, 16 dudosos, 2 necesitan foto propia (§5) |
 | 02/11/2026 | Vectores de 5 platos bolivianos | 78 fotos de Wikimedia Commons (15 aparte para prueba) | top-1 12/15 = 80 % |
+| 02/11/2026 | Vectores y clasificador de 95 de los 138 productos (`catalogo-imagenet-v2`) | 27 fotos de tienda + 128 de referencia (76 exactas, 52 parecidas revisadas a mano) | top-1 570/570 (simuladas); falta medir con fotos de celular reales |

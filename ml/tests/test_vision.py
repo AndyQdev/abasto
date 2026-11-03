@@ -75,7 +75,26 @@ def test_el_catalogo_toma_el_codigo_del_nombre_de_cada_foto(tmp_path):
 
     for nombre in ["AB-002.webp", "AB-001.JPG", "LEEME.md", "notas.txt"]:
         (tmp_path / nombre).write_bytes(b"")
-    assert list(catalogo.leer_fotos(tmp_path)) == ["AB-001", "AB-002"]
+    assert list(catalogo.leer_fotos(tmp_path, referencia=None)) == ["AB-001", "AB-002"]
+
+
+def test_el_catalogo_suma_fotos_de_referencia_y_salta_las_ilustraciones(tmp_path, monkeypatch):
+    from abasto_ml.vision import catalogo
+
+    tienda = tmp_path / "fotos-abasto"
+    tienda.mkdir()
+    for nombre in ["AB-001.webp", "AB-101.webp"]:  # AB-101 es una ilustración 3D genérica
+        (tienda / nombre).write_bytes(b"")
+    monkeypatch.setattr(catalogo, "FOTOS_DEL_CATALOGO", tienda)
+    ref = tmp_path / "referencia"
+    for archivo in ["AB-001/a.jpg", "AB-101/b.jpg", "AB-101/c.png"]:
+        (ref / archivo).parent.mkdir(parents=True, exist_ok=True)
+        (ref / archivo).write_bytes(b"")
+    fotos = catalogo.leer_fotos(tienda, referencia=ref)
+    assert {c: [f.name for f in fs] for c, fs in fotos.items()} == {
+        "AB-001": ["AB-001.webp", "a.jpg"],
+        "AB-101": ["b.jpg", "c.png"],
+    }
 
 
 def test_las_vistas_de_una_foto_son_del_tamano_del_modelo_y_la_oscura_tiene_menos_luz():

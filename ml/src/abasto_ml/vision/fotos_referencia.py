@@ -53,6 +53,25 @@ MAX_FOTOS = 3
 ESPERA = 1.1
 MAX_BYTES = 8 * 1024 * 1024
 
+# Las 27 fotos del catálogo que son fotos reales de Fidalga y Amarket (commit f28ffa0). Desde el 02/11 el resto de
+# `fotos-abasto` son ilustraciones 3D genéricas (Andrés): sirven en la app, pero no para enseñarle fotos reales al modelo.
+FOTOS_DE_TIENDA = frozenset(
+    f"AB-{n:03d}"
+    for n in (1, 2, 3, 4, 5, 7, 14, 15, 16, 17, 18, 19, 20, 21, 23, 25, 26, 27, 29, 30, 31, 32, 37, 38, 39, 40, 41)
+)
+
+# Coincidencias «dudosas» revisadas a mano (02/11): es el mismo producto en otra presentación o marca (p. ej. la
+# bolsa de 1 kg de la harina que Abasto vende por quintal). Se ven igual en una foto, así que se descargan como
+# «parecida». Las que eran otra cosa (talco por maicena, gelatina por limón, comida de gato por carne) quedan afuera.
+PARECIDAS_ACEPTADAS = frozenset(
+    f"AB-{n}"
+    for n in (
+        101, 102, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 117, 118, 124, 125, 127, 128, 129,
+        130, 131, 132, 133, 134, 135, 137, 139, 140, 141, 143, 144, 146, 147, 148, 155, 158, 167, 169, 172,
+        173, 174, 175, 178, 180, 181, 183, 185, 186, 189, 194, 198, 200, 201, 205, 206, 208, 209, 210, 211,
+    )
+)
+
 NS = {
     "s": "http://www.sitemaps.org/schemas/sitemap/0.9",
     "image": "http://www.google.com/schemas/sitemap-image/1.1",
@@ -319,9 +338,10 @@ def leer_catalogo(ruta: Path = CATALOGO) -> list[Producto]:
 
 
 def codigos_con_foto(carpeta: Path = FOTOS_CATALOGO) -> set[str]:
+    """Productos cuya foto del catálogo es una foto real de tienda (las demás son ilustraciones 3D genéricas)."""
     if not carpeta.is_dir():
         return set()
-    return {ruta.stem for ruta in carpeta.glob("AB-*") if ruta.is_file()}
+    return {ruta.stem for ruta in carpeta.glob("AB-*") if ruta.is_file() and ruta.stem in FOTOS_DE_TIENDA}
 
 
 class Ritmo:
@@ -659,7 +679,10 @@ def descargar(
     filas: list[Fila] = []
     fallidas: list[tuple[Plan, Preparada]] = []
     for plan in planes:
-        for preparada in plan.exactas:
+        por_bajar = [(p, "exacta") for p in plan.exactas]
+        if not por_bajar and plan.dudosa is not None and plan.producto.codigo in PARECIDAS_ACEPTADAS:
+            por_bajar = [(plan.dudosa, "parecida")]
+        for preparada, coincidencia in por_bajar:
             entrada = preparada.entrada
             try:
                 datos = pedir(entrada.url_imagen, ritmo, robots)
@@ -682,7 +705,7 @@ def descargar(
                     entrada.fuente,
                     entrada.url_producto,
                     entrada.url_imagen,
-                    "exacta",
+                    coincidencia,
                     fecha,
                 )
             )
@@ -739,7 +762,7 @@ def escribir_estado(
     ]
     for plan in planes:
         codigo = plan.producto.codigo
-        exactas = sum(1 for fila in por_codigo.get(codigo, []) if fila.coincidencia == "exacta")
+        exactas = sum(1 for fila in por_codigo.get(codigo, []) if fila.coincidencia in ("exacta", "parecida"))
         dudosa = plan.dudosa is not None and codigo not in con_foto
         if codigo in con_foto or exactas:
             estado = "listo para indexar"
@@ -757,7 +780,9 @@ def escribir_estado(
         )
     lineas += [
         "",
-        "Las fotos dudosas no se descargan: el enlace queda en `ml/fotos-referencia.csv`.",
+        "Las fotos dudosas no se descargan: el enlace queda en `ml/fotos-referencia.csv`. Las revisadas a mano que son el",
+        "mismo producto en otra presentación o marca (`PARECIDAS_ACEPTADAS`) se descargan como «parecida».",
+        "Las ilustraciones 3D del catálogo no cuentan como foto: son genéricas y no le enseñan fotos reales al modelo.",
         "Los productos dudosos sin foto de catálogo siguen necesitando foto propia o del proveedor para indexarse.",
         "Las fotos de referencia son sólo para el modelo local; no se publican en la app.",
         "",
@@ -778,8 +803,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     productos = leer_catalogo()
-    if len(productos) != 49:
-        print(f"aviso: el catálogo tiene {len(productos)} productos, se esperaban 49")
+    print(f"catálogo: {len(productos)} productos, {len(codigos_con_foto())} con foto real de tienda")
     entradas, notas, ritmo, robots = recolectar()
     for nombre, nota in notas:
         print(f"{nombre}: {nota}")
@@ -819,7 +843,8 @@ def main(argv: list[str] | None = None) -> int:
     limpiar_huerfanos(filas)
     cuenta = escribir_estado(planes, filas, notas, fecha)
     exactas = sum(1 for f in filas if f.coincidencia == "exacta")
-    print(f"fotos exactas: {exactas} · enlaces dudosos: {len(filas) - exactas}")
+    parecidas = sum(1 for f in filas if f.coincidencia == "parecida")
+    print(f"fotos exactas: {exactas} · parecidas: {parecidas} · enlaces dudosos: {len(filas) - exactas - parecidas}")
     print(
         "estado: "
         f"{cuenta['listo para indexar']} listos · "
