@@ -181,12 +181,12 @@ export class DecidirPropuesta {
     private readonly reloj: () => Date = () => new Date(),
   ) {}
 
-  async ejecutar(orgId: string, id: string, aprobar: boolean, usuarioId: string) {
+  async ejecutar(orgId: string, id: string, aprobar: boolean, usuarioId: string, sesion?: string) {
     const propuesta = await this.propuestas.buscar(orgId, id);
     if (!propuesta) throw new Error(`No existe la propuesta ${id}`);
     const decidida = decidir(propuesta, aprobar, usuarioId, this.reloj());
     await this.propuestas.guardar(decidida);
-    const ejecucion = aprobar ? await this.ejecutor.ejecutar(decidida) : undefined;
+    const ejecucion = aprobar ? await this.ejecutor.ejecutar(decidida, sesion) : undefined;
     return { propuesta: decidida, ejecucion };
   }
 }

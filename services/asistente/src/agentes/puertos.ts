@@ -6,9 +6,19 @@ export interface RepositorioDePropuestas {
   pendientes(orgId: string): Promise<Propuesta[]>;
 }
 
-/** Ejecuta una acción ya aprobada. En Abasto lo hace n8n (por ejemplo, mandar el WhatsApp). */
+/** Lo que pasó al ejecutar una acción aprobada; `enlace` es, por ejemplo, el WhatsApp listo para mandar. */
+export interface ResultadoDeAccion {
+  enviado: boolean;
+  detalle: string;
+  enlace?: string;
+}
+
+/**
+ * Ejecuta una acción ya aprobada. En Abasto lo hace n8n (pausar en Catálogo, preparar el WhatsApp…).
+ * `sesion` es el token de quien aprobó: la acción se hace a su nombre y con sus permisos, nunca con más.
+ */
 export interface EjecutorDeAcciones {
-  ejecutar(propuesta: Propuesta): Promise<{ enviado: boolean; detalle: string }>;
+  ejecutar(propuesta: Propuesta, sesion?: string): Promise<ResultadoDeAccion>;
 }
 
 export const REPOSITORIO_DE_PROPUESTAS = Symbol('RepositorioDePropuestas');

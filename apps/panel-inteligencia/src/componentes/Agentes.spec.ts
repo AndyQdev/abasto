@@ -60,4 +60,50 @@ describe('Pantalla de agentes', () => {
 
     expect(pantalla.find('.resumen').text()).toContain('Todo en orden');
   });
+
+  it('al aprobar muestra lo que hizo n8n y el WhatsApp listo para abrir', async () => {
+    let propuestas: unknown[] = [
+      { id: 'p1', agenteId: 'cobranza', titulo: 'Recordar a Doña Rosa que vence A-1051', detalle: 'Saldo Bs 120,00', creadaEn: '' },
+    ];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        if (url.endsWith('/decision')) {
+          propuestas = [];
+          return json({
+            propuesta: { id: 'p1', estado: 'aprobada' },
+            ejecucion: { enviado: true, detalle: 'Recordatorio del pedido A-1051 listo', enlace: 'https://wa.me/?text=Hola' },
+          });
+        }
+        return json(url.endsWith('/propuestas') ? propuestas : agentes);
+      }),
+    );
+    const pantalla = mount(Agentes, { props: { sesion } });
+    await flushPromises();
+    await pantalla.findAll('.propuesta .boton-primario')[0].trigger('click');
+    await flushPromises();
+
+    const resultado = pantalla.find('.ejecucion');
+    expect(resultado.text()).toContain('Hecho por n8n · Recordar a Doña Rosa que vence A-1051');
+    expect(resultado.find('a').attributes('href')).toBe('https://wa.me/?text=Hola');
+  });
+
+  it('si n8n no está prendido, la propuesta queda aprobada y lo dice', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        if (url.endsWith('/decision')) return json({ ejecucion: { enviado: false, detalle: 'n8n no respondió' } });
+        return json(
+          url.endsWith('/propuestas') ? [{ id: 'p1', agenteId: 'catalogo', titulo: 'Pausar Atún', detalle: '', creadaEn: '' }] : agentes,
+        );
+      }),
+    );
+    const pantalla = mount(Agentes, { props: { sesion } });
+    await flushPromises();
+    await pantalla.findAll('.propuesta .boton-primario')[0].trigger('click');
+    await flushPromises();
+
+    expect(pantalla.find('.ejecucion').text()).toContain('Aprobada, pero no salió · Pausar Atún');
+    expect(pantalla.find('.ejecucion a').exists()).toBe(false);
+  });
 });

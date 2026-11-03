@@ -71,14 +71,27 @@ async function monitorear() {
 
 const nombreDe = (id: string) => agentes.value.find((a) => a.id === id)?.nombre ?? id;
 
+/** Lo que hizo n8n con la última propuesta aprobada (pausar, dejar listo el WhatsApp…) */
+interface Ejecucion {
+  titulo: string;
+  enviado: boolean;
+  detalle: string;
+  enlace?: string;
+}
+const ultima = ref<Ejecucion | null>(null);
+
 async function decidir(propuesta: Propuesta, aprobar: boolean) {
   ocupado.value = propuesta.id;
   try {
-    await llamarAsistente(props.sesion, `/v1/agentes/propuestas/${propuesta.id}/decision`, {
-      metodo: 'POST',
-      cuerpo: { aprobar },
-    });
+    const r = await llamarAsistente<{ ejecucion?: Omit<Ejecucion, 'titulo'> }>(
+      props.sesion,
+      `/v1/agentes/propuestas/${propuesta.id}/decision`,
+      { metodo: 'POST', cuerpo: { aprobar } },
+    );
+    ultima.value = r?.ejecucion ? { titulo: propuesta.titulo, ...r.ejecucion } : null;
     await cargar();
+  } catch (e) {
+    error.value = (e as Error).message;
   } finally {
     ocupado.value = null;
   }
@@ -124,6 +137,13 @@ onMounted(cargar);
   </div>
 
   <h3>Esperan tu aprobación</h3>
+  <div v-if="ultima" class="carta ejecucion" :class="{ fallo: !ultima.enviado }" role="status">
+    <div>
+      <strong>{{ ultima.enviado ? 'Hecho por n8n' : 'Aprobada, pero no salió' }} · {{ ultima.titulo }}</strong>
+      <span class="gris">{{ ultima.detalle }}</span>
+    </div>
+    <a v-if="ultima.enlace" class="boton-primario" :href="ultima.enlace" target="_blank" rel="noopener">Abrir WhatsApp</a>
+  </div>
   <div class="carta">
     <p v-if="!propuestas.length" class="vacio">Ningún agente está esperando una decisión.</p>
     <div v-for="p in propuestas" :key="p.id" class="propuesta">
@@ -148,4 +168,8 @@ onMounted(cargar);
 .propuesta:first-of-type { border-top: 0; }
 .monitor { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 0.75rem; }
 .resumen { margin: 0 0 1.25rem; }
+.ejecucion { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 0.75rem; }
+.ejecucion > div { display: grid; gap: 0.25rem; }
+.ejecucion.fallo strong { color: hsl(var(--peligro, 0 70% 45%)); }
+.ejecucion a { text-decoration: none; white-space: nowrap; }
 </style>

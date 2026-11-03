@@ -122,7 +122,8 @@ export class AgentesController {
   @HttpCode(200)
   decision(@Param('id') id: string, @Body() cuerpo: unknown, @Req() req: ConUsuario) {
     const { aprobar } = leer(z.object({ aprobar: z.boolean() }), cuerpo);
-    return this.decidir.ejecutar(req.usuario.orgId, id, aprobar, req.usuario.id);
+    const sesion = req.headers.authorization?.replace(/^Bearer /, '');
+    return this.decidir.ejecutar(req.usuario.orgId, id, aprobar, req.usuario.id, sesion);
   }
 }
 

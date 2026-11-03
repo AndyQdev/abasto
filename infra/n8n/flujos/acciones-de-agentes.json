@@ -1,0 +1,192 @@
+{
+  "name": "Acciones de los agentes (aprobadas en Inteligencia)",
+  "nodes": [
+    {
+      "id": "a6e0c001-0000-4000-8000-000000000001",
+      "name": "Acción aprobada",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 200],
+      "webhookId": "acciones-agentes",
+      "notes": "Lo llama Asistente (EjecutorN8n) cuando el mayorista aprueba una propuesta. Trae la propuesta en el cuerpo, la sesión de quien aprobó en Authorization y el id de la propuesta como Idempotency-Key.",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "acciones-agentes",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "a6e0c001-0000-4000-8000-000000000002",
+      "name": "¿Qué acción?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [240, 200],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+                "conditions": [
+                  {
+                    "id": "c1",
+                    "leftValue": "={{ $json.body.accion.tipo }}",
+                    "rightValue": "pausar_producto",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Pausar producto"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+                "conditions": [
+                  {
+                    "id": "c2",
+                    "leftValue": "={{ $json.body.accion.tipo }}",
+                    "rightValue": "enviar_recordatorio_whatsapp",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Recordatorio de cobro"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+                "conditions": [
+                  {
+                    "id": "c3",
+                    "leftValue": "={{ $json.body.accion.tipo }}",
+                    "rightValue": "crear_pedido_a_proveedor",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Pedido al proveedor"
+            }
+          ]
+        },
+        "options": { "fallbackOutput": "extra", "renameFallbackOutput": "Otra acción" }
+      }
+    },
+    {
+      "id": "a6e0c001-0000-4000-8000-000000000003",
+      "name": "Pausar en Catálogo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [520, 0],
+      "notes": "Mutación editarProducto por el Apollo Router con la sesión del mayorista que aprobó: Catálogo revisa que el producto sea suyo.",
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.ROUTER_URL }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "={{ $json.headers.authorization }}" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ query: 'mutation Pausar($id: ID!) { editarProducto(id: $id, entrada: { estado: PAUSADO }) { id nombre estado } }', variables: { id: $json.body.accion.datos.productoId } }) }}",
+        "options": { "response": { "response": { "neverError": true } } }
+      }
+    },
+    {
+      "id": "a6e0c001-0000-4000-8000-000000000004",
+      "name": "Resultado de la pausa",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [760, 0],
+      "parameters": {
+        "jsCode": "const r = $input.first().json;\nconst datos = $('Acción aprobada').first().json.body.accion.datos;\nconst producto = r.data?.editarProducto;\nif (producto) {\n  return [{ json: { enviado: true, detalle: `${producto.nombre} quedó pausado en tu catálogo: las tiendas ya no lo pueden pedir.` } }];\n}\nconst motivo = r.errors?.[0]?.message ?? 'Catálogo no respondió';\nreturn [{ json: { enviado: false, detalle: `No se pudo pausar ${datos.nombre ?? datos.productoId}: ${motivo}` } }];"
+      }
+    },
+    {
+      "id": "a6e0c001-0000-4000-8000-000000000005",
+      "name": "WhatsApp de cobranza",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 200],
+      "notes": "Deja el mensaje listo para abrir en WhatsApp. Con la API de WhatsApp Business (Kapso) aquí va el envío directo.",
+      "parameters": {
+        "jsCode": "const { mensaje, pedidoId } = $input.first().json.body.accion.datos;\nreturn [{ json: {\n  enviado: true,\n  detalle: `Recordatorio del pedido ${pedidoId} listo para mandar por WhatsApp.`,\n  enlace: 'https://wa.me/?text=' + encodeURIComponent(mensaje),\n} }];"
+      }
+    },
+    {
+      "id": "a6e0c001-0000-4000-8000-000000000006",
+      "name": "Pedido al proveedor",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 400],
+      "notes": "Arma el pedido para el proveedor con la cantidad que calculó el agente de Reposición (demanda del ML para 2 semanas).",
+      "parameters": {
+        "jsCode": "const { nombre, cantidad, productoId } = $input.first().json.body.accion.datos;\nconst mensaje = `Hola, quiero hacer un pedido: ${cantidad} u. de ${nombre} (${productoId}). ¿Me confirmas precio y día de entrega? Gracias.`;\nreturn [{ json: {\n  enviado: true,\n  detalle: `Pedido de ${cantidad} u. de ${nombre} listo para mandar al proveedor.`,\n  enlace: 'https://wa.me/?text=' + encodeURIComponent(mensaje),\n} }];"
+      }
+    },
+    {
+      "id": "a6e0c001-0000-4000-8000-000000000007",
+      "name": "Acción que no conozco",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 600],
+      "parameters": {
+        "jsCode": "const tipo = $input.first().json.body?.accion?.tipo;\nreturn [{ json: { enviado: false, detalle: `n8n no sabe ejecutar la acción «${tipo}» todavía.` } }];"
+      }
+    },
+    {
+      "id": "a6e0c001-0000-4000-8000-000000000008",
+      "name": "Responder a Asistente",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1000, 200],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Acción aprobada": {
+      "main": [[{ "node": "¿Qué acción?", "type": "main", "index": 0 }]]
+    },
+    "¿Qué acción?": {
+      "main": [
+        [{ "node": "Pausar en Catálogo", "type": "main", "index": 0 }],
+        [{ "node": "WhatsApp de cobranza", "type": "main", "index": 0 }],
+        [{ "node": "Pedido al proveedor", "type": "main", "index": 0 }],
+        [{ "node": "Acción que no conozco", "type": "main", "index": 0 }]
+      ]
+    },
+    "Pausar en Catálogo": {
+      "main": [[{ "node": "Resultado de la pausa", "type": "main", "index": 0 }]]
+    },
+    "Resultado de la pausa": {
+      "main": [[{ "node": "Responder a Asistente", "type": "main", "index": 0 }]]
+    },
+    "WhatsApp de cobranza": {
+      "main": [[{ "node": "Responder a Asistente", "type": "main", "index": 0 }]]
+    },
+    "Pedido al proveedor": {
+      "main": [[{ "node": "Responder a Asistente", "type": "main", "index": 0 }]]
+    },
+    "Acción que no conozco": {
+      "main": [[{ "node": "Responder a Asistente", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/La_Paz"
+  },
+  "active": false,
+  "id": "abastoAccionesAg01"
+}

@@ -117,6 +117,23 @@ paths:
         content:
           application/json:
             schema: { type: object, required: [aprobar], properties: { aprobar: { type: boolean } } }
+      responses:
+        '200':
+          description: >-
+            La propuesta decidida. Si se aprobó, `ejecucion` dice lo que hizo n8n con la acción
+            (flujo `infra/n8n/flujos/acciones-de-agentes.json`), que actúa con la sesión de quien aprobó.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  propuesta: { type: object }
+                  ejecucion:
+                    type: object
+                    properties:
+                      enviado: { type: boolean }
+                      detalle: { type: string }
+                      enlace: { type: string, description: 'Por ejemplo, el WhatsApp listo para mandar (wa.me)' }
   /v1/auditoria:
     get:
       summary: Últimas consultas sobre los datos de una empresa. Solo rol admin (Superadmin).

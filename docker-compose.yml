@@ -238,7 +238,8 @@ services:
       KEYCLOAK_JWKS_URL: http://keycloak:8080/realms/abasto/protocol/openid-connect/certs
       CATALOGO_URL: http://catalogo:8082/graphql
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-      N8N_WEBHOOK_ACCIONES: ${N8N_WEBHOOK_ACCIONES:-}
+      # Flujo «Acciones de los agentes» (infra/n8n/flujos/acciones-de-agentes.json); con n8n apagado avisa y sigue
+      N8N_WEBHOOK_ACCIONES: ${N8N_WEBHOOK_ACCIONES:-http://n8n:5678/webhook/acciones-agentes}
     ports: ["8085:8085"]
     depends_on:
       postgres: { condition: service_healthy }
@@ -260,6 +261,8 @@ services:
       TZ: America/La_Paz
       CONECTA_URL: ${CONECTA_URL_N8N:-http://conecta:8084}
       KEYCLOAK_TOKEN_URL: http://keycloak:8080/realms/abasto/protocol/openid-connect/token
+      # Las acciones aprobadas de los agentes (pausar un producto) van por el Apollo Router
+      ROUTER_URL: http://router:4000/
       # El flujo de ejemplo usa crypto para la clave de idempotencia y lee las URL de arriba
       NODE_FUNCTION_ALLOW_BUILTIN: crypto
       N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
