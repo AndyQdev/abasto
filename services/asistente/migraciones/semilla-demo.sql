@@ -25,3 +25,25 @@ INSERT INTO ventas_diarias (org_id, fecha, pedidos, total_centavos)
 SELECT 'lp', d::date, 3 + (extract(day FROM d)::int % 5), (180000 + (extract(day FROM d)::int % 7) * 45000)
   FROM generate_series(date_trunc('month', current_date), current_date, interval '1 day') AS d
 ON CONFLICT DO NOTHING;
+
+-- Pedidos de demostración para «Tiendas nuevas y las que dejaron de comprar» y «Cómo te pagan»:
+-- Doña Rosa y Despensa Lupita son nuevas; San Juan y Almacén Mery no compran hace más de 30 días.
+INSERT INTO pedidos (org_id, pedido_id, codigo, tienda_id, tienda_nombre, metodo_pago, total_centavos, estado, creado_en, actualizado_en) VALUES
+    ('lp', 'demo-1', 'A-0901', 'sj', 'Tienda San Juan',     'credito',        210000, 'ENTREGADO',  current_date - 70, current_date - 69),
+    ('lp', 'demo-2', 'A-0915', 'am', 'Almacén Mery',        'qr',              98000, 'ENTREGADO',  current_date - 52, current_date - 51),
+    ('lp', 'demo-3', 'A-0920', 'ec', 'Minimarket El Cruce', 'credito',        185000, 'ENTREGADO',  current_date - 60, current_date - 59),
+    ('lp', 'demo-4', 'A-1036', 'ec', 'Minimarket El Cruce', 'credito',         48000, 'CONFIRMADO', current_date - 7,  current_date - 7),
+    ('lp', 'demo-5', 'A-1040', 'dr', 'Tienda Doña Rosa',    'credito',        120000, 'ENTREGADO',  current_date - 14, current_date - 13),
+    ('lp', 'demo-6', 'A-1044', 'dl', 'Despensa Lupita',     'qr',              64000, 'ENTREGADO',  current_date - 9,  current_date - 8),
+    ('lp', 'demo-7', 'A-1047', 'dl', 'Despensa Lupita',     'contra_entrega',  57000, 'DESPACHADO', current_date - 2,  current_date - 1),
+    ('lp', 'demo-8', 'A-1049', 'es', 'Tienda La Esquina',   'qr',              43000, 'ENTREGADO',  current_date - 20, current_date - 19)
+ON CONFLICT (org_id, pedido_id) DO UPDATE SET creado_en = EXCLUDED.creado_en, actualizado_en = EXCLUDED.actualizado_en;
+
+-- Lo que dejaría el ML nocturno (`uv run abasto-ml-nocturno` lo recalcula con las cuentas reales)
+INSERT INTO riesgo_mora (org_id, tienda_id, tienda_nombre, riesgo, saldo_centavos, cuentas_vencidas) VALUES
+    ('lp', 'es', 'Tienda La Esquina',       0.7800,  75600, 1),
+    ('lp', 'ec', 'Minimarket El Cruce',     0.4100, 133000, 0),
+    ('lp', 'dr', 'Tienda Doña Rosa',        0.2200, 120000, 0),
+    ('lp', 'sj', 'Tienda San Juan',         0.1200,  42000, 0),
+    ('lr', 'lp', 'Distribuidora Los Pozos', 0.3000, 950000, 0)
+ON CONFLICT DO NOTHING;

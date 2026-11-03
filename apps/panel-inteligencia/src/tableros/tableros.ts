@@ -10,6 +10,43 @@ export interface Tableros {
   ventas: { fecha: string; total_centavos: number }[];
   /** Cuentas por cobrar. */
   cobranza: { pendiente_centavos: number; vencida_centavos: number; cuentas_vencidas: number; vencen_esta_semana: number };
+  /** Lo que más sale: unidades por mes según el promedio de 30 días. Los campos nuevos pueden faltar en un Asistente viejo. */
+  masVendidos?: { producto_id: string; nombre: string; unidades_mes: number }[];
+  /** Quién te debe, lo vencido primero. */
+  teDeben?: { tienda_id: string; tienda_nombre: string; saldo_centavos: number; vence: string; vencida: boolean }[];
+  /** Tiendas que compraron por primera vez en 30 días y las que no vuelven hace 30 días. */
+  tiendas?: {
+    nuevas: { tienda_id: string; tienda_nombre: string; desde: string }[];
+    dejaron: { tienda_id: string; tienda_nombre: string; ultima: string }[];
+  };
+  /** Cómo te pagan (pedidos de 30 días). */
+  formasDePago?: { metodo_pago: string; pedidos: number; total_centavos: number }[];
+  /** Riesgo de pagar tarde por tienda (ML supervisado, regresión logística), de 0 a 1. */
+  mora?: { tienda_id: string; tienda_nombre: string; riesgo: number; saldo_centavos: number; cuentas_vencidas: number }[];
+}
+
+const NOMBRE_DE_PAGO: Record<string, string> = { qr: 'QR', credito: 'Crédito', contra_entrega: 'Contra entrega' };
+
+export function serieDeMasVendidos(productos: NonNullable<Tableros['masVendidos']>): Serie {
+  return {
+    columnaEtiqueta: 'nombre',
+    columnaValor: 'unidades_mes',
+    puntos: productos.slice(0, MAXIMO_DE_BARRAS).map((p) => ({ etiqueta: p.nombre, valor: p.unidades_mes })),
+  };
+}
+
+export function serieDeFormasDePago(formas: NonNullable<Tableros['formasDePago']>): Serie {
+  return {
+    columnaEtiqueta: 'metodo_pago',
+    columnaValor: 'total_centavos',
+    puntos: formas.map((f) => ({ etiqueta: NOMBRE_DE_PAGO[f.metodo_pago] ?? f.metodo_pago, valor: f.total_centavos })),
+  };
+}
+
+/** 0,78 → «78 %» y su nivel, para pintar la fila. */
+export function textoDeRiesgo(riesgo: number): { texto: string; nivel: 'alto' | 'medio' | 'bajo' } {
+  const texto = `${Math.round(riesgo * 100)} %`;
+  return { texto, nivel: riesgo >= 0.5 ? 'alto' : riesgo >= 0.25 ? 'medio' : 'bajo' };
 }
 
 /** Debajo de estos días de stock el producto se considera en riesgo. */

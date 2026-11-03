@@ -67,6 +67,17 @@ export const ESQUEMA_REPORTES = {
       ticket_promedio_centavos: 'bigint',
     },
   },
+  riesgo_mora: {
+    descripcion: 'Probabilidad de que cada tienda pague tarde (modelo supervisado de ML, regresión logística)',
+    columnas: {
+      tienda_id: 'text',
+      tienda_nombre: 'text',
+      riesgo: 'numeric entre 0 y 1: 0,8 es 80 % de probabilidad de pagar tarde',
+      saldo_centavos: 'bigint: lo que la tienda debe hoy',
+      cuentas_vencidas: 'integer: cuentas que ya pasaron su fecha sin pagarse',
+      actualizado_en: 'timestamptz: cuándo lo calculó el ML',
+    },
+  },
 } as const;
 
 export type TablaDeReportes = keyof typeof ESQUEMA_REPORTES;

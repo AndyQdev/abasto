@@ -29,6 +29,32 @@ def main() -> None:
         print("Sin REPORTES_URL: no se escribe en la base")
         return
     _guardar(url, proxima, seg)
+    _guardar_riesgo_de_mora(url, m_mora)
+
+
+def _guardar_riesgo_de_mora(url: str, m_mora: mora.ModeloDeMora) -> None:
+    """Riesgo de pago tarde de cada tienda que debe algo, con sus cuentas reales de la base `reportes`."""
+    import psycopg
+
+    with psycopg.connect(url) as conexion, conexion.cursor() as cursor:
+        cursor.execute("SELECT org_id, tienda_id, tienda_nombre, saldo_centavos, vence, estado FROM cuentas_por_cobrar")
+        cuentas = pd.DataFrame(cursor.fetchall(), columns=[c.name for c in cursor.description])
+        cursor.execute("SELECT org_id, tienda_id, creado_en FROM pedidos")
+        pedidos = pd.DataFrame(cursor.fetchall(), columns=[c.name for c in cursor.description])
+        tiendas = mora.caracteristicas_de_tiendas(cuentas, pedidos, pd.Timestamp.today())
+        if tiendas.empty:
+            print("Riesgo de mora: ninguna tienda debe nada")
+            return
+        tiendas["riesgo"] = mora.riesgo(m_mora, tiendas).round(4)
+        # Lo que ya no se debe sale del tablero
+        cursor.execute("DELETE FROM riesgo_mora")
+        for fila in tiendas.itertuples():
+            cursor.execute(
+                """INSERT INTO riesgo_mora (org_id, tienda_id, tienda_nombre, riesgo, saldo_centavos, cuentas_vencidas)
+                   VALUES (%s, %s, %s, %s, %s, %s)""",
+                (fila.org_id, fila.tienda_id, fila.tienda_nombre, float(fila.riesgo), int(fila.saldo_centavos), int(fila.cuentas_vencidas)),
+            )
+    print(f"Guardado el riesgo de mora de {len(tiendas)} tiendas")
 
 
 def _guardar(url: str, proxima: pd.DataFrame, seg: pd.DataFrame, org_id: str = "lp") -> None:

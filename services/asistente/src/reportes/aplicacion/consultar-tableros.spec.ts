@@ -44,19 +44,32 @@ describe('Tableros', () => {
     cuentas_por_cobrar: [{ pendiente_centavos: 205000, vencida_centavos: 42000, cuentas_vencidas: 1, vencen_esta_semana: 2 }],
   };
 
-  it('arma los cuatro tableros pasando por la guardia y dejando auditoría con origen «tablero»', async () => {
-    const auditoria: RegistroDeAuditoria[] = [];
-    const reportes = new ConsultarReportes(
-      {
-        consultar: async (sql) => {
-          const tabla = Object.keys(respuestas).find((t) => sql.includes(`FROM ${t}`))!;
-          return { columnas: [], truncado: false, filas: respuestas[tabla] };
-        },
-      },
-      { registrar: async (r) => void auditoria.push(r) },
-    );
+  // Las consultas nuevas leen las mismas tablas: se reconocen por lo que piden
+  const porConsulta: [string, Record<string, unknown>[]][] = [
+    ['unidades_mes', [{ producto_id: 'AZ-1000', nombre: 'Azúcar refinada 1 kg', unidades_mes: '900' }]],
+    ['ORDER BY vencida', [{ tienda_id: 'es', tienda_nombre: 'Tienda La Esquina', saldo_centavos: '75600', vence: new Date('2026-10-31T00:00:00Z'), vencida: 1 }]],
+    ['min(creado_en)', [
+      { tienda_id: 'dr', tienda_nombre: 'Tienda Doña Rosa', primera: '2026-10-20', ultima: '2026-11-02' },
+      { tienda_id: 'sj', tienda_nombre: 'Tienda San Juan', primera: '2026-08-01', ultima: '2026-09-15' },
+      { tienda_id: 'ec', tienda_nombre: 'Minimarket El Cruce', primera: '2026-08-01', ultima: '2026-11-01' },
+    ]],
+    ['metodo_pago, count', [{ metodo_pago: 'credito', pedidos: '4', total_centavos: '520000' }]],
+    ['FROM riesgo_mora', [{ tienda_id: 'es', tienda_nombre: 'Tienda La Esquina', riesgo: '0.7800', saldo_centavos: '75600', cuentas_vencidas: 1 }]],
+  ];
+  const responder = async (sql: string) => {
+    const propia = porConsulta.find(([marca]) => sql.includes(marca));
+    const tabla = Object.keys(respuestas).find((t) => sql.includes(`FROM ${t}`))!;
+    return { columnas: [], truncado: false, filas: propia ? propia[1] : respuestas[tabla] };
+  };
 
-    const tableros = await new ConsultarTableros(reportes).ejecutar({ usuarioId: 'u1', orgId: 'lp' });
+  it('arma los tableros pasando por la guardia y dejando auditoría con origen «tablero»', async () => {
+    const auditoria: RegistroDeAuditoria[] = [];
+    const reportes = new ConsultarReportes({ consultar: responder }, { registrar: async (r) => void auditoria.push(r) });
+
+    const tableros = await new ConsultarTableros(reportes, () => new Date('2026-11-03T12:00:00Z')).ejecutar({
+      usuarioId: 'u1',
+      orgId: 'lp',
+    });
 
     expect(tableros.demanda[0].producto_id).toBe('AR-0100');
     expect(tableros.segmentos).toEqual([
@@ -69,7 +82,20 @@ describe('Tableros', () => {
       cuentas_vencidas: 1,
       vencen_esta_semana: 2,
     });
-    expect(auditoria).toHaveLength(5);
+    expect(tableros.masVendidos).toEqual([{ producto_id: 'AZ-1000', nombre: 'Azúcar refinada 1 kg', unidades_mes: 900 }]);
+    expect(tableros.teDeben).toEqual([
+      { tienda_id: 'es', tienda_nombre: 'Tienda La Esquina', saldo_centavos: 75600, vence: '2026-10-31', vencida: true },
+    ]);
+    // Doña Rosa compró por primera vez hace 2 semanas; San Juan no vuelve desde septiembre; El Cruce sigue comprando
+    expect(tableros.tiendas).toEqual({
+      nuevas: [{ tienda_id: 'dr', tienda_nombre: 'Tienda Doña Rosa', desde: '2026-10-20' }],
+      dejaron: [{ tienda_id: 'sj', tienda_nombre: 'Tienda San Juan', ultima: '2026-09-15' }],
+    });
+    expect(tableros.formasDePago).toEqual([{ metodo_pago: 'credito', pedidos: 4, total_centavos: 520000 }]);
+    expect(tableros.mora).toEqual([
+      { tienda_id: 'es', tienda_nombre: 'Tienda La Esquina', riesgo: 0.78, saldo_centavos: 75600, cuentas_vencidas: 1 },
+    ]);
+    expect(auditoria).toHaveLength(10);
     expect(auditoria.every((r) => r.origen === 'tablero' && r.resultado === 'ok')).toBe(true);
   });
 
@@ -95,7 +121,7 @@ describe('Tableros', () => {
       { registrar: async () => {} },
     );
     await new ConsultarTableros(reportes).ejecutar({ usuarioId: 'u1', orgId: 'lp' });
-    expect(consultas).toHaveLength(5);
+    expect(consultas).toHaveLength(10);
     for (const sql of consultas) expect(validarConsulta(sql).ok).toBe(true);
   });
 });
