@@ -9,7 +9,7 @@ export const ESTILOS_BASE = `
 
   /* Cabecera de cada sección: título grande bosque, subtítulo corto y un contador en cápsula blanca */
   .cabecera { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem 1.5rem; flex-wrap: wrap; margin: 0 0 1.4rem; padding-left: 1rem; }
-  .titulo-pantalla { font-family: var(--fuente-titulo); font-size: clamp(2.4rem, 3.6vw, 3.4rem); font-weight: 800; letter-spacing: -0.045em; line-height: 1; margin: 0; color: hsl(var(--tinta)); }
+  .titulo-pantalla { font-family: var(--fuente-titulo); font-size: 3.4rem; font-weight: 800; letter-spacing: -0.045em; line-height: 1; margin: 0; color: hsl(var(--tinta)); }
   .subtitulo { margin: 0.5rem 0 0; font-size: 1.4rem; color: hsl(var(--texto-2)); font-weight: 500; }
   .capsula-contador { display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.75rem 1.4rem; font-size: 1.3rem; border-radius: 999px; background: hsl(var(--superficie)); box-shadow: var(--sombra-menor); font-weight: 800; letter-spacing: -0.02em; white-space: nowrap; }
 
@@ -20,7 +20,7 @@ export const ESTILOS_BASE = `
   button.cifra-carta:hover { transform: translateY(-2px); }
   button.cifra-carta.elegida { box-shadow: 0 0 0 3px hsl(var(--primary)), var(--sombra-carta); }
   .cifra-carta .linea-v { width: 2px; align-self: stretch; margin: 0.4rem 0; background: hsl(var(--borde)); border-radius: 2px; }
-  .cifra-carta strong { display: block; font-size: clamp(1.8rem, 2.6vw, 2.6rem); font-weight: 800; letter-spacing: -0.04em; line-height: 1; white-space: nowrap; }
+  .cifra-carta strong { display: block; font-size: 2.6rem; font-weight: 800; letter-spacing: -0.04em; line-height: 1; white-space: nowrap; }
   .cifra-carta div > span { display: block; margin-top: 0.35rem; font-size: 1.4rem; color: hsl(var(--texto)); font-weight: 500; }
   .disco { flex: none; display: grid; place-items: center; width: 64px; height: 64px; border-radius: 20px; color: hsl(var(--tinta)); }
   .disco.ambar { background: hsl(var(--ambar)); }
@@ -101,7 +101,8 @@ export const ESTILOS_BASE = `
   @keyframes aparecer { from { opacity: 0; } }
   @keyframes entrar { from { transform: translateX(40px); opacity: 0.4; } }
 
-  @media (max-width: 1180px) { .cifras { grid-template-columns: minmax(0, 1fr); } .cifra-carta { padding: 1rem 1.25rem; } }
+  @media (max-width: 860px) { .cifras { grid-template-columns: minmax(0, 1fr); } .cifra-carta { padding: 1rem 1.25rem; } }
+  @media (max-width: 600px) { .titulo-pantalla { font-size: 2.4rem; } .cifra-carta strong { font-size: 2rem; } }
   @media (max-width: 860px) {
     .lateral, .lateral-pie { border-radius: 0; }
     .subtitulo { font-size: 1rem; }

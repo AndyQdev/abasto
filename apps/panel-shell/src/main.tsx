@@ -6,6 +6,7 @@ import '@abasto/ui/base.css';
 import './panel.css';
 import './halo.css';
 import { App } from './App';
+import { seguirLaEscala } from './escala';
 import { Registro } from './Registro';
 
 // El service worker (PWA) solo existe en el build; en pnpm dev:panel no se registra
@@ -24,6 +25,8 @@ async function soltarServiceWorkerViejo() {
   for (const clave of await caches.keys()) await caches.delete(clave);
   if (navigator.serviceWorker.controller) window.location.reload();
 }
+
+seguirLaEscala();
 
 const sesion = crearSesion({ clientId: 'abasto-panel' });
 const raiz = createRoot(document.getElementById('raiz')!);

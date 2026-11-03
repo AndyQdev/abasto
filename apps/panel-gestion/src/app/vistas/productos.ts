@@ -265,7 +265,7 @@ function achicarFoto(archivo: File): Promise<string> {
       .elegir-foto { position: relative; overflow: hidden; }
       .elegir-foto input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 
-      @media (max-width: 1300px) { .rubros, .areas { max-width: 100%; } }
+      @media (max-width: 860px) { .rubros, .areas { max-width: 100%; } }
       @media (max-width: 520px) { .catalogo { grid-template-columns: minmax(0, 1fr); } .producto-arriba { grid-template-columns: 100px minmax(0, 1fr); } .producto-pie { grid-template-columns: auto auto; justify-content: space-between; } .producto-pie .raya { display: none; } .producto-foto { height: 130px; } .dos, .escala-fila { grid-template-columns: 1fr 1fr; } }
     `,
   ],

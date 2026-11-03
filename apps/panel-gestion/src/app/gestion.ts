@@ -25,7 +25,7 @@ import { VistaProductos } from './vistas/productos';
       .atajo:hover { transform: translateY(-2px); box-shadow: 0 0 0 2px hsl(var(--primary)), var(--sombra-carta); }
       .atajo strong { display: block; font-size: 1.1rem; font-weight: 800; }
       .atajo span.texto { color: hsl(var(--texto-2)); }
-      @media (max-width: 1000px) { .atajos { grid-template-columns: 1fr; } }
+      @media (max-width: 860px) { .atajos { grid-template-columns: 1fr; } }
     `,
   ],
   template: `

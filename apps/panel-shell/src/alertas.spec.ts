@@ -48,3 +48,14 @@ describe('buscador del header', () => {
     expect(moduloDe('no-existe').ruta).toBe('inicio');
   });
 });
+
+describe('escala del Panel', () => {
+  it('en escritorio se achica para verse como en 1680 px; en pantallas grandes y en el teléfono no', async () => {
+    const { escalaPara } = await import('./escala');
+    expect(escalaPara(1260)).toBe(0.75);
+    expect(escalaPara(1536)).toBe(0.91);
+    expect(escalaPara(1920)).toBe(1);
+    expect(escalaPara(1000)).toBe(0.7);
+    expect(escalaPara(390)).toBe(1);
+  });
+});
