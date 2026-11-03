@@ -11,8 +11,8 @@ sin internet).
 
 | Qué reconoce | Archivo en la app | Cómo se generó | Datos | Resultado |
 |---|---|---|---|---|
-| **95 de los 138 productos** del catálogo de Abasto | `vectores.json`, `etiquetas.json` | `ml/src/abasto_ml/vision/catalogo.py` | 155 fotos reales: las 27 fotos de tienda del catálogo + fotos de referencia (§5); las ilustraciones 3D genéricas **no** se usan. 6 vistas por foto | top-1 570/570 con fotos de celular **simuladas** (optimista: salen de las mismas fotos) |
-| Clasificador de los 95 productos (deep learning, TensorFlow) | dentro de `productos.tflite` | `catalogo.py` › `entrenar_clasificador` (transfer learning: base congelada, capa densa entrenada) | 40 fotos de celular simuladas por producto (giro, recorte, luz, desenfoque) | validación 100 % (mismo aviso) |
+| **117 de los 138 productos** del catálogo de Abasto | `vectores.json`, `etiquetas.json` | `ml/src/abasto_ml/vision/catalogo.py` | 198 fotos reales: las 27 fotos de tienda del catálogo + fotos de referencia (§5) + 43 de Wikimedia Commons revisadas a mano; las ilustraciones 3D genéricas **no** se usan. 6 vistas por foto | top-1 702/702 con fotos de celular **simuladas** (optimista: salen de las mismas fotos) |
+| Clasificador de los 117 productos (deep learning, TensorFlow) | dentro de `productos.tflite` | `catalogo.py` › `entrenar_clasificador` (transfer learning: base congelada, capa densa entrenada) | 40 fotos de celular simuladas por producto (giro, recorte, luz, desenfoque) | validación 100 % (mismo aviso) |
 | **5 platos** bolivianos | `platos.json`, `metricas-platos.json` | `ml/src/abasto_ml/vision/platos.py` (vector promedio por plato) | **Wikimedia Commons**, ver §2 | **top-1 12/15 = 80 %** con fotos reales que no se usaron |
 
 Detalle de los platos (02/11/2026):
@@ -33,6 +33,7 @@ Lo que más falta: fotos de **silpancho, majadito y salchipapa** (menos de 15 ca
 |---|---|---|---|
 | Tiendas en línea Fidalga, Amarket y Guabirá (fotos de referencia, 02/11/2026: `fotos_referencia.py`, ver §5) | 1 a 3 fotos por producto, solo si coinciden marca, producto y peso | Uso académico; para uso comercial, fotos propias o del proveedor | **`ml/fotos-referencia.csv`** (sitio y enlace de cada foto) |
 | Tiendas en línea Fidalga y Amarket (Santa Cruz, 30/10/2026), las cargó Andrés | 27 fotos de productos (640×640, fondo blanco) | Uso de demostración académica; cambiar por fotos propias antes de un uso comercial | `services/catalogo/database/fotos-abasto/LEEME.md` |
+| **Wikimedia Commons**, búsqueda por producto genérico (carne, verduras, descartables: `productos_wikimedia.py`, 02/11/2026) | 43 fotos aprobadas de 119 bajadas, para 22 productos que las tiendas en línea no tienen | Libres (CC0, CC BY, CC BY-SA, dominio público) | **`ml/atribuciones-productos.csv`** (autor, licencia, página y `estado`: aprobada, descartada o sin revisar). Solo entran las aprobadas. |
 | **Wikimedia Commons**, categorías: `Salchipapas`, `Pique macho`, `Silpancho`, `Majadito`, `Salteñas (Bolivia)` | 93 fotos de platos (versión de 512 px) | Libres: CC BY-SA 4.0 (68), CC BY 2.0 (10), CC BY 3.0 (5), CC0 (3), CC BY-SA 3.0 (3), CC BY-SA 2.0 (2) | **`ml/atribuciones-platos.csv`** (autor, licencia y página de cada foto). Las licencias CC BY y CC BY-SA **exigen citar al autor**: ese archivo va con el proyecto. |
 
 Las fotos no están en el repo (`ml/datos/` está en `.gitignore`). Para volver a bajarlas:
@@ -237,4 +238,4 @@ Las fotos de referencia son sólo para el modelo local; no se publican en la app
 | 31/10/2026 | Vectores y clasificador de 27 productos | Fotos del catálogo + simuladas | top-1 162/162 (simuladas) |
 | 02/11/2026 | Fotos de referencia de los 49 productos de Abasto (todavía sin indexar) | Fidalga, Amarket y Guabirá | 31 listos para indexar, 16 dudosos, 2 necesitan foto propia (§5) |
 | 02/11/2026 | Vectores de 5 platos bolivianos | 78 fotos de Wikimedia Commons (15 aparte para prueba) | top-1 12/15 = 80 % |
-| 02/11/2026 | Vectores y clasificador de 95 de los 138 productos (`catalogo-imagenet-v2`) | 27 fotos de tienda + 128 de referencia (76 exactas, 52 parecidas revisadas a mano) | top-1 570/570 (simuladas); falta medir con fotos de celular reales |
+| 02/11/2026 | Vectores y clasificador de 117 de los 138 productos (`catalogo-imagenet-v2`) | 27 fotos de tienda + 128 de referencia (76 exactas, 52 parecidas revisadas a mano) + 43 de Commons revisadas | top-1 702/702 (simuladas); falta medir con fotos de celular reales |

@@ -28,12 +28,15 @@ from abasto_ml.vision.entrenar import ML, SALIDA_POR_DEFECTO, TAMANO, a_tflite, 
 
 FOTOS_DEL_CATALOGO = ML.parent / "services" / "catalogo" / "database" / "fotos-abasto"
 FOTOS_DE_REFERENCIA = ML / "datos" / "fotos-referencia"
+ATRIBUCIONES_COMMONS = ML / "atribuciones-productos.csv"
 NOMBRE_DEL_MODELO = "catalogo-imagenet-v2"
 EXTENSIONES = {".webp", ".jpg", ".jpeg", ".png"}
 RECORTES = (1.0, 0.85, 0.7)
 
 
-def leer_fotos(carpeta: Path, referencia: Path | None = FOTOS_DE_REFERENCIA) -> dict[str, list[Path]]:
+def leer_fotos(
+    carpeta: Path, referencia: Path | None = FOTOS_DE_REFERENCIA, commons: Path | None = ATRIBUCIONES_COMMONS
+) -> dict[str, list[Path]]:
     """Código de producto → sus fotos reales.
 
     Del catálogo solo cuentan las fotos de tienda (`FOTOS_DE_TIENDA`): las ilustraciones 3D genéricas no le enseñan
@@ -54,6 +57,11 @@ def leer_fotos(carpeta: Path, referencia: Path | None = FOTOS_DE_REFERENCIA) -> 
             fotos.setdefault(sub.name, []).extend(
                 f for f in sorted(sub.iterdir()) if f.is_file() and f.suffix.lower() in EXTENSIONES
             )
+    if commons is not None:
+        from abasto_ml.vision.productos_wikimedia import aprobadas
+
+        for codigo, fs in aprobadas(commons).items():
+            fotos.setdefault(codigo, []).extend(fs)
     return {c: fs for c, fs in sorted(fotos.items()) if fs}
 
 

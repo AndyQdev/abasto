@@ -75,7 +75,7 @@ def test_el_catalogo_toma_el_codigo_del_nombre_de_cada_foto(tmp_path):
 
     for nombre in ["AB-002.webp", "AB-001.JPG", "LEEME.md", "notas.txt"]:
         (tmp_path / nombre).write_bytes(b"")
-    assert list(catalogo.leer_fotos(tmp_path, referencia=None)) == ["AB-001", "AB-002"]
+    assert list(catalogo.leer_fotos(tmp_path, referencia=None, commons=None)) == ["AB-001", "AB-002"]
 
 
 def test_el_catalogo_suma_fotos_de_referencia_y_salta_las_ilustraciones(tmp_path, monkeypatch):
@@ -90,7 +90,7 @@ def test_el_catalogo_suma_fotos_de_referencia_y_salta_las_ilustraciones(tmp_path
     for archivo in ["AB-001/a.jpg", "AB-101/b.jpg", "AB-101/c.png"]:
         (ref / archivo).parent.mkdir(parents=True, exist_ok=True)
         (ref / archivo).write_bytes(b"")
-    fotos = catalogo.leer_fotos(tienda, referencia=ref)
+    fotos = catalogo.leer_fotos(tienda, referencia=ref, commons=None)
     assert {c: [f.name for f in fs] for c, fs in fotos.items()} == {
         "AB-001": ["AB-001.webp", "a.jpg"],
         "AB-101": ["b.jpg", "c.png"],
@@ -117,3 +117,22 @@ def test_la_foto_de_celular_simulada_es_repetible_con_la_misma_semilla():
     b = catalogo.como_foto_de_celular(foto, np.random.default_rng(3))
     assert a.shape == (224, 224, 3)
     assert np.array_equal(a, b)
+
+
+def test_de_commons_solo_entran_las_fotos_aprobadas(tmp_path):
+    from abasto_ml.vision import productos_wikimedia as pw
+
+    for nombre in ["a.jpg", "b.jpg", "c.jpg"]:
+        (tmp_path / nombre).write_bytes(b"")
+    csv_ = tmp_path / "atribuciones.csv"
+    filas = [
+        {"codigo": "AB-196", "archivo": "a.jpg", "estado": "aprobada"},
+        {"codigo": "AB-196", "archivo": "b.jpg", "estado": "descartada"},
+        {"codigo": "AB-197", "archivo": "c.jpg", "estado": "sin revisar"},
+    ]
+    pw.escribir_atribuciones(
+        [{**f, "titulo": "", "autor": "", "licencia": "", "pagina": ""} for f in filas], csv_
+    )
+    assert {c: [f.name for f in fs] for c, fs in pw.aprobadas(csv_, tmp_path).items()} == {
+        "AB-196": ["a.jpg"]
+    }
