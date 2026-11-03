@@ -57,7 +57,7 @@ Si no entra en el espacio libre, se baja uno más liviano. La persona puede eleg
 
 ## Dónde tocar para mejorar la precisión (trabajo de datos)
 
-- `src/ia/entender/recetas.json`: recetas de referencia (salteñas, empanadas, pan, torta, almuerzo). Revisar cantidades y sumar las de cada rubro.
+- Recetas (03/11): una sola lista en `src/ia/entender/recetas.ts`. Primero las 20 plantillas de Mi negocio (`packages/comercio/src/mi-negocio/plantillas.ts`, de Andrés, con fuentes) y después las 18 de `recetas.json` que no están ahí (pan batalla, torta, almuerzo de pensión, salchipapa con huevo, silpancho, picante de pollo, fricasé, chairo, sopas de fideo, quinua y lenteja, arroz con leche, tucumanas, buñuelos, milanesa, falso conejo, lomo montado y humintas; cantidades estimadas). Cada insumo trae los códigos del catálogo que lo venden: `catalogar` elige por código y la presentación que mejor calza (12 kg de harina → la arroba). Para sumar una receta: agrégala a `recetas.json` con los `codigos` de cada insumo (la prueba lo exige).
 - `src/ia/entender/con-modelo.ts`: las instrucciones del modelo.
 - `src/ia/entender/reglas.ts`: lo que se entiende sin modelo.
 - `ml/src/abasto_ml/vision/`: el reconocedor de productos por foto (TensorFlow → TFLite).

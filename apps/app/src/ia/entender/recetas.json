@@ -1,5 +1,5 @@
 {
-  "nota": "Recetas de referencia que no están en las plantillas de Mi negocio (packages/comercio/src/mi-negocio/plantillas.ts, que van primero y ya traen los códigos del catálogo). Cantidades para el rinde indicado; el código las escala.",
+  "nota": "Recetas de referencia que no están en las plantillas de Mi negocio (packages/comercio/src/mi-negocio/plantillas.ts, que van primero). Cantidades ESTIMADAS para el rinde indicado (sin fuente publicada): la app avisa que son de referencia y que se ajustan. Cada insumo trae los códigos del catálogo que lo venden, de la presentación más chica a la más grande.",
   "recetas": [
     {
       "id": "pan-batalla",
@@ -16,27 +16,48 @@
         {
           "nombre": "harina de trigo",
           "cantidad": 5,
-          "unidad": "kg"
+          "unidad": "kg",
+          "codigos": [
+            "AB-004",
+            "AB-102",
+            "AB-101"
+          ]
         },
         {
           "nombre": "levadura",
           "cantidad": 0.1,
-          "unidad": "kg"
+          "unidad": "kg",
+          "codigos": [
+            "AB-104"
+          ]
         },
         {
           "nombre": "azúcar",
           "cantidad": 0.15,
-          "unidad": "kg"
+          "unidad": "kg",
+          "codigos": [
+            "AB-002",
+            "AB-123",
+            "AB-103"
+          ]
         },
         {
           "nombre": "manteca",
           "cantidad": 0.25,
-          "unidad": "kg"
+          "unidad": "kg",
+          "codigos": [
+            "AB-130",
+            "AB-106"
+          ]
         },
         {
           "nombre": "sal",
           "cantidad": 0.1,
-          "unidad": "kg"
+          "unidad": "kg",
+          "codigos": [
+            "AB-007",
+            "AB-135"
+          ]
         }
       ]
     },
@@ -48,7 +69,6 @@
         "tortas",
         "pastel",
         "pasteles",
-        "queque",
         "torta de vainilla"
       ],
       "rinde": 20,
@@ -57,37 +77,63 @@
         {
           "nombre": "harina de trigo",
           "cantidad": 0.5,
-          "unidad": "kg"
+          "unidad": "kg",
+          "codigos": [
+            "AB-004",
+            "AB-102",
+            "AB-101"
+          ]
         },
         {
           "nombre": "azúcar",
           "cantidad": 0.45,
-          "unidad": "kg"
+          "unidad": "kg",
+          "codigos": [
+            "AB-002",
+            "AB-123",
+            "AB-103"
+          ]
         },
         {
           "nombre": "huevo",
           "cantidad": 8,
-          "unidad": "u."
+          "unidad": "u.",
+          "codigos": [
+            "AB-115"
+          ]
         },
         {
           "nombre": "mantequilla",
           "cantidad": 0.25,
-          "unidad": "kg"
+          "unidad": "kg",
+          "codigos": [
+            "AB-040",
+            "AB-175"
+          ]
         },
         {
           "nombre": "leche",
           "cantidad": 0.25,
-          "unidad": "L"
+          "unidad": "L",
+          "codigos": [
+            "AB-017"
+          ]
         },
         {
           "nombre": "polvo de hornear",
           "cantidad": 0.02,
-          "unidad": "kg"
+          "unidad": "kg",
+          "codigos": [
+            "AB-105"
+          ]
         },
         {
           "nombre": "crema de leche",
           "cantidad": 0.5,
-          "unidad": "L"
+          "unidad": "L",
+          "codigos": [
+            "AB-173"
+          ]
         }
       ]
     },
@@ -109,42 +155,72 @@
         {
           "nombre": "arroz",
           "cantidad": 5,
-          "unidad": "kg"
+          "unidad": "kg",
+          "codigos": [
+            "AB-001",
+            "AB-109",
+            "AB-108"
+          ]
         },
         {
           "nombre": "pollo",
           "cantidad": 10,
-          "unidad": "kg"
+          "unidad": "kg",
+          "codigos": [
+            "AB-195"
+          ]
         },
         {
           "nombre": "papa",
           "cantidad": 6,
-          "unidad": "kg"
+          "unidad": "kg",
+          "codigos": [
+            "AB-116"
+          ]
         },
         {
           "nombre": "fideo",
           "cantidad": 1.5,
-          "unidad": "kg"
+          "unidad": "kg",
+          "codigos": [
+            "AB-003",
+            "AB-110"
+          ]
         },
         {
           "nombre": "cebolla",
           "cantidad": 2,
-          "unidad": "kg"
+          "unidad": "kg",
+          "codigos": [
+            "AB-117"
+          ]
         },
         {
           "nombre": "tomate",
           "cantidad": 2,
-          "unidad": "kg"
+          "unidad": "kg",
+          "codigos": [
+            "AB-145"
+          ]
         },
         {
           "nombre": "aceite",
           "cantidad": 1.8,
-          "unidad": "L"
+          "unidad": "L",
+          "codigos": [
+            "AB-005",
+            "AB-107",
+            "AB-132"
+          ]
         },
         {
           "nombre": "sal",
           "cantidad": 0.3,
-          "unidad": "kg"
+          "unidad": "kg",
+          "codigos": [
+            "AB-007",
+            "AB-135"
+          ]
         }
       ]
     },
@@ -161,27 +237,45 @@
         {
           "nombre": "papa",
           "cantidad": 1.5,
-          "unidad": "kg"
+          "unidad": "kg",
+          "codigos": [
+            "AB-116"
+          ]
         },
         {
           "nombre": "salchicha",
           "cantidad": 0.5,
-          "unidad": "kg"
+          "unidad": "kg",
+          "codigos": [
+            "AB-162"
+          ]
         },
         {
           "nombre": "huevo",
           "cantidad": 4,
-          "unidad": "u."
+          "unidad": "u.",
+          "codigos": [
+            "AB-115"
+          ]
         },
         {
           "nombre": "aceite",
           "cantidad": 1,
-          "unidad": "L"
+          "unidad": "L",
+          "codigos": [
+            "AB-005",
+            "AB-107",
+            "AB-132"
+          ]
         },
         {
           "nombre": "sal",
           "cantidad": 0.02,
-          "unidad": "kg"
+          "unidad": "kg",
+          "codigos": [
+            "AB-007",
+            "AB-135"
+          ]
         }
       ]
     },
@@ -199,47 +293,1045 @@
         {
           "nombre": "carne de res",
           "cantidad": 0.8,
-          "unidad": "kg"
+          "unidad": "kg",
+          "codigos": [
+            "AB-154"
+          ]
         },
         {
           "nombre": "pan molido",
           "cantidad": 0.2,
-          "unidad": "kg"
+          "unidad": "kg",
+          "codigos": [
+            "AB-127"
+          ]
         },
         {
           "nombre": "arroz",
           "cantidad": 0.5,
-          "unidad": "kg"
+          "unidad": "kg",
+          "codigos": [
+            "AB-001",
+            "AB-109",
+            "AB-108"
+          ]
         },
         {
           "nombre": "papa",
           "cantidad": 1,
-          "unidad": "kg"
+          "unidad": "kg",
+          "codigos": [
+            "AB-116"
+          ]
         },
         {
           "nombre": "huevo",
           "cantidad": 4,
-          "unidad": "u."
+          "unidad": "u.",
+          "codigos": [
+            "AB-115"
+          ]
         },
         {
           "nombre": "tomate",
           "cantidad": 0.3,
-          "unidad": "kg"
+          "unidad": "kg",
+          "codigos": [
+            "AB-145"
+          ]
         },
         {
           "nombre": "cebolla",
           "cantidad": 0.3,
-          "unidad": "kg"
+          "unidad": "kg",
+          "codigos": [
+            "AB-117"
+          ]
         },
         {
           "nombre": "aceite",
           "cantidad": 0.5,
-          "unidad": "L"
+          "unidad": "L",
+          "codigos": [
+            "AB-005",
+            "AB-107",
+            "AB-132"
+          ]
         },
         {
           "nombre": "sal",
           "cantidad": 0.02,
-          "unidad": "kg"
+          "unidad": "kg",
+          "codigos": [
+            "AB-007",
+            "AB-135"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "picante-pollo",
+      "nombre": "Picante de pollo",
+      "alias": [
+        "picante de pollo",
+        "picantes de pollo",
+        "picante"
+      ],
+      "rinde": 10,
+      "unidadDeRinde": "platos",
+      "ingredientes": [
+        {
+          "nombre": "pollo entero",
+          "cantidad": 2,
+          "unidad": "u.",
+          "codigos": [
+            "AB-158"
+          ]
+        },
+        {
+          "nombre": "papa",
+          "cantidad": 3,
+          "unidad": "kg",
+          "codigos": [
+            "AB-116"
+          ]
+        },
+        {
+          "nombre": "cebolla",
+          "cantidad": 1,
+          "unidad": "kg",
+          "codigos": [
+            "AB-117"
+          ]
+        },
+        {
+          "nombre": "ají colorado",
+          "cantidad": 0.2,
+          "unidad": "kg",
+          "codigos": [
+            "AB-111"
+          ]
+        },
+        {
+          "nombre": "tomate",
+          "cantidad": 0.5,
+          "unidad": "kg",
+          "codigos": [
+            "AB-145"
+          ]
+        },
+        {
+          "nombre": "arveja",
+          "cantidad": 0.3,
+          "unidad": "kg",
+          "codigos": [
+            "AB-134"
+          ]
+        },
+        {
+          "nombre": "aceite",
+          "cantidad": 0.2,
+          "unidad": "L",
+          "codigos": [
+            "AB-005",
+            "AB-107",
+            "AB-132"
+          ]
+        },
+        {
+          "nombre": "comino",
+          "cantidad": 0.01,
+          "unidad": "kg",
+          "codigos": [
+            "AB-112"
+          ]
+        },
+        {
+          "nombre": "sal",
+          "cantidad": 0.03,
+          "unidad": "kg",
+          "codigos": [
+            "AB-007",
+            "AB-135"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fricase",
+      "nombre": "Fricasé",
+      "alias": [
+        "fricasé",
+        "fricase",
+        "fricasé de cerdo"
+      ],
+      "rinde": 8,
+      "unidadDeRinde": "platos",
+      "ingredientes": [
+        {
+          "nombre": "costilla de cerdo",
+          "cantidad": 2,
+          "unidad": "kg",
+          "codigos": [
+            "AB-198"
+          ]
+        },
+        {
+          "nombre": "mote",
+          "cantidad": 1,
+          "unidad": "kg",
+          "codigos": [
+            "AB-179"
+          ]
+        },
+        {
+          "nombre": "ají colorado",
+          "cantidad": 0.15,
+          "unidad": "kg",
+          "codigos": [
+            "AB-111"
+          ]
+        },
+        {
+          "nombre": "pan molido",
+          "cantidad": 0.2,
+          "unidad": "kg",
+          "codigos": [
+            "AB-127"
+          ]
+        },
+        {
+          "nombre": "cebolla",
+          "cantidad": 0.5,
+          "unidad": "kg",
+          "codigos": [
+            "AB-117"
+          ]
+        },
+        {
+          "nombre": "comino",
+          "cantidad": 0.01,
+          "unidad": "kg",
+          "codigos": [
+            "AB-112"
+          ]
+        },
+        {
+          "nombre": "pimienta",
+          "cantidad": 0.005,
+          "unidad": "kg",
+          "codigos": [
+            "AB-113"
+          ]
+        },
+        {
+          "nombre": "sal",
+          "cantidad": 0.03,
+          "unidad": "kg",
+          "codigos": [
+            "AB-007",
+            "AB-135"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "chairo",
+      "nombre": "Chairo",
+      "alias": [
+        "chairo",
+        "sopa de chairo"
+      ],
+      "rinde": 10,
+      "unidadDeRinde": "platos",
+      "ingredientes": [
+        {
+          "nombre": "charque",
+          "cantidad": 0.5,
+          "unidad": "kg",
+          "codigos": [
+            "AB-153"
+          ]
+        },
+        {
+          "nombre": "papa",
+          "cantidad": 2,
+          "unidad": "kg",
+          "codigos": [
+            "AB-116"
+          ]
+        },
+        {
+          "nombre": "zanahoria",
+          "cantidad": 0.5,
+          "unidad": "kg",
+          "codigos": [
+            "AB-146"
+          ]
+        },
+        {
+          "nombre": "arveja",
+          "cantidad": 0.3,
+          "unidad": "kg",
+          "codigos": [
+            "AB-134"
+          ]
+        },
+        {
+          "nombre": "mote",
+          "cantidad": 0.5,
+          "unidad": "kg",
+          "codigos": [
+            "AB-179"
+          ]
+        },
+        {
+          "nombre": "cebolla",
+          "cantidad": 0.3,
+          "unidad": "kg",
+          "codigos": [
+            "AB-117"
+          ]
+        },
+        {
+          "nombre": "aceite",
+          "cantidad": 0.1,
+          "unidad": "L",
+          "codigos": [
+            "AB-005",
+            "AB-107",
+            "AB-132"
+          ]
+        },
+        {
+          "nombre": "comino",
+          "cantidad": 0.01,
+          "unidad": "kg",
+          "codigos": [
+            "AB-112"
+          ]
+        },
+        {
+          "nombre": "sal",
+          "cantidad": 0.03,
+          "unidad": "kg",
+          "codigos": [
+            "AB-007",
+            "AB-135"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sopa-fideo",
+      "nombre": "Sopa de fideo",
+      "alias": [
+        "sopa de fideo",
+        "sopa de fideos"
+      ],
+      "rinde": 10,
+      "unidadDeRinde": "platos",
+      "ingredientes": [
+        {
+          "nombre": "fideo",
+          "cantidad": 0.5,
+          "unidad": "kg",
+          "codigos": [
+            "AB-003",
+            "AB-110"
+          ]
+        },
+        {
+          "nombre": "carne de res",
+          "cantidad": 0.5,
+          "unidad": "kg",
+          "codigos": [
+            "AB-154"
+          ]
+        },
+        {
+          "nombre": "papa",
+          "cantidad": 1,
+          "unidad": "kg",
+          "codigos": [
+            "AB-116"
+          ]
+        },
+        {
+          "nombre": "zanahoria",
+          "cantidad": 0.3,
+          "unidad": "kg",
+          "codigos": [
+            "AB-146"
+          ]
+        },
+        {
+          "nombre": "cebolla",
+          "cantidad": 0.3,
+          "unidad": "kg",
+          "codigos": [
+            "AB-117"
+          ]
+        },
+        {
+          "nombre": "caldo de gallina",
+          "cantidad": 4,
+          "unidad": "u.",
+          "codigos": [
+            "AB-185"
+          ]
+        },
+        {
+          "nombre": "sal",
+          "cantidad": 0.02,
+          "unidad": "kg",
+          "codigos": [
+            "AB-007",
+            "AB-135"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sopa-quinua",
+      "nombre": "Sopa de quinua",
+      "alias": [
+        "sopa de quinua",
+        "sopa de quinoa"
+      ],
+      "rinde": 10,
+      "unidadDeRinde": "platos",
+      "ingredientes": [
+        {
+          "nombre": "quinua",
+          "cantidad": 0.5,
+          "unidad": "kg",
+          "codigos": [
+            "AB-180"
+          ]
+        },
+        {
+          "nombre": "carne de res",
+          "cantidad": 0.5,
+          "unidad": "kg",
+          "codigos": [
+            "AB-154"
+          ]
+        },
+        {
+          "nombre": "papa",
+          "cantidad": 1,
+          "unidad": "kg",
+          "codigos": [
+            "AB-116"
+          ]
+        },
+        {
+          "nombre": "zanahoria",
+          "cantidad": 0.3,
+          "unidad": "kg",
+          "codigos": [
+            "AB-146"
+          ]
+        },
+        {
+          "nombre": "cebolla",
+          "cantidad": 0.3,
+          "unidad": "kg",
+          "codigos": [
+            "AB-117"
+          ]
+        },
+        {
+          "nombre": "aceite",
+          "cantidad": 0.05,
+          "unidad": "L",
+          "codigos": [
+            "AB-005",
+            "AB-107",
+            "AB-132"
+          ]
+        },
+        {
+          "nombre": "sal",
+          "cantidad": 0.02,
+          "unidad": "kg",
+          "codigos": [
+            "AB-007",
+            "AB-135"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sopa-lenteja",
+      "nombre": "Sopa de lenteja",
+      "alias": [
+        "sopa de lenteja",
+        "sopa de lentejas"
+      ],
+      "rinde": 10,
+      "unidadDeRinde": "platos",
+      "ingredientes": [
+        {
+          "nombre": "lenteja",
+          "cantidad": 0.5,
+          "unidad": "kg",
+          "codigos": [
+            "AB-178"
+          ]
+        },
+        {
+          "nombre": "papa",
+          "cantidad": 1,
+          "unidad": "kg",
+          "codigos": [
+            "AB-116"
+          ]
+        },
+        {
+          "nombre": "zanahoria",
+          "cantidad": 0.3,
+          "unidad": "kg",
+          "codigos": [
+            "AB-146"
+          ]
+        },
+        {
+          "nombre": "cebolla",
+          "cantidad": 0.3,
+          "unidad": "kg",
+          "codigos": [
+            "AB-117"
+          ]
+        },
+        {
+          "nombre": "aceite",
+          "cantidad": 0.05,
+          "unidad": "L",
+          "codigos": [
+            "AB-005",
+            "AB-107",
+            "AB-132"
+          ]
+        },
+        {
+          "nombre": "comino",
+          "cantidad": 0.005,
+          "unidad": "kg",
+          "codigos": [
+            "AB-112"
+          ]
+        },
+        {
+          "nombre": "sal",
+          "cantidad": 0.02,
+          "unidad": "kg",
+          "codigos": [
+            "AB-007",
+            "AB-135"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "arroz-con-leche",
+      "nombre": "Arroz con leche",
+      "alias": [
+        "arroz con leche"
+      ],
+      "rinde": 20,
+      "unidadDeRinde": "vasos",
+      "ingredientes": [
+        {
+          "nombre": "arroz",
+          "cantidad": 1,
+          "unidad": "kg",
+          "codigos": [
+            "AB-001",
+            "AB-109",
+            "AB-108"
+          ]
+        },
+        {
+          "nombre": "leche",
+          "cantidad": 3,
+          "unidad": "L",
+          "codigos": [
+            "AB-017"
+          ]
+        },
+        {
+          "nombre": "azúcar",
+          "cantidad": 0.5,
+          "unidad": "kg",
+          "codigos": [
+            "AB-002",
+            "AB-123",
+            "AB-103"
+          ]
+        },
+        {
+          "nombre": "canela",
+          "cantidad": 0.02,
+          "unidad": "kg",
+          "codigos": [
+            "AB-167"
+          ]
+        },
+        {
+          "nombre": "leche condensada",
+          "cantidad": 2,
+          "unidad": "u.",
+          "codigos": [
+            "AB-171"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tucumana",
+      "nombre": "Tucumanas",
+      "alias": [
+        "tucumana",
+        "tucumanas"
+      ],
+      "rinde": 40,
+      "unidadDeRinde": "tucumanas",
+      "ingredientes": [
+        {
+          "nombre": "harina de trigo",
+          "cantidad": 1,
+          "unidad": "kg",
+          "codigos": [
+            "AB-004",
+            "AB-102",
+            "AB-101"
+          ]
+        },
+        {
+          "nombre": "carne molida",
+          "cantidad": 1,
+          "unidad": "kg",
+          "codigos": [
+            "AB-155"
+          ]
+        },
+        {
+          "nombre": "papa",
+          "cantidad": 1,
+          "unidad": "kg",
+          "codigos": [
+            "AB-116"
+          ]
+        },
+        {
+          "nombre": "huevo",
+          "cantidad": 6,
+          "unidad": "u.",
+          "codigos": [
+            "AB-115"
+          ]
+        },
+        {
+          "nombre": "cebolla",
+          "cantidad": 0.5,
+          "unidad": "kg",
+          "codigos": [
+            "AB-117"
+          ]
+        },
+        {
+          "nombre": "ají colorado",
+          "cantidad": 0.05,
+          "unidad": "kg",
+          "codigos": [
+            "AB-111"
+          ]
+        },
+        {
+          "nombre": "aceite",
+          "cantidad": 2,
+          "unidad": "L",
+          "codigos": [
+            "AB-005",
+            "AB-107",
+            "AB-132"
+          ]
+        },
+        {
+          "nombre": "sal",
+          "cantidad": 0.03,
+          "unidad": "kg",
+          "codigos": [
+            "AB-007",
+            "AB-135"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bunuelo",
+      "nombre": "Buñuelos",
+      "alias": [
+        "buñuelo",
+        "buñuelos"
+      ],
+      "rinde": 50,
+      "unidadDeRinde": "buñuelos",
+      "ingredientes": [
+        {
+          "nombre": "harina de trigo",
+          "cantidad": 1,
+          "unidad": "kg",
+          "codigos": [
+            "AB-004",
+            "AB-102",
+            "AB-101"
+          ]
+        },
+        {
+          "nombre": "levadura",
+          "cantidad": 0.02,
+          "unidad": "kg",
+          "codigos": [
+            "AB-104"
+          ]
+        },
+        {
+          "nombre": "azúcar",
+          "cantidad": 0.1,
+          "unidad": "kg",
+          "codigos": [
+            "AB-002",
+            "AB-123",
+            "AB-103"
+          ]
+        },
+        {
+          "nombre": "aceite",
+          "cantidad": 2,
+          "unidad": "L",
+          "codigos": [
+            "AB-005",
+            "AB-107",
+            "AB-132"
+          ]
+        },
+        {
+          "nombre": "sal",
+          "cantidad": 0.01,
+          "unidad": "kg",
+          "codigos": [
+            "AB-007",
+            "AB-135"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "milanesa-pollo",
+      "nombre": "Milanesa de pollo",
+      "alias": [
+        "milanesa",
+        "milanesas",
+        "milanesa de pollo"
+      ],
+      "rinde": 10,
+      "unidadDeRinde": "platos",
+      "ingredientes": [
+        {
+          "nombre": "pechuga de pollo",
+          "cantidad": 2,
+          "unidad": "kg",
+          "codigos": [
+            "AB-195"
+          ]
+        },
+        {
+          "nombre": "pan molido",
+          "cantidad": 0.5,
+          "unidad": "kg",
+          "codigos": [
+            "AB-127"
+          ]
+        },
+        {
+          "nombre": "huevo",
+          "cantidad": 6,
+          "unidad": "u.",
+          "codigos": [
+            "AB-115"
+          ]
+        },
+        {
+          "nombre": "arroz",
+          "cantidad": 1,
+          "unidad": "kg",
+          "codigos": [
+            "AB-001",
+            "AB-109",
+            "AB-108"
+          ]
+        },
+        {
+          "nombre": "papa",
+          "cantidad": 2,
+          "unidad": "kg",
+          "codigos": [
+            "AB-116"
+          ]
+        },
+        {
+          "nombre": "aceite",
+          "cantidad": 1,
+          "unidad": "L",
+          "codigos": [
+            "AB-005",
+            "AB-107",
+            "AB-132"
+          ]
+        },
+        {
+          "nombre": "ajo",
+          "cantidad": 0.02,
+          "unidad": "kg",
+          "codigos": [
+            "AB-118"
+          ]
+        },
+        {
+          "nombre": "sal",
+          "cantidad": 0.03,
+          "unidad": "kg",
+          "codigos": [
+            "AB-007",
+            "AB-135"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "falso-conejo",
+      "nombre": "Falso conejo",
+      "alias": [
+        "falso conejo"
+      ],
+      "rinde": 10,
+      "unidadDeRinde": "platos",
+      "ingredientes": [
+        {
+          "nombre": "carne molida",
+          "cantidad": 1.5,
+          "unidad": "kg",
+          "codigos": [
+            "AB-155"
+          ]
+        },
+        {
+          "nombre": "pan molido",
+          "cantidad": 0.3,
+          "unidad": "kg",
+          "codigos": [
+            "AB-127"
+          ]
+        },
+        {
+          "nombre": "huevo",
+          "cantidad": 4,
+          "unidad": "u.",
+          "codigos": [
+            "AB-115"
+          ]
+        },
+        {
+          "nombre": "fideo",
+          "cantidad": 0.5,
+          "unidad": "kg",
+          "codigos": [
+            "AB-003",
+            "AB-110"
+          ]
+        },
+        {
+          "nombre": "papa",
+          "cantidad": 2,
+          "unidad": "kg",
+          "codigos": [
+            "AB-116"
+          ]
+        },
+        {
+          "nombre": "cebolla",
+          "cantidad": 0.5,
+          "unidad": "kg",
+          "codigos": [
+            "AB-117"
+          ]
+        },
+        {
+          "nombre": "tomate",
+          "cantidad": 0.5,
+          "unidad": "kg",
+          "codigos": [
+            "AB-145"
+          ]
+        },
+        {
+          "nombre": "ají colorado",
+          "cantidad": 0.1,
+          "unidad": "kg",
+          "codigos": [
+            "AB-111"
+          ]
+        },
+        {
+          "nombre": "aceite",
+          "cantidad": 0.3,
+          "unidad": "L",
+          "codigos": [
+            "AB-005",
+            "AB-107",
+            "AB-132"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lomo-montado",
+      "nombre": "Lomo montado",
+      "alias": [
+        "lomo montado"
+      ],
+      "rinde": 10,
+      "unidadDeRinde": "platos",
+      "ingredientes": [
+        {
+          "nombre": "lomo",
+          "cantidad": 1.5,
+          "unidad": "kg",
+          "codigos": [
+            "AB-156"
+          ]
+        },
+        {
+          "nombre": "huevo",
+          "cantidad": 10,
+          "unidad": "u.",
+          "codigos": [
+            "AB-115"
+          ]
+        },
+        {
+          "nombre": "arroz",
+          "cantidad": 1,
+          "unidad": "kg",
+          "codigos": [
+            "AB-001",
+            "AB-109",
+            "AB-108"
+          ]
+        },
+        {
+          "nombre": "papa",
+          "cantidad": 2,
+          "unidad": "kg",
+          "codigos": [
+            "AB-116"
+          ]
+        },
+        {
+          "nombre": "tomate",
+          "cantidad": 0.5,
+          "unidad": "kg",
+          "codigos": [
+            "AB-145"
+          ]
+        },
+        {
+          "nombre": "cebolla",
+          "cantidad": 0.5,
+          "unidad": "kg",
+          "codigos": [
+            "AB-117"
+          ]
+        },
+        {
+          "nombre": "aceite",
+          "cantidad": 1,
+          "unidad": "L",
+          "codigos": [
+            "AB-005",
+            "AB-107",
+            "AB-132"
+          ]
+        },
+        {
+          "nombre": "sal",
+          "cantidad": 0.03,
+          "unidad": "kg",
+          "codigos": [
+            "AB-007",
+            "AB-135"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "humintas",
+      "nombre": "Humintas",
+      "alias": [
+        "huminta",
+        "humintas",
+        "humita",
+        "humitas"
+      ],
+      "rinde": 24,
+      "unidadDeRinde": "humintas",
+      "ingredientes": [
+        {
+          "nombre": "choclo",
+          "cantidad": 24,
+          "unidad": "u.",
+          "codigos": [
+            "AB-193"
+          ]
+        },
+        {
+          "nombre": "queso",
+          "cantidad": 1,
+          "unidad": "kg",
+          "codigos": [
+            "AB-144"
+          ]
+        },
+        {
+          "nombre": "manteca",
+          "cantidad": 0.2,
+          "unidad": "kg",
+          "codigos": [
+            "AB-130",
+            "AB-106"
+          ]
+        },
+        {
+          "nombre": "azúcar",
+          "cantidad": 0.1,
+          "unidad": "kg",
+          "codigos": [
+            "AB-002",
+            "AB-123",
+            "AB-103"
+          ]
+        },
+        {
+          "nombre": "sal",
+          "cantidad": 0.02,
+          "unidad": "kg",
+          "codigos": [
+            "AB-007",
+            "AB-135"
+          ]
         }
       ]
     }

@@ -47,6 +47,16 @@ describe('Una sola lista de recetas: las plantillas de Mi negocio y las nuestras
     for (const p of PLANTILLAS) for (const i of desdePlantilla(p).ingredientes) expect(i.codigos?.length).toBeGreaterThan(0);
   });
 
+  it('cada insumo de cada receta dice qué producto del catálogo lo vende', () => {
+    for (const r of RECETAS) {
+      for (const i of r.ingredientes) {
+        expect({ receta: r.id, insumo: i.nombre, codigos: i.codigos?.filter((c) => /^AB-\d{3}$/.test(c)).length ?? 0 }).toMatchObject({ codigos: i.codigos?.length || -1 });
+      }
+    }
+    expect(buscarReceta('quiero 50 tucumanas')?.id).toBe('tucumana');
+    expect(buscarReceta('picante de pollo para 10')?.id).toBe('picante-pollo');
+  });
+
   it('no hay dos recetas con el mismo id', () => {
     expect(new Set(RECETAS.map((r) => r.id)).size).toBe(RECETAS.length);
   });
