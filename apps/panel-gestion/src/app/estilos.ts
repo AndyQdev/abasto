@@ -103,6 +103,12 @@ export const ESTILOS_BASE = `
 
   @media (max-width: 860px) { .cifras { grid-template-columns: minmax(0, 1fr); } .cifra-carta { padding: 1rem 1.25rem; } }
   @media (max-width: 600px) { .titulo-pantalla { font-size: 2.4rem; } .cifra-carta strong { font-size: 2rem; } }
+  /* En el teléfono los filtros no se parten en renglones: se deslizan de costado */
+  @media (max-width: 600px) {
+    .segmentos { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; min-width: 0; }
+    .segmentos::-webkit-scrollbar { display: none; }
+    .segmento { flex: none; }
+  }
   @media (max-width: 860px) {
     .lateral, .lateral-pie { border-radius: 0; }
     .subtitulo { font-size: 1rem; }

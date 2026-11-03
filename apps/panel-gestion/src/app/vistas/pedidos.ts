@@ -219,7 +219,7 @@ const POR_COLUMNA = 6;
       }
     } @else {
       <div class="barra">
-        <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap">
+        <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; min-width: 0; max-width: 100%">
           <div class="segmentos" role="group" aria-label="Filtrar pedidos">
             @for (f of filtros; track f.clave) {
               <button class="segmento" [class.elegido]="filtro() === f.clave" [attr.aria-pressed]="filtro() === f.clave" (click)="filtro.set(f.clave)">

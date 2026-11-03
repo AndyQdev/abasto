@@ -165,7 +165,7 @@ const nuevoId = () => (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-
       .campo { display: grid; gap: 0.45rem; }
       .campo label { font-weight: 700; }
       .monto { display: flex; align-items: center; gap: 0.5rem; }
-      .monto .entrada { flex: 1; height: 56px; font-size: 1.5rem; font-weight: 800; }
+      .monto .entrada { flex: 1; width: 100%; min-width: 0; height: 56px; font-size: 1.5rem; font-weight: 800; }
       .monto .moneda { font-size: 1.3rem; font-weight: 800; color: hsl(var(--texto-2)); }
       .atajos { display: flex; gap: 0.5rem; flex-wrap: wrap; }
       .aviso-campo { color: hsl(var(--error-suave-texto)); font-weight: 600; font-size: 0.9rem; }
