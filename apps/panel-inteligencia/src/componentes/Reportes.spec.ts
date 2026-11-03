@@ -30,7 +30,78 @@ const voz: DependenciasDeVoz = {
   transcriptor: { transcribir: async () => 'cuánto me deben' },
 };
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+  localStorage.clear();
+});
+
+const json = (cuerpo: unknown) => new Response(JSON.stringify(cuerpo), { headers: { 'content-type': 'application/json' } });
+const sinSenal = (sin: boolean) => vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(!sin);
+
+describe('Reportes sin señal', () => {
+  it('lo dicho por voz sin señal queda guardado y se responde solo al volver la señal', async () => {
+    const senal = sinSenal(true);
+    const pedir = vi.fn(async () => json(respuesta));
+    vi.stubGlobal('fetch', pedir);
+    const pantalla = mount(Reportes, { props: { sesion, voz }, attachTo: document.body });
+
+    // Whisper transcribe dentro del navegador aunque no haya red
+    await pantalla.get('button.microfono').trigger('click');
+    await flushPromises();
+    await pantalla.get('button.microfono').trigger('click');
+    await flushPromises();
+
+    expect(pedir).not.toHaveBeenCalled();
+    expect(pantalla.get('.aviso-senal').text()).toContain('tu pregunta quedó guardada');
+    expect(pantalla.get('.pendientes').text()).toContain('cuánto me deben');
+
+    senal.mockReturnValue(true);
+    window.dispatchEvent(new Event('online'));
+    await flushPromises();
+
+    expect(pedir).toHaveBeenCalledTimes(1);
+    expect(pantalla.find('.pendientes').exists()).toBe(false);
+    expect(pantalla.text()).toContain('Bs 1.200,00');
+    expect(pantalla.get('.aviso-senal').text()).toContain('Volvió la señal');
+    pantalla.unmount();
+  });
+
+  it('sin señal muestra el último reporte guardado de la misma pregunta y no deja exportar', async () => {
+    const senal = sinSenal(false);
+    vi.stubGlobal('fetch', vi.fn(async () => json(respuesta)));
+    const pantalla = mount(Reportes, { props: { sesion, voz } });
+    await pantalla.get('input').setValue('cuánto me deben');
+    await pantalla.get('form').trigger('submit');
+    await flushPromises();
+    pantalla.unmount();
+
+    senal.mockReturnValue(false);
+    const otra = mount(Reportes, { props: { sesion, voz } });
+    expect(otra.get('.guardados').text()).toContain('cuánto me deben');
+    senal.mockReturnValue(true);
+    await otra.get('input').setValue('¿Cuánto me deben?');
+    // Se cae la red a mitad: fetch lanza TypeError
+    vi.stubGlobal('fetch', vi.fn(async () => Promise.reject(new TypeError('Failed to fetch'))));
+    await otra.get('form').trigger('submit');
+    await flushPromises();
+
+    expect(otra.get('.aviso-senal').text()).toContain('último reporte guardado');
+    expect(otra.text()).toContain('guardado el');
+    expect(otra.text()).toContain('Bs 1.200,00');
+    expect(otra.get('.resultado .boton-primario').attributes('disabled')).toBeDefined();
+  });
+
+  it('si el Asistente dice que no (no es falta de red), se muestra el error y no se encola', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ message: 'La tabla x no está disponible' }), { status: 400 })));
+    const pantalla = mount(Reportes, { props: { sesion, voz } });
+    await pantalla.get('form').trigger('submit');
+    await flushPromises();
+
+    expect(pantalla.get('.falla').text()).toBe('La tabla x no está disponible');
+    expect(pantalla.find('.pendientes').exists()).toBe(false);
+  });
+});
 
 describe('Pantalla de reportes', () => {
   it('lo dicho por voz se escribe en la pregunta, se pregunta solo y se dibuja el gráfico', async () => {
