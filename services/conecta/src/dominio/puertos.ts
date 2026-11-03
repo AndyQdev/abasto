@@ -1,3 +1,4 @@
+import type { EntradaDeBitacora } from './bitacora.js';
 import type { Operacion } from './operacion.js';
 
 export type Reserva =
@@ -22,5 +23,13 @@ export interface DestinoDeOperaciones {
   aplicar(operacion: Operacion, token: string): Promise<unknown>;
 }
 
+/** Puerto: la bitácora de lo que entró para cada mayorista (Panel › Conecta). */
+export interface Bitacora {
+  anotar(entrada: EntradaDeBitacora): Promise<void>;
+  /** Lo último primero. */
+  delMayorista(mayoristaId: string, limite: number): Promise<EntradaDeBitacora[]>;
+}
+
 export const REGISTRO_DE_IDEMPOTENCIA = Symbol('RegistroDeIdempotencia');
+export const BITACORA = Symbol('Bitacora');
 export const DESTINO_DE_OPERACIONES = Symbol('DestinoDeOperaciones');

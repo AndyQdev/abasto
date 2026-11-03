@@ -91,6 +91,10 @@
             {
               "name": "Idempotency-Key",
               "value": "={{ $('Interpretar mensaje').item.json.clave }}"
+            },
+            {
+              "name": "X-Abasto-Origen",
+              "value": "whatsapp"
             }
           ]
         },

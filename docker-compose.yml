@@ -217,7 +217,7 @@ services:
       DYNAMODB_URL: http://dynamodb:8000
       ROUTER_URL: http://router:4000/
       KEYCLOAK_JWKS_URL: http://keycloak:8080/realms/abasto/protocol/openid-connect/certs
-      ORIGENES_PERMITIDOS: http://localhost:8090,http://localhost:5174
+      ORIGENES_PERMITIDOS: http://localhost:8090,http://localhost:5174,http://localhost:5170
       # Tiempo real (WebSocket /v1/tiempo-real): escucha pedido.* y cobro.* de abasto.eventos
       RABBITMQ_URL: amqp://abasto:abasto@rabbitmq:5672
     ports: ["8084:8084"]

@@ -5,7 +5,7 @@ import type { DestinoDeOperaciones } from '../../dominio/puertos.js';
 /** Cada tipo de operación es una mutación del supergrafo. La clave viaja para que el servicio también la registre. */
 const MUTACIONES: Record<TipoDeOperacion, string> = {
   'pedido.crear': `mutation CrearPedido($entrada: CrearPedidoEntrada!) {
-    crearPedido(entrada: $entrada) { id estado total { texto } }
+    crearPedido(entrada: $entrada) { id codigo estado total { texto } tienda { nombre } }
   }`,
   'producto.cargar': `mutation CargarProducto($entrada: CargarProductoEntrada!) {
     cargarProducto(entrada: $entrada) { id nombre estado }

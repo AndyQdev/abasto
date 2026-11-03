@@ -31,9 +31,11 @@
 Actualizado: 03/11/2026 · en main (los dos trabajamos ahí)
 
 ## Estoy en
-Las fases que faltan del Panel web. CU-09 (Cuentas por cobrar) hecho; sigue Conecta (F3). Después: registro de tiendas desde la app (CU-15).
+El Panel web ya no tiene módulos «en construcción»: CU-09 (Cuentas por cobrar) y Conecta (F3) hechos el 03/11. Sigue: registro de tiendas desde la app (CU-15).
 
 ## Terminé
+- **Conecta en el Panel (F3, 03/11):** la bitácora de lo que entra de afuera (WhatsApp por n8n, tienda en línea por la API, app sin señal) con lo que pasó con cada cosa, incluido «Repetido: no se duplicó» (idempotencia a la vista). Conecta: `GET /v1/bitacora` y la cabecera `X-Abasto-Origen` (OpenAPI, aditivo); el flujo de n8n la manda. e2e `conecta.spec.ts`.
+- **Bug arreglado (03/11):** un pedido con un producto que no existe en Catálogo dejaba vacío Panel › Pedidos (el Router anulaba toda `misVentas`). Catálogo ahora resuelve ese producto como «Producto que ya no está en el catálogo (código)».
 - **CU-09 · Cuentas por cobrar (03/11):** Cobros abre una cuenta por cada pedido a crédito o contra entrega al confirmarse (`pedido.confirmado`, cola `cobros.cuentas`); el Panel › Cuentas muestra lo que te deben (lo más atrasado primero) y registra pagos en efectivo, transferencia o QR, todo o una parte. Un pago repetido no se cuenta dos veces y al saldar un crédito la tienda recupera el cupo. e2e `cuentas.spec.ts` (confirmar A-1051 → la cuenta aparece → dos pagos → pagada); la suite completa en verde (arreglé `mi-negocio.spec.ts`, que todavía buscaba la tabla vieja de Pedidos).
   **Jhoel:** ahora Cobros publica `cobro.pago_registrado` con `{ pedidoId, codigo, tiendaId, mayoristaId, centavos, forma, saldoCentavos }` (`contracts/asyncapi.yaml`); tu proyector ya lo aplicaba y lo probé: A-1051 queda `pagada` en `reportes.cuentas_por_cobrar`. Una diferencia que conviene igualar: tu proyector pone 15 días de plazo a todo crédito y Cobros usa el plazo de la línea (15 o 30); si quieres, toma `saldoCentavos` del evento en vez de restar. Después de `git pull`: `pnpm supergrafo` no hace falta (lo subí), `docker compose --profile servicios up -d --build cobros` y `docker compose restart router`.
 - **Panel PWA lista para la IA local del navegador (03/11, lo pidió el ingeniero: «el navegador debe tener su IA local» y «ambos deben funcionar offline»):** probé el Panel construido sin señal con el diseño v7 (e2e `panel-sin-senal` en verde) y Whisper sin internet (e2e nuevo `ia-navegador-sin-senal`, con `IA_NAVEGADOR=1`). El service worker guardaba el modelo dos veces (en su caché y en la de transformers.js): ahora deja pasar Hugging Face y guarda una vez la librería del CDN con versión fija (`abasto-ia-local`). Manifiesto e íconos con la identidad v7, «Instalar el Panel» en el menú del perfil y almacenamiento persistente.
@@ -68,6 +70,7 @@ Las fases que faltan del Panel web. CU-09 (Cuentas por cobrar) hecho; sigue Cone
 - e2e: 22 pruebas en verde (02/11).
 
 ## Cambié en contratos
+- 03/11 · Conecta (OpenAPI, aditivo): `GET /v1/bitacora` y la cabecera opcional `X-Abasto-Origen` en `POST /v1/pedidos`; la respuesta de `pedido.crear` trae además `codigo` y `tienda { nombre }`.
 - 03/11 · Cobros (CU-09): `cuentasPorCobrar(conPagadas)`, `registrarPago(entrada)` y sus tipos (aditivo; supergrafo regenerado). AsyncAPI: payload de `cobro.pago_registrado` y la cola nueva `cobros.cuentas` (solo `pedido.confirmado`), también en `infra/rabbitmq/definitions.json`.
 - 03/11 · `contracts/microfrontends.md`: sección nueva «IA local del navegador en la PWA» (qué guarda el service worker y qué guarda la librería de IA). Aditivo: Inteligencia no tiene que cambiar nada.
 - 02/11 · Catálogo: `Producto.usos: [String!]!` (a quién se muestra en el Inicio), `usos` en `CrearProductoEntrada` y `EditarProductoEntrada`, y `Mayorista.dePrueba: Boolean!`. Subtipos del productor: se suman `horneados`, `polleria` y `puesto`. Todo aditivo; subgrafo y supergrafo regenerados. **Jhoel:** nada que tocar; después de `git pull`, `pnpm semilla` para ver los 138 productos.

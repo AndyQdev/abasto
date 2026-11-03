@@ -44,4 +44,12 @@ export class GraphQL {
     if (cuerpo.errors?.length) console.warn('GraphQL devolvió datos parciales', cuerpo.errors);
     return cuerpo.data as T;
   }
+
+  /** Conecta es REST (la API pública): Panel › Conecta lee su bitácora con la misma sesión. */
+  async leerDeConecta<T>(ruta: string): Promise<T> {
+    const sesion = this.sesion() ?? (await this.sesionLista);
+    const respuesta = await fetch(`${sesion.urls.conecta}${ruta}`, { headers: { authorization: `Bearer ${await sesion.token()}` } });
+    if (!respuesta.ok) throw new Error(respuesta.status === 401 ? 'Tu sesión venció: vuelve a entrar' : `Conecta respondió ${respuesta.status}`);
+    return (await respuesta.json()) as T;
+  }
 }

@@ -5,8 +5,8 @@ import { Icono } from './icono';
 import { pedirNavegar, type SesionDelShell } from './sesion';
 import { VistaClientes } from './vistas/clientes';
 import { VistaCompras } from './vistas/compras';
+import { VistaConecta } from './vistas/conecta';
 import { VistaCuentas } from './vistas/cuentas';
-import { VistaEnConstruccion } from './vistas/en-construccion';
 import { VistaPedidos } from './vistas/pedidos';
 import { VistaProductos } from './vistas/productos';
 
@@ -17,7 +17,7 @@ import { VistaProductos } from './vistas/productos';
 @Component({
   selector: 'abasto-gestion-raiz',
   encapsulation: ViewEncapsulation.ShadowDom,
-  imports: [VistaPedidos, VistaProductos, VistaClientes, VistaCompras, VistaCuentas, VistaEnConstruccion, Icono],
+  imports: [VistaPedidos, VistaProductos, VistaClientes, VistaCompras, VistaCuentas, VistaConecta, Icono],
   styles: [
     ESTILOS_BASE,
     `
@@ -59,10 +59,7 @@ import { VistaProductos } from './vistas/productos';
       @case ('productos') { <abasto-vista-productos /> }
       @case ('clientes') { <abasto-vista-clientes /> }
       @case ('cuentas') { <abasto-vista-cuentas /> }
-      @case ('conecta') {
-        <abasto-vista-en-construccion titulo="Conecta" fase="F3"
-          detalle="Tiendas conectadas por API o WooCommerce, eventos recientes y webhooks que fallaron." />
-      }
+      @case ('conecta') { <abasto-vista-conecta /> }
       @default { <abasto-vista-pedidos [soloPorConfirmar]="true" /> }
     }
   `,

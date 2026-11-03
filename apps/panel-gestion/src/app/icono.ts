@@ -48,6 +48,11 @@ import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
         @case ('huevo') { <path d="M12 22c6.23-.05 7.87-5.57 7.5-10-.36-4.34-3.95-9.96-7.5-10-3.55.04-7.14 5.66-7.5 10-.37 4.43 1.27 9.95 7.5 10z" /> }
         @case ('zanahoria') { <path d="M2.27 21.7s9.87-3.5 12.73-6.36a4.5 4.5 0 0 0-6.36-6.37C5.77 11.84 2.27 21.7 2.27 21.7zM8.64 14l-2.05-2.04M15.34 15l-2.46-2.46M22 9s-1.33-2-3.5-2C16.86 7 15 9 15 9s1.33 2 3.5 2S22 9 22 9zM15 2s-2 1.33-2 3.5S15 9 15 9s2-1.84 2-3.5C17 3.33 15 2 15 2z" /> }
         @case ('burbujas') { <circle cx="9" cy="15" r="5" /><circle cx="17" cy="7" r="3" /><circle cx="18.5" cy="16.5" r="2" /> }
+        @case ('mensaje') { <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" /> }
+        @case ('enchufe') { <path d="M12 22v-5M9 8V2M15 8V2M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z" /> }
+        @case ('celular') { <rect width="14" height="20" x="5" y="2" rx="2" /><path d="M12 18h.01" /> }
+        @case ('repetir') { <path d="m17 2 4 4-4 4M3 11v-1a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v1a4 4 0 0 1-4 4H3" /> }
+        @case ('copiar') { <rect width="14" height="14" x="8" y="8" rx="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /> }
         @default { <circle cx="12" cy="12" r="9" /> }
       }
     </svg>

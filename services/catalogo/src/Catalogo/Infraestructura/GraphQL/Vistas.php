@@ -72,6 +72,38 @@ final class Vistas
         ];
     }
 
+    /**
+     * Un producto que ya no está en el catálogo (o que nunca estuvo) pero que figura en un pedido viejo.
+     * Sin esto, el Router no puede completar Producto.nombre y anula la lista entera de pedidos (Panel › Pedidos vacío).
+     *
+     * @return array<string, mixed>
+     */
+    public static function productoQueYaNoEsta(string $id): array
+    {
+        return [
+            'id' => $id,
+            'codigo' => $id,
+            'nombre' => "Producto que ya no está en el catálogo ({$id})",
+            'rubro' => '',
+            'descripcion' => '',
+            'stock' => 0,
+            'estado' => 'PAUSADO',
+            'mayorista' => self::mayorista(null, ''),
+            'precioVisible' => false,
+            'escalas' => [],
+            'abastecimiento' => 'STOCK',
+            'entregaHoras' => null,
+            'costoUnitario' => null,
+            'proveedor' => null,
+            'foto' => null,
+            'marca' => null,
+            'marcaBoliviana' => false,
+            'precioEnSuper' => null,
+            'precioPorConfirmar' => false,
+            'usos' => [],
+        ];
+    }
+
     /** @return array<string, mixed> */
     public static function mayorista(?Organizacion $o, string $id, string $relacion = 'NINGUNA'): array
     {

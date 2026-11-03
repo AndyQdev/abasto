@@ -129,6 +129,21 @@ it('resuelve la entidad Tienda para Pedidos y Cobros', function () {
     expect($r['data']['_entities'][0]['nombre'])->toBe('Tienda Doña Rosa');
 });
 
+it('un producto que ya no está en el catálogo se resuelve igual: no vacía la lista de pedidos', function () {
+    comoEmpresa('abasto', ['mayorista']);
+    $r = graphql('query($r: [_Any!]!) { _entities(representations: $r) { ... on Producto { id nombre foto escalas { presentacion } } } }', [
+        'r' => [['__typename' => 'Producto', 'id' => 'NO-0000']],
+    ]);
+
+    expect($r)->not->toHaveKey('errors');
+    expect($r['data']['_entities'][0])->toMatchArray([
+        'id' => 'NO-0000',
+        'nombre' => 'Producto que ya no está en el catálogo (NO-0000)',
+        'foto' => null,
+        'escalas' => [],
+    ]);
+});
+
 it('un distribuidor que también compra no ve sus propios productos en Mercado', function () {
     comoEmpresa('lp', ['mayorista', 'tienda']);
     $productos = graphql(PRODUCTOS)['data']['productos'];

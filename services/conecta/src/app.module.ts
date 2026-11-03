@@ -3,6 +3,8 @@ import { APP_GUARD } from '@nestjs/core';
 import { CanalDeTiendas } from './aplicacion/canal-de-tiendas.js';
 import { SincronizarLote } from './aplicacion/sincronizar-lote.js';
 import {
+  BITACORA,
+  type Bitacora,
   DESTINO_DE_OPERACIONES,
   REGISTRO_DE_IDEMPOTENCIA,
   type DestinoDeOperaciones,
@@ -11,6 +13,7 @@ import {
 import { DestinoGraphQL } from './infraestructura/destinos/destino.graphql.js';
 import { crearClienteDynamoDB, DYNAMODB } from './infraestructura/dynamodb/cliente.js';
 import { RegistroDynamoDB } from './infraestructura/dynamodb/registro.dynamodb.js';
+import { BitacoraDynamoDB } from './infraestructura/dynamodb/bitacora.dynamodb.js';
 import { EscuchaDeEventos } from './infraestructura/mensajeria/eventos.rabbitmq.js';
 import { AutenticacionGuard } from './infraestructura/seguridad/autenticacion.guard.js';
 import { SaludController } from './interfaz/http/salud.controller.js';
@@ -25,10 +28,12 @@ import { ServidorDeTiempoReal } from './interfaz/ws/tiempo-real.servidor.js';
     { provide: DESTINO_DE_OPERACIONES, useClass: DestinoGraphQL },
     {
       provide: SincronizarLote,
-      useFactory: (registro: RegistroDeIdempotencia, destino: DestinoDeOperaciones) =>
-        new SincronizarLote(registro, destino),
-      inject: [REGISTRO_DE_IDEMPOTENCIA, DESTINO_DE_OPERACIONES],
+      useFactory: (registro: RegistroDeIdempotencia, destino: DestinoDeOperaciones, bitacora: Bitacora) =>
+        new SincronizarLote(registro, destino, bitacora),
+      inject: [REGISTRO_DE_IDEMPOTENCIA, DESTINO_DE_OPERACIONES, BITACORA],
     },
+    // Bitácora (03/11): lo que entró para cada mayorista; la ve Panel › Conecta
+    { provide: BITACORA, useClass: BitacoraDynamoDB },
     { provide: APP_GUARD, useClass: AutenticacionGuard },
     // Tiempo real (02/11): RabbitMQ -> canal por tienda -> WebSocket /v1/tiempo-real
     { provide: CanalDeTiendas, useValue: new CanalDeTiendas() },

@@ -55,6 +55,40 @@ paths:
                   resultados: { type: array, items: { $ref: '#/components/schemas/Resultado' } }
         '400': { description: El lote no cumple el esquema }
         '401': { description: Falta la sesión o venció }
+  /v1/bitacora:
+    get:
+      summary: >-
+        (03/11, aditivo) Panel › Conecta: los últimos 100 pedidos que entraron de afuera para el mayorista de la sesión
+        (WhatsApp, tienda en línea, API o la app sin señal) y qué pasó con cada uno. Se guardan 30 días.
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  resumen:
+                    type: object
+                    properties:
+                      aplicadas: { type: integer }
+                      repetidas: { type: integer, description: Reintentos que la idempotencia descartó }
+                      conProblemas: { type: integer }
+                  entradas:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        clave: { type: string, format: uuid }
+                        origen: { type: string, enum: [whatsapp, tienda-en-linea, app-sin-senal, api] }
+                        estado: { type: string, enum: [aplicada, repetida, conflicto, rechazada] }
+                        ocurridoEn: { type: string, format: date-time }
+                        tiendaId: { type: string, nullable: true }
+                        tiendaNombre: { type: string, nullable: true }
+                        codigo: { type: string, nullable: true }
+                        total: { type: string, nullable: true, example: 'Bs 120,00' }
+                        error: { type: string, nullable: true }
+        '401': { description: Falta la sesión o venció }
+        '403': { description: La cuenta no pertenece a una empresa }
   /v1/pedidos:
     post:
       summary: Un pedido desde un e-commerce o n8n
@@ -63,6 +97,11 @@ paths:
           in: header
           required: true
           schema: { type: string, format: uuid }
+        - name: X-Abasto-Origen
+          in: header
+          required: false
+          description: (03/11, aditivo) De dónde viene, para la bitácora del mayorista. Sin cabecera, «api».
+          schema: { type: string, enum: [whatsapp, tienda-en-linea, api] }
       requestBody:
         required: true
         content:

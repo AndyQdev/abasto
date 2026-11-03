@@ -17,13 +17,16 @@ final readonly class Producto
 
     /**
      * @param  array{id: string}  $representacion
-     * @return array<string, mixed>|null
+     * @return array<string, mixed>
      */
-    public function __invoke(array $representacion): ?array
+    public function __invoke(array $representacion): array
     {
         $vista = $this->catalogo->uno($representacion['id'], Usuario::actual()->orgId);
 
-        // El __typename le dice a la unión _Entity qué tipo es
-        return $vista === null ? null : ['__typename' => 'Producto'] + Vistas::producto($vista);
+        // El __typename le dice a la unión _Entity qué tipo es. Un pedido viejo puede tener un producto que ya no
+        // existe: se devuelve igual, con un nombre que lo dice, para no vaciar la lista de pedidos de nadie
+        return ['__typename' => 'Producto'] + ($vista === null
+            ? Vistas::productoQueYaNoEsta($representacion['id'])
+            : Vistas::producto($vista));
     }
 }

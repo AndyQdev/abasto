@@ -13,4 +13,6 @@ La puerta de entrada de afuera: API pública para e-commerce, n8n, el plugin Woo
   - Cobros publica `cobro.qr_generado` (aditivo) para que la app sepa cuándo ya puede mostrar el QR.
   - Contrato: `contracts/openapi/conecta.yaml` (`/v1/tiempo-real`) y `contracts/asyncapi.yaml` (`cobro.qr_generado`). e2e: `e2e/pruebas/tiempo-real.spec.ts`.
 
+- **Bitácora (03/11, Panel › Conecta):** cada `pedido.crear` que entra (por `POST /v1/pedidos` o por un lote de la app sin señal) queda anotado para su mayorista con el origen (`X-Abasto-Origen`: whatsapp, tienda-en-linea o api; los lotes son app-sin-senal), qué pasó (aplicada, repetida, conflicto, rechazada), el motivo y el código, total y tienda que devolvió Pedidos. Tabla `conecta` (PK `BITACORA#<mayorista>`, SK `<fecha>#<clave>`, 30 días). Anotar nunca hace fallar el pedido. `GET /v1/bitacora` da los últimos 100 del mayorista del token con el resumen. El flujo de n8n manda `X-Abasto-Origen: whatsapp`. CORS acepta el Panel (5170). e2e: `e2e/pruebas/conecta.spec.ts`.
+
 Probar: `pnpm --filter @abasto/conecta test`; las de integración con `test:e2e` (necesitan `pnpm infra`).
