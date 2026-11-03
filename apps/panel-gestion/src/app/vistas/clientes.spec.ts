@@ -1,7 +1,7 @@
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { GraphQL } from '../graphql';
-import { VistaClientes } from './clientes';
+import { compradores, VistaClientes } from './clientes';
 
 interface SolicitudDePrueba {
   tienda: { id: string; nombre: string; ciudad: string };
@@ -99,5 +99,23 @@ describe('Vista de Clientes', () => {
     const fixture = await montar(graphql);
 
     expect(raiz(fixture).querySelector('.falla')?.textContent).toContain('No tienes permiso');
+  });
+});
+
+describe('Clientes: quién te compra', () => {
+  it('suma los pedidos por tienda (sin rechazados) y ordena del que más compra', () => {
+    const venta = (tienda: string, centavos: number, creadoEn: string, estado = 'ENTREGADO', zona = 'Plan 3000') => ({
+      estado, creadoEn, total: { centavos }, tienda: { id: tienda, nombre: tienda }, entrega: { zona },
+    });
+    const lista = compradores([
+      venta('Doña Rosa', 1000, '2026-11-01T10:00:00Z'),
+      venta('Don Pedro', 5000, '2026-11-02T10:00:00Z', 'CONFIRMADO', 'Equipetrol'),
+      venta('Doña Rosa', 2000, '2026-11-02T09:00:00Z', 'ENTREGADO', 'Villa 1ro de Mayo'),
+      venta('Doña Rosa', 9000, '2026-11-02T11:00:00Z', 'RECHAZADO'),
+    ]);
+    expect(lista.map((c) => [c.nombre, c.pedidos, c.totalCentavos, c.zona])).toEqual([
+      ['Don Pedro', 1, 5000, 'Equipetrol'],
+      ['Doña Rosa', 2, 3000, 'Villa 1ro de Mayo'],
+    ]);
   });
 });

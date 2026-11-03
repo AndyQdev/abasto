@@ -34,6 +34,7 @@ Actualizado: 02/11/2026 · en main (los dos trabajamos ahí)
 La app de clientes en el emulador Android. Después: registro de tiendas desde la app (CU-15) y el cobro contra entrega (CU-09).
 
 ## Terminé
+- **Panel web, versión 7 «Halo» (02/11):** header verde bosque con la curva que abraza al menú blanco flotante, dock derecho (Alertas, Agentes, Reportes, Tableros y Ayuda), buscador que lleva al pedido o al producto, y Pedidos (tablero de tres columnas con detalle al costado), Compras (checklist por puesto e imprimir), Productos (tarjetas, activar o pausar, crear y editar con foto) y Clientes («Te compran») rehechos. Aviso a Jhoel: Inteligencia toma los colores nuevos sola (son variables del Shell); su título sigue en mayúsculas con su estilo. En `contracts/microfrontends.md` solo agregué el evento `abasto:buscar`.
 - Infra, Pedidos (saga, outbox, inbox, plazos), Conecta, n8n, CI y e2e.
 - Cobros en la saga: autorizar y liberar crédito, QR que vence a los 30 min, pagarQrDePrueba y Pedido.cobro por federación.
 - App de clientes (`apps/app`, Expo): Inicio, Buscar, buscar por foto, Vendedor, carrito, finalizar (QR, crédito o contra entrega), Mis pedidos, seguimiento y modo sin señal.

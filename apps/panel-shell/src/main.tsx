@@ -4,6 +4,7 @@ import { APPS, appQueLeToca, crearSesion } from '@abasto/sesion';
 import '@abasto/ui/tokens.css';
 import '@abasto/ui/base.css';
 import './panel.css';
+import './halo.css';
 import { App } from './App';
 import { Registro } from './Registro';
 

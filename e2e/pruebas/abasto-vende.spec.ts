@@ -156,13 +156,13 @@ test('Panel de Abasto: la lista de compras por puesto y preparar un pedido confi
   await page.goto('http://localhost:5170/compras');
   await entrarComo(page, 'ventas@abasto.bo');
   await expect(page.getByText('vas a gastar')).toBeVisible();
-  await expect(page.getByRole('heading', { name: /Mercado Mutualista/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Mutualista' })).toBeVisible();
   await expect(page.getByText('Sal fina Lobos 1 kg')).toBeVisible();
 
   await page.getByRole('link', { name: 'Pedidos' }).click();
-  const fila = page.getByRole('row').filter({ hasText: crearPedido.codigo });
-  await fila.getByRole('button', { name: 'Preparar' }).click();
-  await expect(fila.getByText('En preparación')).toBeVisible();
+  const tarjeta = page.getByRole('article', { name: `Pedido ${crearPedido.codigo}` });
+  await tarjeta.getByRole('button', { name: 'Preparar' }).click();
+  await expect(tarjeta.getByText('En preparación')).toBeVisible();
 });
 
 test('Panel de Abasto: filtra los productos por área y decide a quién se muestra cada uno (usos)', async ({ page, request }) => {
@@ -181,7 +181,7 @@ test('Panel de Abasto: filtra los productos por área y decide a quién se muest
 
   // Un toque en «Panadería» del yogurt lo prende: queda en Catálogo
   await areas.getByRole('button', { name: /^Tienda/ }).click();
-  const yogurt = page.getByRole('row').filter({ hasText: 'Yogurt bebible PIL durazno 1 L' });
+  const yogurt = page.getByRole('article', { name: 'Yogurt bebible PIL durazno 1 L' });
   await yogurt.getByRole('button', { name: 'Panadería' }).click();
   await expect.poll(() => usosDe('AB-018')).toEqual(['hogar', 'tienda', 'panaderia']);
   await yogurt.getByRole('button', { name: 'Panadería' }).click();
