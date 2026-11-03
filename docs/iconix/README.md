@@ -40,7 +40,7 @@ Dueños: Andrés lleva lo comercial y Jhoel toda la IA.
 | CU-14 Aprobar la propuesta de un agente | Mayorista | Panel › Inteligencia (Agentes) | Asistente, n8n | Jhoel | F5 |
 | CU-15 Registrarse como tienda | Tienda | App (Entrar › Crear cuenta) | Catálogo, Keycloak | Andrés | F1 |
 
-Ya tienen prueba punta a punta: la sesión única (Panel → Superadmin), el Panel con sus tres frameworks y CU-13 (pregunta → tabla → Excel). Ya tienen prueba de servicio: la red privada (CU-03/04/05), la saga (CU-06, del lado de Pedidos), la idempotencia de Conecta (CU-11 y CU-12) y la guardia SQL (CU-13).
+Ya tienen prueba punta a punta: la sesión única (Panel → Superadmin), el Panel con sus tres frameworks, CU-09 (confirmar a crédito → cuenta → dos pagos → pagada) y CU-13 (pregunta → tabla → Excel). Ya tienen prueba de servicio: la red privada (CU-03/04/05), la saga (CU-06, del lado de Pedidos), la idempotencia de Conecta (CU-11 y CU-12) y la guardia SQL (CU-13).
 
 ## Archivos por caso
 

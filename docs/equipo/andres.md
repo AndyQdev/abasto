@@ -31,9 +31,11 @@
 Actualizado: 03/11/2026 · en main (los dos trabajamos ahí)
 
 ## Estoy en
-Las fases que faltan del Panel web: Cuentas por cobrar (CU-09) y Conecta, que siguen «en construcción». Después: registro de tiendas desde la app (CU-15).
+Las fases que faltan del Panel web. CU-09 (Cuentas por cobrar) hecho; sigue Conecta (F3). Después: registro de tiendas desde la app (CU-15).
 
 ## Terminé
+- **CU-09 · Cuentas por cobrar (03/11):** Cobros abre una cuenta por cada pedido a crédito o contra entrega al confirmarse (`pedido.confirmado`, cola `cobros.cuentas`); el Panel › Cuentas muestra lo que te deben (lo más atrasado primero) y registra pagos en efectivo, transferencia o QR, todo o una parte. Un pago repetido no se cuenta dos veces y al saldar un crédito la tienda recupera el cupo. e2e `cuentas.spec.ts` (confirmar A-1051 → la cuenta aparece → dos pagos → pagada); la suite completa en verde (arreglé `mi-negocio.spec.ts`, que todavía buscaba la tabla vieja de Pedidos).
+  **Jhoel:** ahora Cobros publica `cobro.pago_registrado` con `{ pedidoId, codigo, tiendaId, mayoristaId, centavos, forma, saldoCentavos }` (`contracts/asyncapi.yaml`); tu proyector ya lo aplicaba y lo probé: A-1051 queda `pagada` en `reportes.cuentas_por_cobrar`. Una diferencia que conviene igualar: tu proyector pone 15 días de plazo a todo crédito y Cobros usa el plazo de la línea (15 o 30); si quieres, toma `saldoCentavos` del evento en vez de restar. Después de `git pull`: `pnpm supergrafo` no hace falta (lo subí), `docker compose --profile servicios up -d --build cobros` y `docker compose restart router`.
 - **Panel PWA lista para la IA local del navegador (03/11, lo pidió el ingeniero: «el navegador debe tener su IA local» y «ambos deben funcionar offline»):** probé el Panel construido sin señal con el diseño v7 (e2e `panel-sin-senal` en verde) y Whisper sin internet (e2e nuevo `ia-navegador-sin-senal`, con `IA_NAVEGADOR=1`). El service worker guardaba el modelo dos veces (en su caché y en la de transformers.js): ahora deja pasar Hugging Face y guarda una vez la librería del CDN con versión fija (`abasto-ia-local`). Manifiesto e íconos con la identidad v7, «Instalar el Panel» en el menú del perfil y almacenamiento persistente.
   **Jhoel:** `pnpm dev:panel:pwa` levanta el Panel como PWA (Shell construido en 5170 + Gestión e Inteligencia en desarrollo); con `pnpm dev:panel` no hay service worker. Para sumar otra IA en el navegador: librería del CDN con versión exacta en la URL y modelos guardados por la librería; si usa otro host, se agrega en `apps/panel-shell/src/offline/ia-local.ts`. Agregué una sección en `contracts/microfrontends.md` («IA local del navegador en la PWA»), sin cambiar nada de lo que ya existía.
 - **Panel web, versión 7 «Halo» (02/11):** header verde bosque con la curva que abraza al menú blanco flotante, dock derecho (Alertas, Agentes, Reportes, Tableros y Ayuda), buscador que lleva al pedido o al producto, y Pedidos (tablero de tres columnas con detalle al costado), Compras (checklist por puesto e imprimir), Productos (tarjetas, activar o pausar, crear y editar con foto) y Clientes («Te compran») rehechos. Aviso a Jhoel: Inteligencia toma los colores nuevos sola (son variables del Shell); su título sigue en mayúsculas con su estilo. En `contracts/microfrontends.md` solo agregué el evento `abasto:buscar`.
@@ -66,6 +68,7 @@ Las fases que faltan del Panel web: Cuentas por cobrar (CU-09) y Conecta, que si
 - e2e: 22 pruebas en verde (02/11).
 
 ## Cambié en contratos
+- 03/11 · Cobros (CU-09): `cuentasPorCobrar(conPagadas)`, `registrarPago(entrada)` y sus tipos (aditivo; supergrafo regenerado). AsyncAPI: payload de `cobro.pago_registrado` y la cola nueva `cobros.cuentas` (solo `pedido.confirmado`), también en `infra/rabbitmq/definitions.json`.
 - 03/11 · `contracts/microfrontends.md`: sección nueva «IA local del navegador en la PWA» (qué guarda el service worker y qué guarda la librería de IA). Aditivo: Inteligencia no tiene que cambiar nada.
 - 02/11 · Catálogo: `Producto.usos: [String!]!` (a quién se muestra en el Inicio), `usos` en `CrearProductoEntrada` y `EditarProductoEntrada`, y `Mayorista.dePrueba: Boolean!`. Subtipos del productor: se suman `horneados`, `polleria` y `puesto`. Todo aditivo; subgrafo y supergrafo regenerados. **Jhoel:** nada que tocar; después de `git pull`, `pnpm semilla` para ver los 138 productos.
 - 02/11 · Tiempo real: Conecta abre el WebSocket `/v1/tiempo-real` (OpenAPI de Conecta) y escucha `pedido.*` y `cobro.*` con una cola exclusiva propia. AsyncAPI: `cobro.qr_generado` (aditivo; Cobros lo publica al crear el QR). **Jhoel:** el proyector de Asistente recibe `cobro.qr_generado` y lo ignora (cae en `default`); no hay que tocar nada.
@@ -84,5 +87,4 @@ Las fases que faltan del Panel web: Cuentas por cobrar (CU-09) y Conecta, que si
 
 ## Sigue
 - CU-15: registro de tiendas desde la app.
-- Registrar el cobro de los pedidos contra entrega y las cuentas por cobrar (CU-09).
 - Investigar de dónde y cómo cargar el catálogo real.

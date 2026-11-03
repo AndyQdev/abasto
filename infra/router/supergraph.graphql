@@ -231,6 +231,45 @@ input CrearProductoEntrada
   usos: [String!]
 }
 
+"""Lo que una tienda debe por un pedido. Una por pedido."""
+type CuentaPorCobrar
+  @join__type(graph: COBROS)
+{
+  id: ID!
+  pedidoId: ID!
+
+  """El código que ve la gente (A-1042)."""
+  codigo: String!
+  tienda: Tienda!
+  origen: OrigenDeCuenta!
+  monto: Dinero!
+  pagado: Dinero!
+  saldo: Dinero!
+  estado: EstadoDeCuenta!
+  abiertaEn: String!
+
+  """Null en contra entrega: se cobra al entregar."""
+  venceEn: String
+
+  """0 si no venció (o ya está pagada)."""
+  diasDeAtraso: Int!
+  pagos: [PagoDeCuenta!]!
+}
+
+type CuentasPorCobrar
+  @join__type(graph: COBROS)
+{
+  """Lo que falta cobrar, sumado."""
+  porCobrar: Dinero!
+
+  """De eso, lo que ya pasó la fecha."""
+  vencido: Dinero!
+
+  """Cuántas tiendas deben algo."""
+  tiendas: Int!
+  cuentas: [CuentaPorCobrar!]!
+}
+
 """Monto en bolivianos. Mismo tipo en los tres subgrafos."""
 type Dinero
   @join__type(graph: CATALOGO)
@@ -353,6 +392,14 @@ enum EstadoCobroQr
   ANULADO @join__enumValue(graph: COBROS)
 }
 
+enum EstadoDeCuenta
+  @join__type(graph: COBROS)
+{
+  PENDIENTE @join__enumValue(graph: COBROS)
+  PARCIAL @join__enumValue(graph: COBROS)
+  PAGADA @join__enumValue(graph: COBROS)
+}
+
 """El estado que el mayorista fija editando; el resto lo decide el stock."""
 enum EstadoEditableProducto
   @join__type(graph: CATALOGO)
@@ -397,6 +444,14 @@ enum FormaDeCobro
 {
   CONTADO @join__enumValue(graph: COBROS)
   FIADO @join__enumValue(graph: COBROS)
+}
+
+enum FormaDePago
+  @join__type(graph: COBROS)
+{
+  EFECTIVO @join__enumValue(graph: COBROS)
+  TRANSFERENCIA @join__enumValue(graph: COBROS)
+  QR @join__enumValue(graph: COBROS)
 }
 
 type InsumoDeReceta
@@ -761,6 +816,12 @@ type Mutation
   sincronizarMiNegocio(cambios: CambiosDeNegocioEntrada!): ResultadoDeSincronizacion! @join__field(graph: COBROS)
 
   """
+  CU-09: el mayorista anota lo que la tienda le pagó (todo o una parte). El pagoId lo genera quien registra:
+  repetirlo (doble toque o reenvío sin señal) no cobra dos veces. Al saldar un crédito, la tienda recupera el cupo.
+  """
+  registrarPago(entrada: RegistrarPagoEntrada!): CuentaPorCobrar! @join__field(graph: COBROS)
+
+  """
   Paso 1 de la saga de compra. La clave la genera la app una sola vez:
   repetir la mutación con la misma clave devuelve el mismo pedido.
   """
@@ -853,6 +914,13 @@ enum OrigenDeArticulo
   OTRO_PROVEEDOR @join__enumValue(graph: COBROS)
 }
 
+enum OrigenDeCuenta
+  @join__type(graph: COBROS)
+{
+  CREDITO @join__enumValue(graph: COBROS)
+  CONTRA_ENTREGA @join__enumValue(graph: COBROS)
+}
+
 enum OrigenDeMovimiento
   @join__type(graph: COBROS)
 {
@@ -861,6 +929,16 @@ enum OrigenDeMovimiento
   MANUAL @join__enumValue(graph: COBROS)
   VENTA @join__enumValue(graph: COBROS)
   TANDA @join__enumValue(graph: COBROS)
+}
+
+type PagoDeCuenta
+  @join__type(graph: COBROS)
+{
+  id: ID!
+  monto: Dinero!
+  forma: FormaDePago!
+  nota: String
+  registradoEn: String!
 }
 
 """El pedido es de Pedidos; Cobros le agrega su cobro (federación)."""
@@ -1020,6 +1098,12 @@ type Query
   """
   miNegocio(desde: String): MiNegocio! @join__field(graph: COBROS)
 
+  """
+  CU-09: lo que le deben al mayorista con sesión (pedidos a crédito o contra entrega), lo más atrasado primero.
+  Las pagadas solo si se piden.
+  """
+  cuentasPorCobrar(conPagadas: Boolean = false): CuentasPorCobrar! @join__field(graph: COBROS)
+
   """Lo que compró la empresa de la sesión (Mercado)."""
   misCompras(estado: EstadoPedido): [Pedido!]! @join__field(graph: PEDIDOS)
 
@@ -1078,6 +1162,16 @@ input RegistrarMayoristaEntrada
   telefono: String!
   correo: String!
   clave: String!
+}
+
+input RegistrarPagoEntrada
+  @join__type(graph: COBROS)
+{
+  pagoId: ID!
+  pedidoId: ID!
+  centavos: Int!
+  forma: FormaDePago!
+  nota: String
 }
 
 type RelacionComercial

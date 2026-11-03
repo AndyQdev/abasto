@@ -180,6 +180,33 @@ La tabla con actor, interfaz, servicios, dueño y fase está en `README.md`. Aba
 - Si el pago fue por QR y estaba pagado, la compensación usa `cobros.devolver_qr` y espera `cobro.qr_devuelto`; si fue a crédito, usa `cobros.liberar_credito` y espera `cobro.credito_liberado`.
 - **Pendiente:** no hay una pantalla para ver el historial de compensaciones ni el detalle del motivo de un rechazo anterior; el estado y el motivo se guardan en el pedido.
 
+## CU-09 · Registrar un pago de una cuenta por cobrar
+
+**Actor:** Mayorista.
+**Precondición:** el mayorista confirmó un pedido a crédito o contra entrega (CU-07), así que Cobros ya abrió su cuenta por cobrar.
+**Servicio:** Cobros (con Catálogo para el nombre de la tienda, por el Router).
+
+**Curso básico**
+
+1. Al confirmarse el pedido, Pedidos publica `pedido.confirmado`. `ConsumidorDeCuentas` (cola `cobros.cuentas`) llama a `AbrirCuentaDePedido`: si el pedido es a crédito o contra entrega crea `CuentaPorCobrar` con el total. El crédito vence a los `plazoDias` de la `LineaDeCredito` de la tienda; contra entrega se cobra al entregar.
+2. El mayorista abre Gestión → Cuentas por cobrar; `vistas/cuentas.ts` consulta `cuentasPorCobrar`. Arriba ve lo que le deben, lo vencido y lo que vence en 7 días; abajo, una tarjeta por cuenta, lo más atrasado primero, con el vencimiento en palabras («Venció hace 5 días»).
+3. Toca la cuenta. Al costado ve el pedido, lo pagado, lo que debe y los pagos anteriores.
+4. Escribe cuánto le pagó (o toca «Todo» o «La mitad»), elige Efectivo, Transferencia o QR y, si quiere, una nota.
+5. La vista envía `registrarPago(entrada)` con un `pagoId` nuevo. `RegistrarPago` busca la cuenta del pedido, comprueba que sea del mayorista del token y llama a `CuentaPorCobrar.registrarPago`.
+6. La cuenta suma el pago, queda `PARCIAL` o `PAGADA` y deja `cobro.pago_registrado` (con el saldo) en el outbox, en la misma transacción. Asistente lo proyecta en `cuentas_por_cobrar`.
+7. Si una cuenta a crédito queda `PAGADA`, `LineaDeCredito.saldar` quita la reserva del pedido: la tienda recupera ese cupo.
+8. La vista muestra «Registraste Bs 100,00 de Almacén Mery: todavía debe Bs 130,00» o «Almacén Mery terminó de pagar A-1051».
+
+**Cursos alternos**
+
+- Si el monto pasa lo que debe, la pantalla lo dice antes de enviar; Cobros lo rechaza igual con `PAGO_MAYOR_QUE_EL_SALDO`: «El pedido {codigo} debe {saldo}: no se puede registrar un pago de {monto}».
+- Si el mismo pago llega dos veces (doble toque o reenvío desde la bandeja sin señal), tiene el mismo `pagoId` y se cuenta una sola vez.
+- Si dos personas cobran la misma cuenta a la vez y juntas pasan lo que se debe, la base lo frena (`pagado_centavos ≤ centavos`): «Otro pago de esta cuenta se registró recién».
+- Si la cuenta es de otro mayorista, `SIN_PERMISO`; si el pedido no tiene cuenta (por QR ya está pagado), `CUENTA_NO_EXISTE`.
+- Saldar no publica `cobro.credito_liberado`: ese evento es una compensación de la saga y Pedidos la tomaría como tal.
+
+**Prueba:** `services/cobros/src/aplicacion/cuentas-por-cobrar.spec.ts` (reglas), `apps/panel-gestion/src/app/vistas/cuentas.spec.ts` (pantalla) y `e2e/pruebas/cuentas.spec.ts` (de punta a punta: confirmar A-1051 → la cuenta aparece → dos pagos → pagada).
+
 ## CU-12 · Hacer un pedido sin señal
 
 **Actor:** Cliente.

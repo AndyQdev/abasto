@@ -8,6 +8,8 @@ import { AtenderComando } from './aplicacion/atender-comando.js';
 import { AutorizarCredito, LiberarCredito } from './aplicacion/autorizar-credito.js';
 import { ConsultarCobro, DevolverQr, GenerarQr, PagarQr, VencerQrs, type Reloj } from './aplicacion/cobros-qr.js';
 import { ConsultarCredito } from './aplicacion/consultar-credito.js';
+import { AbrirCuentaDePedido, ConsultarCuentas, RegistrarPago } from './aplicacion/cuentas-por-cobrar.js';
+import { CUENTA_POR_COBRAR_REPOSITORIO, type CuentaPorCobrarRepositorio } from './dominio/cuenta-por-cobrar.repositorio.js';
 import {
   COBRO_QR_REPOSITORIO,
   MENSAJES_PROCESADOS,
@@ -20,13 +22,16 @@ import {
   LINEA_DE_CREDITO_REPOSITORIO,
   type LineaDeCreditoRepositorio,
 } from './dominio/linea-de-credito.repositorio.js';
+import { ConsumidorDeCuentas } from './infraestructura/mensajeria/cuentas.rabbitmq.js';
 import { ConsumidorDeComandos, PublicadorOutbox, RevisorDeQrs } from './infraestructura/mensajeria/rabbitmq.js';
+import { CuentaPorCobrarPrisma } from './infraestructura/persistencia/cuenta-por-cobrar.prisma.js';
 import { CobroQrPrisma, MensajesProcesadosPrisma, OutboxPrisma } from './infraestructura/persistencia/cobro-qr.prisma.js';
 import { LineaDeCreditoPrisma } from './infraestructura/persistencia/linea-de-credito.prisma.js';
 import { PersistenciaModule } from './infraestructura/persistencia/persistencia.module.js';
 import { AutenticacionGuard } from './infraestructura/seguridad/autenticacion.guard.js';
 import { CobroResolver, PedidoConCobroResolver } from './interfaz/graphql/cobro.resolver.js';
 import { CreditoResolver } from './interfaz/graphql/credito.resolver.js';
+import { CuentasResolver } from './interfaz/graphql/cuentas.resolver.js';
 import { SaludController } from './interfaz/http/salud.controller.js';
 import { MiNegocioModule } from './mi-negocio/mi-negocio.module.js';
 
@@ -62,6 +67,21 @@ const vigenciaMinutos = Number(process.env.QR_VIGENCIA_MINUTOS ?? 30);
     { provide: OUTBOX, useClass: OutboxPrisma },
     { provide: MENSAJES_PROCESADOS, useClass: MensajesProcesadosPrisma },
     { provide: RELOJ, useValue: reloj },
+    { provide: CUENTA_POR_COBRAR_REPOSITORIO, useClass: CuentaPorCobrarPrisma },
+    // CU-09 · Cuentas por cobrar
+    {
+      provide: AbrirCuentaDePedido,
+      useFactory: (c: CuentaPorCobrarRepositorio, l: LineaDeCreditoRepositorio) => new AbrirCuentaDePedido(c, l, randomUUID),
+      inject: [CUENTA_POR_COBRAR_REPOSITORIO, LINEA_DE_CREDITO_REPOSITORIO],
+    },
+    { provide: ConsultarCuentas, useFactory: (c: CuentaPorCobrarRepositorio) => new ConsultarCuentas(c), inject: [CUENTA_POR_COBRAR_REPOSITORIO] },
+    {
+      provide: RegistrarPago,
+      useFactory: (c: CuentaPorCobrarRepositorio, l: LineaDeCreditoRepositorio, r: Reloj) => new RegistrarPago(c, l, r),
+      inject: [CUENTA_POR_COBRAR_REPOSITORIO, LINEA_DE_CREDITO_REPOSITORIO, RELOJ],
+    },
+    ConsumidorDeCuentas,
+    CuentasResolver,
     casoDeUso(AutorizarCredito),
     casoDeUso(LiberarCredito),
     casoDeUso(ConsultarCredito),

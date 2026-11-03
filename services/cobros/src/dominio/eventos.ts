@@ -15,4 +15,6 @@ export type EventoDeCobros =
   | (Referencia & { tipo: 'cobro.qr_generado'; centavos: number; venceEn: string })
   | (Referencia & { tipo: 'cobro.qr_pagado'; centavos: number })
   | (Referencia & { tipo: 'cobro.qr_devuelto'; centavos: number })
-  | (Referencia & { tipo: 'cobro.rechazado'; motivo: string });
+  | (Referencia & { tipo: 'cobro.rechazado'; motivo: string })
+  /** CU-09 (03/11): el mayorista registró un pago de una cuenta por cobrar. Lo proyecta Asistente (cuentas_por_cobrar) */
+  | (Referencia & { tipo: 'cobro.pago_registrado'; codigo: string; centavos: number; forma: string; saldoCentavos: number });

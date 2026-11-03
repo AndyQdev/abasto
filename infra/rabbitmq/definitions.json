@@ -23,7 +23,9 @@
     { "name": "pedidos.respuestas.dlq", "vhost": "/", "durable": true, "auto_delete": false, "arguments": {} },
     { "name": "conecta.eventos.dlq", "vhost": "/", "durable": true, "auto_delete": false, "arguments": {} },
     { "name": "asistente.proyector.dlq", "vhost": "/", "durable": true, "auto_delete": false, "arguments": {} },
-    { "name": "cobros.mi-negocio.dlq", "vhost": "/", "durable": true, "auto_delete": false, "arguments": {} }
+    { "name": "cobros.mi-negocio.dlq", "vhost": "/", "durable": true, "auto_delete": false, "arguments": {} },
+    { "name": "cobros.cuentas", "vhost": "/", "durable": true, "auto_delete": false, "arguments": { "x-queue-type": "quorum", "x-dead-letter-exchange": "abasto.dlx", "x-dead-letter-routing-key": "cobros.cuentas", "x-delivery-limit": 5 } },
+    { "name": "cobros.cuentas.dlq", "vhost": "/", "durable": true, "auto_delete": false, "arguments": {} }
   ],
   "bindings": [
     { "source": "abasto.comandos", "vhost": "/", "destination": "catalogo.comandos", "destination_type": "queue", "routing_key": "catalogo.#", "arguments": {} },
@@ -38,6 +40,8 @@
     { "source": "abasto.dlx", "vhost": "/", "destination": "pedidos.respuestas.dlq", "destination_type": "queue", "routing_key": "pedidos.respuestas", "arguments": {} },
     { "source": "abasto.dlx", "vhost": "/", "destination": "conecta.eventos.dlq", "destination_type": "queue", "routing_key": "conecta.eventos", "arguments": {} },
     { "source": "abasto.dlx", "vhost": "/", "destination": "asistente.proyector.dlq", "destination_type": "queue", "routing_key": "asistente.proyector", "arguments": {} },
-    { "source": "abasto.dlx", "vhost": "/", "destination": "cobros.mi-negocio.dlq", "destination_type": "queue", "routing_key": "cobros.mi-negocio", "arguments": {} }
+    { "source": "abasto.dlx", "vhost": "/", "destination": "cobros.mi-negocio.dlq", "destination_type": "queue", "routing_key": "cobros.mi-negocio", "arguments": {} },
+    { "source": "abasto.eventos", "vhost": "/", "destination": "cobros.cuentas", "destination_type": "queue", "routing_key": "pedido.confirmado", "arguments": {} },
+    { "source": "abasto.dlx", "vhost": "/", "destination": "cobros.cuentas.dlq", "destination_type": "queue", "routing_key": "cobros.cuentas", "arguments": {} }
   ]
 }

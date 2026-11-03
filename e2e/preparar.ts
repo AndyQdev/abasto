@@ -24,6 +24,18 @@ export default function preparar() {
   ].join('\n');
   execSync('docker compose exec -T postgres psql -U abasto -d pedidos -q -v ON_ERROR_STOP=1', { cwd: '..', input: sql, stdio: ['pipe', 'inherit', 'inherit'] });
 
+  // CU-09: la cuenta por cobrar de los pedidos de demostración vuelve a no existir (se abre al confirmar A-1051)
+  execSync('docker compose exec -T postgres psql -U abasto -d cobros -q -v ON_ERROR_STOP=1', {
+    cwd: '..',
+    input: [
+      'BEGIN;',
+      "DELETE FROM pagos_de_cuenta WHERE cuenta_id IN (SELECT id FROM cuentas_por_cobrar WHERE pedido_id LIKE '7b0d4f3e-0001-%');",
+      "DELETE FROM cuentas_por_cobrar WHERE pedido_id LIKE '7b0d4f3e-0001-%';",
+      'COMMIT;',
+    ].join('\n'),
+    stdio: ['pipe', 'inherit', 'inherit'],
+  });
+
   execSync(`docker compose exec -T mongo mongosh catalogo --quiet --eval "db.relaciones.deleteOne({ _id: 'dr|lr' })"`, {
     cwd: '..',
     stdio: 'inherit',

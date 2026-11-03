@@ -83,6 +83,45 @@ model CobroQr {
   @@schema("public")
 }
 
+/// CU-09: lo que una tienda le debe a un mayorista por un pedido a crédito o contra entrega. Una por pedido.
+model CuentaPorCobrar {
+  id          String          @id
+  pedidoId    String          @unique @map("pedido_id")
+  codigo      String
+  tiendaId    String          @map("tienda_id")
+  mayoristaId String          @map("mayorista_id")
+  /// CREDITO o CONTRA_ENTREGA
+  origen      String
+  centavos    Int
+  abiertaEn   DateTime        @map("abierta_en")
+  /// Null en contra entrega: se cobra al entregar
+  venceEn     DateTime?       @map("vence_en")
+  /// Lo pagado se guarda también aquí para listar y sumar sin recorrer los pagos
+  pagadoCentavos Int          @default(0) @map("pagado_centavos")
+  pagos       PagoDeCuenta[]
+
+  @@index([mayoristaId, pagadoCentavos])
+  @@map("cuentas_por_cobrar")
+  @@schema("public")
+}
+
+/// Un pago de una cuenta. Nunca se edita ni se borra; el id lo genera quien registra (idempotencia).
+model PagoDeCuenta {
+  id            String          @id
+  cuentaId      String          @map("cuenta_id")
+  centavos      Int
+  /// EFECTIVO, TRANSFERENCIA o QR
+  forma         String
+  nota          String?
+  registradoEn  DateTime        @map("registrado_en")
+  registradoPor String          @map("registrado_por")
+  cuenta        CuentaPorCobrar @relation(fields: [cuentaId], references: [id])
+
+  @@index([cuentaId])
+  @@map("pagos_de_cuenta")
+  @@schema("public")
+}
+
 // ─────────────────────────────────────────────────────────────────────────────────────────────────────────────
 // «Mi negocio» (esquema negocio, módulo src/mi-negocio). Todo lleva org_id (el del token) y recibido_en (marca del
 // servidor para bajar lo nuevo con miNegocio(desde)). Montos en centavos; cantidades en numeric(14,6): 10 kg de un

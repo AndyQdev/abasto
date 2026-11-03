@@ -5,6 +5,7 @@ import { Icono } from './icono';
 import { pedirNavegar, type SesionDelShell } from './sesion';
 import { VistaClientes } from './vistas/clientes';
 import { VistaCompras } from './vistas/compras';
+import { VistaCuentas } from './vistas/cuentas';
 import { VistaEnConstruccion } from './vistas/en-construccion';
 import { VistaPedidos } from './vistas/pedidos';
 import { VistaProductos } from './vistas/productos';
@@ -16,7 +17,7 @@ import { VistaProductos } from './vistas/productos';
 @Component({
   selector: 'abasto-gestion-raiz',
   encapsulation: ViewEncapsulation.ShadowDom,
-  imports: [VistaPedidos, VistaProductos, VistaClientes, VistaCompras, VistaEnConstruccion, Icono],
+  imports: [VistaPedidos, VistaProductos, VistaClientes, VistaCompras, VistaCuentas, VistaEnConstruccion, Icono],
   styles: [
     ESTILOS_BASE,
     `
@@ -57,10 +58,7 @@ import { VistaProductos } from './vistas/productos';
       @case ('compras') { <abasto-vista-compras /> }
       @case ('productos') { <abasto-vista-productos /> }
       @case ('clientes') { <abasto-vista-clientes /> }
-      @case ('cuentas') {
-        <abasto-vista-en-construccion titulo="Cuentas por cobrar" fase="F2"
-          detalle="Saldos, vencimientos y registrar pagos en efectivo o transferencia. Los datos son de Cobros (NestJS)." />
-      }
+      @case ('cuentas') { <abasto-vista-cuentas /> }
       @case ('conecta') {
         <abasto-vista-en-construccion titulo="Conecta" fase="F3"
           detalle="Tiendas conectadas por API o WooCommerce, eventos recientes y webhooks que fallaron." />

@@ -65,6 +65,13 @@ operations:
       inventario de «Mi negocio» del cliente (tiendaId): un artículo abasto:<productoId> y una ENTRADA con la clave
       pedido:<pedidoId>:<productoId>:<presentacion> por línea, y un GASTO pedido:<pedidoId> por el total. Repetido no
       duplica. El nombre y el rubro se los pide a Catálogo (_entities) con la cuenta de servicio cobros-servicio.
+  cobrosAbreCuentas:
+    action: receive
+    channel: { $ref: '#/channels/eventos' }
+    summary: >-
+      (03/11, CU-09) Cola cobros.cuentas (solo pedido.confirmado). Si el pedido es a crédito o contra entrega, Cobros
+      abre su cuenta por cobrar (una por pedido; repetido no abre otra). El crédito vence a los plazoDias de la línea
+      de la tienda (15 si no tiene); contra entrega se cobra al entregar.
 
 components:
   schemas:
@@ -201,14 +208,31 @@ components:
                   venceEn: { type: string, format: date-time }
     cobroHecho:
       name: cobro.credito_autorizado | cobro.qr_pagado | cobro.pago_registrado
-      payload: { $ref: '#/components/schemas/Sobre' }
+      summary: >-
+        cobro.pago_registrado (03/11, CU-09): el mayorista anotó un pago de una cuenta por cobrar. orgId es el
+        mayorista. Lo proyecta Asistente (cuentas_por_cobrar); Pedidos lo ignora.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/Sobre'
+          - properties:
+              datos:
+                type: object
+                required: [pedidoId, tiendaId, mayoristaId, centavos]
+                properties:
+                  pedidoId: { type: string }
+                  codigo: { type: string, description: Solo en cobro.pago_registrado (A-1042) }
+                  tiendaId: { type: string }
+                  mayoristaId: { type: string }
+                  centavos: { type: integer, description: Lo autorizado, lo pagado por QR o el pago registrado }
+                  forma: { type: string, enum: [EFECTIVO, TRANSFERENCIA, QR], description: Solo en cobro.pago_registrado }
+                  saldoCentavos: { type: integer, description: Solo en cobro.pago_registrado; lo que todavía debe }
     pedido:
       name: pedido.creado | pedido.por_confirmar
       payload:
         allOf: [{ $ref: '#/components/schemas/Sobre' }, { properties: { datos: { $ref: '#/components/schemas/DatosPedido' } } }]
     pedidoConfirmado:
       name: pedido.confirmado
-      summary: Lo proyecta Asistente (ventas y cuentas por cobrar) y Conecta lo manda por webhook.
+      summary: Lo proyecta Asistente (ventas y cuentas por cobrar), Conecta lo manda por webhook y Cobros abre la cuenta por cobrar (cola cobros.cuentas, CU-09).
       payload:
         allOf: [{ $ref: '#/components/schemas/Sobre' }, { properties: { datos: { $ref: '#/components/schemas/DatosPedido' } } }]
     pedidoRechazado:

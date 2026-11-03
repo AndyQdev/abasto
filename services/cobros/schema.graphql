@@ -13,6 +13,11 @@ type Query {
   o lo recibido después de la marca `desde`, que es el `hasta` de la bajada anterior.
   """
   miNegocio(desde: String): MiNegocio!
+  """
+  CU-09: lo que le deben al mayorista con sesión (pedidos a crédito o contra entrega), lo más atrasado primero.
+  Las pagadas solo si se piden.
+  """
+  cuentasPorCobrar(conPagadas: Boolean = false): CuentasPorCobrar!
 }
 
 type Mutation {
@@ -28,6 +33,11 @@ type Mutation {
   entra una vez y lo editable gana si su actualizadoEn es igual o más nuevo.
   """
   sincronizarMiNegocio(cambios: CambiosDeNegocioEntrada!): ResultadoDeSincronizacion!
+  """
+  CU-09: el mayorista anota lo que la tienda le pagó (todo o una parte). El pagoId lo genera quien registra:
+  repetirlo (doble toque o reenvío sin señal) no cobra dos veces. Al saldar un crédito, la tienda recupera el cupo.
+  """
+  registrarPago(entrada: RegistrarPagoEntrada!): CuentaPorCobrar!
 }
 
 input AutorizarCreditoEntrada {
@@ -84,6 +94,71 @@ type Dinero @shareable {
   centavos: Int!
   moneda: String!
   texto: String!
+}
+
+# ─── CU-09 · Cuentas por cobrar (03/11)
+
+type CuentasPorCobrar {
+  "Lo que falta cobrar, sumado."
+  porCobrar: Dinero!
+  "De eso, lo que ya pasó la fecha."
+  vencido: Dinero!
+  "Cuántas tiendas deben algo."
+  tiendas: Int!
+  cuentas: [CuentaPorCobrar!]!
+}
+
+"Lo que una tienda debe por un pedido. Una por pedido."
+type CuentaPorCobrar {
+  id: ID!
+  pedidoId: ID!
+  "El código que ve la gente (A-1042)."
+  codigo: String!
+  tienda: Tienda!
+  origen: OrigenDeCuenta!
+  monto: Dinero!
+  pagado: Dinero!
+  saldo: Dinero!
+  estado: EstadoDeCuenta!
+  abiertaEn: String!
+  "Null en contra entrega: se cobra al entregar."
+  venceEn: String
+  "0 si no venció (o ya está pagada)."
+  diasDeAtraso: Int!
+  pagos: [PagoDeCuenta!]!
+}
+
+type PagoDeCuenta {
+  id: ID!
+  monto: Dinero!
+  forma: FormaDePago!
+  nota: String
+  registradoEn: String!
+}
+
+input RegistrarPagoEntrada {
+  pagoId: ID!
+  pedidoId: ID!
+  centavos: Int!
+  forma: FormaDePago!
+  nota: String
+}
+
+enum OrigenDeCuenta {
+  CREDITO
+  CONTRA_ENTREGA
+}
+
+enum EstadoDeCuenta {
+  PENDIENTE
+  PARCIAL
+  PAGADA
+}
+
+enum FormaDePago {
+  EFECTIVO
+  TRANSFERENCIA
+  QR
 }
 
 "La tienda es de Catálogo; aquí solo se referencia."

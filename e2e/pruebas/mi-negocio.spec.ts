@@ -53,15 +53,17 @@ test('lo que se entrega desde el Panel entra solo al inventario de la tienda, un
   // Abasto lo avanza desde el Panel, botón por botón
   await page.goto('http://localhost:5170/pedidos');
   await entrarComo(page, 'ventas@abasto.bo');
-  const fila = page.getByRole('row').filter({ hasText: crearPedido.codigo });
-  for (const [boton, estado] of [
-    ['Confirmar', 'Confirmado'],
-    ['Preparar', 'En preparación'],
-    ['Despachar', 'Despachado'],
-    ['Marcar entregado', 'Entregado'],
+  // Tablero v7: cada tarjeta tiene un solo botón, el paso que sigue; al tocarlo, la tarjeta avanza
+  const tarjeta = page.getByRole('article', { name: `Pedido ${crearPedido.codigo}` });
+  for (const [boton, siguiente] of [
+    ['Confirmar', 'Preparar'],
+    ['Preparar', 'Despachar'],
+    ['Despachar', 'Marcar entregado'],
+    ['Marcar entregado', null],
   ] as const) {
-    await fila.getByRole('button', { name: boton }).click();
-    await expect(fila.getByText(estado, { exact: true })).toBeVisible({ timeout: 15_000 });
+    await tarjeta.getByRole('button', { name: boton, exact: true }).click();
+    if (siguiente) await expect(tarjeta.getByRole('button', { name: siguiente, exact: true })).toBeVisible({ timeout: 15_000 });
+    else await expect(tarjeta).toHaveCount(0, { timeout: 15_000 }); // entregado: sale del tablero (queda en «Entregados»)
   }
 
   // La tienda lo ve entregado, con lo que el inventario necesita: unidades y lo que pagó por línea

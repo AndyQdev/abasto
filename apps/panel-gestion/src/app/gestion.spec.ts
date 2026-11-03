@@ -22,11 +22,16 @@ describe('Gestión', () => {
 
   it('un módulo que falta muestra en qué fase se construye', async () => {
     const fixture = TestBed.createComponent(GestionRaiz);
-    fixture.componentInstance.ruta = 'cuentas';
+    fixture.componentInstance.ruta = 'conecta';
     fixture.detectChanges();
     await fixture.whenStable();
     const raiz = fixture.nativeElement.shadowRoot as ShadowRoot;
     const vista = raiz.querySelector('abasto-vista-en-construccion')?.shadowRoot;
-    expect(vista?.textContent).toContain('fase F2');
+    expect(vista?.textContent).toContain('fase F3');
+    // Cuentas por cobrar (CU-09) ya tiene su pantalla
+    fixture.componentRef.setInput('ruta', 'cuentas');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(raiz.querySelector('abasto-vista-cuentas')).not.toBeNull();
   });
 });

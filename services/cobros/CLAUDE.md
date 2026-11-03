@@ -10,6 +10,13 @@ Pagos por QR, crédito, cuotas y comisiones. Base `cobros` en Postgres (5440) co
 
 En la saga: `cobros.autorizar_credito` → `cobro.credito_autorizado` o `cobro.rechazado` (con el motivo); `cobros.generar_qr` → QR pendiente, y `cobro.qr_pagado` cuando la tienda paga; un QR sin pagar vence a los `QR_VIGENCIA_MINUTOS` (30) y sale `cobro.rechazado`. Compensaciones: `cobros.liberar_credito` y `cobros.devolver_qr`.
 
+## Cuentas por cobrar (CU-09, 03/11)
+
+- `CuentaPorCobrar` (dominio): una por pedido a crédito o contra entrega. La abre `AbrirCuentaDePedido` al llegar `pedido.confirmado` (cola `cobros.cuentas`, `infraestructura/mensajeria/cuentas.rabbitmq.ts`). El crédito vence a los `plazoDias` de la línea (15 si no tiene); contra entrega no tiene fecha.
+- `RegistrarPago`: solo el mayorista del token; nunca más que el saldo; el `pagoId` lo manda el Panel y un pago repetido no se cuenta dos veces. Publica `cobro.pago_registrado` (lo proyecta Asistente). Al saldar un crédito, `LineaDeCredito.saldar` quita la reserva **sin** publicar `cobro.credito_liberado` (es una compensación de la saga: Pedidos la tomaría como tal).
+- Tablas `cuentas_por_cobrar` y `pagos_de_cuenta` (esquema `public`). `pagado_centavos` lo recalcula la base sumando los pagos dentro de la transacción y un CHECK impide pasar el monto: dos cobros a la vez no pueden cobrar de más.
+- GraphQL: `cuentasPorCobrar(conPagadas)` y `registrarPago(entrada)`. La semilla carga 6 cuentas de demostración (`demo-cxc-…`).
+
 - `QR_DE_PRUEBA=si` habilita `pagarQrDePrueba` para la demo. Con un banco real se apaga.
 - Los guards corren también en los campos de federación (`fieldResolverEnhancers: ['guards']`); el token se verifica una vez por petición.
 

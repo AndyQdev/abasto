@@ -117,6 +117,27 @@ classDiagram
     +Instant venceEn
     +Instant pagadoEn
   }
+  class CuentaPorCobrar {
+    +String id
+    +String pedidoId
+    +String codigo
+    +String tiendaId
+    +String mayoristaId
+    +OrigenDeCuenta origen
+    +Dinero monto
+    +Dinero pagado
+    +Dinero saldo
+    +EstadoDeCuenta estado
+    +Instant venceEn
+    +registrarPago(Pago)
+  }
+  class Pago {
+    +String id
+    +Dinero monto
+    +FormaDePago forma
+    +Instant registradoEn
+    +String nota
+  }
   class Dinero {
     +long centavos
     +String moneda
@@ -230,6 +251,9 @@ classDiagram
   LineaDeCredito "0..*" --> "1" Organizacion : mayorista
   LineaDeCredito "1" --> "1" Dinero : límite
   CobroQr "0..*" --> "1" Pedido : cobra
+  CuentaPorCobrar "0..1" --> "1" Pedido : se debe por
+  CuentaPorCobrar "1" *-- "0..*" Pago : registra
+  CuentaPorCobrar ..> LineaDeCredito : al saldar devuelve el cupo
   CobroQr "1" --> "1" Dinero : monto
   Traccion "1" *-- "0..*" Semana : agrupa
   Traccion "1" *-- "0..*" TiendaCompradora : ranking
@@ -278,4 +302,8 @@ classDiagram
 
 **Estados** — Catálogo, Pedidos y Cobros. Cada agregado tiene su enum de estado; los nombres de arriba son los que existen en el código, no una traducción.
 
-Pendiente: no existen las clases `Tienda`, `Mayorista`, `Cuota` ni `Pago`. `Tienda` y `Mayorista` son tipos GraphQL sobre `Organizacion`; `Cuota` y `Pago` no tienen clase, tabla ni caso de uso en el repo. Tampoco hay un concepto `Foto` en `Producto`: el producto no guarda imagen.
+**CuentaPorCobrar** — Cobros (03/11, CU-09). Lo que una tienda le debe a un mayorista por un pedido a crédito o contra entrega; una por pedido. Nace con `pedido.confirmado`. Lo pagado nunca pasa el monto y un `Pago` repetido (mismo id) no se cuenta dos veces. Al saldar un crédito, la `LineaDeCredito` recupera el cupo.
+
+**Pago** — Cobros. Efectivo, transferencia o QR, con fecha, quién lo anotó y una nota. Nunca se edita ni se borra.
+
+Pendiente: no existen las clases `Tienda`, `Mayorista` ni `Cuota`. `Tienda` y `Mayorista` son tipos GraphQL sobre `Organizacion`; las cuotas (pagar un crédito en partes con fechas fijas) no existen: hoy un crédito tiene un solo vencimiento y se paga en los pagos que haga falta. Tampoco hay un concepto `Foto` en `Producto`: el producto no guarda imagen.

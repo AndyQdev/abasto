@@ -97,6 +97,14 @@ export class LineaDeCredito {
     });
   }
 
+  /**
+   * CU-09: la tienda terminó de pagar el pedido y el cupo vuelve a estar disponible.
+   * No publica cobro.credito_liberado: ese evento es una compensación de la saga y Pedidos lo tomaría como tal.
+   */
+  saldar(pedidoId: string): void {
+    this.reservas.delete(pedidoId);
+  }
+
   /** Entrega los eventos nuevos una sola vez, para guardarlos en el outbox. */
   sacarEventos(): EventoDeCobros[] {
     const pendientes = this.eventos;

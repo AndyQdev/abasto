@@ -10,6 +10,7 @@ Microfrontend del Panel (puerto 5171), publicado como `<abasto-gestion ruta="...
 - **Compras:** una tarjeta por puesto con casillas de «comprado». Lo marcado se recuerda por día en este navegador (`localStorage`): es la lista de quien sale al mercado. «Imprimir lista» usa el CSS de impresión del Shell.
 - **Productos:** cuadrícula o lista. Interruptor Activo/Pausado (`editarProducto` con `estado`) y formulario al costado para crear o editar: precios por volumen, costo, proveedor, stock, usos y foto (se achica a 900 px antes de `cambiarFotoDeProducto`).
 - **Clientes:** las solicitudes de la red privada y «Te compran», armado con `misVentas` (`compradores`).
+- **Cuentas por cobrar (CU-09, 03/11):** `vistas/cuentas.ts`. Tres cifras (por cobrar, vencido, vence en 7 días), filtros (Todas, Vencidas, Por vencer, Contra entrega, Pagadas), una tarjeta por cuenta con el vencimiento en palabras y la barra de lo pagado. Al costado se registra el pago (monto con «Todo» o «La mitad», forma y nota); el `pagoId` se genera al abrir para que un doble toque no cobre dos veces. El panel lee la cuenta por id de la lista, nunca una copia vieja. Lógica pura: `vencimientoDe`, `filtrarCuentas`, `centavosDe` («1.200,50»).
 - Lo que dejó el buscador del header llega como `?q=` en la URL y con el evento `abasto:buscar`.
 
 Probar: `pnpm --filter @abasto/panel-gestion test`.

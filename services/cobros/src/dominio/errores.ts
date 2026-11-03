@@ -45,6 +45,18 @@ export class CobroNoExiste extends ErrorDeDominio {
   }
 }
 
+export class PagoMayorQueElSaldo extends ErrorDeDominio {
+  constructor(codigo: string, saldo: string, pago: string) {
+    super('PAGO_MAYOR_QUE_EL_SALDO', `El pedido ${codigo} debe ${saldo}: no se puede registrar un pago de ${pago}`);
+  }
+}
+
+export class CuentaNoExiste extends ErrorDeDominio {
+  constructor(pedidoId: string) {
+    super('CUENTA_NO_EXISTE', `El pedido ${pedidoId} no tiene una cuenta por cobrar`);
+  }
+}
+
 export class SinPermiso extends ErrorDeDominio {
   constructor(mensaje: string) {
     super('SIN_PERMISO', mensaje);
