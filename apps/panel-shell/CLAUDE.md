@@ -7,6 +7,7 @@ El marco del Panel Mayorista (puerto 5170): login, header, menú, buscador, aler
 - **Alertas** (`alertas.ts`): pedidos por confirmar (el más viejo arriba) y tiendas que piden ser clientes. Se refrescan cada minuto y después de cada `abasto:aviso`. Las muestran la campana y el dock.
 - **Buscador del header:** un código de pedido va a `pedidos?q=…` y lo demás a `productos?q=…` (`destinoDeBusqueda`). Además manda `abasto:buscar` para la vista que ya está abierta.
 - Los tokens del Panel (lima, bosque, ámbar, Plus Jakarta Sans) se pisan en `halo.css`, no en `packages/ui`: así el Superadmin no cambia.
+- **Service worker viejo (02/11):** `pnpm pwa` usa el mismo puerto 5170. Si el navegador abrió alguna vez el build, su service worker seguía sirviendo el Shell viejo (menú lateral) aunque corriera `pnpm dev:panel`. En desarrollo, `/sw.js` es uno que se borra solo (plugin en `vite.config.ts`) y `main.tsx` desregistra lo que quede: basta con abrir la página.
 
 - No tiene pantallas de negocio: según la ruta monta `<abasto-gestion>` (Angular, 5171) o `<abasto-inteligencia>` (Vue, 5172) como Web Components.
 - `remotos.ts` dice dónde está cada remoto; `Microfrontend.tsx` carga su script y le pasa la sesión (`token()`, usuario y URLs).
