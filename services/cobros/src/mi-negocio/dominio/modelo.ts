@@ -96,6 +96,8 @@ export interface Receta {
   articuloId: string;
   nombre: string;
   rinde: number;
+  /** Lo que lleva y no se compra, como el agua. Un teléfono con la app vieja no lo manda */
+  notas?: string | null;
   insumos: InsumoDeReceta[];
   actualizadoEn: string;
   eliminado: boolean;

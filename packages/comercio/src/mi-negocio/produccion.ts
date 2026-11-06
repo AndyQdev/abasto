@@ -48,7 +48,7 @@ export function articuloHecho(nombre: string, ahora: string, id: string): Articu
 }
 
 /** Una receta nueva o cambiada. Valida que tenga rinde y al menos un insumo, y que no se use a sí misma */
-export function receta(entrada: { id: string; articuloId: string; nombre: string; rinde: number; insumos: InsumoDeReceta[] }, ahora: string): Receta {
+export function receta(entrada: { id: string; articuloId: string; nombre: string; rinde: number; notas?: string | null; insumos: InsumoDeReceta[] }, ahora: string): Receta {
   const nombre = entrada.nombre.trim().replace(/\s+/g, ' ');
   if (nombre.length < 2) throw new ErrorDeInventario('Ponle nombre a la receta');
   if (!Number.isFinite(entrada.rinde) || entrada.rinde <= 0) throw new ErrorDeInventario('¿Cuántas salen con esta receta?');
@@ -56,7 +56,7 @@ export function receta(entrada: { id: string; articuloId: string; nombre: string
   if (!insumos.length) throw new ErrorDeInventario('Agrega al menos un insumo');
   if (insumos.some((i) => !Number.isFinite(i.cantidad))) throw new ErrorDeInventario('Revisa las cantidades');
   if (insumos.some((i) => i.articuloId === entrada.articuloId)) throw new ErrorDeInventario('Un producto no puede ser insumo de su propia receta');
-  return { id: entrada.id, articuloId: entrada.articuloId, nombre, rinde: entrada.rinde, insumos, actualizadoEn: ahora, eliminado: false };
+  return { id: entrada.id, articuloId: entrada.articuloId, nombre, rinde: entrada.rinde, notas: entrada.notas ?? null, insumos, actualizadoEn: ahora, eliminado: false };
 }
 
 export interface CostoDeReceta {

@@ -51,6 +51,28 @@ flowchart LR
 
 La tabla con actor, interfaz, servicios, dueño y fase está en `README.md`. Abajo va el texto de los casos que ya tienen código, en orden.
 
+## CU-01 · Registrarse como mayorista y ser verificado
+
+**Actores:** Mayorista y Admin.
+**Precondición:** ninguna; el registro es público.
+**Servicios:** Catálogo y Keycloak.
+
+**Curso básico**
+
+1. El mayorista abre `/registro` en el Panel y escribe empresa, NIT, ciudad, representante, teléfono, correo y contraseña.
+2. `RegistrarOrganizacion::mayorista` valida los datos y que el NIT no esté en uso.
+3. `KeycloakCuentas::crear` crea la cuenta con su `org_id` y el grupo `mayoristas`; la `Organizacion` queda `PENDIENTE`.
+4. Al entrar, el Panel le muestra que está en revisión.
+5. El admin abre Superadmin › Mayoristas, revisa el NIT, habla con el representante y toca «Verificar».
+6. `VerificarMayorista::aprobar` lo deja `VERIFICADO`: sus productos salen en la app.
+
+**Cursos alternos**
+
+- Datos incompletos: `DATOS_INVALIDOS`. NIT repetido: `NIT_EN_USO`. Correo repetido: `CORREO_EN_USO`.
+- Si el admin rechaza, tiene que escribir el motivo (`MOTIVO_REQUERIDO`) y el mayorista lo ve en su Panel.
+
+**Prueba:** `services/catalogo/tests/Unit/{RegistroDeOrganizacionesTest,VerificacionTest}.php` y `e2e/pruebas/registro-mayorista.spec.ts`.
+
 ## CU-02 · Publicar un producto con escalas y foto
 
 **Actor:** Mayorista.
@@ -73,7 +95,28 @@ La tabla con actor, interfaz, servicios, dueño y fase está en `README.md`. Aba
 - Si ya existe un producto del mismo mayorista con ese código, `CODIGO_REPETIDO`: «Ya tienes un producto con el código {codigo}».
 - Si una escala no trae unidades, `ESCALA_INVALIDA`: «Una presentación tiene que traer al menos una unidad».
 - Si el precio no es mayor a cero, `PRECIO_INVALIDO`: «El precio tiene que ser mayor a cero».
-- La foto no existe en el modelo: `Producto` no tiene campo de imagen, no hay carga de archivos y `cargarProducto` solo recibe nombre, rubro, presentación, unidades y precio. **Pendiente:** foto y formulario.
+- La foto se carga aparte (`CambiarFotoDeProducto`); un producto sin foto muestra la ilustración de su rubro en la app.
+
+## CU-03 · Pedir ser cliente de un mayorista
+
+**Actor:** Tienda.
+**Precondición:** la tienda entró a la app y el mayorista está verificado.
+**Servicio:** Catálogo.
+
+**Curso básico**
+
+1. La tienda abre la ficha del vendedor. Sin relación aprobada, ve los productos sin precio (red privada).
+2. Toca «Pedir ser cliente»; la app envía `pedirSerCliente(mayoristaId)`.
+3. `GestionarClientes::pedirSerCliente` crea la `RelacionComercial` en `SOLICITADA`.
+4. La solicitud aparece en Panel › Clientes del mayorista (CU-04).
+
+**Cursos alternos**
+
+- Mayorista que no existe: `MAYORISTA_NO_EXISTE`. Una empresa no puede ser cliente de sí misma: `RELACION_CONSIGO_MISMO`.
+- Si ya estaba aprobada, no cambia; si la rechazaron, vuelve a `SOLICITADA`.
+- Abasto, el vendedor de la casa, no pide este paso: cualquier tienda registrada ve sus precios.
+
+**Prueba:** `services/catalogo/tests/Unit/RedPrivadaTest.php` y `e2e/pruebas/red-privada.spec.ts`.
 
 ## CU-04 · Aprobar un cliente con lista de precios y crédito
 
@@ -184,6 +227,29 @@ La tabla con actor, interfaz, servicios, dueño y fase está en `README.md`. Aba
 - Si el pago fue por QR y estaba pagado, la compensación usa `cobros.devolver_qr` y espera `cobro.qr_devuelto`; si fue a crédito, usa `cobros.liberar_credito` y espera `cobro.credito_liberado`.
 - **Pendiente:** no hay una pantalla para ver el historial de compensaciones ni el detalle del motivo de un rechazo anterior; el estado y el motivo se guardan en el pedido.
 
+## CU-08 · Pagar con QR, a crédito o contra entrega
+
+**Actor:** Tienda.
+**Precondición:** la tienda está haciendo un pedido (CU-06).
+**Servicios:** Cobros y Pedidos.
+
+**Curso básico**
+
+1. En Finalizar elige cómo paga. Crédito solo se puede si `lineaDeCredito` tiene cupo para el total.
+2. **Crédito:** `AutorizarCredito` reserva el monto y sale `cobro.credito_autorizado`.
+3. **QR:** `GenerarQr` crea el cobro, que vence a los 30 minutos, y sale `cobro.qr_generado`. Seguimiento muestra el QR; al pagar, `PagarQr` lo marca `PAGADO` y sale `cobro.qr_pagado`.
+4. **Contra entrega:** no pasa por Cobros en este paso; se cobra al entregar (CU-09).
+5. El pedido queda `POR_CONFIRMAR` esperando al mayorista (CU-07).
+
+**Cursos alternos**
+
+- Sin cupo: `LIMITE_DE_CREDITO_EXCEDIDO`, sale `cobro.rechazado` con el motivo y la saga libera el stock.
+- QR vencido: `VencerQrs` lo marca y sale `cobro.rechazado`. Intentar pagarlo: `QR_NO_SE_PUEDE_PAGAR`.
+- Otra tienda intenta pagarlo: `SIN_PERMISO`.
+- **Pendiente:** el pago por QR se simula (`pagarQrDePrueba`). Falta conectar un banco real.
+
+**Prueba:** `services/cobros/src/dominio/cobro-qr.spec.ts`, `services/cobros/src/aplicacion/atender-comando.spec.ts` y `e2e/pruebas/compra.spec.ts`.
+
 ## CU-09 · Registrar un pago de una cuenta por cobrar
 
 **Actor:** Mayorista.
@@ -210,6 +276,52 @@ La tabla con actor, interfaz, servicios, dueño y fase está en `README.md`. Aba
 - Saldar no publica `cobro.credito_liberado`: ese evento es una compensación de la saga y Pedidos la tomaría como tal.
 
 **Prueba:** `services/cobros/src/aplicacion/cuentas-por-cobrar.spec.ts` (reglas), `apps/panel-gestion/src/app/vistas/cuentas.spec.ts` (pantalla) y `e2e/pruebas/cuentas.spec.ts` (de punta a punta: confirmar A-1051 → la cuenta aparece → dos pagos → pagada).
+
+## CU-10 · Conectar un e-commerce (API, WooCommerce, MCP)
+
+**Actor:** Tienda, su e-commerce o un agente de IA.
+**Precondición:** la tienda tiene cuenta (CU-15).
+**Servicios:** Conecta y Keycloak; Pedidos y Catálogo por el Router.
+
+**Curso básico**
+
+1. En Cuenta › Conectar mi tienda en línea, la tienda saca una llave. Se muestra una sola vez; Conecta guarda solo su huella y crea una cuenta de Keycloak con el `org_id` de la tienda y el rol `tienda`.
+2. La pega en el plugin de WooCommerce, en su e-commerce o en un agente con MCP.
+3. Lee el catálogo con sus precios (`GET /v1/productos`, `buscar_productos`). El plugin lo importa como borrador, con la ganancia sumada.
+4. Cuando entra una venta, pide con una clave fija (`POST /v1/pedidos`, `crear_pedido`). El plugin saca la clave del sitio, el pedido y el mayorista: reintentar nunca duplica.
+5. Registra una dirección de avisos. Cada `pedido.*` y `cobro.*` de esa tienda le llega firmado; el plugin lo deja como nota en el pedido.
+
+**Cursos alternos**
+
+- Llave inventada o revocada: 401. Revocarla corta al momento.
+- Una llave no puede sacar otras llaves: 403.
+- Misma clave: `repetida`, misma respuesta. Misma clave con otro contenido: `conflicto`. Clave que ya usó otra tienda: `CLAVE_EN_USO`, nunca el pedido ajeno.
+- Dirección interna o sin https: `URL_INVALIDA`.
+- Aviso que no llega: se reintenta a los 1, 5, 30, 120 y 720 minutos; después queda `fallida` y se reenvía desde la app o el Superadmin.
+
+**Prueba:** `services/conecta/src/aplicacion/integraciones.spec.ts`, `services/conecta/src/interfaz/mcp/servidor-mcp.spec.ts`, `apps/app/src/pantallas/conectar-tienda.test.tsx`, `e2e/pruebas/tienda-en-linea.spec.ts` y, contra un WooCommerce de verdad, `e2e/pruebas/woocommerce.spec.ts`.
+
+## CU-11 · Pedir por WhatsApp
+
+**Actor:** Tienda, por WhatsApp.
+**Precondición:** n8n está corriendo con el flujo `pedido-por-whatsapp` activo.
+**Servicios:** Conecta y Pedidos.
+
+**Curso básico**
+
+1. Llega el mensaje con su id, el teléfono y el texto: «2 cajas HP-0400, 1 docena HJ-0110».
+2. n8n convierte cada línea en producto, presentación y cantidad, y deriva la clave del id del mensaje.
+3. Manda `POST /v1/pedidos` con `Idempotency-Key` y `X-Abasto-Origen: whatsapp`.
+4. `SincronizarLote` reserva la clave, crea el pedido por el Router y anota la bitácora.
+5. El mayorista lo ve en Panel › Conecta y en Pedidos.
+
+**Cursos alternos**
+
+- WhatsApp reintenta el mensaje: `repetida` y en el Panel sale «Repetido: no se duplicó».
+- Presentación que no existe: `rechazada`, con el motivo a la vista en el Panel.
+- **Pendiente:** el flujo usa la tienda de prueba y un mensaje de ejemplo. Falta conectar un número real y buscar la tienda por su teléfono.
+
+**Prueba:** `services/conecta/src/aplicacion/sincronizar-lote.spec.ts` y `e2e/pruebas/conecta.spec.ts` (el mismo envío que hace n8n).
 
 ## CU-12 · Hacer un pedido sin señal
 
@@ -293,3 +405,26 @@ La tabla con actor, interfaz, servicios, dueño y fase está en `README.md`. Aba
 - **Cobranza** (`MisionCobranza`): las cuentas por cobrar que vencen mañana y están `pendiente` → un `enviar_recordatorio_whatsapp` por cuenta, con el saldo y el mensaje.
 - **Reposición** (`MisionReposicion`): con `demandaDeLaSemana`, `enRiesgo` (menos de 7 días de stock) y `cantidadAPedir` (dos semanas), lo que no alcanza → `crear_pedido_a_proveedor`.
 - **Catálogo** (`MisionCatalogo`): los productos con `stock = 0` que siguen publicados → `pausar_producto`, primero los que más se venden.
+
+## CU-15 · Registrarse como tienda
+
+**Actor:** Tienda o persona.
+**Precondición:** ninguna.
+**Servicios:** Catálogo y Keycloak.
+
+**Curso básico**
+
+1. Escribe su celular. `pedirCodigo` guarda la huella de un código de 6 dígitos, que dura 5 minutos, y lo manda.
+2. Escribe el código. La primera vez, también su nombre.
+3. `EntrarConTelefono` crea la `Organizacion` y su cuenta de Keycloak en el grupo `clientes`. Nunca hay correo ni contraseña.
+4. La app recibe una sesión larga y no vuelve a pedir el celular.
+5. Elige para qué compra (hogar, tienda o productor) y su dirección. Queda en la base: en otro celular se carga solo.
+
+**Cursos alternos**
+
+- Celular que no es de Bolivia: `TELEFONO_INVALIDO`. Pedir otro código muy pronto: `ESPERA`.
+- Código incorrecto: `CODIGO_INCORRECTO`. Muchos intentos: `CODIGO_BLOQUEADO`. Venció: `CODIGO_VENCIDO`.
+- Cuenta suspendida por Abasto: `CUENTA_SUSPENDIDA`.
+- **Pendiente:** el código se muestra en la app («Modo prueba»). Falta conectar WhatsApp para mandarlo de verdad.
+
+**Prueba:** `services/catalogo/tests/Unit/EntrarConTelefonoTest.php`, `apps/app/src/acceso.test.ts` y `e2e/pruebas/registro-tienda.spec.ts`.

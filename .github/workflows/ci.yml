@@ -29,6 +29,7 @@ jobs:
       node: ${{ steps.filtro.outputs.node }}
       pedidos: ${{ steps.filtro.outputs.pedidos }}
       catalogo: ${{ steps.filtro.outputs.catalogo }}
+      plugin: ${{ steps.filtro.outputs.plugin }}
       ml: ${{ steps.filtro.outputs.ml }}
       app: ${{ steps.filtro.outputs.app }}
       supergrafo: ${{ steps.filtro.outputs.supergrafo }}
@@ -55,6 +56,9 @@ jobs:
               - '.github/workflows/**'
             catalogo:
               - 'services/catalogo/**'
+              - '.github/workflows/**'
+            plugin:
+              - 'plugins/**'
               - '.github/workflows/**'
             ml:
               - 'ml/**'
@@ -128,6 +132,17 @@ jobs:
       - run: vendor/bin/phpstan analyse --no-progress
 
   # ---------------------------------------------------------------- ML: Python
+  # La lógica del plugin de WooCommerce, sin WordPress. Contra un WooCommerce de verdad: WOOCOMMERCE=1, ver plugins/CLAUDE.md
+  plugin:
+    needs: cambios
+    if: needs.cambios.outputs.plugin == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with: { php-version: '8.3' }
+      - run: php plugins/woocommerce-abasto/tests/logica.test.php
+
   ml:
     needs: cambios
     if: needs.cambios.outputs.ml == 'true'

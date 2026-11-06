@@ -321,6 +321,11 @@ function HojaDeTanda({
         {paso === 0 && (
           <>
             <Texto style={e.pregunta}>¿Cuántas vas a hacer?</Texto>
+            {!!r.notas && (
+              <Texto v="gris">
+                {r.notas} por cada {numeroBonito(r.rinde)}
+              </Texto>
+            )}
             <Contador valor={cuantas} alCambiar={setCuantas} paso={Math.max(1, Math.round(r.rinde / 10))} minimo={1} unidad={lo.plural} etiqueta="Cuántas quieres hacer" />
             <Opciones
               opciones={[1, 2, 3].map((k) => ({ clave: String(r.rinde * k), texto: `${numeroBonito(r.rinde * k)}` }))}
@@ -441,6 +446,7 @@ function HojaDeReceta({
           <Texto v="chico">Receta</Texto>
           <Texto v="t2">{r.nombre}</Texto>
           <Texto v="gris">Con esto salen {numeroBonito(r.rinde)} {lo.plural}</Texto>
+          {!!r.notas && <Texto v="gris">{r.notas}</Texto>}
         </View>
         <View style={ui.tarjeta}>
           {r.insumos.map((i) => {
@@ -519,7 +525,7 @@ function AsistenteDeReceta({
       const t = ahora();
       const existente = editando ? datos.articulos.find((a) => a.id === editando.articuloId) : datos.articulos.find((a) => a.clase === 'HECHO' && !a.eliminado && a.nombre.toLowerCase() === nombre.trim().toLowerCase());
       const hecho = existente ? { ...existente, nombre: nombre.trim(), actualizadoEn: t } : articuloHecho(nombre, t, `hecho:${nuevoId()}`);
-      const r = armarReceta({ id: editando?.id ?? nuevoId(), articuloId: hecho.id, nombre: hecho.nombre, rinde, insumos: elegidos }, t);
+      const r = armarReceta({ id: editando?.id ?? nuevoId(), articuloId: hecho.id, nombre: hecho.nombre, rinde, notas: editando?.notas ?? null, insumos: elegidos }, t);
       await aplicar({ articulos: [hecho], recetas: [r] });
       alCerrar();
     } catch (x) {

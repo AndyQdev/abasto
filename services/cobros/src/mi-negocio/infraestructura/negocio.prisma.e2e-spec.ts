@@ -48,13 +48,14 @@ describe('Mi negocio en Postgres (esquema negocio)', () => {
     const venta = { id: 'v1', fecha: F, lineas: [{ articuloId: 'a', cantidad: 2, precioUnitarioCentavos: 2100, costoUnitarioCentavos: 1750 }, { articuloId: 'b', cantidad: 1.5, precioUnitarioCentavos: 1000, costoUnitarioCentavos: null }], totalCentavos: 5700, costoCentavos: 3500, forma: 'CONTADO' as const, clienteId: null, anulada: false };
     await repo.guardar(org, { ventas: [venta] });
     await repo.guardar(org, { ventas: [venta] });
-    const receta = { id: 'r1', articuloId: 'h1', nombre: 'Salteñas', rinde: 100, insumos: [{ articuloId: 'abasto:AB-101', cantidad: 5 }, { articuloId: 'papa', cantidad: 4 }], actualizadoEn: F, eliminado: false };
+    const receta = { id: 'r1', articuloId: 'h1', nombre: 'Salteñas', rinde: 100, notas: 'Además lleva 2,7 L de agua', insumos: [{ articuloId: 'abasto:AB-101', cantidad: 5 }, { articuloId: 'papa', cantidad: 4 }], actualizadoEn: F, eliminado: false };
     await repo.guardar(org, { recetas: [receta] });
     await repo.guardar(org, { recetas: [{ ...receta, insumos: [{ articuloId: 'abasto:AB-101', cantidad: 6 }], actualizadoEn: '2026-11-01T14:00:00.000Z' }] });
     const todo = await repo.desde(org, null);
     expect(todo.ventas).toHaveLength(1);
     expect(todo.ventas[0].lineas.map((l) => l.cantidad)).toEqual([2, 1.5]);
     expect(todo.recetas[0].insumos).toEqual([{ articuloId: 'abasto:AB-101', cantidad: 6 }]);
+    expect(todo.recetas[0].notas).toBe('Además lleva 2,7 L de agua');
   });
 
   it('baja solo lo recibido después de la marca y nunca lo de otro cliente', async () => {

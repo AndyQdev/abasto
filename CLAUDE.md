@@ -51,6 +51,7 @@ Antes de cambiar algo en `contracts/`, escríbelo en tu archivo de estado y haz 
 - `pnpm dev:panel` · `dev:superadmin` · `pnpm app` (Expo en el puerto 8090) · `app:android` · `dev:cobros` · `dev:conecta` · `dev:asistente` · `dev:pedidos` · `dev:catalogo`
 - `pnpm test` (TypeScript) · `test:pedidos` · `test:catalogo` · `test:ml` · `test:todo` · `pnpm e2e` (necesita `pnpm todo`)
 - `pnpm arquitectura` revisa las capas · `pnpm supergrafo` recompone el supergrafo · `pnpm n8n` levanta n8n e importa los flujos
+- Plugin de WooCommerce: `pnpm test:plugin` · `pnpm woocommerce` (WordPress de verdad en el 8095) · `pnpm woocommerce:borrar` · `pnpm plugin:zip`. Ver `plugins/CLAUDE.md`
 
 Puertos, usuarios de prueba y arranque paso a paso: `README.md`. Arquitectura: `docs/arquitectura.md`.
 
@@ -91,6 +92,7 @@ Puertos, usuarios de prueba y arranque paso a paso: `README.md`. Arquitectura: `
   2. Instalar `cmake;4.0.2` con el `sdkmanager`, que trae ninja 1.12.1.
   3. Copiar ese `ninja.exe` sobre el de `Android\Sdk\cmake\3.22.1\bin`, guardando antes el viejo.
 - Docker tiene tope: cada contenedor con `mem_limit` y la máquina de WSL con 6 GB en `%USERPROFILE%\.wslconfig`. En reposo todo usa ~2 GB. Los chequeos de salud van cada 30 s (cada 2 s mientras arranca).
+- Catálogo corre su escucha de RabbitMQ dentro del contenedor, con el código montado: si cambias algo de la saga en PHP, `docker compose --profile servicios restart catalogo` o seguirá con el código viejo.
 - La saga corre de punta a punta (Pedidos → Catálogo → Cobros). Los pedidos de demostración vencen a las 2 h: `e2e/preparar.ts` los recarga antes de cada corrida.
 
 ## Al terminar

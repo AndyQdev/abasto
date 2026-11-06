@@ -1185,6 +1185,9 @@ type RecetaDeNegocio
   articuloId: String!
   nombre: String!
   rinde: Float!
+
+  """Lo que lleva y no se compra, como el agua"""
+  notas: String
   insumos: [InsumoDeReceta!]!
   actualizadoEn: String!
   eliminado: Boolean!
@@ -1197,6 +1200,7 @@ input RecetaDeNegocioEntrada
   articuloId: String!
   nombre: String!
   rinde: Float!
+  notas: String
   insumos: [InsumoDeRecetaEntrada!]!
   actualizadoEn: String!
   eliminado: Boolean!

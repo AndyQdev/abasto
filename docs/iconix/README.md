@@ -38,11 +38,11 @@ Dueños: Andrés lleva lo comercial y Jhoel toda la IA.
 | CU-12 Pedir sin señal | Tienda | App (bandeja sin señal) | Conecta, Pedidos | Andrés | F4 |
 | CU-13 Preguntarle a los datos (texto o voz) | Mayorista | Panel › Inteligencia (Reportes) | Asistente + IA local del navegador | Jhoel | F5 |
 | CU-14 Aprobar la propuesta de un agente | Mayorista | Panel › Inteligencia (Agentes) | Asistente, n8n | Jhoel | F5 |
-| CU-15 Registrarse como tienda | Tienda | App (Entrar › Crear cuenta) | Catálogo, Keycloak | Andrés | F1 |
+| CU-15 Registrarse como tienda | Tienda | App (Entrar: celular y código) | Catálogo, Keycloak | Andrés | F1 |
 
-Ya tienen prueba punta a punta: la sesión única (Panel → Superadmin), el Panel con sus tres frameworks, CU-09 (confirmar a crédito → cuenta → dos pagos → pagada) y CU-13 (pregunta → tabla → Excel). Ya tienen prueba de servicio: la red privada (CU-03/04/05), la saga (CU-06, del lado de Pedidos), la idempotencia de Conecta (CU-11 y CU-12) y la guardia SQL (CU-13).
+Tienen prueba punta a punta: la sesión única (Panel → Superadmin), el Panel con sus tres frameworks, CU-01, CU-03/04/05 (red privada), CU-04 (crédito), CU-06 y CU-08 (la saga), CU-09, CU-10 (con WooCommerce real), CU-11 (el mismo envío de n8n, sin n8n), CU-12 y CU-13. Lo que falta conectar afuera está marcado **Pendiente** en cada caso: WhatsApp real (CU-11, CU-15) y un banco real (CU-08).
 
 ## Archivos por caso
 
-- Robustez: [CU-02](robustez/CU-02.md) · [CU-03](robustez/CU-03.md) · [CU-04](robustez/CU-04.md) · [CU-05](robustez/CU-05.md) · [CU-06](robustez/CU-06.md) · [CU-07](robustez/CU-07.md) · [CU-13](robustez/CU-13.md) · [CU-14](robustez/CU-14.md).
-- Secuencia: [CU-03](secuencia/CU-03.md) · [CU-04](secuencia/CU-04.md) · [CU-05](secuencia/CU-05.md) · [CU-06](secuencia/CU-06.md) · [CU-07](secuencia/CU-07.md) · [CU-13](secuencia/CU-13.md) · [CU-14](secuencia/CU-14.md).
+- Robustez: [CU-01](robustez/CU-01.md) · [CU-02](robustez/CU-02.md) · [CU-03](robustez/CU-03.md) · [CU-04](robustez/CU-04.md) · [CU-05](robustez/CU-05.md) · [CU-06](robustez/CU-06.md) · [CU-07](robustez/CU-07.md) · [CU-08](robustez/CU-08.md) · [CU-09](robustez/CU-09.md) · [CU-10](robustez/CU-10.md) · [CU-11](robustez/CU-11.md) · [CU-12](robustez/CU-12.md) · [CU-13](robustez/CU-13.md) · [CU-14](robustez/CU-14.md) · [CU-15](robustez/CU-15.md).
+- Secuencia: [CU-01](secuencia/CU-01.md) · [CU-02](secuencia/CU-02.md) · [CU-03](secuencia/CU-03.md) · [CU-04](secuencia/CU-04.md) · [CU-05](secuencia/CU-05.md) · [CU-06](secuencia/CU-06.md) · [CU-07](secuencia/CU-07.md) · [CU-08](secuencia/CU-08.md) · [CU-09](secuencia/CU-09.md) · [CU-10](secuencia/CU-10.md) · [CU-11](secuencia/CU-11.md) · [CU-12](secuencia/CU-12.md) · [CU-13](secuencia/CU-13.md) · [CU-14](secuencia/CU-14.md) · [CU-15](secuencia/CU-15.md).

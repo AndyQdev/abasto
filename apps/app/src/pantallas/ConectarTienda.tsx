@@ -167,11 +167,11 @@ export function ConectarTienda() {
               {!!aviso && <Texto v="chico">{resultadoDeEntrega(aviso)}</Texto>}
               <View style={e.acciones}>
                 <View style={{ flex: 1 }}>
-                  <Boton tipo="secundario" texto="Probar" deshabilitado={ocupado} alTocar={() => void haciendo(async () => void (await api.probarWebhook(w.id)))} />
+                  <Boton tipo="chico" texto="Probar" deshabilitado={ocupado} alTocar={() => void haciendo(async () => void (await api.probarWebhook(w.id)))} />
                 </View>
                 {aviso?.estado === 'fallida' && (
                   <View style={{ flex: 1 }}>
-                    <Boton tipo="secundario" texto="Reenviar" deshabilitado={ocupado} alTocar={() => void haciendo(async () => void (await api.reenviar(aviso.id)))} />
+                    <Boton tipo="chico" texto="Reenviar" deshabilitado={ocupado} alTocar={() => void haciendo(async () => void (await api.reenviar(aviso.id)))} />
                   </View>
                 )}
                 <View style={{ flex: 1 }}>

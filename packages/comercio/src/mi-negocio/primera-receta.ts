@@ -3,7 +3,7 @@
  * insumo de Abasto crea su artículo con existencia 0 (enlazado al producto del catálogo) y la receta lo usa. Así el
  * productor ve cuánto le cuesta cada unidad con los precios de referencia y pide lo que falta de un toque.
  *
- * El agua no se compra: se muestra en la plantilla, pero no entra a la receta (no tiene artículo ni costo).
+ * El agua no se compra: no tiene artículo ni costo, así que queda como nota de la receta («Además lleva 2,7 L de agua»).
  */
 import { disponible, escalasConPrecio, separarContenido, type Producto } from '../catalogo';
 import { idDeArticuloDeAbasto } from './compras';
@@ -110,6 +110,14 @@ export interface PrimeraReceta {
  * y la receta, con cada cantidad en la unidad del artículo (400 g de azúcar → 0,4 kg si la arroba se cuenta en kg).
  * Un mismo insumo en dos grupos (yuca para el asadito y para servir) se suma.
  */
+/** Lo que lleva y no se compra, junto: 700 ml y 2 L de agua son «Además lleva 2,7 L de agua». Null si no hay agua */
+export function notasDeReceta(insumos: InsumoElegido[]): string | null {
+  const mililitros = insumos.filter((i) => i.clave === 'agua' && i.cantidad > 0).reduce((total, i) => total + (convertir(i.cantidad, i.unidad, 'ml') ?? 0), 0);
+  if (!mililitros) return null;
+  const numero = (n: number) => String(Math.round(n * 100) / 100).replace('.', ',');
+  return `Además lleva ${mililitros >= 1000 ? `${numero(mililitros / 1000)} L` : `${numero(mililitros)} ml`} de agua`;
+}
+
 export function primeraReceta(
   entrada: { nombre: string; rinde: number; insumos: InsumoElegido[] },
   productos: Producto[],
@@ -137,7 +145,7 @@ export function primeraReceta(
   }
   const insumos: InsumoDeReceta[] = [...cantidades].map(([articuloId, cantidad]) => ({ articuloId, cantidad: Math.round(cantidad * 1e6) / 1e6 }));
   const hecho = articuloHecho(entrada.nombre, ahora, nuevoId());
-  const r = armarReceta({ id: nuevoId(), articuloId: hecho.id, nombre: entrada.nombre, rinde: entrada.rinde, insumos }, ahora);
+  const r = armarReceta({ id: nuevoId(), articuloId: hecho.id, nombre: entrada.nombre, rinde: entrada.rinde, notas: notasDeReceta(entrada.insumos), insumos }, ahora);
   return { receta: r, cambios: { articulos: [...nuevos, hecho], recetas: [r] } };
 }
 

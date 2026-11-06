@@ -12,7 +12,7 @@ const CAMPOS = `
   ventas { id fecha lineas { articuloId cantidad precioUnitarioCentavos costoUnitarioCentavos } totalCentavos costoCentavos forma clienteId anulada }
   clientes { id nombre telefono creadoEn actualizadoEn eliminado }
   fiados { id clienteId tipo montoCentavos ventaId fecha nota }
-  recetas { id articuloId nombre rinde insumos { articuloId cantidad } actualizadoEn eliminado }
+  recetas { id articuloId nombre rinde notas insumos { articuloId cantidad } actualizadoEn eliminado }
   tandas { id recetaId articuloId planificado obtenido costoTotalCentavos fecha }
   anotaciones { id tipo montoCentavos categoria nota origen claveUnica fecha }
   lista { id productoId presentacion cantidad actualizadoEn eliminado }`;

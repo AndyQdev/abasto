@@ -316,6 +316,6 @@ Arroz Caisy 1 kg · azúcar Guabirá 1 kg · aceite Fino 900 ml · fideo Don Vit
 | 5 · Inicio | `seccionesDelNegocio` filtra por `usos`: «Para tu receta de…» (los insumos de sus recetas), «Lo que más se pide en tu rubro» (lo que llevan las plantillas de su área), «Para llevar» y «También te puede servir». «Tu pedido de la semana» sigue en el Carrito (pedido de Andrés del 02/11). |
 
 **Quedó afuera, a decidir:**
-- El agua sale en la plantilla, pero no se guarda en la receta: el modelo de Cobros pide un artículo por insumo. Para guardarla hace falta un campo de notas en la receta.
+- ~~El agua sale en la plantilla, pero no se guarda en la receta.~~ **Hecho (06/11):** queda en `Receta.notas` («Además lleva 2,7 L de agua»), se guarda en la base y se ve al mirar la receta y al hacer la tanda.
 - La ganancia editable se aplica al primer estante (queda como precio de venta de cada artículo). El margen por defecto del negocio sigue fijo en 20 % para la tienda y 50 % para el productor.
 - Las ilustraciones de producto son 3D sobre fondo blanco, como las fotos; cuando haya fotos propias se reemplazan con el mismo nombre de archivo.

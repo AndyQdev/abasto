@@ -63,7 +63,8 @@ export class NegocioPrisma implements RepositorioDeNegocio {
       for (const r of c.recetas ?? []) {
         const actual = await tx.negocioReceta.findUnique({ where: { orgId_id: { orgId, id: r.id } }, select: { actualizadoEn: true } });
         if (!(await gana(actual, r.actualizadoEn))) continue;
-        const datos = { articuloId: r.articuloId, nombre: r.nombre, rinde: r.rinde, actualizadoEn: fecha(r.actualizadoEn), eliminado: r.eliminado, recibidoEn: ahora };
+        // `notas` sin definir (app vieja) no pisa lo que ya estaba guardado
+        const datos = { articuloId: r.articuloId, nombre: r.nombre, rinde: r.rinde, notas: r.notas, actualizadoEn: fecha(r.actualizadoEn), eliminado: r.eliminado, recibidoEn: ahora };
         await tx.negocioReceta.upsert({ where: { orgId_id: { orgId, id: r.id } }, create: { orgId, id: r.id, ...datos }, update: datos });
         // Los insumos son parte de la receta: se reemplazan con ella
         await tx.negocioRecetaInsumo.deleteMany({ where: { orgId, recetaId: r.id } });
@@ -212,6 +213,7 @@ export class NegocioPrisma implements RepositorioDeNegocio {
         articuloId: r.articuloId,
         nombre: r.nombre,
         rinde: Number(r.rinde),
+        notas: r.notas,
         insumos: r.insumos.map((i) => ({ articuloId: i.articuloId, cantidad: Number(i.cantidad) })),
         actualizadoEn: iso(r.actualizadoEn),
         eliminado: r.eliminado,

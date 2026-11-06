@@ -117,6 +117,8 @@ export interface Receta extends Editable {
   nombre: string;
   /** Cuántas unidades salen con estas cantidades: «100 salteñas» */
   rinde: number;
+  /** Lo que lleva y no se compra, como el agua: «Además lleva 2,7 L de agua». Sin artículo ni costo */
+  notas?: string | null;
   insumos: InsumoDeReceta[];
 }
 

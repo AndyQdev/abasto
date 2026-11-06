@@ -28,12 +28,20 @@
 >
 > Tus tareas están en Trello, en la tarjeta «LEER PRIMERO · Reparto nuevo» y en las que tienen tu nombre. El prompt para tu Claude está en `docs/PROMPT-JHOEL.md`.
 
-Actualizado: 03/11/2026 · en main (los dos trabajamos ahí)
+Actualizado: 06/11/2026 · en main (los dos trabajamos ahí)
 
 ## Estoy en
-El Panel web ya no tiene módulos «en construcción»: CU-09 (Cuentas por cobrar) y Conecta (F3) hechos el 03/11. Sigue: registro de tiendas desde la app (CU-15).
+Los 15 casos de uso tienen pantalla, prueba y sus diagramas ICONIX. Ni el Panel ni el Superadmin tienen módulos en construcción. Falta lo que depende de afuera o de una decisión (ver «Sigue»).
 
 ## Terminé
+- **CU-10 · Conectar un e-commerce (06/11):** llaves de API (cada una es una cuenta de Keycloak con el `org_id` de la tienda), avisos firmados con reintentos, MCP de compras `abasto-compras` y plugin de WooCommerce (`plugins/woocommerce-abasto`), probado contra WordPress 7.1 y WooCommerce 11.2 reales. Pantalla en App › Cuenta › Conectar mi tienda en línea.
+  **Jhoel:** después de `git pull`, `pnpm install`, `pnpm todo` (crea `conecta-integraciones` en Keycloak y la cola `conecta.webhooks`) y `docker compose --profile servicios restart catalogo`. Tu MCP de reportes no cambió.
+- **Bug de seguridad (06/11):** Pedidos devolvía el pedido de otra tienda si alguien reusaba su clave de idempotencia. Ahora responde `CLAVE_EN_USO`, y Conecta guarda las claves por empresa.
+- **CU-04 · Dar crédito (06/11):** hasta ahora las líneas solo existían en la semilla. Se da al aprobar o desde la tarjeta del cliente, en Panel › Clientes. `lineaDeCredito` ya no la puede leer cualquier sesión.
+- **Superadmin (06/11):** Tiendas (suspender de verdad frena sus pedidos), Reportes, Integraciones y Usuarios (solo lectura). Los gráficos de Tracción mentían: 78 y 103 se veían casi iguales; arreglado. Se usa bien en el teléfono.
+- **CU-15 (06/11):** ya estaba resuelto por «entrar con el celular» (30/10). Le faltaba su prueba de punta a punta: `e2e/pruebas/registro-tienda.spec.ts`.
+- **Agua en las recetas (06/11):** queda como `Receta.notas` («Además lleva 2,7 L de agua») y se ve al cocinar.
+- **ICONIX (06/11):** los 15 casos con texto, robustez y secuencia; los 30 diagramas pasan el analizador de Mermaid.
 - **Conecta en el Panel (F3, 03/11):** la bitácora de lo que entra de afuera (WhatsApp por n8n, tienda en línea por la API, app sin señal) con lo que pasó con cada cosa, incluido «Repetido: no se duplicó» (idempotencia a la vista). Conecta: `GET /v1/bitacora` y la cabecera `X-Abasto-Origen` (OpenAPI, aditivo); el flujo de n8n la manda. e2e `conecta.spec.ts`.
 - **Bug arreglado (03/11):** un pedido con un producto que no existe en Catálogo dejaba vacío Panel › Pedidos (el Router anulaba toda `misVentas`). Catálogo ahora resuelve ese producto como «Producto que ya no está en el catálogo (código)».
 - **CU-09 · Cuentas por cobrar (03/11):** Cobros abre una cuenta por cada pedido a crédito o contra entrega al confirmarse (`pedido.confirmado`, cola `cobros.cuentas`); el Panel › Cuentas muestra lo que te deben (lo más atrasado primero) y registra pagos en efectivo, transferencia o QR, todo o una parte. Un pago repetido no se cuenta dos veces y al saldar un crédito la tienda recupera el cupo. e2e `cuentas.spec.ts` (confirmar A-1051 → la cuenta aparece → dos pagos → pagada); la suite completa en verde (arreglé `mi-negocio.spec.ts`, que todavía buscaba la tabla vieja de Pedidos).
@@ -93,5 +101,12 @@ El Panel web ya no tiene módulos «en construcción»: CU-09 (Cuentas por cobra
 - Jhoel: `reconocerProducto(fotoUri)` en `apps/app/src/ia` con el modelo TFLite entrenado con las fotos del catálogo.
 
 ## Sigue
-- CU-15: registro de tiendas desde la app.
-- Investigar de dónde y cómo cargar el catálogo real.
+Depende de afuera:
+- Conectar WhatsApp de verdad: el código de entrada (`EnviadorDeCodigos`, hoy lo muestra la app) y el flujo de pedidos de n8n (usa la tienda de prueba).
+- Conectar un banco para el QR (hoy `pagarQrDePrueba`).
+- Cotizar en el mercado los precios que siguen «Por confirmar».
+
+Espera una decisión:
+- Reclamos: cómo se devuelve el dinero. Salió del menú del Superadmin hasta decidirlo.
+- Día fijo de entrega por zona.
+- Roles finos en el Superadmin (hoy solo `admin`) y el margen por defecto editable por negocio.

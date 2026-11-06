@@ -64,7 +64,7 @@ sequenceDiagram
 
 `SagaDeCompra` (Pedidos) es la máquina de estados que decide el siguiente paso y las compensaciones. `RevisorDePlazos` cancela lo que se quedó esperando.
 
-**Estado actual:** Pedidos publica los comandos y mueve la saga con las respuestas. Faltan los consumidores: Catálogo (reservar y liberar stock) y Cobros (autorizar y liberar crédito, QR). Hasta entonces, un pedido nuevo queda pendiente y en Bs 0.
+Pedidos publica los comandos y mueve la saga con las respuestas; Catálogo y Cobros los atienden. La saga corre de punta a punta (`e2e/pruebas/compra.spec.ts`).
 
 ## Red privada de precios
 

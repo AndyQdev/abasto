@@ -3,7 +3,7 @@ import { comprasQueEntran } from './compras';
 import type { Articulo, Movimiento } from './modelo';
 import { itemsParaPedir } from './pedir';
 import { PLANTILLAS, plantillasDe } from './plantillas';
-import { insumosIniciales, preciosDeReferencia, primeraReceta, productoParaInsumo } from './primera-receta';
+import { insumosIniciales, notasDeReceta, preciosDeReferencia, primeraReceta, productoParaInsumo, type InsumoElegido } from './primera-receta';
 import { costoDeReceta, faltantesDelPlan, planificar } from './produccion';
 import { CATALOGO_DE_LA_SEMILLA as CATALOGO } from './semilla-de-prueba.spec';
 
@@ -20,6 +20,15 @@ describe('La primera receta, con los insumos en cero', () => {
     expect(productoParaInsumo({ ...harina, cantidad: 11.5, unidad: 'kg' }, CATALOGO)?.id).toBe('AB-102');
     expect(productoParaInsumo({ ...harina, cantidad: 20, unidad: 'kg' }, CATALOGO)?.id).toBe('AB-101');
     expect(productoParaInsumo({ ...harina, cantidad: 2000, unidad: 'kg' }, CATALOGO)?.id).toBe('AB-101');
+  });
+
+  it('el agua no entra como insumo, pero queda como nota sumada en la receta', () => {
+    const { receta } = primeraReceta({ nombre: 'Salteña de carne', rinde: 50, insumos: insumosIniciales(saltena, CATALOGO) }, CATALOGO, vacio, AHORA, nuevoId);
+    expect(receta.notas).toBe('Además lleva 2,7 L de agua');
+    const agua = (cantidad: number, unidad: InsumoElegido['unidad']) => ({ clave: 'agua', nombre: 'Agua', grupo: '', cantidad, unidad, productoId: null }) as unknown as InsumoElegido;
+    expect(notasDeReceta([agua(700, 'ml')])).toBe('Además lleva 700 ml de agua');
+    expect(notasDeReceta([agua(0, 'ml')])).toBeNull();
+    expect(notasDeReceta([])).toBeNull();
   });
 
   it('la lista para editar trae cada insumo con su producto; el agua no se compra', () => {
