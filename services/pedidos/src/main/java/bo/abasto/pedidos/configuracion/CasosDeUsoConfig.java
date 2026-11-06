@@ -3,8 +3,10 @@ package bo.abasto.pedidos.configuracion;
 import bo.abasto.pedidos.aplicacion.puertos.salida.MensajesProcesados;
 import bo.abasto.pedidos.aplicacion.puertos.salida.Outbox;
 import bo.abasto.pedidos.aplicacion.puertos.salida.PedidoRepositorio;
+import bo.abasto.pedidos.aplicacion.puertos.salida.ReclamoRepositorio;
 import bo.abasto.pedidos.aplicacion.puertos.salida.SagaRepositorio;
 import bo.abasto.pedidos.aplicacion.servicios.PedidosServicio;
+import bo.abasto.pedidos.aplicacion.servicios.ReclamosServicio;
 import bo.abasto.pedidos.aplicacion.servicios.SagaServicio;
 import java.time.Clock;
 import org.springframework.context.annotation.Bean;
@@ -22,6 +24,11 @@ class CasosDeUsoConfig {
     @Bean
     PedidosServicio pedidosServicio(PedidoRepositorio pedidos, SagaRepositorio sagas, Outbox outbox, Clock reloj) {
         return new PedidosServicio(pedidos, sagas, outbox, reloj);
+    }
+
+    @Bean
+    ReclamosServicio reclamosServicio(ReclamoRepositorio reclamos, PedidoRepositorio pedidos, Outbox outbox, Clock reloj) {
+        return new ReclamosServicio(reclamos, pedidos, outbox, reloj);
     }
 
     @Bean

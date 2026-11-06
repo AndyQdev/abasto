@@ -31,9 +31,10 @@
 Actualizado: 06/11/2026 · en main (los dos trabajamos ahí)
 
 ## Estoy en
-Los 15 casos de uso tienen pantalla, prueba y sus diagramas ICONIX. Ni el Panel ni el Superadmin tienen módulos en construcción. Falta lo que depende de afuera o de una decisión (ver «Sigue»).
+Los 16 casos de uso tienen pantalla, prueba y sus diagramas ICONIX. Ni el Panel ni el Superadmin tienen módulos en construcción. Falta lo que depende de afuera o de una decisión (ver «Sigue»).
 
 ## Terminé
+- **CU-16 · Reclamos (06/11, decisión de Andrés):** la tienda reporta un problema desde Seguimiento, Abasto lo resuelve a mano en Superadmin › Reclamos y el sistema solo anota lo devuelto. No mueve Cobros. El mayorista ve la marca en su pedido del Panel.
 - **CU-10 · Conectar un e-commerce (06/11):** llaves de API (cada una es una cuenta de Keycloak con el `org_id` de la tienda), avisos firmados con reintentos, MCP de compras `abasto-compras` y plugin de WooCommerce (`plugins/woocommerce-abasto`), probado contra WordPress 7.1 y WooCommerce 11.2 reales. Pantalla en App › Cuenta › Conectar mi tienda en línea.
   **Jhoel:** después de `git pull`, `pnpm install`, `pnpm todo` (crea `conecta-integraciones` en Keycloak y la cola `conecta.webhooks`) y `docker compose --profile servicios restart catalogo`. Tu MCP de reportes no cambió.
 - **Bug de seguridad (06/11):** Pedidos devolvía el pedido de otra tienda si alguien reusaba su clave de idempotencia. Ahora responde `CLAVE_EN_USO`, y Conecta guarda las claves por empresa.
@@ -41,7 +42,7 @@ Los 15 casos de uso tienen pantalla, prueba y sus diagramas ICONIX. Ni el Panel 
 - **Superadmin (06/11):** Tiendas (suspender de verdad frena sus pedidos), Reportes, Integraciones y Usuarios (solo lectura). Los gráficos de Tracción mentían: 78 y 103 se veían casi iguales; arreglado. Se usa bien en el teléfono.
 - **CU-15 (06/11):** ya estaba resuelto por «entrar con el celular» (30/10). Le faltaba su prueba de punta a punta: `e2e/pruebas/registro-tienda.spec.ts`.
 - **Agua en las recetas (06/11):** queda como `Receta.notas` («Además lleva 2,7 L de agua») y se ve al cocinar.
-- **ICONIX (06/11):** los 15 casos con texto, robustez y secuencia; los 30 diagramas pasan el analizador de Mermaid.
+- **ICONIX (06/11):** los 16 casos con texto, robustez y secuencia; los 32 diagramas pasan el analizador de Mermaid.
 - **Conecta en el Panel (F3, 03/11):** la bitácora de lo que entra de afuera (WhatsApp por n8n, tienda en línea por la API, app sin señal) con lo que pasó con cada cosa, incluido «Repetido: no se duplicó» (idempotencia a la vista). Conecta: `GET /v1/bitacora` y la cabecera `X-Abasto-Origen` (OpenAPI, aditivo); el flujo de n8n la manda. e2e `conecta.spec.ts`.
 - **Bug arreglado (03/11):** un pedido con un producto que no existe en Catálogo dejaba vacío Panel › Pedidos (el Router anulaba toda `misVentas`). Catálogo ahora resuelve ese producto como «Producto que ya no está en el catálogo (código)».
 - **CU-09 · Cuentas por cobrar (03/11):** Cobros abre una cuenta por cada pedido a crédito o contra entrega al confirmarse (`pedido.confirmado`, cola `cobros.cuentas`); el Panel › Cuentas muestra lo que te deben (lo más atrasado primero) y registra pagos en efectivo, transferencia o QR, todo o una parte. Un pago repetido no se cuenta dos veces y al saldar un crédito la tienda recupera el cupo. e2e `cuentas.spec.ts` (confirmar A-1051 → la cuenta aparece → dos pagos → pagada); la suite completa en verde (arreglé `mi-negocio.spec.ts`, que todavía buscaba la tabla vieja de Pedidos).
@@ -78,6 +79,7 @@ Los 15 casos de uso tienen pantalla, prueba y sus diagramas ICONIX. Ni el Panel 
 - e2e: 22 pruebas en verde (02/11).
 
 ## Cambié en contratos
+- 06/11 · Pedidos (CU-16, aditivo): `abrirReclamo`, `resolverReclamo`, `reclamos(estado)` y `Pedido.reclamo`; migración V4; supergrafo regenerado. AsyncAPI: `pedido.reclamo_abierto` y `pedido.reclamo_resuelto`. **Jhoel:** tu proyector los recibe y los ignora (caen en `default`); no hay que tocar nada. Si quieres contar reclamos en Reportes, ahí están.
 - 06/11 · Catálogo: `tiendas`, `equipoDeAbasto`, `suspenderTienda`, `reactivarTienda` (solo admin). Pedidos: `SemanaDeVentas.tiendas`. Aditivo; supergrafo regenerado. **Jhoel:** el Catálogo corre su escucha dentro del contenedor: después de `git pull`, `docker compose --profile servicios restart catalogo` para que tome el código nuevo.
 - 06/11 · Conecta (OpenAPI, aditivo, CU-10): llaves de API (`/v1/llaves`), webhooks (`/v1/webhooks`, `/v1/entregas`), lectura para el e-commerce (`/v1/mayoristas`, `/v1/productos`, `/v1/pedidos/{id}`), administración (`/v1/admin/...`) y `POST /mcp`. `X-Abasto-Origen` suma `mcp`. Cola nueva `conecta.webhooks`. **Jhoel:** después de `git pull`, `pnpm install`, `pnpm todo` (corre `al-dia.mjs`, crea `conecta-integraciones`). El MCP de reportes sigue siendo tuyo, en Asistente; no toqué nada. Falta el origen `mcp` en tu proyector solo si quieres contarlo aparte.
 - 06/11 · Pedidos: `crearPedido` rechaza con `CLAVE_EN_USO` una clave que ya usó otra tienda (antes devolvía el pedido ajeno).
@@ -106,7 +108,6 @@ Depende de afuera:
 - Conectar un banco para el QR (hoy `pagarQrDePrueba`).
 - Cotizar en el mercado los precios que siguen «Por confirmar».
 
-Espera una decisión:
-- Reclamos: cómo se devuelve el dinero. Salió del menú del Superadmin hasta decidirlo.
-- Día fijo de entrega por zona.
-- Roles finos en el Superadmin (hoy solo `admin`) y el margen por defecto editable por negocio.
+Decidido por Andrés (06/11), no se hace por ahora:
+- Día fijo de entrega por zona: cuando haya zonas reales.
+- Roles finos en el Superadmin y margen por defecto editable por negocio.

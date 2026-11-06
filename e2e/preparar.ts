@@ -17,6 +17,7 @@ export default function preparar() {
   const sql = [
     'BEGIN;',
     `DELETE FROM sagas_de_compra WHERE ${demo};`,
+    `DELETE FROM reclamos WHERE ${demo};`,
     `DELETE FROM lineas_de_pedido WHERE ${demo};`,
     "DELETE FROM pedidos WHERE id::text LIKE '7b0d4f3e-0001-%';",
     readFileSync(new URL(PEDIDOS_DEMO, import.meta.url), 'utf8'),

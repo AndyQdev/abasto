@@ -173,6 +173,11 @@ main {
 .rechazo textarea { height: auto; padding: 0.6rem 0.875rem; resize: vertical; }
 .boton-peligro { height: var(--alto-control); padding: 0 1rem; border-radius: var(--radio-md); background: hsl(var(--error)); color: #fff; border: 0; font-weight: 600; }
 .boton-peligro:disabled, .boton-primario:disabled { opacity: 0.5; cursor: not-allowed; }
+.motivo-reclamo { background: hsl(var(--advertencia-suave)); color: hsl(var(--advertencia-suave-texto)); padding: 0.6rem 0.8rem; border-radius: var(--radio); }
+.motivo-resuelto { font-weight: 600; }
+.resolver-monto { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(140px, 200px); gap: 0.6rem; align-items: end; }
+.resolver-monto label { display: grid; gap: 0.35rem; font-weight: 600; }
+.resolver-monto .entrada { width: 100%; min-width: 0; }
 .buscador { width: min(340px, 100%); }
 .tabla-ancha { overflow-x: auto; }
 .tabla-ancha .tabla { min-width: 720px; }
@@ -192,6 +197,7 @@ main {
   .pestanas .chip { flex: none; }
   .buscador { width: 100%; }
   .suspender { flex-wrap: wrap; justify-content: flex-start; }
+  .resolver-monto { grid-template-columns: minmax(0, 1fr); }
   .ciudad { grid-template-columns: minmax(70px, 110px) 1fr; }
   .ciudad-valor { grid-column: 1 / -1; justify-self: end; }
 }

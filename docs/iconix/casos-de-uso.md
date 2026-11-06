@@ -18,6 +18,7 @@ flowchart LR
     CU10(["CU-10 Conectar un e-commerce (API, WooCommerce, MCP)"])
     CU12(["CU-12 Pedir sin señal"])
     CU15(["CU-15 Registrarse como tienda"])
+    CU16(["CU-16 Reportar un problema con un pedido"])
   end
 
   subgraph Panel["Panel web (PWA)"]
@@ -37,6 +38,8 @@ flowchart LR
   Tienda --> CU10
   Tienda --> CU12
   Tienda --> CU15
+  Tienda --> CU16
+  Admin --> CU16
   Tienda --> WhatsApp
   WhatsApp --> CU11
   Mayorista --> CU01
@@ -428,3 +431,30 @@ La tabla con actor, interfaz, servicios, dueño y fase está en `README.md`. Aba
 - **Pendiente:** el código se muestra en la app («Modo prueba»). Falta conectar WhatsApp para mandarlo de verdad.
 
 **Prueba:** `services/catalogo/tests/Unit/EntrarConTelefonoTest.php`, `apps/app/src/acceso.test.ts` y `e2e/pruebas/registro-tienda.spec.ts`.
+
+## CU-16 · Reportar un problema con un pedido
+
+**Actores:** Tienda y Admin.
+**Precondición:** la tienda tiene un pedido que ya salió de `PENDIENTE`.
+**Servicio:** Pedidos.
+
+**Curso básico**
+
+1. En Seguimiento, la tienda toca «Tengo un problema con este pedido», elige qué pasó (llegó incompleto, dañado, no llegó, le cobraron mal u otro) y, si quiere, lo cuenta.
+2. `ReclamosServicio.abrir` comprueba que el pedido sea suyo y crea el `Reclamo` en `ABIERTO`.
+3. El mayorista ve la marca «Reclamo» en su pedido del Panel; no lo resuelve él.
+4. El admin abre Superadmin › Reclamos, habla con la tienda y, si corresponde, le devuelve el dinero a mano.
+5. Anota cuánto devolvió, cómo y qué le responde. El `Reclamo` queda `APROBADO`.
+6. La tienda lee en Seguimiento la respuesta y lo devuelto.
+
+**Cursos alternos**
+
+- Pedido que la saga todavía procesa: `PEDIDO_EN_PROCESO`. Pedido de otra tienda: `PEDIDO_NO_EXISTE`.
+- Repetir el reclamo devuelve el mismo: hay uno por pedido.
+- El motivo «Otro» pide contar qué pasó: `DETALLE_REQUERIDO`.
+- Si Abasto no le da la razón, lo rechaza con su respuesta. Aprobar sin devolver dinero también se puede, por ejemplo si repuso el producto.
+- Lo devuelto pasa el total del pedido: `DEVUELTO_MAYOR_QUE_EL_TOTAL`. Dinero sin decir cómo: `FORMA_REQUERIDA`. Sin respuesta: `RESPUESTA_REQUERIDA`. Ya resuelto: `RECLAMO_YA_RESUELTO`.
+
+**Decisión de Andrés (06/11):** el sistema solo anota la devolución. No hay saga ni compensación: no cambia el cobro, el crédito ni la cuenta por cobrar del pedido.
+
+**Prueba:** `services/pedidos/src/test/java/bo/abasto/pedidos/aplicacion/servicios/ReclamosServicioTest.java`, `apps/app/src/reclamo-del-pedido.test.tsx`, `apps/superadmin/src/reclamos.spec.ts` y `e2e/pruebas/reclamos.spec.ts`.

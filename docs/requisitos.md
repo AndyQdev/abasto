@@ -24,7 +24,7 @@ Al 06/11: ✅ hecho y con prueba · ⚠️ en curso.
 | Una sola cuenta para entrar a todas las apps | Keycloak (OIDC + PKCE): entrar al Panel abre el Superadmin sin volver a pedir la contraseña; la app usa la misma cuenta | Andrés | ✅ |
 | Arquitecturas de código DDD, hexagonal y clean | Cobros es DDD, Pedidos es hexagonal y Catálogo es clean. ArchUnit, Deptrac y dependency-cruiser lo revisan en la CI | los dos | ✅ |
 | Arquitectura de datos para los reportes | CQRS: el proyector del Asistente escucha los eventos y arma la base `reportes`; los reportes no leen las bases de los servicios | Jhoel | ✅ |
-| ICONIX | `docs/iconix`: modelo de dominio, clases y, de los 15 casos de uso, el texto, la robustez y la secuencia | los dos | ✅ |
+| ICONIX | `docs/iconix`: modelo de dominio, clases y, de los 16 casos de uso, el texto, la robustez y la secuencia | los dos | ✅ |
 
 ## Las tres interfaces (replanteo del 29/10)
 

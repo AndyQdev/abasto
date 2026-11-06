@@ -14,7 +14,22 @@ export type EstadoPedido =
 
 export type EstadoCobroQr = 'PENDIENTE' | 'PAGADO' | 'VENCIDO' | 'DEVUELTO' | 'ANULADO';
 
+export type MotivoDeReclamo = 'INCOMPLETO' | 'DANADO' | 'NO_LLEGO' | 'COBRO_EQUIVOCADO' | 'OTRO';
+
+/** CU-16: el problema que la tienda reportó y cómo se resolvió. */
+export interface ReclamoDePedido {
+  id: string;
+  motivo: MotivoDeReclamo;
+  detalle: string | null;
+  estado: 'ABIERTO' | 'APROBADO' | 'RECHAZADO';
+  respuesta: string | null;
+  devuelto: { centavos: number; texto: string } | null;
+  forma: 'EFECTIVO' | 'TRANSFERENCIA' | 'QR' | 'OTRA' | null;
+}
+
 export interface Pedido {
+  /** Null si no reportó ningún problema. Falta en los pedidos guardados antes del 06/11 */
+  reclamo?: ReclamoDePedido | null;
   id: string;
   codigo: string;
   estado: EstadoPedido;
@@ -49,10 +64,46 @@ const CAMPOS = `id codigo estado metodoPago creadoEn motivoRechazo total { centa
   mayorista { id nombre }
   lineas { presentacion cantidad unidades producto { id nombre rubro } subtotal { centavos texto } }
   cobro { estado codigo venceEn monto { texto } }
-  entrega { calle zona referencia latitud longitud texto }`;
+  entrega { calle zona referencia latitud longitud texto }
+  reclamo { id motivo detalle estado respuesta devuelto { centavos texto } forma }`;
 
 export const MIS_COMPRAS = `query MisCompras { misCompras { ${CAMPOS} } }`;
 export const UN_PEDIDO = `query Pedido($id: ID!) { pedido(id: $id) { ${CAMPOS} } }`;
+export const ABRIR_RECLAMO = `mutation AbrirReclamo($entrada: AbrirReclamoEntrada!) {
+  abrirReclamo(entrada: $entrada) { id motivo detalle estado respuesta devuelto { centavos texto } forma }
+}`;
+
+export const MOTIVOS_DE_RECLAMO: { clave: MotivoDeReclamo; texto: string }[] = [
+  { clave: 'INCOMPLETO', texto: 'Llegó incompleto' },
+  { clave: 'DANADO', texto: 'Llegó dañado' },
+  { clave: 'NO_LLEGO', texto: 'No llegó' },
+  { clave: 'COBRO_EQUIVOCADO', texto: 'Me cobraron mal' },
+  { clave: 'OTRO', texto: 'Otro problema' },
+];
+
+/** Mientras la saga lo procesa todavía puede cambiar solo: no hay de qué reclamar. */
+export const puedeReclamar = (p: Pick<Pedido, 'estado' | 'reclamo'>) => p.estado !== 'PENDIENTE' && !p.reclamo;
+
+const FORMAS_DE_DEVOLUCION: Record<NonNullable<ReclamoDePedido['forma']>, string> = {
+  EFECTIVO: 'en efectivo',
+  TRANSFERENCIA: 'por transferencia',
+  QR: 'por QR',
+  OTRA: '',
+};
+
+/** El reclamo dicho para la tienda: en qué va, lo que se devolvió y lo que le respondieron. */
+export function reclamoEnPalabras(r: ReclamoDePedido): { titulo: string; detalle: string | null; respuesta: string | null; clase: 'en-revision' | 'aprobado' | 'rechazado' } {
+  if (r.estado === 'ABIERTO') {
+    return { titulo: 'Estamos revisando tu reclamo', detalle: 'Te respondemos aquí mismo. Si hace falta, te escribimos por WhatsApp.', respuesta: null, clase: 'en-revision' };
+  }
+  if (r.estado === 'RECHAZADO') {
+    return { titulo: 'No pudimos aprobar tu reclamo', detalle: null, respuesta: r.respuesta, clase: 'rechazado' };
+  }
+  const forma = r.forma ? FORMAS_DE_DEVOLUCION[r.forma] : '';
+  const detalle = r.devuelto?.centavos ? `Te devolvimos ${r.devuelto.texto}${forma ? ` ${forma}` : ''}.` : null;
+  return { titulo: 'Te dimos la razón', detalle, respuesta: r.respuesta, clase: 'aprobado' };
+}
+
 export const PAGAR_QR_DE_PRUEBA = `mutation Pagar($id: ID!) { pagarQrDePrueba(pedidoId: $id) { estado } }`;
 
 export type Clase = 'ins-verde' | 'ins-ambar' | 'ins-rojo' | 'ins-gris';

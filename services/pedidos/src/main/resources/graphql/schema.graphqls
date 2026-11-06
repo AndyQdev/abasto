@@ -10,6 +10,8 @@ type Query {
   misVentas(estado: EstadoPedido): [Pedido!]!
   "Un pedido. Null si no existe o si la empresa de la sesión no es ni la tienda ni el mayorista."
   pedido(id: ID!): Pedido
+  "CU-16, solo admin (Superadmin): los reclamos en ese estado, o todos; lo más nuevo primero."
+  reclamos(estado: EstadoDeReclamo): [Reclamo!]!
   """
   Lo que el mayorista de la sesión tiene que comprar para sus pedidos confirmados que todavía no preparó
   (Abasto vende bajo pedido). Costo y proveedor de cada producto los pone Catálogo.
@@ -57,6 +59,10 @@ type Mutation {
   repetir la mutación con la misma clave devuelve el mismo pedido.
   """
   crearPedido(entrada: CrearPedidoEntrada!): Pedido!
+  "CU-16: la tienda reporta un problema con su pedido. Hay uno por pedido: repetirlo devuelve el mismo."
+  abrirReclamo(entrada: AbrirReclamoEntrada!): Reclamo!
+  "CU-16, solo admin: anota cómo se resolvió. No mueve dinero, crédito ni cuentas: la devolución se hace a mano."
+  resolverReclamo(entrada: ResolverReclamoEntrada!): Reclamo!
   "Paso 4 de la saga: el mayorista acepta."
   confirmarPedido(id: ID!): Pedido!
   "El mayorista rechaza: se devuelve el cobro y se libera el stock."
@@ -129,6 +135,62 @@ type Pedido @key(fields: "id") {
   motivoRechazo: String
   "Null en los pedidos sin dirección (e-commerce, n8n o anteriores al 31/10)"
   entrega: DireccionDeEntrega
+  "CU-16: el problema que reportó la tienda. Null si no reportó ninguno"
+  reclamo: Reclamo
+}
+
+"CU-16: un problema con un pedido, que Abasto resuelve a mano."
+type Reclamo {
+  id: ID!
+  pedido: Pedido!
+  motivo: MotivoDeReclamo!
+  detalle: String
+  estado: EstadoDeReclamo!
+  "Lo que Abasto le responde a la tienda"
+  respuesta: String
+  "Lo que se anotó como devuelto. Null o cero si no se devolvió dinero"
+  devuelto: Dinero
+  forma: FormaDeDevolucion
+  creadoEn: String!
+  resueltoEn: String
+}
+
+enum MotivoDeReclamo {
+  INCOMPLETO
+  DANADO
+  NO_LLEGO
+  COBRO_EQUIVOCADO
+  OTRO
+}
+
+enum EstadoDeReclamo {
+  ABIERTO
+  APROBADO
+  RECHAZADO
+}
+
+enum FormaDeDevolucion {
+  EFECTIVO
+  TRANSFERENCIA
+  QR
+  OTRA
+}
+
+input AbrirReclamoEntrada {
+  pedidoId: ID!
+  motivo: MotivoDeReclamo!
+  "Obligatorio si el motivo es OTRO"
+  detalle: String
+}
+
+input ResolverReclamoEntrada {
+  reclamoId: ID!
+  aprobado: Boolean!
+  "Solo al aprobar. Nunca más que el total del pedido"
+  devueltoCentavos: Int
+  "Obligatoria si se devolvió dinero"
+  forma: FormaDeDevolucion
+  respuesta: String!
 }
 
 type LineaDePedido {

@@ -6,7 +6,10 @@ asyncapi: 3.0.0
 info:
   title: Abasto · mensajería entre servicios
   version: 1.0.0
-  description: Saga de compra orquestada desde Pedidos, proyector de reportes en Asistente y webhooks de Conecta (cola conecta.webhooks, con pedido.* y cobro.*).
+  description: >-
+    Saga de compra orquestada desde Pedidos, proyector de reportes en Asistente y webhooks de Conecta (cola conecta.webhooks,
+    con pedido.* y cobro.*). CU-16 suma pedido.reclamo_abierto y pedido.reclamo_resuelto, con DatosPedido más reclamoId, motivo,
+    estadoDelReclamo y devueltoCentavos; solo avisan: la devolución se hace a mano y no mueve Cobros.
 
 servers:
   local:

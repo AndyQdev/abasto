@@ -21,7 +21,9 @@ export function Texto({
   lineas,
   ajustar,
   seleccionable,
+  accessibilityRole,
 }: {
+  accessibilityRole?: 'alert';
   v?: Variante;
   style?: StyleProp<TextStyle>;
   children: ReactNode;
@@ -35,7 +37,7 @@ export function Texto({
   const plano: TextStyle = StyleSheet.flatten([estilos[v], style]) ?? {};
   const { fontWeight, ...resto } = plano;
   return (
-    <Text selectable={seleccionable} numberOfLines={lineas} adjustsFontSizeToFit={ajustar} minimumFontScale={ajustar ? 0.8 : undefined} style={[resto, { fontFamily: resto.fontFamily ?? fuenteDe(fontWeight) }]}>
+    <Text accessibilityRole={accessibilityRole} selectable={seleccionable} numberOfLines={lineas} adjustsFontSizeToFit={ajustar} minimumFontScale={ajustar ? 0.8 : undefined} style={[resto, { fontFamily: resto.fontFamily ?? fuenteDe(fontWeight) }]}>
       {children}
     </Text>
   );

@@ -4,6 +4,7 @@ import { MODULOS } from './modulos';
 import { Auditoria } from './pantallas/Auditoria';
 import { Integraciones } from './pantallas/Integraciones';
 import { Mayoristas } from './pantallas/Mayoristas';
+import { Reclamos } from './pantallas/Reclamos';
 import { Reportes } from './pantallas/Reportes';
 import { Tiendas } from './pantallas/Tiendas';
 import { Usuarios } from './pantallas/Usuarios';
@@ -102,6 +103,7 @@ export function App({ usuario }: { usuario: Usuario }) {
         {modulo.ruta === 'auditoria' && <Auditoria />}
         {modulo.ruta === 'mayoristas' && <Mayoristas />}
         {modulo.ruta === 'tiendas' && <Tiendas />}
+        {modulo.ruta === 'reclamos' && <Reclamos />}
         {modulo.ruta === 'reportes' && <Reportes />}
         {modulo.ruta === 'integraciones' && <Integraciones />}
         {modulo.ruta === 'usuarios' && <Usuarios />}

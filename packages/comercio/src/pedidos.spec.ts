@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { cambiarCantidad, type ItemDeCarrito } from './carrito';
-import { compensaciones, esPasoDePagoQr, estadoVisible, filtrarPedidos, lineaDeTiempo, pasoActual, porPagar, progresoDelPedido, terminado, tiempoRestante, titularDelPedido, type Pedido } from './pedidos';
+import { reclamoEnPalabras, puedeReclamar, type ReclamoDePedido, compensaciones, esPasoDePagoQr, estadoVisible, filtrarPedidos, lineaDeTiempo, pasoActual, porPagar, progresoDelPedido, terminado, tiempoRestante, titularDelPedido, type Pedido } from './pedidos';
 
 type Base = Pick<Pedido, 'estado' | 'metodoPago' | 'cobro' | 'total' | 'motivoRechazo'>;
 
@@ -14,6 +14,30 @@ const pedido = (parcial: Partial<Base>): Base => ({
 });
 const qr = (estado: NonNullable<Pedido['cobro']>['estado']) => ({ estado, codigo: 'ABASTO-QR|p1', venceEn: '2026-10-28T14:30:00Z', monto: { texto: 'Bs 232,80' } });
 const nodos = (p: Base) => lineaDeTiempo(p).map((x) => `${x.nombre}:${x.nodo}`);
+
+describe('CU-16 · Reclamos', () => {
+  const reclamo = (parcial: Partial<ReclamoDePedido>): ReclamoDePedido => ({ id: 'r', motivo: 'DANADO', detalle: null, estado: 'ABIERTO', respuesta: null, devuelto: null, forma: null, ...parcial });
+
+  it('se puede reclamar un pedido ya procesado que no tenga otro reclamo', () => {
+    expect(puedeReclamar({ estado: 'ENTREGADO', reclamo: null })).toBe(true);
+    expect(puedeReclamar({ estado: 'RECHAZADO' })).toBe(true);
+    expect(puedeReclamar({ estado: 'PENDIENTE', reclamo: null })).toBe(false);
+    expect(puedeReclamar({ estado: 'ENTREGADO', reclamo: reclamo({}) })).toBe(false);
+  });
+
+  it('dice en qué va y lo que se devolvió', () => {
+    expect(reclamoEnPalabras(reclamo({})).titulo).toBe('Estamos revisando tu reclamo');
+    expect(reclamoEnPalabras(reclamo({ estado: 'APROBADO', devuelto: { centavos: 5000, texto: 'Bs 50,00' }, forma: 'EFECTIVO', respuesta: 'Listo' }))).toMatchObject({
+      titulo: 'Te dimos la razón',
+      detalle: 'Te devolvimos Bs 50,00 en efectivo.',
+      respuesta: 'Listo',
+    });
+    expect(reclamoEnPalabras(reclamo({ estado: 'APROBADO', devuelto: { centavos: 5000, texto: 'Bs 50,00' }, forma: 'OTRA' })).detalle).toBe('Te devolvimos Bs 50,00.');
+    // Aprobado sin dinero (por ejemplo, se repuso el producto): no dice que se devolvió
+    expect(reclamoEnPalabras(reclamo({ estado: 'APROBADO', devuelto: { centavos: 0, texto: 'Bs 0,00' }, respuesta: 'Te lo repusimos' })).detalle).toBeNull();
+    expect(reclamoEnPalabras(reclamo({ estado: 'RECHAZADO', respuesta: 'Llegó completo' }))).toMatchObject({ titulo: 'No pudimos aprobar tu reclamo', respuesta: 'Llegó completo' });
+  });
+});
 
 describe('seguimiento del pedido', () => {
   it('recién creado, todavía sin precio: está reservando el stock', () => {

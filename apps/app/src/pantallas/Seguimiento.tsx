@@ -23,6 +23,7 @@ import { LineaDeTiempo } from '../linea-de-tiempo';
 import { MapaChico } from '../Mapa';
 import type { PantallaDePila } from '../navegacion';
 import { COLOR, FUENTE } from '../tema';
+import { ReclamoDelPedido } from '../ReclamoDelPedido';
 import { unaALaVez, useAvisosDePedidos } from '../tiempo-real';
 
 const PAGO = { QR: 'Pago por QR', CREDITO: 'Crédito', CONTRA_ENTREGA: 'Contra entrega' } as const;
@@ -205,6 +206,9 @@ export function Seguimiento({ route, navigation }: PantallaDePila<'Seguimiento'>
               </View>
             ))}
           </Tarjeta>
+
+          {/* CU-16: el aviso en tiempo real de Conecta trae la respuesta; al enviarlo se ve al momento */}
+          <ReclamoDelPedido pedido={pedido} alCambiar={(reclamo) => setPedido((p) => (p ? { ...p, reclamo } : p))} />
         </View>
       </ScrollView>
       <PagoExitoso visible={festejo} total={pedido.total.texto} centavos={pedido.total.centavos} alCerrar={() => setFestejo(false)} />

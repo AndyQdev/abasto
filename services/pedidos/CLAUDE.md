@@ -10,4 +10,6 @@ Pedidos y la saga de compra (pedido → reservar stock en Catálogo → cobrar e
 - Migraciones Flyway en `src/main/resources/db/migration`. `R__datos_demo` solo corre con el perfil `demo`.
 - Schema GraphQL: `src/main/resources/graphql/schema.graphqls`. Si cambia: `pnpm supergrafo` en la raíz.
 
+- **Reclamos (CU-16, 06/11):** `dominio/Reclamo`, `ReclamosServicio`, tabla `reclamos` (uno por pedido). La tienda lo abre (`abrirReclamo`, sale del token) y solo el rol `admin` lista y resuelve (`reclamos`, `resolverReclamo`). **Decisión de Andrés:** Abasto resuelve a mano y el sistema solo anota lo devuelto: sin saga ni compensación, no toca Cobros. Publica `pedido.reclamo_abierto` y `pedido.reclamo_resuelto` por el outbox (Conecta avisa a la app y al e-commerce; Asistente los ignora). `Pedido.reclamo` va con `@BatchMapping`: una lista de pedidos hace una sola consulta.
+
 Probar: `pnpm test:pedidos` (las de integración usan Testcontainers: Docker tiene que estar corriendo). Correr fuera de Docker: `pnpm dev:pedidos`.

@@ -15,6 +15,8 @@ export interface PedidoFila {
   tienda: { id: string; nombre?: string | null };
   /** Solo los pedidos con QR tienen cobro */
   cobro?: { estado: string } | null;
+  /** CU-16: lo resuelve Abasto; el mayorista solo se entera */
+  reclamo?: { motivo: string; detalle: string | null; estado: string; respuesta: string | null; devuelto: { texto: string } | null } | null;
   /** A dónde llevarlo (lo elige la tienda en el mapa de la app). Null en los pedidos sin dirección */
   entrega: { texto: string; zona: string; referencia: string; latitud: number | null; longitud: number | null } | null;
   lineas: {
@@ -32,6 +34,22 @@ export const SIGUIENTE_PASO: Record<string, string> = {
   EN_PREPARACION: 'Despachar',
   DESPACHADO: 'Marcar entregado',
 };
+
+const MOTIVOS_DE_RECLAMO: Record<string, string> = {
+  INCOMPLETO: 'Llegó incompleto',
+  DANADO: 'Llegó dañado',
+  NO_LLEGO: 'No llegó',
+  COBRO_EQUIVOCADO: 'Le cobraron mal',
+  OTRO: 'Otro problema',
+};
+
+/** «Llegó dañado · Abasto lo está revisando». Lo resuelve Abasto: el mayorista solo se entera. */
+export function textoDeReclamo(r: NonNullable<PedidoFila['reclamo']>): string {
+  const motivo = MOTIVOS_DE_RECLAMO[r.motivo] ?? r.motivo;
+  if (r.estado === 'ABIERTO') return `${motivo} · Abasto lo está revisando`;
+  if (r.estado === 'RECHAZADO') return `${motivo} · Rechazado`;
+  return r.devuelto ? `${motivo} · Aprobado, se devolvió ${r.devuelto.texto}` : `${motivo} · Aprobado`;
+}
 
 export type Columna = 'confirmar' | 'preparar' | 'reparto' | 'cerrado';
 
@@ -91,6 +109,7 @@ const MIS_VENTAS = `
       cobro { estado }
       tienda { id nombre }
       entrega { texto zona referencia latitud longitud }
+      reclamo { motivo detalle estado respuesta devuelto { texto } }
       lineas { cantidad unidades presentacion subtotal { texto } producto { id nombre foto } }
     }
   }`;
@@ -282,7 +301,8 @@ const POR_COLUMNA = 6;
               <span class="hace" [class.urgente]="urgente(p)">{{ hace(p.creadoEn) }}</span>
               @if (p.estado === 'CONFIRMADO') { <span class="insignia estado-chico advertencia">Por comprar</span> }
               @else if (p.estado === 'EN_PREPARACION') { <span class="insignia estado-chico lima">En preparación</span> }
-              @else if (columna(p.estado) === 'cerrado') { <span class="insignia estado-chico" [class]="'insignia estado-chico ' + estado(p.estado).clase">{{ estado(p.estado).texto }}</span> }
+              @if (p.reclamo?.estado === 'ABIERTO') { <span class="insignia estado-chico error">Reclamo</span> }
+              @if (columna(p.estado) === 'cerrado') { <span class="insignia estado-chico" [class]="'insignia estado-chico ' + estado(p.estado).clase">{{ estado(p.estado).texto }}</span> }
             </div>
             <span class="tienda">{{ p.tienda.nombre ?? 'Tienda' }}</span>
             <span class="zona"><abasto-icono nombre="pin" [tamano]="16" /> {{ p.entrega?.zona || p.entrega?.texto || 'Sin dirección' }}</span>
@@ -323,6 +343,14 @@ const POR_COLUMNA = 6;
             <button class="cerrar" (click)="cerrar()" aria-label="Cerrar"><abasto-icono nombre="cerrar" /></button>
           </div>
           <div class="lateral-cuerpo">
+            @if (p.reclamo; as r) {
+              <div class="bloque">
+                <h3>Reclamo de la tienda</h3>
+                <span class="grande">{{ textoDeReclamo(r) }}</span>
+                @if (r.detalle) { <p style="margin: 0.35rem 0 0">«{{ r.detalle }}»</p> }
+                @if (r.respuesta) { <p style="margin: 0.35rem 0 0">Abasto respondió: {{ r.respuesta }}</p> }
+              </div>
+            }
             <div class="bloque">
               <h3>Para</h3>
               <span class="grande">{{ p.tienda.nombre ?? 'Tienda' }}</span>
@@ -446,6 +474,7 @@ export class VistaPedidos implements OnInit, OnDestroy {
   estado = (e: string) => ESTADOS_DE_PEDIDO[e] ?? { texto: e, clase: 'neutro' };
   columna = columnaDe;
   pago = textoDePago;
+  readonly textoDeReclamo = textoDeReclamo;
   hace = (fecha: string) => haceCuanto(fecha);
   urgente = (p: PedidoFila) => esUrgente(p);
   letra = inicial;

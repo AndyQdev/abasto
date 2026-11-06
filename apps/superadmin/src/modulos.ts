@@ -10,6 +10,8 @@ export const MODULOS: Modulo[] = [
   // CU-01: los que se registran en el Panel esperan aquí la verificación
   { ruta: 'mayoristas', titulo: 'Mayoristas' },
   { ruta: 'tiendas', titulo: 'Tiendas' },
+  // CU-16: lo que las tiendas reportan; Abasto lo resuelve a mano y aquí lo anota
+  { ruta: 'reclamos', titulo: 'Reclamos' },
   { ruta: 'reportes', titulo: 'Reportes' },
   // CU-10: las tiendas conectadas con su e-commerce y los avisos que no llegaron
   { ruta: 'integraciones', titulo: 'Integraciones' },
