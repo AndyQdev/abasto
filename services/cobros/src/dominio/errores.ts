@@ -57,6 +57,18 @@ export class CuentaNoExiste extends ErrorDeDominio {
   }
 }
 
+export class LimiteMenorQueLoUsado extends ErrorDeDominio {
+  constructor(usado: string) {
+    super('LIMITE_MENOR_QUE_LO_USADO', `La tienda ya usó ${usado} de su crédito: el límite no puede ser menor`);
+  }
+}
+
+export class PlazoInvalido extends ErrorDeDominio {
+  constructor() {
+    super('PLAZO_INVALIDO', 'El plazo del crédito es de 15 o 30 días');
+  }
+}
+
 export class SinPermiso extends ErrorDeDominio {
   constructor(mensaje: string) {
     super('SIN_PERMISO', mensaje);

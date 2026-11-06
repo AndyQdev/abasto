@@ -22,6 +22,10 @@ export class LineaDeCreditoEnMemoria implements LineaDeCreditoRepositorio {
     return this.lineas.get(id) ?? null;
   }
 
+  async delMayorista(mayoristaId: string) {
+    return [...this.lineas.values()].filter((l) => l.mayoristaId === mayoristaId);
+  }
+
   async guardar(linea: LineaDeCredito) {
     this.outbox.push(...linea.sacarEventos());
     this.lineas.set(linea.id, linea);

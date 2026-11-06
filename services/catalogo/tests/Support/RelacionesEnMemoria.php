@@ -27,6 +27,11 @@ final class RelacionesEnMemoria implements RelacionRepositorio
         return [];
     }
 
+    public function aprobadasDe(string $mayoristaId): array
+    {
+        return [];
+    }
+
     public function guardar(RelacionComercial $relacion): void
     {
         $this->todas["{$relacion->tiendaId}|{$relacion->mayoristaId}"] = $relacion;

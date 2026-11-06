@@ -363,6 +363,9 @@ type Query {
   "Tiendas que pidieron ser clientes del mayorista de la sesión."
   misSolicitudes: [RelacionComercial!]!
 
+  "CU-04: las tiendas que el mayorista de la sesión ya aprobó, con su lista de precios."
+  misClientes: [RelacionComercial!]!
+
   "La empresa de la sesión, con su verificación (el Panel muestra «en revisión» o el motivo del rechazo)."
   miOrganizacion: MiOrganizacion!
 

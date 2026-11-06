@@ -1,11 +1,15 @@
 import { Inject } from '@nestjs/common';
-import { Args, Mutation, Parent, Query, ResolveField, ResolveReference, Resolver } from '@nestjs/graphql';
+import { Args, Context, Mutation, Parent, Query, ResolveField, ResolveReference, Resolver } from '@nestjs/graphql';
 import { GraphQLError } from 'graphql';
+import { AsignarCredito, type AsignarCreditoEntrada } from '../../aplicacion/asignar-credito.js';
 import { AutorizarCredito, type AutorizarCreditoEntrada } from '../../aplicacion/autorizar-credito.js';
 import { ConsultarCredito } from '../../aplicacion/consultar-credito.js';
 import type { Dinero } from '../../dominio/dinero.js';
 import { ErrorDeDominio } from '../../dominio/errores.js';
 import type { LineaDeCredito } from '../../dominio/linea-de-credito.js';
+import type { Usuario } from '../../infraestructura/seguridad/autenticacion.guard.js';
+
+type Contexto = { req: { usuario: Usuario } };
 
 const dinero = (d: Dinero) => ({ centavos: d.centavos, moneda: d.moneda, texto: d.texto() });
 
@@ -32,12 +36,33 @@ export class CreditoResolver {
   constructor(
     @Inject(ConsultarCredito) private readonly consultar: ConsultarCredito,
     @Inject(AutorizarCredito) private readonly autorizar: AutorizarCredito,
+    @Inject(AsignarCredito) private readonly asignar: AsignarCredito,
   ) {}
 
   @Query('lineaDeCredito')
-  async lineaDeCredito(@Args('tiendaId') tiendaId: string, @Args('mayoristaId') mayoristaId: string) {
-    const linea = await this.consultar.porTiendaYMayorista(tiendaId, mayoristaId);
-    return linea ? vista(linea) : null;
+  async lineaDeCredito(@Args('tiendaId') tiendaId: string, @Args('mayoristaId') mayoristaId: string, @Context() ctx: Contexto) {
+    try {
+      const linea = await this.consultar.deLaSesion(tiendaId, mayoristaId, ctx.req.usuario.orgId);
+      return linea ? vista(linea) : null;
+    } catch (e) {
+      return aGraphQL(e);
+    }
+  }
+
+  @Query('misCreditosDados')
+  async misCreditosDados(@Context() ctx: Contexto) {
+    const orgId = ctx.req.usuario.orgId;
+    if (!orgId) throw new GraphQLError('Tu cuenta no pertenece a una empresa', { extensions: { code: 'SIN_PERMISO' } });
+    return (await this.consultar.delMayorista(orgId)).map(vista);
+  }
+
+  @Mutation('asignarCredito')
+  async asignarCredito(@Args('entrada') entrada: AsignarCreditoEntrada, @Context() ctx: Contexto) {
+    try {
+      return vista(await this.asignar.ejecutar(entrada, ctx.req.usuario));
+    } catch (e) {
+      return aGraphQL(e);
+    }
   }
 
   @Mutation('autorizarCredito')

@@ -257,6 +257,17 @@ final readonly class Resolutores
         );
     }
 
+    /** @return list<array<string, mixed>> */
+    public function misClientes(): array
+    {
+        $usuario = Usuario::actual()->exigirRol('mayorista');
+
+        return array_map(
+            fn ($r) => Vistas::relacion($r, $this->organizaciones->porId($r->tiendaId), $this->organizaciones->porId($r->mayoristaId)),
+            $this->relaciones->aprobadasDe($usuario->orgId),
+        );
+    }
+
     /**
 
      * @param array<string, mixed> $args

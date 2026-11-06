@@ -42,6 +42,13 @@ final readonly class MongoRelacionRepositorio implements RelacionRepositorio
         return array_values(array_map(static fn ($doc) => self::aDominio((array) $doc), $docs));
     }
 
+    public function aprobadasDe(string $mayoristaId): array
+    {
+        $docs = $this->coleccion->find(['mayorista_id' => $mayoristaId, 'estado' => EstadoRelacion::APROBADA->value])->toArray();
+
+        return array_values(array_map(static fn ($doc) => self::aDominio((array) $doc), $docs));
+    }
+
     public function guardar(RelacionComercial $relacion): void
     {
         $this->coleccion->replaceOne(

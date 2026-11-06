@@ -10,6 +10,10 @@ Pagos por QR, crédito, cuotas y comisiones. Base `cobros` en Postgres (5440) co
 
 En la saga: `cobros.autorizar_credito` → `cobro.credito_autorizado` o `cobro.rechazado` (con el motivo); `cobros.generar_qr` → QR pendiente, y `cobro.qr_pagado` cuando la tienda paga; un QR sin pagar vence a los `QR_VIGENCIA_MINUTOS` (30) y sale `cobro.rechazado`. Compensaciones: `cobros.liberar_credito` y `cobros.devolver_qr`.
 
+## Dar crédito (CU-04, 06/11)
+
+`AsignarCredito`: el mayorista del token abre o cambia la línea de una tienda (`asignarCredito`); plazo de 15 o 30 días, límite 0 quita el cupo y nunca por debajo de lo usado. `misCreditosDados` lista las suyas. `lineaDeCredito` solo la leen esa tienda y ese mayorista.
+
 ## Cuentas por cobrar (CU-09, 03/11)
 
 - `CuentaPorCobrar` (dominio): una por pedido a crédito o contra entrega. La abre `AbrirCuentaDePedido` al llegar `pedido.confirmado` (cola `cobros.cuentas`, `infraestructura/mensajeria/cuentas.rabbitmq.ts`). El crédito vence a los `plazoDias` de la línea (15 si no tiene); contra entrega no tiene fecha.

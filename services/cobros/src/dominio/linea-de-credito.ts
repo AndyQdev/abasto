@@ -1,5 +1,5 @@
 import { Dinero } from './dinero.js';
-import { LimiteDeCreditoExcedido, MontoInvalido } from './errores.js';
+import { LimiteDeCreditoExcedido, LimiteMenorQueLoUsado, MontoInvalido, PlazoInvalido } from './errores.js';
 import type { EventoDeCobros } from './eventos.js';
 
 export type PlazoDias = 15 | 30;
@@ -23,8 +23,25 @@ export class LineaDeCredito {
   private readonly reservas: Map<string, Dinero>;
   private eventos: EventoDeCobros[] = [];
 
-  constructor(private readonly datos: DatosLineaDeCredito) {
+  constructor(private datos: DatosLineaDeCredito) {
     this.reservas = new Map(datos.reservas);
+  }
+
+  /** CU-04: el mayorista le da crédito a una tienda por primera vez. */
+  static abrir(id: string, tiendaId: string, mayoristaId: string, limite: Dinero, plazoDias: number): LineaDeCredito {
+    const linea = new LineaDeCredito({ id, tiendaId, mayoristaId, limite: Dinero.cero(), plazoDias: 15, reservas: new Map() });
+    linea.cambiar(limite, plazoDias);
+    return linea;
+  }
+
+  /**
+   * CU-04: el mayorista cambia el límite o el plazo. Con límite cero la tienda deja de poder comprar a crédito.
+   * Lo ya usado se respeta: el límite no puede quedar por debajo. El plazo nuevo vale para los pedidos siguientes.
+   */
+  cambiar(limite: Dinero, plazoDias: number): void {
+    if (plazoDias !== 15 && plazoDias !== 30) throw new PlazoInvalido();
+    if (this.usado.esMayorQue(limite)) throw new LimiteMenorQueLoUsado(this.usado.texto());
+    this.datos = { ...this.datos, limite, plazoDias };
   }
 
   get id(): string {

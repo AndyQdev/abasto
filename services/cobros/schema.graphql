@@ -4,8 +4,10 @@
 extend schema @link(url: "https://specs.apollo.dev/federation/v2.7", import: ["@key", "@shareable"])
 
 type Query {
-  "Crédito que un mayorista le dio a una tienda. Null si no tiene."
+  "Crédito que un mayorista le dio a una tienda. Null si no tiene. Solo lo ven esa tienda y ese mayorista."
   lineaDeCredito(tiendaId: ID!, mayoristaId: ID!): LineaDeCredito
+  "CU-04: los créditos que dio el mayorista con sesión."
+  misCreditosDados: [LineaDeCredito!]!
   "El cobro por QR de un pedido. Solo lo ven la tienda que compra y el mayorista que vende."
   cobroDePedido(pedidoId: ID!): CobroQr
   """
@@ -21,6 +23,11 @@ type Query {
 }
 
 type Mutation {
+  """
+  CU-04: el mayorista con sesión le da crédito a una tienda o cambia el que tiene. Límite 0 quita el cupo;
+  no puede quedar por debajo de lo que la tienda ya usó. El plazo es de 15 o 30 días.
+  """
+  asignarCredito(entrada: AsignarCreditoEntrada!): LineaDeCredito!
   "Paso 3 de la saga de compra. Lo usa el orquestador de Pedidos; repetirlo con el mismo pedido no descuenta dos veces."
   autorizarCredito(entrada: AutorizarCreditoEntrada!): AutorizacionDeCredito!
   """
@@ -38,6 +45,12 @@ type Mutation {
   repetirlo (doble toque o reenvío sin señal) no cobra dos veces. Al saldar un crédito, la tienda recupera el cupo.
   """
   registrarPago(entrada: RegistrarPagoEntrada!): CuentaPorCobrar!
+}
+
+input AsignarCreditoEntrada {
+  tiendaId: ID!
+  limiteCentavos: Int!
+  plazoDias: Int!
 }
 
 input AutorizarCreditoEntrada {

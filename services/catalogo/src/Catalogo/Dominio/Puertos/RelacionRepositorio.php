@@ -16,5 +16,8 @@ interface RelacionRepositorio
     /** @return list<RelacionComercial> solicitudes pendientes que recibió un mayorista */
     public function solicitudesDe(string $mayoristaId): array;
 
+    /** @return list<RelacionComercial> tiendas que un mayorista ya aprobó como clientes */
+    public function aprobadasDe(string $mayoristaId): array;
+
     public function guardar(RelacionComercial $relacion): void;
 }

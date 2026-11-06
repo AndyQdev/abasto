@@ -5,6 +5,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import { AtenderComando } from './aplicacion/atender-comando.js';
+import { AsignarCredito } from './aplicacion/asignar-credito.js';
 import { AutorizarCredito, LiberarCredito } from './aplicacion/autorizar-credito.js';
 import { ConsultarCobro, DevolverQr, GenerarQr, PagarQr, VencerQrs, type Reloj } from './aplicacion/cobros-qr.js';
 import { ConsultarCredito } from './aplicacion/consultar-credito.js';
@@ -85,6 +86,11 @@ const vigenciaMinutos = Number(process.env.QR_VIGENCIA_MINUTOS ?? 30);
     casoDeUso(AutorizarCredito),
     casoDeUso(LiberarCredito),
     casoDeUso(ConsultarCredito),
+    {
+      provide: AsignarCredito,
+      useFactory: (l: LineaDeCreditoRepositorio) => new AsignarCredito(l, randomUUID),
+      inject: [LINEA_DE_CREDITO_REPOSITORIO],
+    },
     {
       provide: GenerarQr,
       useFactory: (cobros: CobroQrRepositorio) => new GenerarQr(cobros, { vigenciaMinutos, generarId: randomUUID, reloj }),

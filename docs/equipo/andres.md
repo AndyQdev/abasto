@@ -70,6 +70,7 @@ El Panel web ya no tiene módulos «en construcción»: CU-09 (Cuentas por cobra
 - e2e: 22 pruebas en verde (02/11).
 
 ## Cambié en contratos
+- 06/11 · CU-04: Cobros `asignarCredito(entrada)` y `misCreditosDados`; Catálogo `misClientes`. `lineaDeCredito` ahora solo la leen la tienda y el mayorista de esa línea (antes cualquier sesión). Aditivo; supergrafo regenerado.
 - 03/11 · Conecta (OpenAPI, aditivo): `GET /v1/bitacora` y la cabecera opcional `X-Abasto-Origen` en `POST /v1/pedidos`; la respuesta de `pedido.crear` trae además `codigo` y `tienda { nombre }`.
 - 03/11 · Cobros (CU-09): `cuentasPorCobrar(conPagadas)`, `registrarPago(entrada)` y sus tipos (aditivo; supergrafo regenerado). AsyncAPI: payload de `cobro.pago_registrado` y la cola nueva `cobros.cuentas` (solo `pedido.confirmado`), también en `infra/rabbitmq/definitions.json`.
 - 03/11 · `contracts/microfrontends.md`: sección nueva «IA local del navegador en la PWA» (qué guarda el service worker y qué guarda la librería de IA). Aditivo: Inteligencia no tiene que cambiar nada.

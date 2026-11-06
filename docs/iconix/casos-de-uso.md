@@ -85,17 +85,21 @@ La tabla con actor, interfaz, servicios, dueño y fase está en `README.md`. Aba
 
 1. El mayorista abre Gestión → Clientes; `vistas/clientes.ts` consulta `MIS_SOLICITUDES`.
 2. El resolver `misSolicitudes` consulta `RelacionRepositorio::solicitudesDe` y devuelve las relaciones `SOLICITADA` con la tienda y su estado.
-3. El mayorista elige una lista —`NUEVOS` 100 %, `FRECUENTES` 97 % o `VIP` 95 %— y toca «Aprobar».
+3. El mayorista elige una lista —`NUEVOS` 100 %, `FRECUENTES` 97 % o `VIP` 95 %—, escribe si quiere el crédito y el plazo (15 o 30 días) y toca «Aprobar».
 4. La vista envía la mutación `aprobarCliente(tiendaId, lista)` por el Router.
 5. `GestionarClientes::aprobar` busca la relación; si no existe lanza `SOLICITUD_NO_EXISTE`: «Esa tienda no pidió ser tu cliente».
 6. `RelacionComercial::aprobar(lista)` pasa la relación a `APROBADA` y `RelacionRepositorio::guardar` la persiste.
-7. El resolver devuelve la relación y la vista recarga la lista.
+7. El resolver devuelve la relación. Si hubo crédito, la vista envía `asignarCredito(entrada)` a Cobros: `AsignarCredito` abre la `LineaDeCredito` del mayorista del token.
+8. La vista recarga: la tienda pasa a «Te compran» con lo que tiene disponible.
 
 **Cursos alternos**
 
 - Si el mayorista rechaza, la vista envía `rechazarCliente(tiendaId)`; `GestionarClientes::rechazar` llama a `RelacionComercial::rechazar()` y la relación queda `RECHAZADA`.
 - Si la tienda vuelve a pedir, `volverASolicitar()` la deja en `SOLICITADA`; si ya estaba `APROBADA`, no la cambia.
-- **Crédito Pendiente:** `GestionarClientes::aprobar` no crea una `LineaDeCredito` ni publica `cobro.credito_autorizado`. Cobros sí tiene `autorizarCredito`, `lineaDeCredito` y el evento, pero Gestión no los llama. `vistas/clientes.ts` tiene un TODO de crédito y no muestra límite ni plazo.
+- Si Cobros falla después de aprobar, la tienda queda aprobada y la vista avisa que el crédito no se guardó; se le da desde su tarjeta.
+- Desde «Te compran», «Dar crédito» o «Cambiar crédito» usa la misma mutación. Con límite 0 la tienda deja de comprar a crédito. Si el límite queda por debajo de lo usado, Cobros responde `LIMITE_MENOR_QUE_LO_USADO`.
+
+**Prueba:** `services/cobros/src/aplicacion/asignar-credito.spec.ts`, `apps/panel-gestion/src/app/vistas/clientes.spec.ts` y `e2e/pruebas/credito.spec.ts`.
 
 ## CU-05 · Buscar en el catálogo (texto o foto)
 

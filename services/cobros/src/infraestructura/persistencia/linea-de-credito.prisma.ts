@@ -41,9 +41,20 @@ export class LineaDeCreditoPrisma implements LineaDeCreditoRepositorio {
     return fila ? aDominio(fila) : null;
   }
 
+  async delMayorista(mayoristaId: string) {
+    const filas = await this.prisma.lineaDeCredito.findMany({ where: { mayoristaId }, include: { reservas: true } });
+    return filas.map(aDominio);
+  }
+
   async guardar(linea: LineaDeCredito) {
     const eventos = linea.sacarEventos();
+    const datos = { limiteCentavos: linea.limite.centavos, plazoDias: linea.plazoDias };
     await this.prisma.$transaction(async (tx) => {
+      await tx.lineaDeCredito.upsert({
+        where: { id: linea.id },
+        create: { id: linea.id, tiendaId: linea.tiendaId, mayoristaId: linea.mayoristaId, ...datos },
+        update: datos,
+      });
       await tx.reservaDeCredito.deleteMany({ where: { lineaId: linea.id } });
       await tx.reservaDeCredito.createMany({
         data: linea.listaDeReservas().map((r) => ({

@@ -15,6 +15,8 @@ type Query {
   mayoristas(busqueda: String): [Mayorista!]! @field(resolver: "Catalogo\\Infraestructura\\GraphQL\\Resolutores@mayoristas")
   "Tiendas que pidieron ser clientes del mayorista de la sesión."
   misSolicitudes: [RelacionComercial!]! @field(resolver: "Catalogo\\Infraestructura\\GraphQL\\Resolutores@misSolicitudes")
+  "CU-04: las tiendas que el mayorista de la sesión ya aprobó, con su lista de precios."
+  misClientes: [RelacionComercial!]! @field(resolver: "Catalogo\\Infraestructura\\GraphQL\\Resolutores@misClientes")
   "La empresa de la sesión, con su verificación (el Panel muestra «en revisión» o el motivo del rechazo)."
   miOrganizacion: MiOrganizacion! @field(resolver: "Catalogo\\Infraestructura\\GraphQL\\Resolutores@miOrganizacion")
   "App de clientes: para qué compra (hogar, tienda o productor). Null si todavía no eligió."
