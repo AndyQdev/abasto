@@ -8,7 +8,7 @@ import { Aparecer, Tocable } from '../animacion';
 import { Boton, Icono, Iniciales, Tarjeta, Texto } from '../componentes';
 import { iconoDeEtiqueta } from '../direcciones';
 import { useDirecciones } from '../direcciones-estado';
-import { CambiarNegocio } from '../NegocioInicio';
+import { CambiarNegocio, useNegocio } from '../NegocioInicio';
 import { Diagnostico } from '../ia';
 import type { PantallaDePestana } from '../navegacion';
 import { useSesion } from '../sesion';
@@ -21,6 +21,7 @@ export function Cuenta({ navigation }: PantallaDePestana<'Cuenta'>) {
   const espacio = useEspacioBarra();
   const { usuario, salir } = useSesion();
   const { lista, elegida, borrar } = useDirecciones();
+  const { negocio } = useNegocio();
   const [diagnostico, setDiagnostico] = useState(false);
   if (!usuario) return null;
   if (diagnostico) return <Diagnostico alCerrar={() => setDiagnostico(false)} />;
@@ -98,6 +99,16 @@ export function Cuenta({ navigation }: PantallaDePestana<'Cuenta'>) {
             </Tarjeta>
           ))}
         </Aparecer>
+
+        {usuario.roles.includes('tienda') && negocio?.tipo !== 'hogar' && (
+          <Aparecer orden={2}>
+            <Tarjeta style={{ gap: 8 }}>
+              <Texto v="t3">¿Vendes por internet?</Texto>
+              <Texto v="gris">Conecta tu tienda en línea y sus pedidos llegan solos a Abasto.</Texto>
+              <Boton tipo="secundario" texto="Conectar mi tienda en línea" icono="link-outline" alTocar={() => navigation.navigate('ConectarTienda')} />
+            </Tarjeta>
+          </Aparecer>
+        )}
 
         {vende && (
           <Aparecer orden={2}>

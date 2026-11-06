@@ -35,7 +35,11 @@
     "semilla": "docker compose exec catalogo php artisan catalogo:semilla && docker compose exec catalogo php artisan catalogo:semilla-abasto",
     "app": "npm --prefix apps/app start",
     "app:android": "npm --prefix apps/app run android",
-    "test:app": "npm --prefix apps/app test"
+    "test:app": "npm --prefix apps/app test",
+    "test:plugin": "docker compose -f plugins/woocommerce-abasto/docker-compose.yml -p abasto-woo run --rm --no-deps woo-cli php wp-content/plugins/abasto-woocommerce/tests/logica.test.php",
+    "woocommerce": "node plugins/woocommerce-abasto/preparar.mjs",
+    "woocommerce:borrar": "docker compose -f plugins/woocommerce-abasto/docker-compose.yml -p abasto-woo down -v",
+    "plugin:zip": "node plugins/woocommerce-abasto/empaquetar.mjs"
   },
   "devDependencies": {
     "@apollo/rover": "1.0.0",

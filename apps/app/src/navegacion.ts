@@ -29,6 +29,8 @@ export type Pila = {
   Asistente: undefined;
   IaLocal: undefined;
   NuevaDireccion: undefined;
+  /** CU-10: llaves de API y avisos para el e-commerce de la tienda */
+  ConectarTienda: undefined;
 };
 
 export type PantallaDePila<N extends keyof Pila> = NativeStackScreenProps<Pila, N>;

@@ -9,6 +9,7 @@ infra/                      @AndyQdev
 services/pedidos/           @AndyQdev
 services/cobros/            @AndyQdev
 services/conecta/           @AndyQdev
+plugins/                    @AndyQdev
 services/catalogo/          @AndyQdev
 apps/app/                   @AndyQdev
 apps/superadmin/            @AndyQdev

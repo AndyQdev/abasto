@@ -1,0 +1,55 @@
+# Un WordPress con WooCommerce de verdad para probar el plugin (`pnpm woocommerce`). Solo para pruebas: Abasto no usa
+# MySQL ni MariaDB; esta base es la que WordPress necesita y se borra con `pnpm woocommerce:borrar`.
+services:
+  woo-bd:
+    image: mariadb:11
+    mem_limit: 384m
+    environment:
+      MARIADB_DATABASE: wordpress
+      MARIADB_USER: wordpress
+      MARIADB_PASSWORD: wordpress
+      MARIADB_RANDOM_ROOT_PASSWORD: "1"
+    volumes:
+      - woo-bd:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  woo:
+    image: wordpress:php8.3-apache
+    mem_limit: 512m
+    depends_on:
+      woo-bd:
+        condition: service_healthy
+    environment:
+      WORDPRESS_DB_HOST: woo-bd
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
+      WORDPRESS_DB_NAME: wordpress
+    ports: ["${PUERTO_WOO:-8095}:80"]
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    volumes:
+      - woo:/var/www/html
+      - ./:/var/www/html/wp-content/plugins/abasto-woocommerce:ro
+
+  woo-cli:
+    image: wordpress:cli-php8.3
+    profiles: ["cli"]
+    user: "33:33"
+    depends_on: [woo]
+    environment:
+      WORDPRESS_DB_HOST: woo-bd
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
+      WORDPRESS_DB_NAME: wordpress
+      HOME: /tmp
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    volumes:
+      - woo:/var/www/html
+      - ./:/var/www/html/wp-content/plugins/abasto-woocommerce:ro
+
+volumes:
+  woo-bd:
+  woo:

@@ -20,6 +20,7 @@ export function Texto({
   children,
   lineas,
   ajustar,
+  seleccionable,
 }: {
   v?: Variante;
   style?: StyleProp<TextStyle>;
@@ -27,12 +28,14 @@ export function Texto({
   lineas?: number;
   /** Achica la letra (hasta 80 %) para que entre en sus líneas en vez de cortarse */
   ajustar?: boolean;
+  /** Se puede mantener apretado para copiarlo */
+  seleccionable?: boolean;
 }) {
   // Plus Jakarta Sans: el grosor se elige por archivo; fontWeight se quita para que Android no lo engrose de nuevo
   const plano: TextStyle = StyleSheet.flatten([estilos[v], style]) ?? {};
   const { fontWeight, ...resto } = plano;
   return (
-    <Text numberOfLines={lineas} adjustsFontSizeToFit={ajustar} minimumFontScale={ajustar ? 0.8 : undefined} style={[resto, { fontFamily: resto.fontFamily ?? fuenteDe(fontWeight) }]}>
+    <Text selectable={seleccionable} numberOfLines={lineas} adjustsFontSizeToFit={ajustar} minimumFontScale={ajustar ? 0.8 : undefined} style={[resto, { fontFamily: resto.fontFamily ?? fuenteDe(fontWeight) }]}>
       {children}
     </Text>
   );

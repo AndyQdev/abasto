@@ -15,6 +15,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Texto } from './src/componentes';
 import { ProveedorDeEstado, useEstado } from './src/estado';
 import { PantallaAsistente, PantallaIaLocal, ProveedorDeIaLocal } from './src/ia';
+import { ConectarTienda } from './src/pantallas/ConectarTienda';
 import type { Pestanas, Pila } from './src/navegacion';
 import { BarraInferior } from './src/BarraInferior';
 import { ProveedorDeDirecciones, useDirecciones } from './src/direcciones-estado';
@@ -121,6 +122,7 @@ function ConDireccion() {
           <Stack.Screen name="BuscarPorFoto" component={BuscarPorFoto} options={{ title: 'Buscar con una foto' }} />
           <Stack.Screen name="Asistente" component={PantallaAsistente} options={{ title: 'Pídelo con tus palabras' }} />
           <Stack.Screen name="IaLocal" component={PantallaIaLocal} options={{ title: 'IA en tu teléfono' }} />
+          <Stack.Screen name="ConectarTienda" component={ConectarTienda} options={{ title: 'Conectar mi tienda en línea' }} />
           <Stack.Screen name="NuevaDireccion" options={{ headerShown: false, presentation: 'modal', animation: 'slide_from_bottom' }}>
             {({ navigation }) => <Ubicacion alTerminar={() => navigation.goBack()} alCerrar={() => navigation.goBack()} />}
           </Stack.Screen>
