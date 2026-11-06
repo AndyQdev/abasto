@@ -71,7 +71,7 @@ class PedidoController {
         }
     }
 
-    record SemanaVista(String desde, int pedidos, DineroVista ventas) {}
+    record SemanaVista(String desde, int pedidos, int tiendas, DineroVista ventas) {}
 
     record TiendaCompradoraVista(Referencia tienda, int pedidos, DineroVista ventas) {}
 
@@ -80,7 +80,7 @@ class PedidoController {
         static TraccionVista de(Traccion t) {
             return new TraccionVista(t.pedidos(), DineroVista.de(t.ventas()), DineroVista.de(t.ticketPromedio()),
                     t.tiendasActivas(), t.tiendasQueRepiten(),
-                    t.semanas().stream().map(s -> new SemanaVista(s.desde().toString(), s.pedidos(), DineroVista.de(s.ventas()))).toList(),
+                    t.semanas().stream().map(s -> new SemanaVista(s.desde().toString(), s.pedidos(), s.tiendas(), DineroVista.de(s.ventas()))).toList(),
                     t.tiendas().stream().map(x -> new TiendaCompradoraVista(new Referencia(x.tiendaId()), x.pedidos(), DineroVista.de(x.ventas()))).toList());
         }
     }

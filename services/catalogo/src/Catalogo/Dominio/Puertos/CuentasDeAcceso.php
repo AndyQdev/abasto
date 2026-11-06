@@ -35,4 +35,14 @@ interface CuentasDeAcceso
      * La app la guarda y la renueva sola: el cliente no vuelve a escribir su número.
      */
     public function sesionPara(string $usuario): SesionEmitida;
+
+    /** Prende o apaga la cuenta (tienda suspendida). Si ese usuario no tiene cuenta, no hace nada. */
+    public function activar(string $usuario, bool $activa): void;
+
+    /**
+     * Quién tiene el rol. Superadmin › Usuarios.
+     *
+     * @return list<array{usuario: string, nombre: string, correo: ?string, activo: bool}>
+     */
+    public function conRol(string $rol): array;
 }

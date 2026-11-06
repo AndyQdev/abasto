@@ -143,6 +143,22 @@ final class Vistas
     }
 
     /** @return array<string, mixed> */
+    public static function tiendaDeAbasto(Organizacion $o): array
+    {
+        return [
+            'id' => $o->id,
+            'nombre' => $o->nombre,
+            'ciudad' => $o->ciudad,
+            'telefono' => $o->telefono,
+            'registradaEn' => $o->registradaEn,
+            'dePrueba' => $o->dePrueba,
+            'suspendida' => $o->suspendida,
+            'motivoSuspension' => $o->motivoSuspension,
+            'negocio' => self::negocio($o->negocio),
+        ];
+    }
+
+    /** @return array<string, mixed> */
     public static function tienda(?Organizacion $o, string $id): array
     {
         return ['id' => $id, 'nombre' => $o->nombre ?? $id, 'ciudad' => $o->ciudad ?? '', 'negocio' => self::negocio($o?->negocio)];

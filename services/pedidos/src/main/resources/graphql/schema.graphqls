@@ -40,6 +40,8 @@ type SemanaDeVentas {
   "Lunes de la semana, aaaa-mm-dd"
   desde: String!
   pedidos: Int!
+  "Tiendas distintas que compraron esa semana"
+  tiendas: Int!
   ventas: Dinero!
 }
 

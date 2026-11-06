@@ -28,6 +28,17 @@ final class OrganizacionesEnMemoria implements OrganizacionRepositorio
         return array_values(array_filter($this->todas, static fn (Organizacion $o) => $o->esMayorista()));
     }
 
+    public function tiendas(?string $busqueda = null): array
+    {
+        $lista = array_values(array_filter(
+            $this->todas,
+            static fn (Organizacion $o) => !$o->esMayorista() && ($busqueda === null || mb_stripos($o->nombre, $busqueda) !== false),
+        ));
+        usort($lista, static fn (Organizacion $a, Organizacion $b) => strcmp((string) $b->registradaEn, (string) $a->registradaEn));
+
+        return $lista;
+    }
+
     public function porNit(string $nit): ?Organizacion
     {
         foreach ($this->todas as $o) {

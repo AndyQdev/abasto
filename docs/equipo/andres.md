@@ -70,6 +70,7 @@ El Panel web ya no tiene módulos «en construcción»: CU-09 (Cuentas por cobra
 - e2e: 22 pruebas en verde (02/11).
 
 ## Cambié en contratos
+- 06/11 · Catálogo: `tiendas`, `equipoDeAbasto`, `suspenderTienda`, `reactivarTienda` (solo admin). Pedidos: `SemanaDeVentas.tiendas`. Aditivo; supergrafo regenerado. **Jhoel:** el Catálogo corre su escucha dentro del contenedor: después de `git pull`, `docker compose --profile servicios restart catalogo` para que tome el código nuevo.
 - 06/11 · Conecta (OpenAPI, aditivo, CU-10): llaves de API (`/v1/llaves`), webhooks (`/v1/webhooks`, `/v1/entregas`), lectura para el e-commerce (`/v1/mayoristas`, `/v1/productos`, `/v1/pedidos/{id}`), administración (`/v1/admin/...`) y `POST /mcp`. `X-Abasto-Origen` suma `mcp`. Cola nueva `conecta.webhooks`. **Jhoel:** después de `git pull`, `pnpm install`, `pnpm todo` (corre `al-dia.mjs`, crea `conecta-integraciones`). El MCP de reportes sigue siendo tuyo, en Asistente; no toqué nada. Falta el origen `mcp` en tu proyector solo si quieres contarlo aparte.
 - 06/11 · Pedidos: `crearPedido` rechaza con `CLAVE_EN_USO` una clave que ya usó otra tienda (antes devolvía el pedido ajeno).
 - 06/11 · CU-04: Cobros `asignarCredito(entrada)` y `misCreditosDados`; Catálogo `misClientes`. `lineaDeCredito` ahora solo la leen la tienda y el mayorista de esa línea (antes cualquier sesión). Aditivo; supergrafo regenerado.

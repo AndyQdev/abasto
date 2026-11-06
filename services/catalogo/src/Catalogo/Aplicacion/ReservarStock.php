@@ -59,6 +59,9 @@ final readonly class ReservarStock
         if ($lineas === []) {
             return ReservaDeStock::rechazada($pedidoId, 'El pedido no trae productos');
         }
+        if ($this->organizaciones?->porId($tiendaId)?->suspendida === true) {
+            return ReservaDeStock::rechazada($pedidoId, 'Tu cuenta está suspendida. Escríbenos para revisarla.');
+        }
 
         $relacion = $this->relaciones->de($tiendaId, $mayoristaId);
         $deLaCasa = $this->organizaciones?->porId($mayoristaId)->deLaCasa ?? false;

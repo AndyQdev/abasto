@@ -2,7 +2,11 @@ import { useEffect, useState } from 'react';
 import { APPS, type Usuario } from '@abasto/sesion';
 import { MODULOS } from './modulos';
 import { Auditoria } from './pantallas/Auditoria';
+import { Integraciones } from './pantallas/Integraciones';
 import { Mayoristas } from './pantallas/Mayoristas';
+import { Reportes } from './pantallas/Reportes';
+import { Tiendas } from './pantallas/Tiendas';
+import { Usuarios } from './pantallas/Usuarios';
 import { Sistema } from './pantallas/Sistema';
 import { Traccion } from './pantallas/Traccion';
 import { sesion } from './servicios';
@@ -97,19 +101,10 @@ export function App({ usuario }: { usuario: Usuario }) {
         {modulo.ruta === 'sistema' && <Sistema />}
         {modulo.ruta === 'auditoria' && <Auditoria />}
         {modulo.ruta === 'mayoristas' && <Mayoristas />}
-        {modulo.fase && (
-          <>
-            <div className="cabecera">
-              <h1 className="titulo-pantalla">{modulo.titulo}</h1>
-            </div>
-            <div className="carta">
-              <p>
-                <strong>Este módulo se construye en la fase {modulo.fase}.</strong>
-              </p>
-              <p>{modulo.detalle}</p>
-            </div>
-          </>
-        )}
+        {modulo.ruta === 'tiendas' && <Tiendas />}
+        {modulo.ruta === 'reportes' && <Reportes />}
+        {modulo.ruta === 'integraciones' && <Integraciones />}
+        {modulo.ruta === 'usuarios' && <Usuarios />}
       </main>
       </div>
     </div>

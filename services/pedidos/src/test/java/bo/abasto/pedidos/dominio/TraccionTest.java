@@ -44,6 +44,7 @@ class TraccionTest {
         assertThat(t.semanas()).extracting(Traccion.Semana::desde)
                 .containsExactly(LocalDate.of(2026, 10, 12), LocalDate.of(2026, 10, 19), LocalDate.of(2026, 10, 26));
         assertThat(t.semanas()).extracting(Traccion.Semana::pedidos).containsExactly(0, 2, 1);
+        assertThat(t.semanas()).extracting(Traccion.Semana::tiendas).allSatisfy((n) -> assertThat(n).isBetween(0, 2));
         assertThat(t.tiendas()).extracting(Traccion.TiendaCompradora::tiendaId).containsExactly("dr", "ec");
     }
 

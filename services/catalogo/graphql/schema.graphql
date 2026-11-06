@@ -21,6 +21,10 @@ type Query {
   miOrganizacion: MiOrganizacion! @field(resolver: "Catalogo\\Infraestructura\\GraphQL\\Resolutores@miOrganizacion")
   "App de clientes: para qué compra (hogar, tienda o productor). Null si todavía no eligió."
   miTipoDeNegocio: NegocioDelCliente @field(resolver: "Catalogo\\Infraestructura\\GraphQL\\Resolutores@miTipoDeNegocio")
+  "Solo admin (Superadmin): las tiendas, las registradas más recientemente primero."
+  tiendas(busqueda: String): [TiendaDeAbasto!]! @field(resolver: "Catalogo\\Infraestructura\\GraphQL\\Resolutores@tiendas")
+  "Solo admin (Superadmin): quién del equipo de Abasto puede entrar."
+  equipoDeAbasto: [IntegranteDelEquipo!]! @field(resolver: "Catalogo\\Infraestructura\\GraphQL\\Resolutores@equipoDeAbasto")
   "Solo admin (Superadmin): mayoristas en ese estado, los registrados más recientemente primero."
   mayoristasPorVerificar(estado: String = "PENDIENTE"): [SolicitudDeMayorista!]!
     @field(resolver: "Catalogo\\Infraestructura\\GraphQL\\Resolutores@mayoristasPorVerificar")
@@ -38,6 +42,10 @@ type Mutation {
   "Público. Un mayorista se registra (CU-01) y queda PENDIENTE hasta que Abasto lo verifica."
   registrarMayorista(entrada: RegistrarMayoristaEntrada!): SolicitudDeMayorista!
     @field(resolver: "Catalogo\\Infraestructura\\GraphQL\\Resolutores@registrarMayorista")
+  "Solo admin: la tienda no puede entrar ni hacer pedidos nuevos hasta que se reactive."
+  suspenderTienda(id: ID!, motivo: String!): TiendaDeAbasto! @field(resolver: "Catalogo\\Infraestructura\\GraphQL\\Resolutores@suspenderTienda")
+  "Solo admin: la tienda vuelve a poder comprar."
+  reactivarTienda(id: ID!): TiendaDeAbasto! @field(resolver: "Catalogo\\Infraestructura\\GraphQL\\Resolutores@reactivarTienda")
   "Solo admin: verifica al mayorista; desde ahí sus productos salen en la app."
   verificarMayorista(id: ID!): SolicitudDeMayorista! @field(resolver: "Catalogo\\Infraestructura\\GraphQL\\Resolutores@verificarMayorista")
   "Solo admin: rechaza al mayorista con un motivo que él ve en su Panel."
@@ -242,6 +250,28 @@ type NegocioDelCliente {
   subtipo: String
   "Cuándo lo eligió o lo cambió (ISO 8601)"
   elegidoEn: String!
+}
+
+"Una tienda tal como la ve Abasto en el Superadmin."
+type TiendaDeAbasto {
+  id: ID!
+  nombre: String!
+  ciudad: String!
+  telefono: String
+  "ISO 8601; null en las de la semilla"
+  registradaEn: String
+  dePrueba: Boolean!
+  suspendida: Boolean!
+  motivoSuspension: String
+  negocio: NegocioDelCliente
+}
+
+"Alguien del equipo de Abasto con acceso al Superadmin."
+type IntegranteDelEquipo {
+  usuario: String!
+  nombre: String!
+  correo: String
+  activo: Boolean!
 }
 
 "Un mayorista tal como lo revisa Abasto en el Superadmin."

@@ -119,6 +119,10 @@ final readonly class EntrarConTelefono
             $cliente = $this->crearCliente($telefono, $nombre);
         }
 
+        if ($cliente->suspendida) {
+            throw new ErrorDeDominio('CUENTA_SUSPENDIDA', 'Tu cuenta está suspendida. Escríbenos para revisarla.');
+        }
+
         $this->codigos->borrar($telefono);
 
         return ['sesion' => $this->cuentas->sesionPara($telefono), 'cliente' => $cliente, 'nuevo' => $nuevo];

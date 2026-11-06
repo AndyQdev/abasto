@@ -476,6 +476,16 @@ input InsumoDeRecetaEntrada
   cantidad: Float!
 }
 
+"""Alguien del equipo de Abasto con acceso al Superadmin."""
+type IntegranteDelEquipo
+  @join__type(graph: CATALOGO)
+{
+  usuario: String!
+  nombre: String!
+  correo: String
+  activo: Boolean!
+}
+
 type ItemDeListaFija
   @join__type(graph: COBROS)
 {
@@ -769,6 +779,14 @@ type Mutation
   Público. Un mayorista se registra (CU-01) y queda PENDIENTE hasta que Abasto lo verifica.
   """
   registrarMayorista(entrada: RegistrarMayoristaEntrada!): SolicitudDeMayorista! @join__field(graph: CATALOGO)
+
+  """
+  Solo admin: la tienda no puede entrar ni hacer pedidos nuevos hasta que se reactive.
+  """
+  suspenderTienda(id: ID!, motivo: String!): TiendaDeAbasto! @join__field(graph: CATALOGO)
+
+  """Solo admin: la tienda vuelve a poder comprar."""
+  reactivarTienda(id: ID!): TiendaDeAbasto! @join__field(graph: CATALOGO)
 
   """
   Solo admin: verifica al mayorista; desde ahí sus productos salen en la app.
@@ -1099,6 +1117,14 @@ type Query
   miTipoDeNegocio: NegocioDelCliente @join__field(graph: CATALOGO)
 
   """
+  Solo admin (Superadmin): las tiendas, las registradas más recientemente primero.
+  """
+  tiendas(busqueda: String): [TiendaDeAbasto!]! @join__field(graph: CATALOGO)
+
+  """Solo admin (Superadmin): quién del equipo de Abasto puede entrar."""
+  equipoDeAbasto: [IntegranteDelEquipo!]! @join__field(graph: CATALOGO)
+
+  """
   Solo admin (Superadmin): mayoristas en ese estado, los registrados más recientemente primero.
   """
   mayoristasPorVerificar(estado: String = "PENDIENTE"): [SolicitudDeMayorista!]! @join__field(graph: CATALOGO)
@@ -1220,6 +1246,9 @@ type SemanaDeVentas
   """Lunes de la semana, aaaa-mm-dd"""
   desde: String!
   pedidos: Int!
+
+  """Tiendas distintas que compraron esa semana"""
+  tiendas: Int!
   ventas: Dinero!
 }
 
@@ -1315,6 +1344,23 @@ type TiendaCompradora
   tienda: Tienda!
   pedidos: Int!
   ventas: Dinero!
+}
+
+"""Una tienda tal como la ve Abasto en el Superadmin."""
+type TiendaDeAbasto
+  @join__type(graph: CATALOGO)
+{
+  id: ID!
+  nombre: String!
+  ciudad: String!
+  telefono: String
+
+  """ISO 8601; null en las de la semilla"""
+  registradaEn: String
+  dePrueba: Boolean!
+  suspendida: Boolean!
+  motivoSuspension: String
+  negocio: NegocioDelCliente
 }
 
 enum TipoDeAnotacion

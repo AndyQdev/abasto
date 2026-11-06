@@ -14,6 +14,13 @@ interface OrganizacionRepositorio
     /** @return list<Organizacion> */
     public function mayoristas(?string $busqueda = null): array;
 
+    /**
+     * Superadmin: las tiendas, las registradas más recientemente primero.
+     *
+     * @return list<Organizacion>
+     */
+    public function tiendas(?string $busqueda = null): array;
+
     public function guardar(Organizacion $organizacion): void;
 
     public function porNit(string $nit): ?Organizacion;

@@ -25,7 +25,7 @@ public record Traccion(
         List<Semana> semanas,
         List<TiendaCompradora> tiendas) {
 
-    public record Semana(LocalDate desde, int pedidos, Dinero ventas) {}
+    public record Semana(LocalDate desde, int pedidos, int tiendas, Dinero ventas) {}
 
     public record TiendaCompradora(String tiendaId, int pedidos, Dinero ventas) {}
 
@@ -51,7 +51,8 @@ public record Traccion(
             var inicio = desde.plusWeeks(i);
             var fin = inicio.plusWeeks(1);
             var deLaSemana = ventas.stream().filter(p -> !dia(p, zona).isBefore(inicio) && dia(p, zona).isBefore(fin)).toList();
-            porSemana.add(new Semana(inicio, deLaSemana.size(), suma(deLaSemana)));
+            var tiendasDeLaSemana = (int) deLaSemana.stream().map(Pedido::tiendaId).distinct().count();
+            porSemana.add(new Semana(inicio, deLaSemana.size(), tiendasDeLaSemana, suma(deLaSemana)));
         }
 
         Map<String, List<Pedido>> porTienda = new HashMap<>();

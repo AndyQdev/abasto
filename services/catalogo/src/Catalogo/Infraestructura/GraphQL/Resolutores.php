@@ -13,6 +13,7 @@ use Catalogo\Aplicacion\EditarProducto;
 use Catalogo\Aplicacion\ElegirTipoDeNegocio;
 use Catalogo\Aplicacion\EntrarConTelefono;
 use Catalogo\Aplicacion\GestionarClientes;
+use Catalogo\Aplicacion\GestionarTiendas;
 use Catalogo\Aplicacion\RegistrarOrganizacion;
 use Catalogo\Aplicacion\VerificarMayorista;
 use Catalogo\Aplicacion\VistaDeProducto;
@@ -24,6 +25,7 @@ use Catalogo\Dominio\EstadoVerificacion;
 use Catalogo\Dominio\ListaDePrecios;
 use Catalogo\Dominio\Organizacion;
 use Catalogo\Dominio\Presentacion;
+use Catalogo\Dominio\Puertos\CuentasDeAcceso;
 use Catalogo\Dominio\Puertos\OrganizacionRepositorio;
 use Catalogo\Dominio\Puertos\RelacionRepositorio;
 use Catalogo\Infraestructura\Http\Usuario;
@@ -38,6 +40,8 @@ final readonly class Resolutores
     public function __construct(
         private ConsultarCatalogo $catalogo,
         private GestionarClientes $clientes,
+        private GestionarTiendas $tiendas,
+        private CuentasDeAcceso $cuentas,
         private CargarProducto $cargar,
         private CrearProducto $crear,
         private EditarProducto $editar,
@@ -160,6 +164,53 @@ final readonly class Resolutores
         return Vistas::solicitud($this->conErrores(fn () => $this->registro->mayorista(
             $e['empresa'], $e['nit'], $e['ciudad'], $e['representante'], $e['telefono'], $e['correo'], $e['clave'],
         )));
+    }
+
+    /**
+     * @param array<string, mixed> $args
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function tiendas(mixed $_, array $args): array
+    {
+        Usuario::actual()->exigirRol('admin');
+        $busqueda = isset($args['busqueda']) ? (string) $args['busqueda'] : null;
+
+        return array_map(Vistas::tiendaDeAbasto(...), $this->tiendas->listar($busqueda));
+    }
+
+    /**
+     * @return list<array{usuario: string, nombre: string, correo: ?string, activo: bool}>
+     */
+    public function equipoDeAbasto(): array
+    {
+        Usuario::actual()->exigirRol('admin');
+
+        return $this->cuentas->conRol('admin');
+    }
+
+    /**
+     * @param array<string, mixed> $args
+     *
+     * @return array<string, mixed>
+     */
+    public function suspenderTienda(mixed $_, array $args): array
+    {
+        Usuario::actual()->exigirRol('admin');
+
+        return Vistas::tiendaDeAbasto($this->conErrores(fn () => $this->tiendas->suspender((string) $args['id'], (string) $args['motivo'])));
+    }
+
+    /**
+     * @param array<string, mixed> $args
+     *
+     * @return array<string, mixed>
+     */
+    public function reactivarTienda(mixed $_, array $args): array
+    {
+        Usuario::actual()->exigirRol('admin');
+
+        return Vistas::tiendaDeAbasto($this->conErrores(fn () => $this->tiendas->reactivar((string) $args['id'])));
     }
 
     /**

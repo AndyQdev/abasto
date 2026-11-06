@@ -28,7 +28,29 @@ final readonly class Organizacion
         public ?NegocioDelCliente $negocio = null,
         /** Datos de demostración de `catalogo:semilla` (e2e y casos de uso del parcial): la app no los muestra */
         public bool $dePrueba = false,
+        /** Abasto la suspendió desde el Superadmin: no entra ni hace pedidos nuevos */
+        public bool $suspendida = false,
+        public ?string $motivoSuspension = null,
     ) {
+    }
+
+    /** Devuelve la tienda suspendida, con el motivo. */
+    public function suspender(string $motivo): self
+    {
+        return new self(
+            $this->id, $this->nombre, $this->tipo, $this->ciudad, $this->verificacion, $this->nit, $this->deLaCasa,
+            $this->representante, $this->telefono, $this->correo, $this->motivoRechazo, $this->registradaEn, $this->negocio, $this->dePrueba,
+            true, $motivo,
+        );
+    }
+
+    /** Devuelve la tienda sin suspensión. */
+    public function reactivar(): self
+    {
+        return new self(
+            $this->id, $this->nombre, $this->tipo, $this->ciudad, $this->verificacion, $this->nit, $this->deLaCasa,
+            $this->representante, $this->telefono, $this->correo, $this->motivoRechazo, $this->registradaEn, $this->negocio, $this->dePrueba,
+        );
     }
 
     public function esMayorista(): bool
@@ -71,6 +93,7 @@ final readonly class Organizacion
         return new self(
             $this->id, $this->nombre, $this->tipo, $this->ciudad, $this->verificacion, $this->nit, $this->deLaCasa,
             $this->representante, $this->telefono, $this->correo, $this->motivoRechazo, $this->registradaEn, $negocio, $this->dePrueba,
+            $this->suspendida, $this->motivoSuspension,
         );
     }
 
@@ -79,6 +102,7 @@ final readonly class Organizacion
         return new self(
             $o->id, $o->nombre, $o->tipo, $o->ciudad, $verificacion, $o->nit, $o->deLaCasa,
             $o->representante, $o->telefono, $o->correo, $motivo, $o->registradaEn, $o->negocio, $o->dePrueba,
+            $o->suspendida, $o->motivoSuspension,
         );
     }
 }

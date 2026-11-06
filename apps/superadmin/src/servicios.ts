@@ -5,6 +5,7 @@ export const sesion = crearSesion({ clientId: 'abasto-superadmin' });
 export const URLS = {
   router: import.meta.env.VITE_ROUTER_URL ?? 'http://localhost:4000/',
   asistente: import.meta.env.VITE_ASISTENTE_URL ?? 'http://localhost:8085',
+  conecta: import.meta.env.VITE_CONECTA_URL ?? 'http://localhost:8084',
 };
 
 /** Los servicios que vigila la pantalla Sistema. Cada uno responde GET /salud sin sesión. */
@@ -26,6 +27,14 @@ export async function graphql<T>(query: string, variables: Record<string, unknow
   const cuerpo = (await r.json()) as { data?: T; errors?: { message: string }[] };
   if (!cuerpo.data) throw new Error(cuerpo.errors?.[0]?.message ?? `El Router respondió ${r.status}`);
   return cuerpo.data;
+}
+
+/** Un POST con la sesión. Si el servicio responde un motivo, ese es el error que se muestra. */
+export async function enviarConToken<T>(url: string): Promise<T> {
+  const r = await fetch(url, { method: 'POST', headers: { authorization: `Bearer ${await sesion.token()}` } });
+  const cuerpo = (await r.json().catch(() => null)) as (T & { message?: string }) | null;
+  if (!r.ok) throw new Error(cuerpo?.message ?? `${url} respondió ${r.status}`);
+  return cuerpo as T;
 }
 
 export async function conToken<T>(url: string): Promise<T> {

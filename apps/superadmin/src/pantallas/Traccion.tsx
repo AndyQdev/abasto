@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { graphql } from '../servicios';
-import { alturas, crecimiento, recompra, semana, TRACCION, type Traccion as T } from '../traccion';
+import { crecimiento, recompra, TRACCION, type Traccion as T } from '../traccion';
+import { BarrasPorSemana } from './Barras';
 
 type Alcance = 'abasto' | 'todos';
 
@@ -79,15 +80,15 @@ export function Traccion() {
 
           <div className="carta">
             <h2 className="titulo-carta">Ventas por semana</h2>
-            <div className="barras" role="img" aria-label="Ventas por semana">
-              {datos.semanas.map((s, i) => (
-                <div key={s.desde} className="barra-col" title={`${s.pedidos} pedidos · ${s.ventas.texto}`}>
-                  <span className="barra-valor">{s.pedidos ? s.ventas.texto : ''}</span>
-                  <span className="barra" style={{ height: `${Math.max(alturas(datos.semanas)[i], s.pedidos ? 4 : 0)}%` }} />
-                  <span className="barra-etiqueta">{semana(s.desde)}</span>
-                </div>
-              ))}
-            </div>
+            <BarrasPorSemana
+              titulo="Ventas por semana"
+              barras={datos.semanas.map((s) => ({
+                desde: s.desde,
+                valor: s.ventas.centavos,
+                etiqueta: s.ventas.texto,
+                detalle: `${s.pedidos} ${s.pedidos === 1 ? 'pedido' : 'pedidos'} · ${s.ventas.texto}`,
+              }))}
+            />
           </div>
 
           <div className="carta">

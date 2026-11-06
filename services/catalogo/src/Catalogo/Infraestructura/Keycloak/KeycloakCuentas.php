@@ -66,6 +66,30 @@ final readonly class KeycloakCuentas implements CuentasDeAcceso
         return new SesionEmitida((string) $r['access_token'], (string) $r['refresh_token'], (int) $r['expires_in']);
     }
 
+    public function activar(string $usuario, bool $activa): void
+    {
+        $encontrados = $this->admin()->get('/users', ['username' => $usuario, 'exact' => 'true'])->throw()->json();
+        if (!is_array($encontrados) || !isset($encontrados[0]['id'])) {
+            return;
+        }
+        $this->admin()->put('/users/'.$encontrados[0]['id'], ['enabled' => $activa])->throw();
+    }
+
+    public function conRol(string $rol): array
+    {
+        $lista = $this->admin()->get('/roles/'.rawurlencode($rol).'/users')->throw()->json();
+        if (!is_array($lista)) {
+            return [];
+        }
+
+        return array_values(array_map(static fn (array $u): array => [
+            'usuario' => (string) ($u['username'] ?? ''),
+            'nombre' => trim(($u['firstName'] ?? '').' '.($u['lastName'] ?? '')),
+            'correo' => isset($u['email']) ? (string) $u['email'] : null,
+            'activo' => (bool) ($u['enabled'] ?? false),
+        ], $lista));
+    }
+
     private function idDe(string $usuario): string
     {
         $encontrados = $this->admin()->get('/users', ['username' => $usuario, 'exact' => 'true'])->throw()->json();

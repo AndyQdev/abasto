@@ -139,11 +139,17 @@ main {
 .kpi small { color: hsl(var(--texto-3)); }
 .carta + .carta { margin-top: 1rem; }
 .kpis .carta + .carta { margin-top: 0; }
-.barras { display: flex; align-items: flex-end; gap: 0.75rem; height: 220px; padding-top: 1.5rem; }
-.barra-col { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 0.35rem; }
-.barra { width: 100%; max-width: 3.5rem; border-radius: 0.5rem 0.5rem 0 0; background: hsl(var(--primary)); }
-.barra-valor { font-size: 0.6875rem; color: hsl(var(--texto-2)); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.barra-etiqueta { font-size: 0.75rem; color: hsl(var(--texto-3)); }
+.barras { display: flex; gap: 0.5rem; height: 220px; padding-top: 1.5rem; overflow-x: auto; }
+.barra-col { flex: 1; min-width: 2.25rem; height: 100%; display: flex; flex-direction: column; align-items: center; gap: 0.35rem; }
+/* La pista es lo que mide el 100 %: los textos quedan afuera para que el alto sea proporcional al valor */
+.barra-pista { position: relative; flex: 1; min-height: 0; width: 100%; display: flex; align-items: flex-end; justify-content: center; border-bottom: 1px solid hsl(var(--borde)); }
+.barra { position: relative; display: block; width: 100%; max-width: 3.5rem; border-radius: 4px 4px 0 0; background: hsl(var(--primary)); }
+.barra-valor { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); padding-bottom: 0.2rem; font-size: 0.6875rem; color: hsl(var(--texto-2)); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.barra-etiqueta { font-size: 0.75rem; color: hsl(var(--texto-3)); white-space: nowrap; }
+.barra-tip { position: absolute; bottom: 0.5rem; left: 50%; z-index: 2; transform: translateX(-50%); width: max-content; max-width: 220px; padding: 0.35rem 0.55rem; border-radius: var(--radio); background: hsl(var(--tinta)); color: hsl(var(--tinta-texto)); font-size: 0.75rem; opacity: 0; pointer-events: none; transition: opacity 0.1s; }
+.barra-col:first-child .barra-tip { left: 0; transform: none; }
+.barra-col:last-child .barra-tip { left: auto; right: 0; transform: none; }
+.barra-col:hover .barra-tip { opacity: 1; }
 @media (max-width: 900px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 /* Mayoristas (CU-01) */
@@ -167,5 +173,37 @@ main {
 .rechazo textarea { height: auto; padding: 0.6rem 0.875rem; resize: vertical; }
 .boton-peligro { height: var(--alto-control); padding: 0 1rem; border-radius: var(--radio-md); background: hsl(var(--error)); color: #fff; border: 0; font-weight: 600; }
 .boton-peligro:disabled, .boton-primario:disabled { opacity: 0.5; cursor: not-allowed; }
+.buscador { width: min(340px, 100%); }
+.tabla-ancha { overflow-x: auto; }
+.tabla-ancha .tabla { min-width: 720px; }
+.tabla-ancha .tabla .num, .tabla-ancha .tabla .mono { white-space: nowrap; }
+.tabla-ancha .tabla .celda-url { white-space: normal; }
+/* En el teléfono el menú pasa arriba y se desliza de costado; el contenido usa todo el ancho */
+@media (max-width: 760px) {
+  .superadmin { grid-template-columns: minmax(0, 1fr); }
+  .lateral { gap: 0.75rem; padding: 0.75rem 1rem; }
+  .lateral .pie { display: none; }
+  .lateral nav { display: flex; overflow-x: auto; scrollbar-width: none; margin: 0 -1rem; padding: 0 1rem; }
+  .lateral nav a { flex: none; white-space: nowrap; }
+  .superior { padding: 0.75rem 1rem 0; }
+  .cabecera { flex-wrap: wrap; }
+  .filtros-traccion { flex-wrap: wrap; }
+  .pestanas { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .pestanas .chip { flex: none; }
+  .buscador { width: 100%; }
+  .suspender { flex-wrap: wrap; justify-content: flex-start; }
+  .ciudad { grid-template-columns: minmax(70px, 110px) 1fr; }
+  .ciudad-valor { grid-column: 1 / -1; justify-self: end; }
+}
+.celda-accion { text-align: right; white-space: nowrap; }
+.celda-url { max-width: 280px; overflow-wrap: anywhere; font-size: 0.8125rem; }
+.suspender { display: flex; gap: 0.4rem; align-items: center; justify-content: flex-end; }
+.suspender .entrada { width: 220px; }
+.ciudades { display: grid; gap: 0.7rem; margin-top: 0.75rem; }
+.ciudad { display: grid; grid-template-columns: minmax(90px, 160px) 1fr auto; gap: 0.75rem; align-items: center; }
+.ciudad-nombre { font-weight: 600; font-size: 0.875rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ciudad-pista { height: 12px; border-radius: 4px; background: hsl(var(--tenue, var(--borde))); overflow: hidden; }
+.ciudad-barra { display: block; height: 100%; border-radius: 0 4px 4px 0; background: hsl(var(--primary)); }
+.ciudad-valor { font-size: 0.875rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .aviso { position: fixed; right: 1.5rem; bottom: 1.5rem; max-width: 420px; padding: 0.9rem 1.1rem; border-radius: var(--radio-md); background: hsl(var(--tinta)); color: hsl(var(--tinta-texto)); box-shadow: var(--sombra-modal); font-weight: 600; }
 @media (max-width: 900px) { .datos { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

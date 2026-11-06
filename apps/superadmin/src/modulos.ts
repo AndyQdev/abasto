@@ -2,8 +2,6 @@
 export interface Modulo {
   ruta: string;
   titulo: string;
-  fase?: string;
-  detalle?: string;
 }
 
 export const MODULOS: Modulo[] = [
@@ -11,26 +9,11 @@ export const MODULOS: Modulo[] = [
   { ruta: 'traccion', titulo: 'Tracción' },
   // CU-01: los que se registran en el Panel esperan aquí la verificación
   { ruta: 'mayoristas', titulo: 'Mayoristas' },
+  { ruta: 'tiendas', titulo: 'Tiendas' },
+  { ruta: 'reportes', titulo: 'Reportes' },
+  // CU-10: las tiendas conectadas con su e-commerce y los avisos que no llegaron
+  { ruta: 'integraciones', titulo: 'Integraciones' },
   { ruta: 'sistema', titulo: 'Sistema' },
   { ruta: 'auditoria', titulo: 'Auditoría' },
-  { ruta: 'tiendas', titulo: 'Tiendas', fase: 'F5', detalle: 'Tiendas por ciudad, tipo y estado; suspender una cuenta.' },
-  {
-    ruta: 'usuarios',
-    titulo: 'Usuarios',
-    fase: 'F5',
-    detalle: 'Usuarios internos y permisos por rol: Superadmin, Operaciones, Soporte, Verificador, Auditor (roles de Keycloak).',
-  },
-  {
-    ruta: 'reclamos',
-    titulo: 'Reclamos',
-    fase: 'F5',
-    detalle: 'Reclamos de tiendas y mayoristas. Aprobar un reclamo dispara la saga de devolución en Pedidos.',
-  },
-  { ruta: 'reportes', titulo: 'Reportes', fase: 'F5', detalle: 'Pedidos por semana, GMV por ciudad y crecimiento de tiendas activas.' },
-  {
-    ruta: 'integraciones',
-    titulo: 'Integraciones',
-    fase: 'F5',
-    detalle: 'Llaves de API, suscripciones de webhooks y eventos que fallaron, con reenvío. Los datos son de Conecta.',
-  },
+  { ruta: 'usuarios', titulo: 'Usuarios' },
 ];

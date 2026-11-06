@@ -36,6 +36,17 @@ final readonly class MongoOrganizacionRepositorio implements OrganizacionReposit
         return array_values(array_map(static fn ($doc) => self::aDominio((array) $doc), $docs));
     }
 
+    public function tiendas(?string $busqueda = null): array
+    {
+        $filtro = ['tipo' => 'tienda'];
+        if ($busqueda !== null && trim($busqueda) !== '') {
+            $filtro['nombre'] = new Regex(preg_quote(trim($busqueda), '/'), 'i');
+        }
+        $docs = $this->coleccion->find($filtro, ['sort' => ['registrada_en' => -1, 'nombre' => 1]])->toArray();
+
+        return array_values(array_map(static fn ($doc) => self::aDominio((array) $doc), $docs));
+    }
+
     public function guardar(Organizacion $organizacion): void
     {
         // $set y no replace: la semilla guarda campos que este repositorio no conoce
@@ -48,6 +59,8 @@ final readonly class MongoOrganizacionRepositorio implements OrganizacionReposit
             'nit' => $organizacion->nit,
             'de_la_casa' => $organizacion->deLaCasa,
             'de_prueba' => $organizacion->dePrueba,
+            'suspendida' => $organizacion->suspendida,
+            'motivo_suspension' => $organizacion->motivoSuspension,
             'representante' => $organizacion->representante,
             'telefono' => $organizacion->telefono,
             'correo' => $organizacion->correo,
@@ -108,6 +121,8 @@ final readonly class MongoOrganizacionRepositorio implements OrganizacionReposit
             registradaEn: self::texto($doc, 'registrada_en'),
             negocio: self::negocio($doc['negocio'] ?? null),
             dePrueba: (bool) ($doc['de_prueba'] ?? false),
+            suspendida: (bool) ($doc['suspendida'] ?? false),
+            motivoSuspension: self::texto($doc, 'motivo_suspension'),
         );
     }
 
