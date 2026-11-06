@@ -34,6 +34,7 @@ Actualizado: 06/11/2026 · en main (los dos trabajamos ahí)
 Los 16 casos de uso tienen pantalla, prueba y sus diagramas ICONIX. Ni el Panel ni el Superadmin tienen módulos en construcción. Falta lo que depende de afuera o de una decisión (ver «Sigue»).
 
 ## Terminé
+- **WhatsApp por n8n (06/11):** el flujo no le podía comprar a Abasto: pedía códigos de 4 dígitos (`AB-101` tiene 3), fiaba por defecto y su mayorista por defecto era uno de prueba. Ahora compra a Abasto contra entrega, y la prueba `n8n-whatsapp.spec.ts` lo verifica contra el n8n real.
 - **CU-16 · Reclamos (06/11, decisión de Andrés):** la tienda reporta un problema desde Seguimiento, Abasto lo resuelve a mano en Superadmin › Reclamos y el sistema solo anota lo devuelto. No mueve Cobros. El mayorista ve la marca en su pedido del Panel.
 - **CU-10 · Conectar un e-commerce (06/11):** llaves de API (cada una es una cuenta de Keycloak con el `org_id` de la tienda), avisos firmados con reintentos, MCP de compras `abasto-compras` y plugin de WooCommerce (`plugins/woocommerce-abasto`), probado contra WordPress 7.1 y WooCommerce 11.2 reales. Pantalla en App › Cuenta › Conectar mi tienda en línea.
   **Jhoel:** después de `git pull`, `pnpm install`, `pnpm todo` (crea `conecta-integraciones` en Keycloak y la cola `conecta.webhooks`) y `docker compose --profile servicios restart catalogo`. Tu MCP de reportes no cambió.
@@ -100,7 +101,7 @@ Los 16 casos de uso tienen pantalla, prueba y sus diagramas ICONIX. Ni el Panel 
 - 31/10 · Pedidos: `CrearPedidoEntrada.entrega: DireccionEntrada` (opcional) y `Pedido.entrega: DireccionDeEntrega`; migración V3. OpenAPI de Conecta: `DatosPedido.entrega`.
 
 ## Necesito del otro
-- Jhoel: `reconocerProducto(fotoUri)` en `apps/app/src/ia` con el modelo TFLite entrenado con las fotos del catálogo.
+- Jhoel: con `ANTHROPIC_API_KEY` correr `pnpm --filter @abasto/asistente evaluar` (meta 18/20). Sin la llave, los reportes usan respuestas fijas: tres preguntas distintas devolvieron la misma tabla de ventas del mes. Sería bueno que el simulado diga «no entendí» cuando no reconoce la pregunta, en vez de responder otra cosa.
 
 ## Sigue
 Depende de afuera:

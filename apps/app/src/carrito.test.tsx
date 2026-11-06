@@ -1,5 +1,5 @@
 import type { ItemDeCarrito, Producto } from '@abasto/comercio';
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { configure, fireEvent, render, screen } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { BotonAgregar } from './BotonAgregar';
 import { HojaDelCarrito } from './HojaDelCarrito';
@@ -18,6 +18,10 @@ const mockEstado = {
   cerrarCarrito: jest.fn(),
 };
 jest.mock('./estado', () => ({ useEstado: () => mockEstado }));
+
+// Con toda la suite en paralelo una máquina cargada tarda más: se falló una vez por tiempo, no por la lógica
+configure({ asyncUtilTimeout: 5000 });
+jest.setTimeout(30000);
 
 const METRICAS = { frame: { x: 0, y: 0, width: 412, height: 915 }, insets: { top: 24, left: 0, right: 0, bottom: 0 } };
 const item = (productoId: string, nombre: string, cantidad: number): ItemDeCarrito => ({

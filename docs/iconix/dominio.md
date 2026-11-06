@@ -70,6 +70,19 @@ classDiagram
     +int precioUnitarioCentavos
     +bool descontado
   }
+  class Reclamo {
+    +UUID id
+    +Motivo motivo
+    +String detalle
+    +Estado estado
+    +String respuesta
+    +Dinero devuelto
+    +FormaDeDevolucion forma
+    +abrir(pedido, motivo, detalle)
+    +aprobar(devuelto, forma, respuesta)
+    +rechazar(respuesta)
+  }
+
   class Pedido {
     +String id
     +String codigo
@@ -238,6 +251,7 @@ classDiagram
   Producto "1" --> "1" Abastecimiento : se abastece
   EscalaDePrecio "0..*" --> "1" Presentacion : se vende por
   Pedido "1" *-- "1..*" LineaDePedido : contiene
+  Pedido "1" --> "0..1" Reclamo : tiene
   LineaDePedido "0..*" --> "1" Producto : pide
   LineaDePedido "0..*" --> "1" Presentacion : en
   Pedido "1" --> "1" Dinero : total

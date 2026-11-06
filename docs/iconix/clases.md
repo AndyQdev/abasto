@@ -293,6 +293,19 @@ Fuente: `services/pedidos/src/main/java/bo/abasto/pedidos/{dominio,aplicacion,ad
 ```mermaid
 classDiagram
   namespace Dominio {
+    class Reclamo {
+        -UUID id
+        -UUID pedidoId
+        -Motivo motivo
+        -String detalle
+        -Estado estado
+        -String respuesta
+        -Dinero devuelto
+        -FormaDeDevolucion forma
+        +abrir(id, pedido, motivo, detalle, ahora)$ Reclamo
+        +aprobar(devuelto, forma, respuesta, total, quien, ahora)
+        +rechazar(respuesta, quien, ahora)
+    }
     class Pedido {
       +UUID id
       +String codigo

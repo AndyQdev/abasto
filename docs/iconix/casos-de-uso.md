@@ -307,12 +307,12 @@ La tabla con actor, interfaz, servicios, dueño y fase está en `README.md`. Aba
 ## CU-11 · Pedir por WhatsApp
 
 **Actor:** Tienda, por WhatsApp.
-**Precondición:** n8n está corriendo con el flujo `pedido-por-whatsapp` activo.
+**Precondición:** n8n está corriendo con el flujo `pedido-por-whatsapp` activo (`pnpm n8n`).
 **Servicios:** Conecta y Pedidos.
 
 **Curso básico**
 
-1. Llega el mensaje con su id, el teléfono y el texto: «2 cajas HP-0400, 1 docena HJ-0110».
+1. Llega el mensaje con su id, el teléfono y el texto: «2 unidades AB-101, 1 unidad AB-102». Sin decir a quién, le compra a Abasto, contra entrega; a un afiliado se le indica `mayoristaId` y `metodoPago`.
 2. n8n convierte cada línea en producto, presentación y cantidad, y deriva la clave del id del mensaje.
 3. Manda `POST /v1/pedidos` con `Idempotency-Key` y `X-Abasto-Origen: whatsapp`.
 4. `SincronizarLote` reserva la clave, crea el pedido por el Router y anota la bitácora.
@@ -322,9 +322,10 @@ La tabla con actor, interfaz, servicios, dueño y fase está en `README.md`. Aba
 
 - WhatsApp reintenta el mensaje: `repetida` y en el Panel sale «Repetido: no se duplicó».
 - Presentación que no existe: `rechazada`, con el motivo a la vista en el Panel.
-- **Pendiente:** el flujo usa la tienda de prueba y un mensaje de ejemplo. Falta conectar un número real y buscar la tienda por su teléfono.
+- Un mensaje que no es un pedido no crea nada: `rechazada`.
+- **Pendiente:** el flujo usa la tienda de prueba y un mensaje que se le manda al webhook. Falta conectar un número real y buscar la tienda por su teléfono.
 
-**Prueba:** `services/conecta/src/aplicacion/sincronizar-lote.spec.ts` y `e2e/pruebas/conecta.spec.ts` (el mismo envío que hace n8n).
+**Prueba:** `services/conecta/src/aplicacion/sincronizar-lote.spec.ts`, `e2e/pruebas/conecta.spec.ts` y, contra el n8n de verdad, `e2e/pruebas/n8n-whatsapp.spec.ts`.
 
 ## CU-12 · Hacer un pedido sin señal
 

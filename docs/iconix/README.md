@@ -41,7 +41,7 @@ Dueños: Andrés lleva lo comercial y Jhoel toda la IA.
 | CU-15 Registrarse como tienda | Tienda | App (Entrar: celular y código) | Catálogo, Keycloak | Andrés | F1 |
 | CU-16 Reportar un problema con un pedido | Tienda → Admin | App (Seguimiento) → Superadmin (Reclamos) | Pedidos | Andrés | F5 |
 
-Tienen prueba punta a punta: la sesión única (Panel → Superadmin), el Panel con sus tres frameworks, CU-01, CU-03/04/05 (red privada), CU-04 (crédito), CU-06 y CU-08 (la saga), CU-09, CU-10 (con WooCommerce real), CU-11 (el mismo envío de n8n, sin n8n), CU-12 y CU-13. Lo que falta conectar afuera está marcado **Pendiente** en cada caso: WhatsApp real (CU-11, CU-15) y un banco real (CU-08).
+Tienen prueba punta a punta: la sesión única (Panel → Superadmin), el Panel con sus tres frameworks, CU-01, CU-03/04/05 (red privada), CU-04 (crédito), CU-06 y CU-08 (la saga), CU-09, CU-10 (con WooCommerce real), CU-16, CU-11 (con el n8n de verdad, si está arriba), CU-12 y CU-13. Lo que falta conectar afuera está marcado **Pendiente** en cada caso: WhatsApp real (CU-11, CU-15) y un banco real (CU-08).
 
 ## Archivos por caso
 
