@@ -6,7 +6,7 @@ app.enableShutdownHooks();
 // Mercado y Campo llaman directo a Conecta para sincronizar
 app.enableCors({
   origin: (process.env.ORIGENES_PERMITIDOS ?? 'http://localhost:8090').split(','),
-  allowedHeaders: ['authorization', 'content-type', 'idempotency-key', 'x-abasto-origen'],
+  allowedHeaders: ['authorization', 'content-type', 'idempotency-key', 'x-abasto-origen', 'mcp-protocol-version'],
 });
 const puerto = Number(process.env.PORT ?? 8084);
 await app.listen(puerto, '0.0.0.0');

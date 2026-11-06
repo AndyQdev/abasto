@@ -29,7 +29,7 @@ export class SincronizarLote {
 
   /** Aplica y, si hay bitácora, anota lo que pasó. Anotar nunca hace fallar la operación. */
   async aplicarUna(operacion: Operacion, token: string, contexto?: ContextoDeEntrada): Promise<ResultadoDeOperacion> {
-    const resultado = await this.aplicar(operacion, token);
+    const resultado = await this.aplicar(operacion, token, contexto?.tiendaId ?? null);
     if (this.bitacora && contexto) {
       const entrada = entradaDe(operacion, resultado, contexto, this.reloj());
       if (entrada) await this.bitacora.anotar(entrada).catch(() => undefined);
@@ -37,13 +37,15 @@ export class SincronizarLote {
     return resultado;
   }
 
-  private async aplicar(operacion: Operacion, token: string): Promise<ResultadoDeOperacion> {
+  private async aplicar(operacion: Operacion, token: string, empresa: string | null): Promise<ResultadoDeOperacion> {
     const { clave } = operacion;
+    // Cada empresa tiene sus claves: si otra usa el mismo UUID, nunca recibe la respuesta de esta
+    const claveDelRegistro = empresa ? `${empresa}|${clave}` : clave;
     if (!TIPOS_DE_OPERACION.includes(operacion.tipo)) {
       return { clave, estado: 'rechazada', error: `Tipo de operación desconocido: ${operacion.tipo}` };
     }
 
-    const reserva = await this.registro.reservar(clave, huellaDe(operacion));
+    const reserva = await this.registro.reservar(claveDelRegistro, huellaDe(operacion));
     switch (reserva.tipo) {
       case 'repetida':
         return { clave, estado: 'repetida', respuesta: reserva.respuesta };
@@ -55,10 +57,10 @@ export class SincronizarLote {
 
     try {
       const respuesta = await this.destino.aplicar(operacion, token);
-      await this.registro.completar(clave, respuesta);
+      await this.registro.completar(claveDelRegistro, respuesta);
       return { clave, estado: 'aplicada', respuesta };
     } catch (e) {
-      await this.registro.liberar(clave);
+      await this.registro.liberar(claveDelRegistro);
       return { clave, estado: 'rechazada', error: e instanceof Error ? e.message : String(e) };
     }
   }

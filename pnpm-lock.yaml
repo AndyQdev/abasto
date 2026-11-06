@@ -574,6 +574,9 @@ importers:
       '@aws-sdk/lib-dynamodb':
         specifier: ^3.1153.0
         version: 3.1153.0(@aws-sdk/client-dynamodb@3.1153.0)
+      '@modelcontextprotocol/sdk':
+        specifier: ^1.32.1
+        version: 1.32.1(supports-color@7.2.0)(zod@4.6.7)
       '@nestjs/common':
         specifier: ^12.0.1
         version: 12.2.0(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0)

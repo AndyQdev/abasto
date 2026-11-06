@@ -9,11 +9,13 @@
  * 3. El apellido es opcional: un cliente que se llama «Rosa» entra sin inventar un apellido.
  * 4. cobros-servicio: cuenta de servicio con la que Cobros le pide a Catálogo el nombre de los productos de un pedido
  *    entregado (para «Mi negocio» del cliente). Solo client credentials y audiencia abasto-api; sin roles.
+ * 5. conecta-integraciones: cuenta de servicio con la que Conecta crea y borra el cliente de cada llave de API (CU-10).
  */
 const BASE = process.env.KEYCLOAK_URL ?? 'http://localhost:8180';
 const REALM = 'abasto';
 const SECRETO = process.env.KEYCLOAK_CUENTAS_SECRETO ?? 'catalogo-cuentas-local';
 const SECRETO_COBROS = process.env.KEYCLOAK_COBROS_SECRETO ?? 'cobros-servicio-local';
+const SECRETO_CONECTA = process.env.KEYCLOAK_CONECTA_SECRETO ?? 'conecta-integraciones-local';
 
 async function json(r) {
   const texto = await r.text();
@@ -122,6 +124,34 @@ if (!(await cliente('cobros-servicio'))) {
     }),
   );
   console.log('Keycloak: creado cobros-servicio');
+}
+
+// 6. Cuenta de servicio de Conecta (CU-10: una cuenta por cada llave de API)
+if (!(await cliente('conecta-integraciones'))) {
+  await json(
+    await admin('/clients', {
+      method: 'POST',
+      body: JSON.stringify({
+        clientId: 'conecta-integraciones',
+        name: 'Conecta · llaves de API de las tiendas',
+        publicClient: false,
+        secret: SECRETO_CONECTA,
+        serviceAccountsEnabled: true,
+        standardFlowEnabled: false,
+        directAccessGrantsEnabled: false,
+      }),
+    }),
+  );
+  console.log('Keycloak: creado conecta-integraciones');
+}
+const integraciones = await cliente('conecta-integraciones');
+const cuentaDeConecta = await json(await admin(`/clients/${integraciones.id}/service-account-user`));
+const necesitaConecta = disponibles.filter((r) => ['manage-clients', 'view-clients', 'query-clients', 'manage-users', 'view-users', 'query-users', 'view-realm'].includes(r.name));
+const tieneConecta = await json(await admin(`/users/${cuentaDeConecta.id}/role-mappings/clients/${gestion.id}`));
+const faltanConecta = necesitaConecta.filter((r) => !tieneConecta.some((t) => t.name === r.name));
+if (faltanConecta.length) {
+  await json(await admin(`/users/${cuentaDeConecta.id}/role-mappings/clients/${gestion.id}`, { method: 'POST', body: JSON.stringify(faltanConecta) }));
+  console.log(`Keycloak: conecta-integraciones puede ${faltanConecta.map((r) => r.name).join(', ')}`);
 }
 
 console.log('Keycloak al día');

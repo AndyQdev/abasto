@@ -220,6 +220,12 @@ services:
       ORIGENES_PERMITIDOS: http://localhost:8090,http://localhost:5174,http://localhost:5170
       # Tiempo real (WebSocket /v1/tiempo-real): escucha pedido.* y cobro.* de abasto.eventos
       RABBITMQ_URL: amqp://abasto:abasto@rabbitmq:5672
+      # CU-10: cada llave de API es un cliente de Keycloak; lo maneja la cuenta conecta-integraciones
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_CONECTA_SECRETO: ${KEYCLOAK_CONECTA_SECRETO:-conecta-integraciones-local}
+      # Solo en desarrollo: acepta webhooks a direcciones locales. En producción queda vacío
+      WEBHOOKS_PERMITIR_LOCAL: ${WEBHOOKS_PERMITIR_LOCAL:-si}
+    extra_hosts: ["host.docker.internal:host-gateway"]
     ports: ["8084:8084"]
     depends_on: [dynamodb, rabbitmq]
     healthcheck:

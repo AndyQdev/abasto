@@ -4,9 +4,9 @@ import type { EstadoDeOperacion, Operacion, ResultadoDeOperacion } from './opera
  * Bitácora de Conecta (03/11): lo que entró de afuera para cada mayorista y qué pasó con cada cosa.
  * La ve el mayorista en Panel › Conecta. Muestra la idempotencia en acción: un reintento sale como «repetido».
  */
-export type OrigenDeOperacion = 'whatsapp' | 'tienda-en-linea' | 'app-sin-senal' | 'api';
+export type OrigenDeOperacion = 'whatsapp' | 'tienda-en-linea' | 'app-sin-senal' | 'api' | 'mcp';
 
-export const ORIGENES: readonly OrigenDeOperacion[] = ['whatsapp', 'tienda-en-linea', 'app-sin-senal', 'api'];
+export const ORIGENES: readonly OrigenDeOperacion[] = ['whatsapp', 'tienda-en-linea', 'app-sin-senal', 'api', 'mcp'];
 
 export interface EntradaDeBitacora {
   mayoristaId: string;

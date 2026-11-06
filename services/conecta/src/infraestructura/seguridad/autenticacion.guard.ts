@@ -1,12 +1,15 @@
 import {
   CanActivate,
   ExecutionContext,
+  Inject,
   Injectable,
   SetMetadata,
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { createRemoteJWKSet, jwtVerify, type JWTPayload } from 'jose';
+import { LlavesDeApi } from '../../aplicacion/llaves-de-api.js';
+import { esLlave } from '../../dominio/llave-de-api.js';
 
 /** Lo que Abasto sabe de quien llama, sacado del token de Keycloak. */
 export interface Usuario {
@@ -16,6 +19,8 @@ export interface Usuario {
   roles: string[];
   /** Cuándo vence el token (ms desde 1970); el canal en tiempo real cierra ahí para que la app entre con uno nuevo */
   venceEn?: number;
+  /** Entró con una llave de API (CU-10), no una persona con su sesión */
+  porLlave?: boolean;
 }
 
 const PUBLICO = 'abasto:publico';
@@ -45,7 +50,10 @@ export async function verificarToken(token: string): Promise<Usuario> {
 /** Guard global: toda petición necesita un token válido salvo las marcadas con @Publico(). */
 @Injectable()
 export class AutenticacionGuard implements CanActivate {
-  constructor(private readonly reflector: Reflector) {}
+  constructor(
+    private readonly reflector: Reflector,
+    @Inject(LlavesDeApi) private readonly llaves: LlavesDeApi,
+  ) {}
 
   async canActivate(contexto: ExecutionContext): Promise<boolean> {
     const publico = this.reflector.getAllAndOverride<boolean>(PUBLICO, [
@@ -58,8 +66,17 @@ export class AutenticacionGuard implements CanActivate {
 
     const cabecera: string | undefined = peticion?.headers?.authorization;
     if (!cabecera?.startsWith('Bearer ')) throw new UnauthorizedException('Falta la sesión');
+    const credencial = cabecera.slice(7);
     try {
-      peticion.usuario = await verificarToken(cabecera.slice(7));
+      if (esLlave(credencial)) {
+        const token = await this.llaves.autenticar(credencial);
+        if (!token) throw new Error('Llave inválida');
+        peticion.usuario = { ...(await verificarToken(token)), porLlave: true };
+        peticion.token = token;
+        return true;
+      }
+      peticion.usuario = await verificarToken(credencial);
+      peticion.token = credencial;
       return true;
     } catch {
       throw new UnauthorizedException('La sesión no es válida o venció');

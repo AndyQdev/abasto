@@ -6,7 +6,7 @@ import { TIPOS_DE_OPERACION, type Operacion } from '../../dominio/operacion.js';
 import { BITACORA, type Bitacora } from '../../dominio/puertos.js';
 import type { Usuario } from '../../infraestructura/seguridad/autenticacion.guard.js';
 
-type Peticion = { headers: Record<string, string | undefined>; usuario?: Usuario };
+type Peticion = { headers: Record<string, string | undefined>; usuario?: Usuario; token?: string };
 
 const operacion = z.object({
   clave: z.uuid(),
@@ -25,8 +25,8 @@ const validar = <T>(esquema: z.ZodType<T>, valor: unknown): T => {
 
 const tienda = (peticion: Peticion) => peticion.usuario?.orgId || null;
 
-const tokenDe = (peticion: { headers: Record<string, string | undefined> }) =>
-  (peticion.headers.authorization ?? '').replace(/^Bearer /, '');
+/** El guard deja el token de verdad: el de la sesión, o el de la cuenta de la llave de API. */
+const tokenDe = (peticion: Peticion) => peticion.token ?? (peticion.headers.authorization ?? '').replace(/^Bearer /, '');
 
 @Controller('v1')
 export class SincronizacionController {

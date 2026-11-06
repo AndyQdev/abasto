@@ -1,6 +1,6 @@
 // Crea las tablas de DynamoDB si no existen. Es idempotente: se puede correr las veces que haga falta.
 // `pnpm tablas` (también lo corren `pnpm infra` y `pnpm todo`). Con DYNAMODB_URL=aws crea en AWS.
-import { CreateTableCommand, DynamoDBClient, ListTablesCommand } from '@aws-sdk/client-dynamodb';
+import { CreateTableCommand, DescribeTimeToLiveCommand, DynamoDBClient, ListTablesCommand, UpdateTimeToLiveCommand } from '@aws-sdk/client-dynamodb';
 
 const url = process.env.DYNAMODB_URL ?? 'http://localhost:8800';
 const db = new DynamoDBClient(
@@ -44,4 +44,13 @@ for (const { TableName, llaves } of tablas) {
     }),
   );
   console.log(`DynamoDB: ${TableName} creada`);
+}
+
+// Lo que vence se borra solo en AWS (la bitácora, las entregas y las claves de idempotencia llevan `venceEn`).
+// DynamoDB Local acepta la configuración pero no borra: por eso cada lectura también revisa el vencimiento donde importa.
+for (const TableName of ['idempotencia', 'conecta']) {
+  const { TimeToLiveDescription: ttl } = await db.send(new DescribeTimeToLiveCommand({ TableName }));
+  if (ttl?.TimeToLiveStatus === 'ENABLED' || ttl?.TimeToLiveStatus === 'ENABLING') continue;
+  await db.send(new UpdateTimeToLiveCommand({ TableName, TimeToLiveSpecification: { AttributeName: 'venceEn', Enabled: true } }));
+  console.log(`DynamoDB: ${TableName} borra lo vencido`);
 }

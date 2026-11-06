@@ -43,7 +43,13 @@ public class PedidosServicio implements CrearPedido, DecidirPedido, ConsultarPed
     @Override
     public Pedido ejecutar(CrearPedido.Comando comando) {
         var existente = pedidos.porClave(comando.clave());
-        if (existente.isPresent()) return existente.get();
+        if (existente.isPresent()) {
+            // La clave es única en toda la base: si es de otra tienda, jamás se devuelve su pedido
+            if (!existente.get().tiendaId().equals(comando.tiendaId())) {
+                throw new ErrorDeDominio("CLAVE_EN_USO", "Otra clave, por favor: esa ya se usó. Genera un UUID nuevo por pedido");
+            }
+            return existente.get();
+        }
 
         var lineas = comando.lineas().stream()
                 .map(l -> LineaDePedido.sinPrecio(l.productoId(), l.presentacion(), l.cantidad()))

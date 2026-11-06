@@ -1,6 +1,6 @@
 # Conecta · NestJS · dueño: Andrés
 
-La puerta de entrada de afuera: API pública para e-commerce, n8n, el plugin WooCommerce y la sincronización offline de Campo. DynamoDB (8800), puerto 8084.
+La puerta de entrada de afuera: API pública para e-commerce, n8n, el plugin WooCommerce, el MCP de compras y la sincronización de la app sin señal. DynamoDB (8800), puerto 8084.
 
 - Toda escritura trae `Idempotency-Key` (UUID). La idempotencia es una escritura condicional en DynamoDB: el mismo envío repetido devuelve «repetida» con la respuesta original.
 - `POST /v1/sincronizacion/lotes` (Campo) y `POST /v1/pedidos` (n8n, e-commerce). Contrato: `contracts/openapi/conecta.yaml`.
@@ -14,5 +14,12 @@ La puerta de entrada de afuera: API pública para e-commerce, n8n, el plugin Woo
   - Contrato: `contracts/openapi/conecta.yaml` (`/v1/tiempo-real`) y `contracts/asyncapi.yaml` (`cobro.qr_generado`). e2e: `e2e/pruebas/tiempo-real.spec.ts`.
 
 - **Bitácora (03/11, Panel › Conecta):** cada `pedido.crear` que entra (por `POST /v1/pedidos` o por un lote de la app sin señal) queda anotado para su mayorista con el origen (`X-Abasto-Origen`: whatsapp, tienda-en-linea o api; los lotes son app-sin-senal), qué pasó (aplicada, repetida, conflicto, rechazada), el motivo y el código, total y tienda que devolvió Pedidos. Tabla `conecta` (PK `BITACORA#<mayorista>`, SK `<fecha>#<clave>`, 30 días). Anotar nunca hace fallar el pedido. `GET /v1/bitacora` da los últimos 100 del mayorista del token con el resumen. El flujo de n8n manda `X-Abasto-Origen: whatsapp`. CORS acepta el Panel (5170). e2e: `e2e/pruebas/conecta.spec.ts`.
+
+- **Conectar un e-commerce (CU-10, 06/11):** contrato en `contracts/openapi/conecta.yaml`; e2e `e2e/pruebas/tienda-en-linea.spec.ts`.
+  - **Llaves de API** (`aplicacion/llaves-de-api.ts`): `abk_<id>_<secreto>`. Cada una es un cliente de Keycloak (`llave-<id>`) con `org_id` fijo, audiencia `abasto-api` y rol `tienda` (`infraestructura/keycloak/cuentas.keycloak.ts`, los crea la cuenta `conecta-integraciones` de `infra/keycloak/al-dia.mjs`). Pedidos, Catálogo y Cobros no cambian: ven a la misma tienda. Conecta guarda solo la huella. El guard busca la llave en cada llamada (revocarla corta al momento) y deja en `peticion.token` el token de verdad. Una llave no puede manejar otras llaves.
+  - **Webhooks** (`aplicacion/webhooks.ts`): cola durable `conecta.webhooks` (`pedido.*`, `cobro.*`). Cada aviso se anota antes de intentarlo (id determinístico: repetir el evento no crea otro) y un revisor reintenta cada 30 s lo que toca (1, 5, 30, 120 y 720 min; después queda `fallida` y se reenvía a mano). Firma `sha256=` HMAC de `fecha.cuerpo`. Solo https y direcciones públicas, revisado también al enviar y sin seguir redirecciones (`entregador.http.ts`). `WEBHOOKS_PERMITIR_LOCAL=si` solo en desarrollo: `docker-compose.yml` lo trae prendido, **en producción hay que apagarlo**.
+  - **MCP de compras** (`interfaz/mcp/servidor-mcp.ts`, `POST /mcp`): `abasto-compras` con ver_mayoristas, buscar_productos, crear_pedido, ver_pedido y mis_pedidos. Pasa por los mismos caminos que la API; en la bitácora sale con origen `mcp`.
+  - **Idempotencia por empresa:** el registro guarda `<empresa>|<clave>` (06/11): la clave de una tienda nunca choca ni le responde a otra. Pedidos rechaza con `CLAVE_EN_USO` una clave que ya usó otra tienda.
+  - Tablas: particiones `LLAVES`, `WEBHOOKS` y `ENTREGAS` en `conecta` (`integraciones.dynamodb.ts`). `crear-tablas.mjs` activa el TTL de `venceEn` (solo borra en AWS; DynamoDB Local no).
 
 Probar: `pnpm --filter @abasto/conecta test`; las de integración con `test:e2e` (necesitan `pnpm infra`).

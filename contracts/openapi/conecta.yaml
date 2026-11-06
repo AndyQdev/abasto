@@ -3,8 +3,10 @@ info:
   title: Conecta · la puerta de afuera de Abasto
   version: 1.0.0
   description: |
-    Sincronización de las bandejas offline (Mercado y Campo) y API para e-commerce y n8n.
+    Sincronización de la bandeja sin señal de la app, API para e-commerce y n8n, y MCP de compras.
     Toda escritura lleva una clave de idempotencia: repetirla devuelve la misma respuesta y nunca registra dos veces.
+    Se entra con el token de Keycloak de la sesión o con una llave de API (`Authorization: Bearer abk_…`) que la tienda
+    saca en la app. Una llave actúa como su tienda, con sus precios y sus pedidos, y no puede manejar otras llaves.
 servers:
   - url: http://localhost:8084
 security:
@@ -55,6 +57,167 @@ paths:
                   resultados: { type: array, items: { $ref: '#/components/schemas/Resultado' } }
         '400': { description: El lote no cumple el esquema }
         '401': { description: Falta la sesión o venció }
+  /v1/llaves:
+    get:
+      summary: (CU-10) Las llaves de la tienda de la sesión, sin el secreto. No se puede con una llave
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Llave' } }
+        '403': { description: No es una tienda o entró con una llave }
+    post:
+      summary: (CU-10) Saca una llave. El texto completo se muestra solo esta vez. Máximo 5
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nombre]
+              properties:
+                nombre: { type: string, minLength: 2, maxLength: 60 }
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  llave: { type: string, description: 'abk_<id>_<secreto>' }
+                  datos: { $ref: '#/components/schemas/Llave' }
+        '400': { description: Nombre inválido }
+        '409': { description: Ya tiene el máximo de llaves }
+  /v1/llaves/{id}:
+    delete:
+      summary: (CU-10) Revoca la llave. Deja de servir al momento
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '204': { description: Revocada }
+        '404': { description: No existe o no es de esta tienda }
+  /v1/webhooks:
+    get:
+      summary: (CU-10) A dónde se le avisa a la tienda
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Webhook' } }
+    post:
+      summary: (CU-10) Registra una dirección. El secreto para comprobar la firma se muestra solo esta vez. Máximo 3
+      description: >-
+        Conecta manda un POST por cada evento pedido.* o cobro.* de la tienda, con el cuerpo
+        `{id, tipo, ocurridoEn, datos}` y las cabeceras X-Abasto-Evento, X-Abasto-Entrega (descarta repetidos con ella),
+        X-Abasto-Fecha y X-Abasto-Firma (`sha256=` + HMAC-SHA256 de `fecha.cuerpo` con el secreto). Cualquier 2xx es
+        entregado; si no, reintenta a los 1, 5, 30, 120 y 720 minutos. Solo https y direcciones públicas.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url]
+              properties:
+                url: { type: string, format: uri }
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  secreto: { type: string }
+                  datos: { $ref: '#/components/schemas/Webhook' }
+        '400': { description: Dirección que no se puede usar }
+        '409': { description: Ya tiene el máximo de direcciones }
+  /v1/webhooks/{id}:
+    delete:
+      summary: (CU-10) Borra la dirección
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '204': { description: Borrada }
+        '404': { description: No existe o no es de esta tienda }
+  /v1/webhooks/{id}/probar:
+    post:
+      summary: (CU-10) Manda un aviso webhook.prueba y responde al momento cómo quedó
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Entrega' }
+  /v1/entregas:
+    get:
+      summary: (CU-10) Los últimos 30 avisos de la tienda y cómo quedó cada uno
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Entrega' } }
+  /v1/entregas/{id}/reenviar:
+    post:
+      summary: (CU-10) Vuelve a mandar un aviso que no llegó
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Entrega' }
+        '404': { description: No existe o no es de esta tienda }
+        '409': { description: Ya llegó }
+  /v1/admin/integraciones:
+    get:
+      summary: (CU-10, solo admin) Todas las llaves y direcciones, sin secretos, y los últimos 100 avisos
+      responses:
+        '200': { description: 'llaves, webhooks y entregas' }
+        '403': { description: No es del equipo de Abasto }
+  /v1/admin/entregas/{id}/reenviar:
+    post:
+      summary: (CU-10, solo admin) Reenvía cualquier aviso que no llegó
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Entrega' }
+  /v1/mayoristas:
+    get:
+      summary: (CU-10) A quién le puede comprar esta tienda
+      parameters:
+        - { name: busqueda, in: query, required: false, schema: { type: string } }
+      responses:
+        '200': { description: 'Lista con id, nombre, ciudad, relacion y deLaCasa' }
+  /v1/productos:
+    get:
+      summary: (CU-10) El catálogo con los precios de esta tienda
+      parameters:
+        - { name: busqueda, in: query, required: false, schema: { type: string } }
+        - { name: mayoristaId, in: query, required: false, schema: { type: string } }
+      responses:
+        '200': { description: 'Productos con id, nombre, foto, stock, precioVisible, precioPorConfirmar y escalas' }
+  /v1/pedidos/{id}:
+    get:
+      summary: (CU-10) Un pedido de esta tienda con su estado, total, líneas y QR
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: El pedido }
+        '404': { description: No existe o no es de esta tienda }
+  /mcp:
+    post:
+      summary: (CU-10) MCP de compras (Streamable HTTP, sin sesión)
+      description: >-
+        Servidor `abasto-compras` con ver_mayoristas, buscar_productos, crear_pedido (con clave de idempotencia),
+        ver_pedido y mis_pedidos. Se entra con una llave de API o el token de una tienda.
+      responses:
+        '200': { description: Respuesta JSON-RPC }
+        '401': { description: Sin credencial o inválida }
+        '403': { description: La cuenta no es de una tienda }
   /v1/bitacora:
     get:
       summary: >-
@@ -101,7 +264,7 @@ paths:
           in: header
           required: false
           description: (03/11, aditivo) De dónde viene, para la bitácora del mayorista. Sin cabecera, «api».
-          schema: { type: string, enum: [whatsapp, tienda-en-linea, api] }
+          schema: { type: string, enum: [whatsapp, tienda-en-linea, api, mcp] }
       requestBody:
         required: true
         content:
@@ -120,6 +283,33 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    Llave:
+      type: object
+      properties:
+        id: { type: string }
+        nombre: { type: string }
+        termina: { type: string, description: Los últimos 4 caracteres, para reconocerla }
+        creadaEn: { type: string, format: date-time }
+        ultimoUsoEn: { type: string, format: date-time, nullable: true }
+    Webhook:
+      type: object
+      properties:
+        id: { type: string }
+        url: { type: string, format: uri }
+        creadoEn: { type: string, format: date-time }
+    Entrega:
+      type: object
+      properties:
+        id: { type: string }
+        webhookId: { type: string }
+        url: { type: string }
+        tipo: { type: string }
+        estado: { type: string, enum: [pendiente, entregada, fallida] }
+        intentos: { type: integer }
+        proximoEn: { type: string, format: date-time, nullable: true }
+        ultimoError: { type: string, nullable: true }
+        creadaEn: { type: string, format: date-time }
+        entregadaEn: { type: string, format: date-time, nullable: true }
     Operacion:
       type: object
       required: [clave, tipo, datos, creadaEn]

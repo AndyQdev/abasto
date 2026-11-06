@@ -4,7 +4,7 @@ import { GraphQL } from '../graphql';
 import { Icono } from '../icono';
 import { avisar, pedirNavegar } from '../sesion';
 
-export type Origen = 'whatsapp' | 'tienda-en-linea' | 'app-sin-senal' | 'api';
+export type Origen = 'whatsapp' | 'tienda-en-linea' | 'app-sin-senal' | 'api' | 'mcp';
 export type EstadoDeEntrada = 'aplicada' | 'repetida' | 'conflicto' | 'rechazada';
 
 export interface EntradaDeBitacora {
@@ -29,6 +29,7 @@ export const ORIGEN: Record<Origen, { texto: string; icono: string }> = {
   'tienda-en-linea': { texto: 'Tienda en línea', icono: 'tienda' },
   'app-sin-senal': { texto: 'App sin señal', icono: 'celular' },
   api: { texto: 'API', icono: 'enchufe' },
+  mcp: { texto: 'Agente (MCP)', icono: 'enchufe' },
 };
 
 /** Qué le pasó a lo que entró, dicho para el mayorista. */
@@ -74,7 +75,7 @@ export function filtrarEntradas(entradas: EntradaDeBitacora[], filtro: Filtro): 
 export function ejemploDePedido(urlConecta: string, mayoristaId: string): string {
   return [
     `curl -X POST ${urlConecta}/v1/pedidos \\`,
-    `  -H "Authorization: Bearer <token de la tienda>" \\`,
+    `  -H "Authorization: Bearer <la llave que la tienda saca en su app>" \\`,
     `  -H "Idempotency-Key: <un UUID por pedido>" \\`,
     `  -H "X-Abasto-Origen: tienda-en-linea" \\`,
     `  -H "Content-Type: application/json" \\`,
@@ -226,6 +227,7 @@ export class VistaConecta implements OnInit {
     { valor: 'tienda-en-linea', texto: 'Tienda en línea' },
     { valor: 'app-sin-senal', texto: 'App sin señal' },
     { valor: 'api', texto: 'API' },
+    { valor: 'mcp', texto: 'Agente' },
   ];
 
   readonly visibles = computed(() => filtrarEntradas(this.bitacora()?.entradas ?? [], this.filtro()));
