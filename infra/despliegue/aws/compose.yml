@@ -1,4 +1,4 @@
-# Abasto en AWS (EC2 t3.medium, Ubuntu 24.04, región sa-east-1 São Paulo).
+# Abasto en AWS (EC2 m7i-flex.large, Ubuntu 24.04, región us-east-2 Ohio).
 # Aquí vive la puerta de entrada: Keycloak (sesión), Apollo Router, Conecta + DynamoDB de AWS, n8n y las webs.
 # Pedidos, Cobros, Asistente, Postgres y RabbitMQ están en Azure; Catálogo y Mongo en Google Cloud.
 #
@@ -104,7 +104,7 @@ services:
     environment:
       # "aws": DynamoDB de verdad; la región y las credenciales salen del rol IAM de la máquina
       DYNAMODB_URL: aws
-      AWS_REGION: ${AWS_REGION:-sa-east-1}
+      AWS_REGION: ${AWS_REGION:-us-east-2}
       ROUTER_URL: http://router:4000/
       KEYCLOAK_ISSUER: https://auth.${DOMINIO}/realms/abasto
       KEYCLOAK_JWKS_URL: http://keycloak:8080/realms/abasto/protocol/openid-connect/certs

@@ -1,6 +1,6 @@
 // Crea las tablas de DynamoDB si no existen. Es idempotente: se puede correr las veces que haga falta.
 // `pnpm tablas` (también lo corren `pnpm infra` y `pnpm todo`). Con DYNAMODB_URL=aws crea en AWS.
-import { CreateTableCommand, DescribeTimeToLiveCommand, DynamoDBClient, ListTablesCommand, UpdateTimeToLiveCommand } from '@aws-sdk/client-dynamodb';
+import { CreateTableCommand, DescribeTimeToLiveCommand, DynamoDBClient, ListTablesCommand, UpdateTimeToLiveCommand, waitUntilTableExists } from '@aws-sdk/client-dynamodb';
 
 const url = process.env.DYNAMODB_URL ?? 'http://localhost:8800';
 const db = new DynamoDBClient(
@@ -43,6 +43,8 @@ for (const { TableName, llaves } of tablas) {
       KeySchema: llaves.map(([AttributeName, KeyType]) => ({ AttributeName, KeyType })),
     }),
   );
+  // En AWS la tabla tarda unos segundos en quedar ACTIVE (en DynamoDB Local es inmediata)
+  await waitUntilTableExists({ client: db, maxWaitTime: 120 }, { TableName });
   console.log(`DynamoDB: ${TableName} creada`);
 }
 

@@ -79,11 +79,11 @@ La CI (`.github/workflows/ci.yml`) corre cada stack solo si cambió su carpeta, 
 
 ## Despliegue en la nube
 
-Tres nubes, región São Paulo en las tres. Cada servicio queda en la misma nube que su base de datos, y cada módulo es su propio contenedor: se actualiza uno sin reiniciar los demás.
+Tres nubes, todas en el este de EE. UU. (AWS Ohio `us-east-2`, Azure East US 2, Google `us-east4`): entre ellas hay 10-15 ms. Cada servicio queda en la misma nube que su base de datos, y cada módulo es su propio contenedor: se actualiza uno sin reiniciar los demás.
 
 | Nube | Qué corre | Carpeta |
 |---|---|---|
-| AWS (EC2 `t3.medium`) | Keycloak, Apollo Router, Conecta + DynamoDB, n8n, webs (Shell, Gestión, Inteligencia, Superadmin) | `infra/despliegue/aws` |
+| AWS (EC2 `m7i-flex.large`, 8 GB) | Keycloak, Apollo Router, Conecta + DynamoDB, n8n, webs (Shell, Gestión, Inteligencia, Superadmin) | `infra/despliegue/aws` |
 | Azure | Pedidos, Cobros, Asistente, Postgres, RabbitMQ | pendiente |
 | Google Cloud | Catálogo + Mongo | pendiente |
 
@@ -91,12 +91,13 @@ Cada máquina tiene un Caddy al frente que saca HTTPS solo. El dominio es la IP 
 
 **AWS, una vez:**
 
-1. EC2 Ubuntu 24.04 `t3.medium`, disco de 20 GB, IP elástica. Grupo de seguridad: 22 (solo tu IP), 80 y 443.
+1. EC2 Ubuntu 24.04 `m7i-flex.large` (entra en el plan con créditos), disco de 30 GB, IP elástica. Grupo de seguridad: 22 (solo tu IP), 80 y 443.
 2. Rol IAM de la máquina con permiso sobre DynamoDB (`AmazonDynamoDBFullAccess` para la demo): Conecta lo usa sin llaves.
 3. En la máquina:
    ```bash
    curl -fsSL https://get.docker.com | sh && sudo usermod -aG docker $USER   # salir y volver a entrar
-   git clone https://github.com/AndyQdev/abasto.git && cd abasto/infra/despliegue/aws
+   # el repo es privado: el código se manda desde tu computadora (abajo, «Actualizar»)
+   cd abasto/infra/despliegue/aws
    cp .env.example .env && nano .env      # DOMINIO y claves nuevas (openssl rand -hex 24)
    docker compose up -d --build
    sh preparar.sh                         # tablas de DynamoDB, Keycloak al día y flujos de n8n
@@ -110,7 +111,8 @@ Cada máquina tiene un Caddy al frente que saca HTTPS solo. El dominio es la IP 
 
 **Actualizar un solo módulo:**
 
-- Un servicio: `git pull` en la máquina y `docker compose up -d --build conecta`.
+- El código (desde tu computadora, sin dejar credenciales en la máquina): `git archive HEAD | ssh -i ~/.ssh/abasto-aws.pem ubuntu@IP "tar -x -C abasto"`.
+- Un servicio: después de mandar el código, `docker compose up -d --build conecta` en la máquina.
 - Un microfrontend: `node infra/despliegue/construir-webs.mjs inteligencia` y `scp -r infra/despliegue/aws/webs/inteligencia ubuntu@IP:abasto/infra/despliegue/aws/webs/`. El Shell no se toca: lee `remotos.json` al abrir.
 
 **La app móvil** no se despliega en una nube: se compila con las direcciones públicas (`EXPO_PUBLIC_KEYCLOAK_URL=https://auth.DOMINIO/realms/abasto`, `EXPO_PUBLIC_ROUTER_URL=https://api.DOMINIO/`, `EXPO_PUBLIC_CONECTA_URL=https://conecta.DOMINIO`, `EXPO_PUBLIC_PANEL_URL=https://panel.DOMINIO/`) y se instala el APK.
