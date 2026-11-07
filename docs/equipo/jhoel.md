@@ -1,9 +1,9 @@
 # Jhoel · estado
 
-Actualizado: 03/11/2026 · en main (reparto nuevo: toda la IA)
+Actualizado: 07/11/2026 · en main (reparto nuevo: toda la IA)
 
 ## Estoy en
-IA local del teléfono (asistente de compra con modelos de lenguaje según el teléfono). Plan y arquitectura en `docs/ia-local.md`.
+Despliegue en tres nubes (lo pidió el ingeniero): primero AWS, después Azure y al final Google Cloud. Plan y pasos en «Despliegue en la nube» del README.
 
 ## Terminé
 - Reportes sin llave (07/11, lo pidió Andrés): el modelo simulado ya no responde las ventas del mes a cualquier pregunta. Si no la reconoce dice «No entendí la pregunta» con 5 ejemplos (HTTP 422), y reconoce más: riesgo de mora, sin stock, demanda prevista, lo más vendido, pedidos rechazados, segmentos y pedidos.
@@ -24,6 +24,12 @@ IA local del teléfono (asistente de compra con modelos de lenguaje según el te
 - `contracts/openapi/asistente.yaml`: `/v1/agentes/monitorear` y `/v1/tableros` (solo agregué; nada cambió de lo que existía).
 
 ## Necesito del otro
+- Andrés (aviso, 07/11, despliegue en AWS): es infra tuya, te cuento qué cambié. Nuevo `infra/despliegue/aws/` (compose, Caddy con HTTPS por sslip.io, router.yaml con las webs públicas, `preparar.sh`) y `infra/despliegue/construir-webs.mjs`. En lo que ya existía:
+  - `packages/sesion`: el emisor de Keycloak y las direcciones de las apps salen de `VITE_KEYCLOAK_URL`, `VITE_PANEL_URL` y `VITE_SUPERADMIN_URL`; sin ellas, las de siempre.
+  - Superadmin `servicios.ts`: la salud de cada servicio sale de `VITE_SALUD_<SERVICIO>`.
+  - Shell: `sw.ts` reconoce a Keycloak por su dirección (antes por el puerto 8180, que en la nube no existe y terminaba guardando el login en caché) y `remotos.json` quedó fuera del precache (`vite.config.ts`): así un remoto nuevo se ve sin reconstruir el Shell.
+  - `infra/keycloak/al-dia.mjs`: paso 7, con `PANEL_URL`, `GESTION_URL`, `INTELIGENCIA_URL` y `SUPERADMIN_URL` agrega esas direcciones a los clientes; la clave de admin sale de `KEYCLOAK_ADMIN_CLAVE`. En local no cambia nada.
+  - README: sección «Despliegue en la nube».
 - Andrés (aviso, 03/11, n8n de los agentes): en `package.json` de la raíz, `pnpm n8n` ahora también activa los flujos (`update:workflow --all --active=true` y reinicia n8n; antes quedaban importados pero inactivos, también el de WhatsApp). En `docker-compose.yml`: `ROUTER_URL` en n8n y `N8N_WEBHOOK_ACCIONES` del Asistente con valor por defecto `http://n8n:5678/webhook/acciones-agentes`. Nada de tu flujo de WhatsApp cambió.
 - Andrés (aviso, 03/11): el asistente de compra lee tus `PLANTILLAS` de `packages/comercio` como recetas (solo lectura, no cambié nada tuyo). Si cambias `clave`, `nombre`, `unidad` o los `codigos` de un insumo, corre `npx jest src/ia` en `apps/app`. En `App.tsx` (merge del 02/11) quedaron tu versión, `ProveedorDeIaLocal` y las pantallas `Asistente` e `IaLocal`; la IA se carga al usarla con `src/ia/perezoso.ts` (respeta tu arreglo de Expo Go).
 - Andrés (aviso, 01/11): para la IA local toqué lo mínimo de la app: `App.tsx` (`ProveedorDeIaLocal` y las pantallas `Asistente` e `IaLocal`), `src/navegacion.ts` (las dos rutas), `Buscar.tsx` (botón ✨ «Pídelo con tus palabras» junto a la cámara), `Cuenta.tsx` (tarjeta «IA en tu teléfono»), `app.json` (plugin `llama.rn`) y `package.json` (`llama.rn` 0.13.0-rc.7, `expo-device`, `expo-file-system`). **Nativo:** `npm install` y `npx expo run:android` una vez. En Windows, el CMake de llama.rn pide Python en el PATH (sirve el de `uv`: `uv python find 3.12 --system`) y `npm install` necesita el `tar` de Windows (`C:\Windows\System32` primero en el PATH).

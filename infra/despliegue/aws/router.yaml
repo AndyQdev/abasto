@@ -1,0 +1,39 @@
+# Apollo Router en AWS. Igual que infra/router/router.yaml, pero con las webs públicas y sin Jaeger.
+supergraph:
+  listen: 0.0.0.0:4000
+  introspection: true
+
+sandbox:
+  enabled: true
+homepage:
+  enabled: false
+
+health_check:
+  listen: 0.0.0.0:8088
+  enabled: true
+
+headers:
+  all:
+    request:
+      - propagate:
+          named: authorization
+      - propagate:
+          named: idempotency-key
+
+cors:
+  allow_credentials: true
+  policies:
+    - origins:
+        - https://panel.${env.DOMINIO}
+        - https://gestion.${env.DOMINIO}
+        - https://inteligencia.${env.DOMINIO}
+        - https://superadmin.${env.DOMINIO}
+      allow_headers: [authorization, content-type, idempotency-key]
+
+override_subgraph_url:
+  pedidos: ${env.PEDIDOS_URL}
+  catalogo: ${env.CATALOGO_URL}
+  cobros: ${env.COBROS_URL}
+
+include_subgraph_errors:
+  all: true

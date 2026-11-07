@@ -74,3 +74,6 @@ Thumbs.db
 
 # Imágenes crudas de Gemini (las listas van en apps/app/assets/ilustraciones)
 .ilustraciones-crudas/
+
+# Despliegue: las webs construidas para la nube (se arman con infra/despliegue/construir-webs.mjs)
+infra/despliegue/*/webs/

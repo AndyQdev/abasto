@@ -10,6 +10,8 @@
  * 4. cobros-servicio: cuenta de servicio con la que Cobros le pide a Catálogo el nombre de los productos de un pedido
  *    entregado (para «Mi negocio» del cliente). Solo client credentials y audiencia abasto-api; sin roles.
  * 5. conecta-integraciones: cuenta de servicio con la que Conecta crea y borra el cliente de cada llave de API (CU-10).
+ * 7. En la nube (infra/despliegue): con PANEL_URL, GESTION_URL, INTELIGENCIA_URL y SUPERADMIN_URL, el Panel y el Superadmin
+ *    aceptan volver a sus direcciones públicas. KEYCLOAK_ADMIN y KEYCLOAK_ADMIN_CLAVE cambian la cuenta de administrador.
  */
 const BASE = process.env.KEYCLOAK_URL ?? 'http://localhost:8180';
 const REALM = 'abasto';
@@ -27,7 +29,7 @@ const { access_token: token } = await json(
   await fetch(`${BASE}/realms/master/protocol/openid-connect/token`, {
     method: 'POST',
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ grant_type: 'password', client_id: 'admin-cli', username: 'admin', password: 'admin' }),
+    body: new URLSearchParams({ grant_type: 'password', client_id: 'admin-cli', username: process.env.KEYCLOAK_ADMIN ?? 'admin', password: process.env.KEYCLOAK_ADMIN_CLAVE ?? 'admin' }),
   }),
 );
 const admin = (ruta, opciones = {}) =>
@@ -152,6 +154,37 @@ const faltanConecta = necesitaConecta.filter((r) => !tieneConecta.some((t) => t.
 if (faltanConecta.length) {
   await json(await admin(`/users/${cuentaDeConecta.id}/role-mappings/clients/${gestion.id}`, { method: 'POST', body: JSON.stringify(faltanConecta) }));
   console.log(`Keycloak: conecta-integraciones puede ${faltanConecta.map((r) => r.name).join(', ')}`);
+}
+
+// 7. Direcciones públicas de las webs (solo en la nube; en desarrollo no hay variables y no cambia nada)
+const sinBarra = (u) => u.replace(/\/+$/, '');
+const publicas = [
+  ['abasto-panel', process.env.PANEL_URL, [process.env.GESTION_URL, process.env.INTELIGENCIA_URL]],
+  ['abasto-superadmin', process.env.SUPERADMIN_URL, []],
+];
+for (const [clientId, url, extras] of publicas) {
+  if (!url) continue;
+  const c = await cliente(clientId);
+  const origen = sinBarra(url);
+  const redirige = `${origen}/*`;
+  const origenes = [origen, ...extras.filter(Boolean).map(sinBarra)];
+  const salida = (c.attributes?.['post.logout.redirect.uris'] ?? '').split('##').filter(Boolean);
+  const faltaAlgo =
+    !c.redirectUris.includes(redirige) || origenes.some((o) => !c.webOrigins.includes(o)) || !salida.includes(redirige);
+  if (!faltaAlgo) continue;
+  await json(
+    await admin(`/clients/${c.id}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        ...c,
+        rootUrl: origen,
+        redirectUris: [...new Set([...c.redirectUris, redirige])],
+        webOrigins: [...new Set([...c.webOrigins, ...origenes])],
+        attributes: { ...c.attributes, 'post.logout.redirect.uris': [...new Set([...salida, redirige])].join('##') },
+      }),
+    }),
+  );
+  console.log(`Keycloak: ${clientId} acepta ${origen}`);
 }
 
 console.log('Keycloak al día');

@@ -1,0 +1,34 @@
+# Entrada HTTPS de AWS. sslip.io convierte la IP en dominio (18-231-5-10.sslip.io → 18.231.5.10),
+# así Let's Encrypt da certificados sin comprar un dominio. DOMINIO sale del .env.
+auth.{$DOMINIO} {
+	reverse_proxy keycloak:8080
+}
+
+api.{$DOMINIO} {
+	reverse_proxy router:4000
+}
+
+conecta.{$DOMINIO} {
+	# También el WebSocket de tiempo real (/v1/tiempo-real): Caddy lo pasa solo
+	reverse_proxy conecta:8084
+}
+
+n8n.{$DOMINIO} {
+	reverse_proxy n8n:5678
+}
+
+panel.{$DOMINIO} {
+	reverse_proxy web-shell:80
+}
+
+gestion.{$DOMINIO} {
+	reverse_proxy web-gestion:80
+}
+
+inteligencia.{$DOMINIO} {
+	reverse_proxy web-inteligencia:80
+}
+
+superadmin.{$DOMINIO} {
+	reverse_proxy web-superadmin:80
+}

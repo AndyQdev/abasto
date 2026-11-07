@@ -27,7 +27,10 @@ export interface OpcionesDeSesion {
   emisor?: string;
 }
 
-const EMISOR = 'http://localhost:8180/realms/abasto';
+/** En producción las URL llegan al construir con Vite (VITE_*); sin ellas quedan las de desarrollo. */
+const ENV = (import.meta as { env?: Record<string, string | undefined> }).env ?? {};
+
+const EMISOR = ENV.VITE_KEYCLOAK_URL ?? 'http://localhost:8180/realms/abasto';
 
 function aUsuario(u: User): Usuario {
   const p = u.profile as Record<string, unknown>;
@@ -120,8 +123,8 @@ export function crearSesion({ clientId, emisor = EMISOR }: OpcionesDeSesion): Se
 
 /** Direcciones de las apps, para pasar de una a otra con la misma sesión. */
 export const APPS = {
-  panel: 'http://localhost:5170/',
-  superadmin: 'http://localhost:5174/',
+  panel: ENV.VITE_PANEL_URL ?? 'http://localhost:5170/',
+  superadmin: ENV.VITE_SUPERADMIN_URL ?? 'http://localhost:5174/',
 } as const;
 
 export type AppWeb = keyof typeof APPS;

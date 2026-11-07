@@ -77,6 +77,44 @@ pnpm e2e            # Playwright contra el sistema levantado con pnpm todo
 
 La CI (`.github/workflows/ci.yml`) corre cada stack solo si cambió su carpeta, y la punta a punta en cada push a main (los dos trabajamos directo en main).
 
+## Despliegue en la nube
+
+Tres nubes, región São Paulo en las tres. Cada servicio queda en la misma nube que su base de datos, y cada módulo es su propio contenedor: se actualiza uno sin reiniciar los demás.
+
+| Nube | Qué corre | Carpeta |
+|---|---|---|
+| AWS (EC2 `t3.medium`) | Keycloak, Apollo Router, Conecta + DynamoDB, n8n, webs (Shell, Gestión, Inteligencia, Superadmin) | `infra/despliegue/aws` |
+| Azure | Pedidos, Cobros, Asistente, Postgres, RabbitMQ | pendiente |
+| Google Cloud | Catálogo + Mongo | pendiente |
+
+Cada máquina tiene un Caddy al frente que saca HTTPS solo. El dominio es la IP con guiones + `.sslip.io` (`18.231.5.10` → `auth.18-231-5-10.sslip.io`).
+
+**AWS, una vez:**
+
+1. EC2 Ubuntu 24.04 `t3.medium`, disco de 20 GB, IP elástica. Grupo de seguridad: 22 (solo tu IP), 80 y 443.
+2. Rol IAM de la máquina con permiso sobre DynamoDB (`AmazonDynamoDBFullAccess` para la demo): Conecta lo usa sin llaves.
+3. En la máquina:
+   ```bash
+   curl -fsSL https://get.docker.com | sh && sudo usermod -aG docker $USER   # salir y volver a entrar
+   git clone https://github.com/AndyQdev/abasto.git && cd abasto/infra/despliegue/aws
+   cp .env.example .env && nano .env      # DOMINIO y claves nuevas (openssl rand -hex 24)
+   docker compose up -d --build
+   sh preparar.sh                         # tablas de DynamoDB, Keycloak al día y flujos de n8n
+   ```
+4. En tu computadora, las webs con las direcciones públicas (copia el mismo `.env` en `infra/despliegue/aws/.env`):
+   ```bash
+   node infra/despliegue/construir-webs.mjs
+   scp -r infra/despliegue/aws/webs ubuntu@IP:abasto/infra/despliegue/aws/
+   ```
+5. Abre `https://n8n.DOMINIO` enseguida y crea la cuenta de dueño: hasta entonces cualquiera puede crearla.
+
+**Actualizar un solo módulo:**
+
+- Un servicio: `git pull` en la máquina y `docker compose up -d --build conecta`.
+- Un microfrontend: `node infra/despliegue/construir-webs.mjs inteligencia` y `scp -r infra/despliegue/aws/webs/inteligencia ubuntu@IP:abasto/infra/despliegue/aws/webs/`. El Shell no se toca: lee `remotos.json` al abrir.
+
+**La app móvil** no se despliega en una nube: se compila con las direcciones públicas (`EXPO_PUBLIC_KEYCLOAK_URL=https://auth.DOMINIO/realms/abasto`, `EXPO_PUBLIC_ROUTER_URL=https://api.DOMINIO/`, `EXPO_PUBLIC_CONECTA_URL=https://conecta.DOMINIO`, `EXPO_PUBLIC_PANEL_URL=https://panel.DOMINIO/`) y se instala el APK.
+
 ## Para seguir
 
 - `CLAUDE.md`: decisiones, dueños y reglas. Cada servicio y app tiene el suyo.

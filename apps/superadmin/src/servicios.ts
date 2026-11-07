@@ -9,12 +9,14 @@ export const URLS = {
 };
 
 /** Los servicios que vigila la pantalla Sistema. Cada uno responde GET /salud sin sesión. */
+// En producción cada servicio vive en su nube: VITE_SALUD_<SERVICIO> trae su dirección pública
+const env = import.meta.env;
 export const SERVICIOS = [
-  { id: 'pedidos', nombre: 'Pedidos', tecnologia: 'Spring Boot', url: 'http://localhost:8081/salud' },
-  { id: 'catalogo', nombre: 'Catálogo', tecnologia: 'Laravel', url: 'http://localhost:8082/salud' },
-  { id: 'cobros', nombre: 'Cobros', tecnologia: 'NestJS', url: 'http://localhost:8083/salud' },
-  { id: 'conecta', nombre: 'Conecta', tecnologia: 'NestJS', url: 'http://localhost:8084/salud' },
-  { id: 'asistente', nombre: 'Asistente', tecnologia: 'NestJS', url: 'http://localhost:8085/salud' },
+  { id: 'pedidos', nombre: 'Pedidos', tecnologia: 'Spring Boot', url: `${env.VITE_SALUD_PEDIDOS ?? 'http://localhost:8081'}/salud` },
+  { id: 'catalogo', nombre: 'Catálogo', tecnologia: 'Laravel', url: `${env.VITE_SALUD_CATALOGO ?? 'http://localhost:8082'}/salud` },
+  { id: 'cobros', nombre: 'Cobros', tecnologia: 'NestJS', url: `${env.VITE_SALUD_COBROS ?? 'http://localhost:8083'}/salud` },
+  { id: 'conecta', nombre: 'Conecta', tecnologia: 'NestJS', url: `${env.VITE_SALUD_CONECTA ?? 'http://localhost:8084'}/salud` },
+  { id: 'asistente', nombre: 'Asistente', tecnologia: 'NestJS', url: `${env.VITE_SALUD_ASISTENTE ?? 'http://localhost:8085'}/salud` },
 ] as const;
 
 /** Una consulta al Apollo Router con la sesión. Falla si GraphQL devuelve errores sin datos. */

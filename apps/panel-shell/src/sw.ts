@@ -47,7 +47,8 @@ const CACHE_GRAPHQL = 'abasto-graphql';
 const bandeja = new Bandeja(new AlmacenIndexedDB(BANDEJA_DEL_PANEL), async () => []);
 
 // Keycloak nunca se guarda: la sesión siempre se valida contra el servidor
-registerRoute(({ url }) => url.port === '8180', new NetworkOnly());
+const keycloak = new URL(import.meta.env.VITE_KEYCLOAK_URL ?? 'http://localhost:8180/realms/abasto');
+registerRoute(({ url }) => url.origin === keycloak.origin, new NetworkOnly());
 registerRoute(({ url }) => url.pathname === '/remotos.json', new NetworkFirst({ cacheName: 'abasto-remotos', networkTimeoutSeconds: 3 }));
 // IA local del navegador: la librería con versión fija no cambia nunca, se guarda una vez
 registerRoute(({ url, request }) => request.method === 'GET' && esLibreriaConVersion(url), new CacheFirst({ cacheName: CACHE_IA_LOCAL }));

@@ -40,7 +40,9 @@ export default defineConfig({
       filename: 'sw.ts',
       registerType: 'autoUpdate',
       injectRegister: false,
-      injectManifest: { globPatterns: ['**/*.{js,css,html,svg,json,png}'] },
+      // remotos.json queda fuera del precache: lo atiende su ruta NetworkFirst (sw.ts), así cambiar un remoto
+      // en la nube no obliga a reconstruir el Shell
+      injectManifest: { globPatterns: ['**/*.{js,css,html,svg,json,png}'], globIgnores: ['remotos.json'] },
       manifest: {
         name: 'Abasto · Panel Mayorista',
         short_name: 'Abasto Panel',
