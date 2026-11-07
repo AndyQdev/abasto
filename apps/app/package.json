@@ -59,7 +59,7 @@
   },
   "scripts": {
     "start": "expo start --dev-client --port 8090",
-    "android": "expo run:android",
+    "android": "expo run:android --port 8090",
     "iphone": "node scripts/iphone.mjs",
     "test": "jest",
     "tipos": "tsc --noEmit",
