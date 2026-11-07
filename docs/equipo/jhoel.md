@@ -3,9 +3,38 @@
 Actualizado: 07/11/2026 · en main (reparto nuevo: toda la IA)
 
 ## Estoy en
-Despliegue en tres nubes (lo pidió el ingeniero): primero AWS, después Azure y al final Google Cloud. Plan y pasos en «Despliegue en la nube» del README.
+Despliegue en tres nubes (lo pidió el ingeniero). **AWS ya está arriba**; sigue Azure (Pedidos, Cobros, Asistente, Postgres y RabbitMQ) y al final Google Cloud (Catálogo y Mongo). Plan y pasos en «Despliegue en la nube» del README.
 
 ## Terminé
+- **AWS arriba (07/11). Andrés, esto es lo que se hizo:**
+  - **Qué corre ahí:** Keycloak, Apollo Router, Conecta con DynamoDB de AWS, n8n y las cuatro webs. Cada módulo es su propio contenedor, con Caddy al frente para el HTTPS. Los archivos están en `infra/despliegue/aws/`.
+  - **Dónde:** cuenta con créditos de Jhoel, región **us-east-2 (Ohio)**, porque la cuenta no permite otra. Es una EC2 `m7i-flex.large` (8 GB) con IP fija **3.140.59.13**. Por eso Azure irá en East US 2 y Google en `us-east4`, cerca de Ohio.
+  - **Direcciones** (el dominio es la IP con sslip.io):
+
+    | Qué | Dirección |
+    |---|---|
+    | Panel | https://panel.3-140-59-13.sslip.io |
+    | Superadmin | https://superadmin.3-140-59-13.sslip.io |
+    | Keycloak | https://auth.3-140-59-13.sslip.io (consola en `/admin`) |
+    | Router | https://api.3-140-59-13.sslip.io |
+    | Conecta | https://conecta.3-140-59-13.sslip.io |
+    | n8n | https://n8n.3-140-59-13.sslip.io |
+    | Gestión e Inteligencia | `gestion.` e `inteligencia.`, se cargan dentro del Panel |
+
+  - **Usuarios:** los de prueba con su contraseña de siempre (el realm se importó igual). Lo que entra con Pedidos, Cobros o Catálogo da error hasta que estén Azure y Google.
+  - **Lo que no está en el repo y te pasa Jhoel a mano:**
+    - el `.env` de producción: claves nuevas de admin de Keycloak, su base, las tres cuentas de servicio y la cuenta de dueño de n8n;
+    - la llave SSH `abasto-aws.pem`.
+
+    El SSH (puerto 22) solo acepta la IP de Jhoel. Si vas a entrar, pásale tu IP para que la agreguemos.
+  - **Las mismas claves van en Azure y Google:** `KEYCLOAK_CUENTAS_SECRETO` y `KEYCLOAK_COBROS_SECRETO` las usan Catálogo y Cobros allá.
+  - **Cómo se actualiza:** el repo es privado, así que la máquina no tiene credenciales de GitHub y el código se manda desde tu computadora con `git archive HEAD | ssh ... "tar -x -C abasto"`.
+    - Un servicio: `docker compose up -d --build <servicio>`, y solo se reinicia ese.
+    - Un microfrontend: `node infra/despliegue/construir-webs.mjs <web>` y se sube su carpeta. El Shell no se toca porque lee `remotos.json` al abrir; esto es lo que pidió el ingeniero.
+
+    Los pasos completos están en el README.
+  - **Arreglado de paso:** `infra/dynamodb/crear-tablas.mjs` ahora espera a que cada tabla quede activa. En el DynamoDB real tarda unos segundos, y antes fallaba al configurar el vencimiento.
+  - **Costo:** unos 2,50 USD por día encendida, sobre un crédito de 100 USD.
 - Reportes sin llave (07/11, lo pidió Andrés): el modelo simulado ya no responde las ventas del mes a cualquier pregunta. Si no la reconoce dice «No entendí la pregunta» con 5 ejemplos (HTTP 422), y reconoce más: riesgo de mora, sin stock, demanda prevista, lo más vendido, pedidos rechazados, segmentos y pedidos.
 - Reportes sin señal (03/11): sin red, lo dicho por voz (Whisper en el navegador) queda en «Esperan señal» y se responde solo al volver; si ya hay un reporte guardado de esa pregunta se muestra con su fecha. Los últimos 10 reportes quedan en el equipo (por empresa) y se ven sin señal; Excel pide señal.
 - Tableros (03/11): de 4 a 9 tarjetas en Inteligencia › Tableros: quién te debe, riesgo de que te paguen tarde (el modelo de mora ahora corre en `abasto-ml-nocturno` con las cuentas reales y escribe `riesgo_mora`, migración 004), lo que más se vende, cómo te pagan y tiendas nuevas / que dejaron de comprar. El Analista y el MCP también pueden leer `riesgo_mora`.
