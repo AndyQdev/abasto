@@ -34,7 +34,7 @@ describe('Ejecutor de acciones por n8n', () => {
     const [url, init] = pedir.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe('http://n8n/webhook/acciones-agentes');
     expect(init.headers).toMatchObject({ authorization: 'Bearer token-del-mayorista', 'idempotency-key': 'p-1' });
-    expect(JSON.parse(String(init.body)).accion.tipo).toBe('pausar_producto');
+    expect(JSON.parse(init.body as string).accion.tipo).toBe('pausar_producto');
   });
 
   it('devuelve el enlace que deja n8n (el WhatsApp listo para mandar)', async () => {

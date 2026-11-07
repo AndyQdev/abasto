@@ -12,6 +12,13 @@ export interface ModeloDeLenguaje {
   generarConsulta(pregunta: string, esquema: string): Promise<ConsultaGenerada>;
 }
 
+/** El modelo no supo qué consulta arma la pregunta. Mejor decirlo que responder otra cosa. */
+export class PreguntaNoEntendida extends Error {
+  constructor(readonly ejemplos: string[]) {
+    super('No entendí la pregunta');
+  }
+}
+
 export interface ResultadoDeConsulta {
   columnas: string[];
   filas: Record<string, unknown>[];

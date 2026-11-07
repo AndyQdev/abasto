@@ -1,5 +1,6 @@
-import { ModeloSimulado } from '../../infraestructura/modelos/modelo.simulado.js';
-import type { AuditoriaDeConsultas, ConsultorDeReportes, RegistroDeAuditoria } from '../puertos.js';
+import { EJEMPLOS, ModeloSimulado } from '../../infraestructura/modelos/modelo.simulado.js';
+import { validarConsulta } from '../dominio/guardia-sql.js';
+import { PreguntaNoEntendida, type AuditoriaDeConsultas, type ConsultorDeReportes, type RegistroDeAuditoria } from '../puertos.js';
 import { ConsultaRechazada, ConsultarReportes } from './consultar-reportes.js';
 import { ResponderPregunta } from './responder-pregunta.js';
 
@@ -31,6 +32,36 @@ describe('ResponderPregunta', () => {
     const r = await responder.ejecutar(pregunta, solicitante);
     expect(r.sql).toContain('sum(saldo_centavos)');
     expect(r.grafico).toBe('barras');
+  });
+
+  it('si no reconoce la pregunta dice «no entendí» con ejemplos, y no corre ninguna consulta', async () => {
+    const { responder, ejecutadas } = preparar();
+    const error = await responder.ejecutar('¿Cuál es la capital de Francia?', solicitante).catch((e) => e);
+    expect(error).toBeInstanceOf(PreguntaNoEntendida);
+    expect((error as PreguntaNoEntendida).ejemplos).toContain('¿Qué tiendas me tienen que pagar mañana?');
+    expect(ejecutadas).toEqual([]);
+  });
+
+  it.each([
+    ['¿Qué tiendas tienen más riesgo de pagar tarde?', 'riesgo_mora'],
+    ['¿Qué productos están sin stock?', 'stock = 0'],
+    ['¿Qué productos se me acaban?', 'dias_de_stock'],
+    ['¿Cuánto voy a vender la próxima semana?', 'prediccion_demanda'],
+    ['¿Qué es lo que más se vende?', 'unidades_mes'],
+    ['¿Qué pedidos se rechazaron?', "estado = 'RECHAZADO'"],
+    ['¿Cómo compran mis tiendas?', 'segmento_tiendas'],
+    ['Muéstrame mis últimos pedidos', 'FROM pedidos'],
+    ['¿Cuánto vendí este mes?', 'ventas_diarias'],
+  ])('reconoce «%s»', async (pregunta, sql) => {
+    const { responder } = preparar();
+    expect((await responder.ejecutar(pregunta, solicitante)).sql).toContain(sql);
+  });
+
+  it('todas las consultas del simulado pasan la guardia de SQL', async () => {
+    for (const pregunta of [...EJEMPLOS, '¿Qué pedidos se rechazaron?', '¿Cómo compran mis tiendas?', 'demanda prevista', 'lo más vendido', 'mis pedidos', 'sin stock']) {
+      const { sql } = await new ModeloSimulado().generarConsulta(pregunta);
+      expect({ pregunta, ok: validarConsulta(sql).ok }).toEqual({ pregunta, ok: true });
+    }
   });
 
   it('convierte la pregunta en SQL, la ejecuta y la audita', async () => {

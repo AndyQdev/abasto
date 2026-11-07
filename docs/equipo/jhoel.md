@@ -6,6 +6,7 @@ Actualizado: 03/11/2026 · en main (reparto nuevo: toda la IA)
 IA local del teléfono (asistente de compra con modelos de lenguaje según el teléfono). Plan y arquitectura en `docs/ia-local.md`.
 
 ## Terminé
+- Reportes sin llave (07/11, lo pidió Andrés): el modelo simulado ya no responde las ventas del mes a cualquier pregunta. Si no la reconoce dice «No entendí la pregunta» con 5 ejemplos (HTTP 422), y reconoce más: riesgo de mora, sin stock, demanda prevista, lo más vendido, pedidos rechazados, segmentos y pedidos.
 - Reportes sin señal (03/11): sin red, lo dicho por voz (Whisper en el navegador) queda en «Esperan señal» y se responde solo al volver; si ya hay un reporte guardado de esa pregunta se muestra con su fecha. Los últimos 10 reportes quedan en el equipo (por empresa) y se ven sin señal; Excel pide señal.
 - Tableros (03/11): de 4 a 9 tarjetas en Inteligencia › Tableros: quién te debe, riesgo de que te paguen tarde (el modelo de mora ahora corre en `abasto-ml-nocturno` con las cuentas reales y escribe `riesgo_mora`, migración 004), lo que más se vende, cómo te pagan y tiendas nuevas / que dejaron de comprar. El Analista y el MCP también pueden leer `riesgo_mora`.
 - Agentes → n8n (03/11): flujo `infra/n8n/flujos/acciones-de-agentes.json`. Al aprobar en Inteligencia › Agentes, n8n pausa el producto en Catálogo (por el Router, con la sesión de quien aprobó) o deja listo el WhatsApp de cobranza o el pedido al proveedor; la pantalla muestra lo que hizo y «Abrir WhatsApp». Con n8n apagado la propuesta queda aprobada y lo dice. Probado contra n8n real.
