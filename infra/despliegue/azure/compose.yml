@@ -1,0 +1,153 @@
+# Abasto en Azure (VM Standard_B2pls_v2: ARM, 2 vCPU, 4 GB + 4 GB de swap; Ubuntu 24.04; región centralus).
+# Aquí viven los servicios que comparten Postgres: Pedidos, Cobros y Asistente, con Postgres y RabbitMQ.
+# Keycloak, el Router, Conecta, n8n y las webs están en AWS; Catálogo y Mongo en Google Cloud.
+#
+# Cada módulo es su propio contenedor: `docker compose up -d --build cobros` reinicia solo Cobros.
+# Paso a paso: «Despliegue en la nube» en el README.md de la raíz. Claves en .env (copia .env.example).
+
+name: abasto-azure
+
+x-salud: &salud
+  interval: 30s
+  timeout: 5s
+  retries: 3
+  start_period: 300s
+  start_interval: 3s
+
+x-keycloak: &keycloak
+  KEYCLOAK_ISSUER: https://auth.${DOMINIO_AWS:?falta DOMINIO_AWS}/realms/abasto
+  KEYCLOAK_JWKS_URL: https://auth.${DOMINIO_AWS}/realms/abasto/protocol/openid-connect/certs
+
+services:
+  # ---------------------------------------------------------------- entrada HTTPS
+  caddy:
+    image: caddy:2.10-alpine
+    mem_limit: 96m
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      DOMINIO: ${DOMINIO:?falta DOMINIO en .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_datos:/data
+
+  # ---------------------------------------------------------------- datos (solo por dentro: no se publica ningún puerto)
+  postgres:
+    image: postgres:17-alpine
+    mem_limit: 256m
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: abasto
+      POSTGRES_PASSWORD: ${POSTGRES_CLAVE:?falta POSTGRES_CLAVE}
+      TZ: America/La_Paz
+    volumes:
+      - postgres:/var/lib/postgresql/data
+      - ../../postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U abasto"]
+      <<: *salud
+
+  # La tabla `asistente` del Asistente (propuestas y auditoría). Conecta usa el DynamoDB real de AWS
+  dynamodb:
+    image: amazon/dynamodb-local:2.5.4
+    mem_limit: 320m
+    restart: unless-stopped
+    command: ["-Xmx192m", "-jar", "DynamoDBLocal.jar", "-sharedDb", "-dbPath", "/home/dynamodblocal/data"]
+    working_dir: /home/dynamodblocal
+    user: root
+    volumes:
+      - dynamodb:/home/dynamodblocal/data
+
+  # ---------------------------------------------------------------- mensajería
+  # 5672 se publica, pero el firewall de Azure solo deja entrar a AWS (Conecta) y a Google (Catálogo).
+  # La clave del usuario abasto sale de RABBITMQ_CLAVE: se escribe en las definiciones al arrancar.
+  rabbitmq:
+    image: rabbitmq:4.1-management
+    mem_limit: 512m
+    restart: unless-stopped
+    ports: ["5672:5672"]
+    environment:
+      RABBITMQ_CLAVE: ${RABBITMQ_CLAVE:?falta RABBITMQ_CLAVE}
+    entrypoint:
+      - sh
+      - -c
+      - >-
+        sed "s/\"password\": \"abasto\"/\"password\": \"$$RABBITMQ_CLAVE\"/" /plantilla/definitions.json > /tmp/definitions.json
+        && exec docker-entrypoint.sh rabbitmq-server
+    volumes:
+      - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - ../../rabbitmq/definitions.json:/plantilla/definitions.json:ro
+      - rabbitmq:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_port_connectivity"]
+      <<: *salud
+
+  # ---------------------------------------------------------------- servicios
+  pedidos:
+    build: ../../../services/pedidos
+    mem_limit: 768m
+    restart: unless-stopped
+    environment:
+      <<: *keycloak
+      SPRING_PROFILES_ACTIVE: demo
+      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=60 -XX:+UseSerialGC"
+      DB_HOST: postgres
+      DB_PUERTO: "5432"
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PUERTO: "5672"
+      SPRING_RABBITMQ_USERNAME: abasto
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_CLAVE}
+      OTEL_SDK_DISABLED: "true"
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8081/salud"]
+      <<: *salud
+
+  cobros:
+    build: { context: ../../.., dockerfile: services/cobros/Dockerfile }
+    mem_limit: 256m
+    restart: unless-stopped
+    environment:
+      <<: *keycloak
+      DATABASE_URL: postgresql://cobros:cobros@postgres:5432/cobros
+      RABBITMQ_URL: amqp://abasto:${RABBITMQ_CLAVE}@rabbitmq:5672
+      QR_DE_PRUEBA: "si"
+      CATALOGO_URL: https://catalogo.${DOMINIO_GCP:?falta DOMINIO_GCP}/graphql
+      KEYCLOAK_URL: https://auth.${DOMINIO_AWS}
+      KEYCLOAK_COBROS_SECRETO: ${KEYCLOAK_COBROS_SECRETO:?falta KEYCLOAK_COBROS_SECRETO}
+      ORIGENES_PERMITIDOS: https://superadmin.${DOMINIO_AWS}
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8083/salud"]
+      <<: *salud
+
+  asistente:
+    build: { context: ../../.., dockerfile: services/asistente/Dockerfile }
+    mem_limit: 384m
+    restart: unless-stopped
+    environment:
+      <<: *keycloak
+      REPORTES_HOST: postgres
+      REPORTES_PUERTO: "5432"
+      DYNAMODB_URL: http://dynamodb:8000
+      RABBITMQ_URL: amqp://abasto:${RABBITMQ_CLAVE}@rabbitmq:5672
+      CATALOGO_URL: https://catalogo.${DOMINIO_GCP}/graphql
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      N8N_WEBHOOK_ACCIONES: https://n8n.${DOMINIO_AWS}/webhook/acciones-agentes
+      ORIGENES_PERMITIDOS: https://panel.${DOMINIO_AWS},https://inteligencia.${DOMINIO_AWS},https://superadmin.${DOMINIO_AWS}
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8085/salud"]
+      <<: *salud
+
+volumes:
+  caddy_datos:
+  postgres:
+  dynamodb:
+  rabbitmq:

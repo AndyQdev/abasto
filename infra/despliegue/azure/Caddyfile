@@ -1,0 +1,13 @@
+# Entrada HTTPS de Azure (DOMINIO = IP con guiones + .sslip.io). El Router de AWS llama a Pedidos y Cobros por aquí;
+# Inteligencia (en el navegador) llama al Asistente.
+pedidos.{$DOMINIO} {
+	reverse_proxy pedidos:8081
+}
+
+cobros.{$DOMINIO} {
+	reverse_proxy cobros:8083
+}
+
+asistente.{$DOMINIO} {
+	reverse_proxy asistente:8085
+}
