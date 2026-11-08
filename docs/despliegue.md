@@ -6,6 +6,18 @@ Lo pidió el ingeniero: los microservicios en Google Cloud, Azure y AWS, y que a
 
 ## 1. Qué va en cada nube y por qué
 
+**Plan final (decidido por Jhoel):** cuando esté la cuenta de Google, Google pasa a ser la puerta de entrada:
+
+| Nube | Qué va (final) |
+|---|---|
+| **Google** | Catálogo + Mongo, Keycloak, Router, webs (Panel, Gestión, Inteligencia, Superadmin) |
+| **AWS** | Conecta + DynamoDB, n8n |
+| **Azure** | Pedidos, Cobros, Asistente, Postgres, RabbitMQ |
+
+Mientras no hay cuenta de Google, Keycloak, el Router y las webs viven **temporalmente en AWS** (tabla de abajo). Al mudarlos cambian sus direcciones (`auth.`, `api.`, `panel.`…): hay que exportar e importar el realm de Keycloak, actualizar los `.env`, el `router.yaml` y los clientes de Keycloak, reconstruir las webs y compilar el APK con las direcciones nuevas.
+
+**Hoy (temporal):**
+
 | Nube | Qué corre | Por qué ahí |
 |---|---|---|
 | **AWS** | Keycloak, Apollo Router, Conecta + DynamoDB, n8n, webs (Shell, Gestión, Inteligencia, Superadmin) | DynamoDB es de AWS. Es la puerta de entrada (login y GraphQL) |

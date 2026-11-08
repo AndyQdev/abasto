@@ -24,12 +24,13 @@ Actualizado: 07/11/2026.
 | 6. ICONIX · Análisis y diseño preliminar (robustez) | ✅ | Los 16 casos |
 | 7. ICONIX · Diseño (secuencia, clases, arquitectura) | ✅ | — |
 | 8. ICONIX · Implementación y pruebas | ✅ | — |
-| 9. Despliegue en tres nubes | ⚠️ | Google Cloud (Catálogo y Mongo) y el APK de la app con las direcciones de la nube |
+| 9. Despliegue en tres nubes | ⚠️ | Ya describe el plan final (Google = puerta de entrada). Falta desplegar en Google, mudar Keycloak, Router y webs desde AWS, poner las direcciones nuevas y el APK |
 | 10. Conclusiones | ✅ | — |
 | Anexos | ⚠️ | Códigos QR del repositorio y del Panel (se agregan como imagen cuando estén) |
 
 ## Historial
 
+- 08/11/2026 · Capítulos 3 y 9: el reparto de nubes pasa al plan final que decidió Jhoel (Google con Catálogo, Keycloak, Router y webs; AWS con Conecta y n8n). Antes mostraba el reparto temporal.
 - 07/11/2026 · Primera versión, armada desde `docs/` (ICONIX, requisitos, trazabilidad, arquitectura, despliegue) y con la estructura de los documentos de referencia de la materia.
 <!-- solo-md:fin -->
 
@@ -278,9 +279,9 @@ Cada servicio elige la base que mejor encaja con sus datos. Se usan tres sistema
 
 | Nube | Máquina | Qué guarda |
 |---|---|---|
-| AWS | EC2 m7i-flex.large (2 vCPU, 8 GB) | Postgres de Keycloak; DynamoDB administrado |
+| Google Cloud | Pendiente | MongoDB del Catálogo y Postgres de Keycloak |
+| AWS | EC2 m7i-flex.large (2 vCPU, 8 GB) | DynamoDB administrado (Conecta y Asistente) |
 | Azure | Standard_B2pls_v2 (2 vCPU ARM, 4 GB + 4 GB de swap) | Postgres de Pedidos, Cobros y reportes |
-| Google Cloud | Pendiente | MongoDB del Catálogo |
 
 ## 3.2 Software
 
@@ -843,19 +844,26 @@ La regla es una sola: **cada servicio queda en la misma nube que su base de dato
 
 | Nube | Qué corre | Por qué ahí |
 |---|---|---|
-| **AWS** (Ohio) | Keycloak, Apollo Router, Conecta, n8n y las webs (Shell, Gestión, Inteligencia, Superadmin) | DynamoDB es de AWS; es la puerta de entrada (sesión y GraphQL) |
+| **Google Cloud** | Catálogo y MongoDB, Keycloak, Apollo Router y las webs (Shell, Gestión, Inteligencia, Superadmin) | Es la puerta de entrada (sesión, GraphQL y webs). El Catálogo tiene su propia base y nadie más la usa |
+| **AWS** (Ohio) | Conecta con DynamoDB y n8n | DynamoDB es de AWS; Conecta y n8n son la entrada desde afuera (API pública, WhatsApp) |
 | **Azure** (Central US) | Pedidos, Cobros, Asistente, PostgreSQL y RabbitMQ | Los tres servicios comparten el servidor PostgreSQL; RabbitMQ va con quien más lo usa |
-| **Google Cloud** | Catálogo y MongoDB | Tiene su propia base y nadie más la usa |
+
+Así cada nube tiene una parte central del sistema: Google recibe a los usuarios, Azure lleva el negocio (pedidos, cobros y la IA del Asistente) y AWS conecta con el exterior.
 
 ```mermaid
 flowchart TB
-  U["Navegador y app móvil"] -->|HTTPS| AWS
+  U["Navegador y app móvil"] -->|HTTPS| GC
+  EX["WhatsApp y tiendas en línea"] -->|HTTPS| AWS
+  subgraph GC["Google Cloud"]
+    CG["Caddy (HTTPS)"] --> KC["Keycloak"]
+    CG --> RT["Apollo Router"]
+    CG --> WB["Webs: Shell · Gestión · Inteligencia · Superadmin"]
+    CT["Catálogo"] --> MG[("MongoDB")]
+    RT --> CT
+  end
   subgraph AWS["AWS · us-east-2"]
-    CA["Caddy (HTTPS)"] --> KC["Keycloak"]
-    CA --> RT["Apollo Router"]
-    CA --> CO["Conecta"]
+    CA["Caddy (HTTPS)"] --> CO["Conecta"]
     CA --> N8["n8n"]
-    CA --> WB["Webs: Shell · Gestión · Inteligencia · Superadmin"]
     CO --> DY[("DynamoDB")]
   end
   subgraph AZ["Azure · centralus"]
@@ -865,12 +873,8 @@ flowchart TB
     PE & CB & AS --> PG[("PostgreSQL")]
     PE & CB & AS --> MQ[["RabbitMQ"]]
   end
-  subgraph GC["Google Cloud"]
-    CT["Catálogo"] --> MG[("MongoDB")]
-  end
   RT -->|"HTTPS · subgrafos"| CZ
-  RT -->|"HTTPS · subgrafo"| CT
-  CO -->|"AMQP · solo la IP de AWS"| MQ
+  CO -->|"AMQP"| MQ
   CT -->|AMQP| MQ
   AS -->|"llave limitada a su tabla"| DY
 ```
@@ -891,9 +895,11 @@ El paso a paso, los problemas que aparecieron y cómo se resolvieron, cómo actu
 
 | Nube | Máquina | Estado |
 |---|---|---|
+| Google Cloud | — | Pendiente |
 | AWS | EC2 m7i-flex.large (2 vCPU, 8 GB) | En línea desde el 07/11/2026 |
 | Azure | Standard_B2pls_v2 (2 vCPU ARM, 4 GB) | En línea desde el 07/11/2026 |
-| Google Cloud | — | Pendiente |
+
+Mientras se habilita la cuenta de Google Cloud, Keycloak, el Router y las webs corren temporalmente en AWS; por eso las direcciones de abajo son de la máquina de AWS y cambiarán al mudarlos.
 
 | Aplicación | Dirección |
 |---|---|
