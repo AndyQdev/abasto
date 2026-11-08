@@ -6,7 +6,7 @@
 #   docker compose up -d --build conecta      → solo Conecta
 #   docker compose restart web-inteligencia   → solo el microfrontend de Inteligencia (el Shell lee remotos.json al abrir)
 #
-# Paso a paso: «Despliegue en la nube» en el README.md de la raíz. Las claves van en .env (copia .env.example), nunca en el repo.
+# Paso a paso, problemas y cómo borrar: docs/despliegue.md. Las claves van en .env (copia .env.example), nunca en el repo.
 
 name: abasto-aws
 

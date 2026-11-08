@@ -79,48 +79,13 @@ La CI (`.github/workflows/ci.yml`) corre cada stack solo si cambió su carpeta, 
 
 ## Despliegue en la nube
 
-Tres nubes, todas en el este de EE. UU. (AWS Ohio `us-east-2`, Azure East US 2, Google `us-east4`): entre ellas hay 10-15 ms. Cada servicio queda en la misma nube que su base de datos, y cada módulo es su propio contenedor: se actualiza uno sin reiniciar los demás.
-
-| Nube | Qué corre | Carpeta |
-|---|---|---|
-| AWS (EC2 `m7i-flex.large`, 8 GB) | Keycloak, Apollo Router, Conecta + DynamoDB, n8n, webs (Shell, Gestión, Inteligencia, Superadmin) | `infra/despliegue/aws` |
-| Azure | Pedidos, Cobros, Asistente, Postgres, RabbitMQ | pendiente |
-| Google Cloud | Catálogo + Mongo | pendiente |
-
-Cada máquina tiene un Caddy al frente que saca HTTPS solo. El dominio es la IP con guiones + `.sslip.io` (`18.231.5.10` → `auth.18-231-5-10.sslip.io`).
-
-**AWS, una vez:**
-
-1. EC2 Ubuntu 24.04 `m7i-flex.large` (entra en el plan con créditos), disco de 30 GB, IP elástica. Grupo de seguridad: 22 (solo tu IP), 80 y 443.
-2. Rol IAM de la máquina con permiso sobre DynamoDB (`AmazonDynamoDBFullAccess` para la demo): Conecta lo usa sin llaves.
-3. En la máquina:
-   ```bash
-   curl -fsSL https://get.docker.com | sh && sudo usermod -aG docker $USER   # salir y volver a entrar
-   # el repo es privado: el código se manda desde tu computadora (abajo, «Actualizar»)
-   cd abasto/infra/despliegue/aws
-   cp .env.example .env && nano .env      # DOMINIO y claves nuevas (openssl rand -hex 24)
-   docker compose up -d --build
-   sh preparar.sh                         # tablas de DynamoDB, Keycloak al día y flujos de n8n
-   ```
-4. En tu computadora, las webs con las direcciones públicas (copia el mismo `.env` en `infra/despliegue/aws/.env`):
-   ```bash
-   node infra/despliegue/construir-webs.mjs
-   scp -r infra/despliegue/aws/webs ubuntu@IP:abasto/infra/despliegue/aws/
-   ```
-5. Abre `https://n8n.DOMINIO` enseguida y crea la cuenta de dueño: hasta entonces cualquiera puede crearla.
-
-**Actualizar un solo módulo:**
-
-- El código (desde tu computadora, sin dejar credenciales en la máquina): `git archive HEAD | ssh -i ~/.ssh/abasto-aws.pem ubuntu@IP "tar -x -C abasto"`.
-- Un servicio: después de mandar el código, `docker compose up -d --build conecta` en la máquina.
-- Un microfrontend: `node infra/despliegue/construir-webs.mjs inteligencia` y `scp -r infra/despliegue/aws/webs/inteligencia ubuntu@IP:abasto/infra/despliegue/aws/webs/`. El Shell no se toca: lee `remotos.json` al abrir.
-
-**La app móvil** no se despliega en una nube: se compila con las direcciones públicas (`EXPO_PUBLIC_KEYCLOAK_URL=https://auth.DOMINIO/realms/abasto`, `EXPO_PUBLIC_ROUTER_URL=https://api.DOMINIO/`, `EXPO_PUBLIC_CONECTA_URL=https://conecta.DOMINIO`, `EXPO_PUBLIC_PANEL_URL=https://panel.DOMINIO/`) y se instala el APK.
+AWS (Keycloak, Router, Conecta, n8n y webs), Azure (Pedidos, Cobros, Asistente, Postgres y RabbitMQ) y Google Cloud (Catálogo). Qué va dónde, cómo se creó, cómo se actualiza un solo módulo, los problemas y cómo se borra: **`docs/despliegue.md`**. Archivos en `infra/despliegue/`.
 
 ## Para seguir
 
 - `CLAUDE.md`: decisiones, dueños y reglas. Cada servicio y app tiene el suyo.
 - `docs/arquitectura.md`: cómo encajan las piezas.
+- `docs/despliegue.md`: el despliegue en AWS, Azure y Google Cloud.
 - `docs/uix-mockup/README.md`: qué maqueta es de qué interfaz.
 - `docs/iconix/`: los diagramas del método.
 - `docs/equipo/`: en qué está cada uno.

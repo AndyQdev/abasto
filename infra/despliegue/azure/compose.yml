@@ -3,7 +3,7 @@
 # Keycloak, el Router, Conecta, n8n y las webs están en AWS; Catálogo y Mongo en Google Cloud.
 #
 # Cada módulo es su propio contenedor: `docker compose up -d --build cobros` reinicia solo Cobros.
-# Paso a paso: «Despliegue en la nube» en el README.md de la raíz. Claves en .env (copia .env.example).
+# Paso a paso, problemas y cómo borrar: docs/despliegue.md. Claves en .env (copia .env.example).
 
 name: abasto-azure
 

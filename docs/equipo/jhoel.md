@@ -3,7 +3,7 @@
 Actualizado: 07/11/2026 · en main (reparto nuevo: toda la IA)
 
 ## Estoy en
-Despliegue en tres nubes (lo pidió el ingeniero). **AWS ya está arriba**; sigue Azure (Pedidos, Cobros, Asistente, Postgres y RabbitMQ) y al final Google Cloud (Catálogo y Mongo). Plan y pasos en «Despliegue en la nube» del README.
+Despliegue en tres nubes (lo pidió el ingeniero). **AWS ya está arriba**; sigue Azure (Pedidos, Cobros, Asistente, Postgres y RabbitMQ) y al final Google Cloud (Catálogo y Mongo). Todo (qué va dónde, cómo se hizo, problemas, cómo actualizar y borrar) en `docs/despliegue.md`.
 
 ## Terminé
 - **AWS arriba (07/11). Andrés, esto es lo que se hizo:**
@@ -32,7 +32,7 @@ Despliegue en tres nubes (lo pidió el ingeniero). **AWS ya está arriba**; sigu
     - Un servicio: `docker compose up -d --build <servicio>`, y solo se reinicia ese.
     - Un microfrontend: `node infra/despliegue/construir-webs.mjs <web>` y se sube su carpeta. El Shell no se toca porque lee `remotos.json` al abrir; esto es lo que pidió el ingeniero.
 
-    Los pasos completos están en el README.
+    Los pasos completos están en `docs/despliegue.md`.
   - **Arreglado de paso:** `infra/dynamodb/crear-tablas.mjs` ahora espera a que cada tabla quede activa. En el DynamoDB real tarda unos segundos, y antes fallaba al configurar el vencimiento.
   - **Costo:** unos 2,50 USD por día encendida, sobre un crédito de 100 USD.
 - Reportes sin llave (07/11, lo pidió Andrés): el modelo simulado ya no responde las ventas del mes a cualquier pregunta. Si no la reconoce dice «No entendí la pregunta» con 5 ejemplos (HTTP 422), y reconoce más: riesgo de mora, sin stock, demanda prevista, lo más vendido, pedidos rechazados, segmentos y pedidos.
