@@ -24,6 +24,7 @@ Al 06/11: ✅ hecho y con prueba · ⚠️ en curso.
 | Una sola cuenta para entrar a todas las apps | Keycloak (OIDC + PKCE): entrar al Panel abre el Superadmin sin volver a pedir la contraseña; la app usa la misma cuenta | Andrés | ✅ |
 | Arquitecturas de código DDD, hexagonal y clean | Cobros es DDD, Pedidos es hexagonal y Catálogo es clean. ArchUnit, Deptrac y dependency-cruiser lo revisan en la CI | los dos | ✅ |
 | Arquitectura de datos para los reportes | CQRS: el proyector del Asistente escucha los eventos y arma la base `reportes`; los reportes no leen las bases de los servicios | Jhoel | ✅ |
+| Desplegar en Google Cloud, Azure y AWS, y cambiar un módulo sin reiniciar todo (pedido posterior del ingeniero, según Jhoel) | `docs/despliegue.md`: AWS (Keycloak, Router, Conecta, n8n y webs) y Azure (Pedidos, Cobros, Asistente, Postgres y RabbitMQ) arriba desde el 07/11. Cada módulo es su contenedor y el Shell lee `remotos.json` al abrir | Jhoel | ⚠️ falta Google (Catálogo y Mongo). Al 08/11, el Panel, el login, la API, el Superadmin y Gestión en AWS no tienen certificado HTTPS y no abren; Conecta y n8n sí |
 | ICONIX | `docs/iconix`: modelo de dominio, clases y, de los 16 casos de uso, el texto, la robustez y la secuencia | los dos | ✅ |
 
 ## Las tres interfaces (replanteo del 29/10)

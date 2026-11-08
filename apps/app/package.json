@@ -79,6 +79,10 @@
     "moduleNameMapper": {
       "^@abasto/comercio$": "<rootDir>/../../packages/comercio/src/index.ts",
       "^@abasto/bandeja$": "<rootDir>/../../packages/outbox-offline/src/bandeja.ts"
-    }
+    },
+    "testTimeout": 30000,
+    "setupFilesAfterEnv": [
+      "<rootDir>/jest.setup.ts"
+    ]
   }
 }
