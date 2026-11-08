@@ -1,10 +1,9 @@
 # Abasto en AWS (EC2 m7i-flex.large, Ubuntu 24.04, región us-east-2 Ohio).
-# Aquí vive la puerta de entrada: Keycloak (sesión), Apollo Router, Conecta + DynamoDB de AWS, n8n y las webs.
-# Pedidos, Cobros, Asistente, Postgres y RabbitMQ están en Azure; Catálogo y Mongo en Google Cloud.
+# Aquí vive la entrada desde afuera: Conecta (API pública, tiempo real) con DynamoDB de AWS, y n8n (WhatsApp, agentes).
+# Keycloak, el Router, las webs y el Catálogo están en Google Cloud; Pedidos, Cobros, Asistente, Postgres y RabbitMQ en Azure.
 #
 # Cada módulo es su propio contenedor: se actualiza uno sin tocar los demás.
 #   docker compose up -d --build conecta      → solo Conecta
-#   docker compose restart web-inteligencia   → solo el microfrontend de Inteligencia (el Shell lee remotos.json al abrir)
 #
 # Paso a paso, problemas y cómo borrar: docs/despliegue.md. Las claves van en .env (copia .env.example), nunca en el repo.
 
@@ -16,12 +15,6 @@ x-salud: &salud
   retries: 3
   start_period: 180s
   start_interval: 2s
-
-x-web: &web
-  image: caddy:2.10-alpine
-  mem_limit: 48m
-  restart: unless-stopped
-  command: ["caddy", "run", "--config", "/etc/caddy/Caddyfile"]
 
 services:
   # ---------------------------------------------------------------- entrada HTTPS
@@ -37,65 +30,6 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_datos:/data
 
-  # ---------------------------------------------------------------- sesión
-  keycloak_db:
-    image: postgres:17-alpine
-    mem_limit: 192m
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: keycloak
-      POSTGRES_PASSWORD: ${KEYCLOAK_DB_CLAVE:?falta KEYCLOAK_DB_CLAVE}
-      POSTGRES_DB: keycloak
-    volumes:
-      - keycloak_db:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U keycloak"]
-      <<: *salud
-
-  keycloak:
-    image: quay.io/keycloak/keycloak:26.4
-    mem_limit: 896m
-    restart: unless-stopped
-    command: ["start", "--import-realm"]
-    environment:
-      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
-      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_CLAVE:?falta KEYCLOAK_ADMIN_CLAVE}
-      KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://keycloak_db:5432/keycloak
-      KC_DB_USERNAME: keycloak
-      KC_DB_PASSWORD: ${KEYCLOAK_DB_CLAVE}
-      # Emisor público de los tokens; los contenedores de aquí lo llaman por dentro (keycloak:8080)
-      KC_HOSTNAME: https://auth.${DOMINIO}
-      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
-      KC_HTTP_ENABLED: "true"
-      KC_PROXY_HEADERS: xforwarded
-      KC_HEALTH_ENABLED: "true"
-      JAVA_OPTS_KC_HEAP: "-XX:MaxRAMPercentage=65"
-    volumes:
-      - ../../keycloak:/opt/keycloak/data/import:ro
-    depends_on:
-      keycloak_db: { condition: service_healthy }
-    healthcheck:
-      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q 'UP' <&3"]
-      <<: *salud
-
-  # ---------------------------------------------------------------- GraphQL federado
-  router:
-    image: ghcr.io/apollographql/router:v2.7.0
-    mem_limit: 256m
-    restart: unless-stopped
-    command: ["--config", "/despliegue/router.yaml", "--supergraph", "/config/supergraph.graphql", "--hot-reload"]
-    environment:
-      DOMINIO: ${DOMINIO}
-      # Los subgrafos viven en las otras nubes
-      PEDIDOS_URL: https://pedidos.${DOMINIO_AZURE:?falta DOMINIO_AZURE}/graphql
-      COBROS_URL: https://cobros.${DOMINIO_AZURE}/graphql
-      CATALOGO_URL: https://catalogo.${DOMINIO_GCP:?falta DOMINIO_GCP}/graphql
-      APOLLO_TELEMETRY_DISABLED: "true"
-    volumes:
-      - ../../router:/config:ro
-      - ./router.yaml:/despliegue/router.yaml:ro
-
   # ---------------------------------------------------------------- API pública y tiempo real
   conecta:
     build: { context: ../../.., dockerfile: services/conecta/Dockerfile }
@@ -105,16 +39,16 @@ services:
       # "aws": DynamoDB de verdad; la región y las credenciales salen del rol IAM de la máquina
       DYNAMODB_URL: aws
       AWS_REGION: ${AWS_REGION:-us-east-2}
-      ROUTER_URL: http://router:4000/
-      KEYCLOAK_ISSUER: https://auth.${DOMINIO}/realms/abasto
-      KEYCLOAK_JWKS_URL: http://keycloak:8080/realms/abasto/protocol/openid-connect/certs
-      KEYCLOAK_URL: http://keycloak:8080
+      # El Router y Keycloak están en Google Cloud
+      ROUTER_URL: https://api.${DOMINIO_GCP:?falta DOMINIO_GCP}/
+      KEYCLOAK_ISSUER: https://auth.${DOMINIO_GCP}/realms/abasto
+      KEYCLOAK_JWKS_URL: https://auth.${DOMINIO_GCP}/realms/abasto/protocol/openid-connect/certs
+      KEYCLOAK_URL: https://auth.${DOMINIO_GCP}
       KEYCLOAK_CONECTA_SECRETO: ${KEYCLOAK_CONECTA_SECRETO:?falta KEYCLOAK_CONECTA_SECRETO}
-      ORIGENES_PERMITIDOS: https://panel.${DOMINIO},https://superadmin.${DOMINIO},https://inteligencia.${DOMINIO}
-      # RabbitMQ está en Azure (amqps, TLS). Sin él la API sigue y reintenta cada 5 s
+      ORIGENES_PERMITIDOS: https://panel.${DOMINIO_GCP},https://superadmin.${DOMINIO_GCP},https://inteligencia.${DOMINIO_GCP}
+      # RabbitMQ está en Azure. Sin él la API sigue y reintenta cada 5 s
       RABBITMQ_URL: ${RABBITMQ_URL:-}
       WEBHOOKS_PERMITIR_LOCAL: ""
-    depends_on: [keycloak]
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8084/salud"]
       <<: *salud
@@ -134,30 +68,14 @@ services:
       GENERIC_TIMEZONE: America/La_Paz
       TZ: America/La_Paz
       CONECTA_URL: http://conecta:8084
-      KEYCLOAK_TOKEN_URL: http://keycloak:8080/realms/abasto/protocol/openid-connect/token
-      ROUTER_URL: http://router:4000/
+      KEYCLOAK_TOKEN_URL: https://auth.${DOMINIO_GCP}/realms/abasto/protocol/openid-connect/token
+      ROUTER_URL: https://api.${DOMINIO_GCP}/
       NODE_FUNCTION_ALLOW_BUILTIN: crypto
       N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
     volumes:
       - n8n:/home/node/.n8n
       - ../../n8n/flujos:/flujos:ro
 
-  # ---------------------------------------------------------------- webs (cada microfrontend por separado)
-  # Lo que sirven lo arma `node infra/despliegue/construir-webs.mjs aws` en tu máquina y se sube a ./webs
-  web-shell:
-    <<: *web
-    volumes: ["./web.Caddyfile:/etc/caddy/Caddyfile:ro", "./webs/shell:/srv:ro"]
-  web-gestion:
-    <<: *web
-    volumes: ["./web.Caddyfile:/etc/caddy/Caddyfile:ro", "./webs/gestion:/srv:ro"]
-  web-inteligencia:
-    <<: *web
-    volumes: ["./web.Caddyfile:/etc/caddy/Caddyfile:ro", "./webs/inteligencia:/srv:ro"]
-  web-superadmin:
-    <<: *web
-    volumes: ["./web.Caddyfile:/etc/caddy/Caddyfile:ro", "./webs/superadmin:/srv:ro"]
-
 volumes:
   caddy_datos:
-  keycloak_db:
   n8n:

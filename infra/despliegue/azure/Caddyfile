@@ -1,4 +1,4 @@
-# Entrada HTTPS de Azure (DOMINIO = IP con guiones + .sslip.io). El Router de AWS llama a Pedidos y Cobros por aquí;
+# Entrada HTTPS de Azure (DOMINIO = IP con guiones + .sslip.io). El Router de Google llama a Pedidos y Cobros por aquí;
 # Inteligencia (en el navegador) llama al Asistente.
 pedidos.{$DOMINIO} {
 	reverse_proxy pedidos:8081

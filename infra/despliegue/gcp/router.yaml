@@ -1,4 +1,4 @@
-# Apollo Router en AWS. Igual que infra/router/router.yaml, pero con las webs públicas y sin Jaeger.
+# Apollo Router en Google Cloud. Igual que infra/router/router.yaml, pero con las webs públicas y sin Jaeger.
 supergraph:
   listen: 0.0.0.0:4000
   introspection: true

@@ -79,7 +79,7 @@ La CI (`.github/workflows/ci.yml`) corre cada stack solo si cambió su carpeta, 
 
 ## Despliegue en la nube
 
-AWS (Keycloak, Router, Conecta, n8n y webs), Azure (Pedidos, Cobros, Asistente, Postgres y RabbitMQ) y Google Cloud (Catálogo). Qué va dónde, cómo se creó, cómo se actualiza un solo módulo, los problemas y cómo se borra: **`docs/despliegue.md`**. Archivos en `infra/despliegue/`.
+Google Cloud (Keycloak, Router, webs y Catálogo con Mongo), AWS (Conecta con DynamoDB y n8n) y Azure (Pedidos, Cobros, Asistente, Postgres y RabbitMQ). Panel: https://panel.34-136-24-10.sslip.io. Qué va dónde, cómo se creó, cómo se actualiza un solo módulo, los problemas y cómo se borra: **`docs/despliegue.md`**. Archivos en `infra/despliegue/`.
 
 ## Para seguir
 

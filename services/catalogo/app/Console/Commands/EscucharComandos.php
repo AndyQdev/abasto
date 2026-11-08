@@ -56,6 +56,9 @@ final class EscucharComandos extends Command
                     (int) config('rabbitmq.puerto'),
                     (string) config('rabbitmq.usuario'),
                     (string) config('rabbitmq.clave'),
+                    // Mantiene viva la conexión cuando no hay pedidos: en la nube, el firewall de Google corta
+                    // las conexiones quietas a los 10 min y la escucha quedaba esperando para siempre
+                    keepalive: true,
                 );
             } catch (Throwable $e) {
                 $ultimo = $e;

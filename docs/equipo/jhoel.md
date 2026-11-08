@@ -1,9 +1,9 @@
 # Jhoel · estado
 
-Actualizado: 07/11/2026 · en main (reparto nuevo: toda la IA)
+Actualizado: 08/11/2026 · en main (reparto nuevo: toda la IA)
 
 ## Estoy en
-Despliegue en tres nubes (lo pidió el ingeniero). **AWS y Azure ya están arriba y conectados**; falta Google Cloud (Catálogo y Mongo): hasta entonces, lo que necesita productos da error. Todo (qué va dónde, cómo se hizo, problemas, cómo actualizar y borrar) en `docs/despliegue.md`.
+Despliegue en tres nubes (lo pidió el ingeniero): **las tres están arriba desde el 08/11** y una compra completa pasa por las tres. Google es la puerta de entrada (Keycloak, Router, webs y Catálogo), AWS tiene Conecta y n8n, Azure Pedidos, Cobros y Asistente. Todo en `docs/despliegue.md`. Falta el APK con las direcciones de la nube.
 
 ## Terminé
 - **AWS arriba (07/11). Andrés, esto es lo que se hizo:**
@@ -53,6 +53,12 @@ Despliegue en tres nubes (lo pidió el ingeniero). **AWS y Azure ya están arrib
 - `contracts/openapi/asistente.yaml`: `/v1/agentes/monitorear` y `/v1/tableros` (solo agregué; nada cambió de lo que existía).
 
 ## Necesito del otro
+- **Andrés (aviso, 08/11, Google Cloud y mudanza):** es infra tuya y toqué el Catálogo, te cuento:
+  - **Direcciones nuevas:** el Panel, el Superadmin, Keycloak y el Router se mudaron de AWS a Google: `panel.`, `superadmin.`, `auth.` y `api.34-136-24-10.sslip.io`. En AWS quedan solo Conecta y n8n (mismas direcciones).
+  - **Nuevo `infra/despliegue/gcp/`** (compose, Caddyfile, `preparar.sh`) y `router.yaml` se movió ahí desde `aws/`. `construir-webs.mjs` ahora deja las webs en `gcp/webs/`. Los compose de AWS y Azure apuntan al Keycloak de Google.
+  - **Mongo 9.0 en Google:** con 8.0 no arranca (kernel 7.0, lo mismo que en la CI).
+  - **Catálogo (2 líneas):** `EscucharComandos.php` y `CatalogoServiceProvider.php` abren RabbitMQ con `keepalive: true`. El firewall de Google corta las conexiones quietas a los 10 min, y la escucha de la saga quedaba colgada (una compra se quedó en PENDIENTE). En local no cambia nada.
+  - **Para entrar:** la llave `abasto-gcp` y el `.env` de Google te los pasa Jhoel a mano.
 - Andrés (aviso, 07/11, despliegue en AWS): es infra tuya, te cuento qué cambié. Nuevo `infra/despliegue/aws/` (compose, Caddy con HTTPS por sslip.io, router.yaml con las webs públicas, `preparar.sh`) y `infra/despliegue/construir-webs.mjs`. En lo que ya existía:
   - `packages/sesion`: el emisor de Keycloak y las direcciones de las apps salen de `VITE_KEYCLOAK_URL`, `VITE_PANEL_URL` y `VITE_SUPERADMIN_URL`; sin ellas, las de siempre.
   - Superadmin `servicios.ts`: la salud de cada servicio sale de `VITE_SALUD_<SERVICIO>`.

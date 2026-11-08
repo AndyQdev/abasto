@@ -1,0 +1,30 @@
+# Entrada HTTPS de Google Cloud. sslip.io convierte la IP en dominio (34-136-24-10.sslip.io → 34.136.24.10),
+# así Let's Encrypt da certificados sin comprar un dominio. DOMINIO sale del .env.
+auth.{$DOMINIO} {
+	reverse_proxy keycloak:8080
+}
+
+api.{$DOMINIO} {
+	reverse_proxy router:4000
+}
+
+catalogo.{$DOMINIO} {
+	# El Router lo llama por dentro; por aquí llegan las fotos y lo que piden Cobros y el Asistente desde Azure
+	reverse_proxy catalogo:8082
+}
+
+panel.{$DOMINIO} {
+	reverse_proxy web-shell:80
+}
+
+gestion.{$DOMINIO} {
+	reverse_proxy web-gestion:80
+}
+
+inteligencia.{$DOMINIO} {
+	reverse_proxy web-inteligencia:80
+}
+
+superadmin.{$DOMINIO} {
+	reverse_proxy web-superadmin:80
+}

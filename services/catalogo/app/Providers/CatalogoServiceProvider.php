@@ -80,6 +80,7 @@ final class CatalogoServiceProvider extends ServiceProvider
                 (int) config('rabbitmq.puerto'),
                 (string) config('rabbitmq.usuario'),
                 (string) config('rabbitmq.clave'),
+                keepalive: true,
             ))->channel(),
         ));
     }

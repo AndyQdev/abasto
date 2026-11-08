@@ -24,12 +24,13 @@ Actualizado: 07/11/2026.
 | 6. ICONIX · Análisis y diseño preliminar (robustez) | ✅ | Los 16 casos |
 | 7. ICONIX · Diseño (secuencia, clases, arquitectura) | ✅ | — |
 | 8. ICONIX · Implementación y pruebas | ✅ | — |
-| 9. Despliegue en tres nubes | ⚠️ | Ya describe el plan final (Google = puerta de entrada). Falta desplegar en Google, mudar Keycloak, Router y webs desde AWS, poner las direcciones nuevas y el APK |
+| 9. Despliegue en tres nubes | ⚠️ | Las tres nubes arriba (08/11). Falta el APK de la app con las direcciones de la nube |
 | 10. Conclusiones | ✅ | — |
 | Anexos | ⚠️ | Códigos QR del repositorio y del Panel (se agregan como imagen cuando estén) |
 
 ## Historial
 
+- 08/11/2026 · Capítulo 9 con Google Cloud desplegado: estado, direcciones nuevas, prueba de la compra y costo. Capítulo 3: la máquina de Google. Capítulo 4: hito del 08/11.
 - 08/11/2026 · Capítulos 3 y 9: el reparto de nubes pasa al plan final que decidió Jhoel (Google con Catálogo, Keycloak, Router y webs; AWS con Conecta y n8n). Antes mostraba el reparto temporal.
 - 07/11/2026 · Primera versión, armada desde `docs/` (ICONIX, requisitos, trazabilidad, arquitectura, despliegue) y con la estructura de los documentos de referencia de la materia.
 <!-- solo-md:fin -->
@@ -279,7 +280,7 @@ Cada servicio elige la base que mejor encaja con sus datos. Se usan tres sistema
 
 | Nube | Máquina | Qué guarda |
 |---|---|---|
-| Google Cloud | Pendiente | MongoDB del Catálogo y Postgres de Keycloak |
+| Google Cloud | Compute Engine e2-standard-2 (2 vCPU, 8 GB) | MongoDB del Catálogo y Postgres de Keycloak |
 | AWS | EC2 m7i-flex.large (2 vCPU, 8 GB) | DynamoDB administrado (Conecta y Asistente) |
 | Azure | Standard_B2pls_v2 (2 vCPU ARM, 4 GB + 4 GB de swap) | Postgres de Pedidos, Cobros y reportes |
 
@@ -341,6 +342,7 @@ ICONIX se aplicó de forma iterativa: cada caso de uso pasó por sus cuatro fase
 | 03/11/2026 | Saga de compra completa, cuentas por cobrar, agentes con n8n |
 | 06/11/2026 | Los 16 casos de uso con pantalla, prueba y diagramas ICONIX |
 | 07/11/2026 | Despliegue en AWS y Azure |
+| 08/11/2026 | Despliegue en Google Cloud: Catálogo y la puerta de entrada (Keycloak, Router y webs) |
 | 10/11/2026 | Presentación |
 
 ## 4.4 Indicadores de seguimiento
@@ -882,10 +884,10 @@ flowchart TB
 ## 9.2 Cómo se desplegó
 
 - **Una máquina virtual por nube** con Docker Compose y **un contenedor por módulo**, cada uno con su tope de memoria. Actualizar un módulo (`docker compose up -d --build cobros`) reinicia solo ese contenedor; una web se actualiza reemplazando su carpeta. Así se cumple que al cambiar un microfrontend o un servicio no se reinicia el sistema.
-- **HTTPS sin comprar dominio:** cada máquina usa su IP con guiones y `sslip.io` (por ejemplo `panel.3-140-59-13.sslip.io`), y Caddy saca los certificados de Let's Encrypt solo.
+- **HTTPS sin comprar dominio:** cada máquina usa su IP con guiones y `sslip.io` (por ejemplo `panel.34-136-24-10.sslip.io`), y Caddy saca los certificados de Let's Encrypt solo.
 - **El Shell lee la lista de microfrontends al cargar** (`remotos.json`), así que cambiar la dirección de Gestión o Inteligencia no exige reconstruir el Shell.
 - **Sin llaves guardadas en AWS:** Conecta usa el rol de la máquina para hablar con DynamoDB. El Asistente, que está en Azure, usa una llave limitada a su propia tabla.
-- **RabbitMQ** solo acepta conexiones desde las IP de las otras nubes, con usuario y clave propios.
+- **RabbitMQ** solo acepta conexiones desde las IP de las otras nubes, con usuario y clave propios. Las conexiones que cruzan de nube mantienen un latido (*heartbeat* o *keepalive*), porque el firewall de Google corta las conexiones quietas a los 10 minutos.
 - **Keycloak** corre en modo producción con el mismo realm de desarrollo, y un script agrega las direcciones públicas a los clientes.
 - **Ningún secreto en el repositorio:** cada nube tiene su `.env`, que los integrantes se pasan por un medio privado.
 
@@ -895,22 +897,24 @@ El paso a paso, los problemas que aparecieron y cómo se resolvieron, cómo actu
 
 | Nube | Máquina | Estado |
 |---|---|---|
-| Google Cloud | — | Pendiente |
-| AWS | EC2 m7i-flex.large (2 vCPU, 8 GB) | En línea desde el 07/11/2026 |
-| Azure | Standard_B2pls_v2 (2 vCPU ARM, 4 GB) | En línea desde el 07/11/2026 |
-
-Mientras se habilita la cuenta de Google Cloud, Keycloak, el Router y las webs corren temporalmente en AWS; por eso las direcciones de abajo son de la máquina de AWS y cambiarán al mudarlos.
+| Google Cloud | Compute Engine e2-standard-2 (2 vCPU, 8 GB), us-central1 | En línea desde el 08/11/2026 |
+| AWS | EC2 m7i-flex.large (2 vCPU, 8 GB), us-east-2 | En línea desde el 07/11/2026 |
+| Azure | Standard_B2pls_v2 (2 vCPU ARM, 4 GB), centralus | En línea desde el 07/11/2026 |
 
 | Aplicación | Dirección |
 |---|---|
-| Panel Mayorista | https://panel.3-140-59-13.sslip.io |
-| Superadmin | https://superadmin.3-140-59-13.sslip.io |
-| Apollo Router | https://api.3-140-59-13.sslip.io |
+| Panel Mayorista | https://panel.34-136-24-10.sslip.io |
+| Superadmin | https://superadmin.34-136-24-10.sslip.io |
+| Keycloak | https://auth.34-136-24-10.sslip.io |
+| Apollo Router | https://api.34-136-24-10.sslip.io |
+| Conecta (API pública) | https://conecta.3-140-59-13.sslip.io |
 | n8n | https://n8n.3-140-59-13.sslip.io |
+
+Se probó una compra completa desde afuera: la tienda pide por el Router (Google), Pedidos (Azure) inicia la saga, el Catálogo (Google) reserva, Cobros (Azure) genera el QR, se paga y el vendedor confirma. La saga tardó menos de 4 segundos.
 
 ## 9.4 Costo
 
-Se usaron los créditos de estudiante de cada nube y se eligió lo justo: una máquina pequeña por nube, bases dentro de la misma máquina (salvo DynamoDB, que es administrado y casi gratis a esta escala) y sin balanceadores. AWS cuesta unos 2,50 USD por día encendida y Azure unos 0,80 USD. Todo se borra después de la revisión del proyecto.
+Se usaron los créditos de estudiante de cada nube y se eligió lo justo: una máquina pequeña por nube, bases dentro de la misma máquina (salvo DynamoDB, que es administrado y casi gratis a esta escala) y sin balanceadores. AWS cuesta unos 2,50 USD por día encendida, Google unos 1,85 USD y Azure unos 0,80 USD. Todo se borra después de la revisión del proyecto.
 
 # 10. Conclusiones y recomendaciones
 
@@ -937,7 +941,7 @@ Se usaron los créditos de estudiante de cada nube y se eligió lo justo: una m�
 | Recurso | Dónde |
 |---|---|
 | Código fuente | https://github.com/AndyQdev/abasto (privado) |
-| Panel Mayorista en la nube | https://panel.3-140-59-13.sslip.io |
+| Panel Mayorista en la nube | https://panel.34-136-24-10.sslip.io |
 | Diagramas ICONIX (fuente) | `docs/iconix/` |
 | Requisitos y trazabilidad | `docs/requisitos.md`, `docs/trazabilidad.md` |
 | Despliegue | `docs/despliegue.md` |
