@@ -3,7 +3,7 @@
 Actualizado: 07/11/2026 · en main (reparto nuevo: toda la IA)
 
 ## Estoy en
-Despliegue en tres nubes (lo pidió el ingeniero). **AWS ya está arriba**; sigue Azure (Pedidos, Cobros, Asistente, Postgres y RabbitMQ) y al final Google Cloud (Catálogo y Mongo). Todo (qué va dónde, cómo se hizo, problemas, cómo actualizar y borrar) en `docs/despliegue.md`.
+Despliegue en tres nubes (lo pidió el ingeniero). **AWS y Azure ya están arriba y conectados**; falta Google Cloud (Catálogo y Mongo): hasta entonces, lo que necesita productos da error. Todo (qué va dónde, cómo se hizo, problemas, cómo actualizar y borrar) en `docs/despliegue.md`.
 
 ## Terminé
 - **AWS arriba (07/11). Andrés, esto es lo que se hizo:**

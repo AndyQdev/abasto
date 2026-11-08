@@ -45,7 +45,7 @@ Hay una sola regla que importa: **cada servicio queda en la misma nube que su ba
 | Nube | Máquina | IP fija | Dominio | Estado |
 |---|---|---|---|---|
 | AWS | EC2 `m7i-flex.large` (x86, 2 vCPU, 8 GB), Ubuntu 24.04, 30 GB | 3.140.59.13 | `3-140-59-13.sslip.io` | arriba (07/11) |
-| Azure | VM `Standard_B2pls_v2` (ARM, 2 vCPU, 4 GB + 4 GB de swap), Ubuntu 24.04, 30 GB | 52.230.165.148 | `52-230-165-148.sslip.io` | levantándose (07/11) |
+| Azure | VM `Standard_B2pls_v2` (ARM, 2 vCPU, 4 GB + 4 GB de swap), Ubuntu 24.04, 30 GB | 52.230.165.148 | `52-230-165-148.sslip.io` | arriba (07/11) |
 | Google | — | — | — | sin cuenta |
 
 ### Direcciones
@@ -129,7 +129,15 @@ Claude Code lo hizo con el CLI de cada nube. Jhoel solo inició sesión en el na
    - 80 y 443 abiertos;
    - 5672 (RabbitMQ) solo desde la IP de AWS.
 6. **Código y claves:** igual que en AWS, el código con `git archive` y el `.env` con claves nuevas. `KEYCLOAK_COBROS_SECRETO` es el mismo de AWS.
-7. **Conexión con AWS:** en AWS se cambiaron `DOMINIO_AZURE` y `RABBITMQ_URL`, se reiniciaron el Router y Conecta, y se reconstruyeron el Shell y el Superadmin, que llevan la dirección del Asistente.
+7. **Arranque:** `docker compose up -d --build` (construir Pedidos con Java en ARM tomó unos 10 minutos) y `sh preparar.sh`, que crea la tabla del Asistente.
+8. **Conexión con AWS:** en AWS se cambiaron `DOMINIO_AZURE` y `RABBITMQ_URL`, se reiniciaron el Router y Conecta, y se reconstruyeron el Shell y el Superadmin, que llevan la dirección del Asistente.
+9. **Prueba desde afuera:**
+    - Pedidos, Cobros y Asistente responden 200;
+    - el Router de AWS devuelve las ventas de Pedidos en Azure;
+    - el Asistente acepta el token de AWS y el CORS del Panel, y responde un reporte;
+    - Conecta (AWS) escucha los eventos de RabbitMQ (Azure).
+
+    Memoria en uso: 1,3 GB de 4 GB.
 
 ## 5. Actualizar un solo módulo
 
