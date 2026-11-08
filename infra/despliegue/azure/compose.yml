@@ -1,5 +1,6 @@
 # Abasto en Azure (VM Standard_B2pls_v2: ARM, 2 vCPU, 4 GB + 4 GB de swap; Ubuntu 24.04; región centralus).
 # Aquí viven los servicios que comparten Postgres: Pedidos, Cobros y Asistente, con Postgres y RabbitMQ.
+# El Asistente guarda propuestas y auditoría en DynamoDB de AWS.
 # Keycloak, el Router, Conecta, n8n y las webs están en AWS; Catálogo y Mongo en Google Cloud.
 #
 # Cada módulo es su propio contenedor: `docker compose up -d --build cobros` reinicia solo Cobros.
@@ -46,17 +47,6 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U abasto"]
       <<: *salud
-
-  # La tabla `asistente` del Asistente (propuestas y auditoría). Conecta usa el DynamoDB real de AWS
-  dynamodb:
-    image: amazon/dynamodb-local:2.5.4
-    mem_limit: 320m
-    restart: unless-stopped
-    command: ["-Xmx192m", "-jar", "DynamoDBLocal.jar", "-sharedDb", "-dbPath", "/home/dynamodblocal/data"]
-    working_dir: /home/dynamodblocal
-    user: root
-    volumes:
-      - dynamodb:/home/dynamodblocal/data
 
   # ---------------------------------------------------------------- mensajería
   # 5672 se publica, pero el firewall de Azure solo deja entrar a AWS (Conecta) y a Google (Catálogo).
@@ -133,7 +123,12 @@ services:
       <<: *keycloak
       REPORTES_HOST: postgres
       REPORTES_PUERTO: "5432"
-      DYNAMODB_URL: http://dynamodb:8000
+      # DynamoDB de AWS (tabla asistente). Desde Azure no hay rol de máquina: entra con una llave que solo
+      # puede usar esa tabla (usuario IAM abasto-asistente-azure)
+      DYNAMODB_URL: aws
+      AWS_REGION: ${AWS_REGION:-us-east-2}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:?falta AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:?falta AWS_SECRET_ACCESS_KEY}
       RABBITMQ_URL: amqp://abasto:${RABBITMQ_CLAVE}@rabbitmq:5672
       CATALOGO_URL: https://catalogo.${DOMINIO_GCP}/graphql
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
@@ -149,5 +144,4 @@ services:
 volumes:
   caddy_datos:
   postgres:
-  dynamodb:
   rabbitmq:

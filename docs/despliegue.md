@@ -28,13 +28,14 @@ Hay una sola regla que importa: **cada servicio queda en la misma nube que su ba
    │       → conecta · n8n                  │
    │       → panel · gestion · inteligencia │
    │       → superadmin                     │
-   │ Conecta → DynamoDB de AWS (rol IAM)    │
+   │ DynamoDB ◄─ Conecta (rol de la EC2)    │
+   │          ◄─ Asistente de Azure (llave) │
    └───┬──────────────────────────┬─────────┘
        │ HTTPS (Router → subgrafos)│ AMQP 5672 (solo la IP de AWS)
    ┌───▼──────────────────────────▼─────────┐      ┌─────────────────────────┐
    │ Azure · centralus                      │      │ Google · pendiente      │
    │ Caddy → pedidos · cobros · asistente   │◄────►│ Catálogo + Mongo        │
-   │ Postgres · RabbitMQ · DynamoDB Local   │      └─────────────────────────┘
+   │ Postgres · RabbitMQ                    │      └─────────────────────────┘
    └────────────────────────────────────────┘
 ```
 
@@ -81,8 +82,8 @@ El crédito exacto de Azure for Students se ve en el portal, en **Education › 
 | `infra/despliegue/aws/web.Caddyfile` | Lo que corre dentro de cada contenedor web: sirve los archivos de una sola web |
 | `infra/despliegue/aws/router.yaml` | El Router con las webs públicas en CORS y los subgrafos de las otras nubes |
 | `infra/despliegue/aws/preparar.sh` | Tablas de DynamoDB, Keycloak al día y flujos de n8n. Se puede repetir |
-| `infra/despliegue/azure/compose.yml` | Pedidos, Cobros, Asistente, Postgres, RabbitMQ y DynamoDB Local |
-| `infra/despliegue/azure/Caddyfile`, `rabbitmq.conf`, `preparar.sh` | HTTPS; RabbitMQ con la clave de producción; la tabla del Asistente |
+| `infra/despliegue/azure/compose.yml` | Pedidos, Cobros, Asistente, Postgres y RabbitMQ. El Asistente usa el DynamoDB de AWS |
+| `infra/despliegue/azure/Caddyfile`, `rabbitmq.conf` | HTTPS; RabbitMQ con la clave de producción |
 | `infra/despliegue/construir-webs.mjs` | Construye las webs con las direcciones públicas en `infra/despliegue/aws/webs/` |
 | `infra/despliegue/<nube>/.env.example` | Qué variables lleva cada nube. El `.env` real no se sube |
 
@@ -129,7 +130,7 @@ Claude Code lo hizo con el CLI de cada nube. Jhoel solo inició sesión en el na
    - 80 y 443 abiertos;
    - 5672 (RabbitMQ) solo desde la IP de AWS.
 6. **Código y claves:** igual que en AWS, el código con `git archive` y el `.env` con claves nuevas. `KEYCLOAK_COBROS_SECRETO` es el mismo de AWS.
-7. **Arranque:** `docker compose up -d --build` (construir Pedidos con Java en ARM tomó unos 10 minutos) y `sh preparar.sh`, que crea la tabla del Asistente.
+7. **Arranque:** `docker compose up -d --build` (construir Pedidos con Java en ARM tomó unos 10 minutos). El Asistente usa la tabla `asistente` del DynamoDB de AWS con la llave limitada del usuario IAM `abasto-asistente-azure` (ver el problema 10). Al probar, los agentes crearon 5 propuestas y quedaron 9 registros en AWS.
 8. **Conexión con AWS:** en AWS se cambiaron `DOMINIO_AZURE` y `RABBITMQ_URL`, se reiniciaron el Router y Conecta, y se reconstruyeron el Shell y el Superadmin, que llevan la dirección del Asistente.
 9. **Prueba desde afuera:**
     - Pedidos, Cobros y Asistente responden 200;
@@ -191,7 +192,7 @@ El puerto 22 solo deja entrar a la IP de Jhoel (189.28.74.156 al 07/11). Si algu
 | 7 | El service worker del Panel reconocía a Keycloak por el puerto 8180 | En la nube Keycloak está en el 443 de `auth.`, así que se hubiera guardado en caché el login | Ahora lo reconoce por su dirección (`VITE_KEYCLOAK_URL`) |
 | 8 | `remotos.json` quedaba en el precache del service worker | Con eso, cambiar un remoto obligaba a reconstruir el Shell | Se sacó del precache (`globIgnores`). Lo atiende su ruta NetworkFirst |
 | 9 | Azure for Students solo permite westus, centralus, mexicocentral, canadacentral y brazilsouth, y en centralus solo hay máquinas ARM | Política de la suscripción y capacidad de la región | centralus (a unos 20 ms de Ohio) con `B2pls_v2` ARM. Todas las imágenes de Abasto corren en ARM |
-| 10 | El Asistente en Azure necesita DynamoDB, pero el de AWS pide llaves | Crear una llave IAM de largo plazo es una credencial nueva, y no se hizo sin que Jhoel lo decida | DynamoDB Local en Azure, solo para la tabla `asistente`. El DynamoDB de AWS lo sigue usando Conecta |
+| 10 | El Asistente en Azure necesita DynamoDB, pero el de AWS pide credenciales | El rol de la EC2 solo sirve dentro de AWS; desde Azure hace falta una llave | Primero se usó un DynamoDB Local en Azure. **Jhoel decidió usar uno solo, el de AWS** (DynamoDB Local es para pruebas, sin respaldos). Se creó el usuario IAM `abasto-asistente-azure`, con una llave que **solo puede usar la tabla `asistente`** (probado: leer `conecta` da `AccessDeniedException`). La llave vive solo en el `.env` de Azure |
 | 11 | La subida del código a Azure tardó unos 10 minutos | Son 42 MB (modelos e imágenes) con la subida lenta de la casa de Jhoel | A Azure solo le hacen falta `services/` e `infra/`. Para la próxima: `git archive HEAD services infra packages package.json pnpm-lock.yaml pnpm-workspace.yaml` |
 
 **Simplificaciones de la demo:**
@@ -215,6 +216,10 @@ aws iam delete-instance-profile --instance-profile-name abasto-ec2
 aws iam detach-role-policy --role-name abasto-ec2 --policy-arn arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
 aws iam delete-role --role-name abasto-ec2
 for t in idempotencia conecta asistente; do aws dynamodb delete-table --table-name $t; done
+for k in $(aws iam list-access-keys --user-name abasto-asistente-azure --query "AccessKeyMetadata[].AccessKeyId" --output text); do
+  aws iam delete-access-key --user-name abasto-asistente-azure --access-key-id $k; done
+aws iam delete-user-policy --user-name abasto-asistente-azure --policy-name solo-tabla-asistente
+aws iam delete-user --user-name abasto-asistente-azure
 
 # Azure (solo el grupo abasto; vendfy no se toca)
 az group delete -n abasto --yes
