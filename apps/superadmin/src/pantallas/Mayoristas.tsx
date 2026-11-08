@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { cuando, insignia, MOTIVOS, motivoValido, PESTANAS, POR_VERIFICAR, RECHAZAR, VERIFICAR, whatsapp, type EstadoVerificacion, type Solicitud } from '../mayoristas';
 import { graphql } from '../servicios';
 
@@ -13,17 +13,21 @@ export function Mayoristas() {
   const [error, setError] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
 
+  // Si se cambia de pestaña antes de que responda la anterior, esa respuesta ya no se muestra
+  const ultimaPedida = useRef(0);
   const cargar = useCallback(async () => {
+    const esta = ++ultimaPedida.current;
     setError(null);
     try {
       const [d, p] = await Promise.all([
         graphql<{ mayoristasPorVerificar: Solicitud[] }>(POR_VERIFICAR, { estado }),
         graphql<{ mayoristasPorVerificar: Solicitud[] }>(POR_VERIFICAR, { estado: 'PENDIENTE' }),
       ]);
+      if (esta !== ultimaPedida.current) return;
       setLista(d.mayoristasPorVerificar);
       setPendientes(p.mayoristasPorVerificar.length);
     } catch (e) {
-      setError((e as Error).message);
+      if (esta === ultimaPedida.current) setError((e as Error).message);
     }
   }, [estado]);
 

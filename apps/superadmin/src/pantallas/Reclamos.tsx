@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { cuando, whatsapp } from '../mayoristas';
 import {
   CELULARES,
@@ -27,18 +27,22 @@ export function Reclamos() {
   const [celulares, setCelulares] = useState<Record<string, string | null>>({});
   const [error, setError] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
+  // Si se cambia de pestaña antes de que responda la anterior, esa respuesta ya no se muestra
+  const ultimaPedida = useRef(0);
 
   const cargar = useCallback(async () => {
+    const esta = ++ultimaPedida.current;
     setError(null);
     try {
       const [d, abiertos] = await Promise.all([
         graphql<{ reclamos: ReclamoFila[] }>(RECLAMOS, { estado }),
         graphql<{ reclamos: { id: string }[] }>(`query { reclamos(estado: ABIERTO) { id } }`),
       ]);
+      if (esta !== ultimaPedida.current) return;
       setLista(d.reclamos);
       setPorResolver(abiertos.reclamos.length);
     } catch (e) {
-      setError((e as Error).message);
+      if (esta === ultimaPedida.current) setError((e as Error).message);
     }
   }, [estado]);
 
