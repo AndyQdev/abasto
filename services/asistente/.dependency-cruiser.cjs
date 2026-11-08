@@ -11,7 +11,7 @@ module.exports = {
       severity: 'error',
       from: { path: '^src/(reportes|agentes)/dominio' },
       to: {
-        path: ['^src/(reportes|agentes)/aplicacion', '^src/(infraestructura|interfaz|mcp|proyector)', 'node_modules/(@nestjs|pg|@aws-sdk|@anthropic-ai|express|jose|amqplib)'],
+        path: ['^src/(reportes|agentes)/aplicacion', '^src/(infraestructura|interfaz|mcp|proyector)', 'node_modules/(@nestjs|pg|@aws-sdk|@google/genai|express|jose|amqplib)'],
       },
     },
     {
@@ -19,7 +19,7 @@ module.exports = {
       comment: 'Los casos de uso no conocen Nest ni cómo se guarda o se expone nada.',
       severity: 'error',
       from: { path: '^src/(reportes|agentes)/aplicacion' },
-      to: { path: ['^src/(infraestructura|interfaz|mcp|proyector)', 'node_modules/(@nestjs|pg|@aws-sdk|@anthropic-ai|express|amqplib)'] },
+      to: { path: ['^src/(infraestructura|interfaz|mcp|proyector)', 'node_modules/(@nestjs|pg|@aws-sdk|@google/genai|express|amqplib)'] },
     },
     {
       name: 'infraestructura-no-usa-interfaz',

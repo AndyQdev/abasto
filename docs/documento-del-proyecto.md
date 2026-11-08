@@ -30,6 +30,7 @@ Actualizado: 07/11/2026.
 
 ## Historial
 
+- 08/11/2026 · El modelo de lenguaje de los reportes pasa de Claude (Anthropic) a Gemini en Vertex AI (Google Cloud): capítulos 7 (diagrama de clases del Asistente), 8 (tecnologías y reportes generativos), 9 (diagrama, reglas y costo) y conclusiones.
 - 08/11/2026 · Capítulo 9 con Google Cloud desplegado: estado, direcciones nuevas, prueba de la compra y costo. Capítulo 3: la máquina de Google. Capítulo 4: hito del 08/11.
 - 08/11/2026 · Capítulos 3 y 9: el reparto de nubes pasa al plan final que decidió Jhoel (Google con Catálogo, Keycloak, Router y webs; AWS con Conecta y n8n). Antes mostraba el reparto temporal.
 - 07/11/2026 · Primera versión, armada desde `docs/` (ICONIX, requisitos, trazabilidad, arquitectura, despliegue) y con la estructura de los documentos de referencia de la materia.
@@ -235,7 +236,7 @@ Un modelo de lenguaje convierte una pregunta en lenguaje natural («¿qué tiend
 
 ### 2.9.3 MCP (Model Context Protocol)
 
-Protocolo abierto para que un asistente de IA use herramientas y datos externos de forma estándar. Un servidor MCP publica herramientas; un cliente (por ejemplo, Claude) las llama. Como da acceso a datos reales, exige autenticación, permisos mínimos, límites y auditoría.
+Protocolo abierto para que un asistente de IA use herramientas y datos externos de forma estándar. Un servidor MCP publica herramientas; un cliente (por ejemplo, un asistente de IA de escritorio) las llama. Como da acceso a datos reales, exige autenticación, permisos mínimos, límites y auditoría.
 
 ### 2.9.4 IA local
 
@@ -749,7 +750,7 @@ Todo el sistema vive en un solo repositorio (monorepositorio poliglota):
 | Móvil | Expo y React Native; TensorFlow Lite, ML Kit, llama.rn |
 | Datos y mensajería | PostgreSQL 17, MongoDB 8, DynamoDB, RabbitMQ 4.1 |
 | Integración | Apollo Router (Federation 2), Keycloak 26, n8n, OpenTelemetry y Jaeger |
-| IA | Claude (Anthropic) para reportes, con un modelo simulado sin llave; Whisper (transformers.js); MCP SDK |
+| IA | Gemini en Vertex AI (Google Cloud) para reportes, con un modelo simulado si no está configurado; Whisper (transformers.js); MCP SDK |
 | Machine learning | Python 3.12, scikit-learn, pandas, TensorFlow (MobileNetV3) |
 | Infraestructura | Docker, Docker Compose, Caddy, AWS, Azure, Google Cloud |
 | Calidad | Vitest, JUnit 5, Testcontainers, Pest, pytest, Jest, Playwright, ArchUnit, Deptrac, dependency-cruiser, PHPStan, oxlint, ruff |
@@ -771,7 +772,7 @@ Las propuestas se guardan en DynamoDB, que funciona como memoria de los agentes.
 
 ### 8.3.2 Reportes generativos
 
-Pregunta (texto o voz) → modelo de lenguaje → SQL → guardia → PostgreSQL de solo lectura → tabla, gráfico y Excel. Sin `ANTHROPIC_API_KEY`, el Asistente usa un modelo simulado que reconoce un conjunto de preguntas y dice «no entendí» ante las demás.
+Pregunta (texto o voz) → modelo de lenguaje → SQL → guardia → PostgreSQL de solo lectura → tabla, gráfico y Excel. El modelo de lenguaje es **Gemini en Vertex AI** (Google Cloud), detrás del puerto `ModeloDeLenguaje`: el adaptador `ModeloVertex` pide la respuesta como JSON con un esquema fijo (`sql`, `explicacion`, `grafico`) y la valida antes de usarla. El Asistente corre en Azure y entra a Vertex con una cuenta de servicio de Google con el rol «Vertex AI User»; el modelo se cambia con una variable, sin tocar código. Si Vertex no está configurado, usa un modelo simulado que reconoce un conjunto de preguntas y dice «no entendí» ante las demás.
 
 ### 8.3.3 Tableros de inteligencia
 
@@ -876,6 +877,7 @@ flowchart TB
     PE & CB & AS --> MQ[["RabbitMQ"]]
   end
   RT -->|"HTTPS · subgrafos"| CZ
+  AS -->|"HTTPS"| VX["Vertex AI · Gemini"]
   CO -->|"AMQP"| MQ
   CT -->|AMQP| MQ
   AS -->|"llave limitada a su tabla"| DY
@@ -887,6 +889,7 @@ flowchart TB
 - **HTTPS sin comprar dominio:** cada máquina usa su IP con guiones y `sslip.io` (por ejemplo `panel.34-136-24-10.sslip.io`), y Caddy saca los certificados de Let's Encrypt solo.
 - **El Shell lee la lista de microfrontends al cargar** (`remotos.json`), así que cambiar la dirección de Gestión o Inteligencia no exige reconstruir el Shell.
 - **Sin llaves guardadas en AWS:** Conecta usa el rol de la máquina para hablar con DynamoDB. El Asistente, que está en Azure, usa una llave limitada a su propia tabla.
+- **El modelo de lenguaje es un servicio de Google:** el Asistente llama a Gemini en Vertex AI por HTTPS con una cuenta de servicio que solo tiene el rol «Vertex AI User». Su llave va montada en la máquina de Azure y nunca en el repositorio.
 - **RabbitMQ** solo acepta conexiones desde las IP de las otras nubes, con usuario y clave propios. Las conexiones que cruzan de nube mantienen un latido (*heartbeat* o *keepalive*), porque el firewall de Google corta las conexiones quietas a los 10 minutos.
 - **Keycloak** corre en modo producción con el mismo realm de desarrollo, y un script agrega las direcciones públicas a los clientes.
 - **Ningún secreto en el repositorio:** cada nube tiene su `.env`, que los integrantes se pasan por un medio privado.
@@ -914,7 +917,7 @@ Se probó una compra completa desde afuera: la tienda pide por el Router (Google
 
 ## 9.4 Costo
 
-Se usaron los créditos de estudiante de cada nube y se eligió lo justo: una máquina pequeña por nube, bases dentro de la misma máquina (salvo DynamoDB, que es administrado y casi gratis a esta escala) y sin balanceadores. AWS cuesta unos 2,50 USD por día encendida, Google unos 1,85 USD y Azure unos 0,80 USD. Todo se borra después de la revisión del proyecto.
+Se usaron los créditos de estudiante de cada nube y se eligió lo justo: una máquina pequeña por nube, bases dentro de la misma máquina (salvo DynamoDB, que es administrado y casi gratis a esta escala) y sin balanceadores. AWS cuesta unos 2,50 USD por día encendida, Google unos 1,85 USD y Azure unos 0,80 USD. Gemini en Vertex AI se paga por uso: las preguntas de la demo y de la revisión cuestan centavos. Todo se borra después de la revisión del proyecto.
 
 # 10. Conclusiones y recomendaciones
 
@@ -930,7 +933,7 @@ Se usaron los créditos de estudiante de cada nube y se eligió lo justo: una m�
 
 - Conectar WhatsApp real (código de entrada y pedidos) y un banco real para el QR.
 - Medir el reconocimiento por foto con fotos reales de celular y sumar el producto que falta.
-- Evaluar el agente Analista con el modelo de lenguaje real sobre el conjunto de 20 preguntas (meta: 18 de 20).
+- Evaluar el agente Analista con Gemini en Vertex AI sobre el conjunto de 20 preguntas (meta: 18 de 20).
 - Pasar a servicios administrados (base de datos, RabbitMQ) si el sistema crece, y a un orquestador de contenedores cuando haya más de una máquina por nube.
 - Mantener ICONIX vivo: cada caso de uso nuevo entra con su texto, robustez, secuencia y prueba.
 

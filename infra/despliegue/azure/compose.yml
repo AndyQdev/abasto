@@ -131,9 +131,16 @@ services:
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:?falta AWS_SECRET_ACCESS_KEY}
       RABBITMQ_URL: amqp://abasto:${RABBITMQ_CLAVE}@rabbitmq:5672
       CATALOGO_URL: https://catalogo.${DOMINIO_GCP}/graphql
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # Gemini en Vertex AI para el Analista. Sin GOOGLE_CLOUD_PROJECT ni VERTEX_API_KEY usa el modelo simulado.
+      # La cuenta de servicio va en secretos/vertex.json de esta carpeta (ignorado por git)
+      GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-}
+      GOOGLE_CLOUD_LOCATION: ${GOOGLE_CLOUD_LOCATION:-global}
+      GOOGLE_APPLICATION_CREDENTIALS: /secretos/vertex.json
+      VERTEX_API_KEY: ${VERTEX_API_KEY:-}
+      ASISTENTE_MODELO: ${ASISTENTE_MODELO:-gemini-3.8-flash}
       N8N_WEBHOOK_ACCIONES: https://n8n.${DOMINIO_AWS:?falta DOMINIO_AWS}/webhook/acciones-agentes
       ORIGENES_PERMITIDOS: https://panel.${DOMINIO_GCP},https://inteligencia.${DOMINIO_GCP},https://superadmin.${DOMINIO_GCP}
+    volumes: ["./secretos:/secretos:ro"]
     depends_on:
       postgres: { condition: service_healthy }
       rabbitmq: { condition: service_healthy }

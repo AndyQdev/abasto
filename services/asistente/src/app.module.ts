@@ -21,7 +21,7 @@ import { EjecutorN8n } from './infraestructura/acciones/ejecutor.n8n.js';
 import { AuditoriaDynamoDB } from './infraestructura/dynamodb/auditoria.dynamodb.js';
 import { crearClienteDynamoDB, DYNAMODB } from './infraestructura/dynamodb/cliente.js';
 import { PropuestasDynamoDB } from './infraestructura/dynamodb/propuestas.dynamodb.js';
-import { ModeloAnthropic } from './infraestructura/modelos/modelo.anthropic.js';
+import { hayVertex, ModeloVertex } from './infraestructura/modelos/modelo.vertex.js';
 import { ModeloSimulado } from './infraestructura/modelos/modelo.simulado.js';
 import { crearPoolDueno, crearPoolLector, POOL_DUENO, POOL_LECTOR } from './infraestructura/postgres/conexiones.js';
 import { ConsultorPostgres } from './infraestructura/postgres/consultor.pg.js';
@@ -50,9 +50,9 @@ import {
   type ModeloDeLenguaje,
 } from './reportes/puertos.js';
 
-/** Sin llave de API se usa el modelo simulado: la demo y las pruebas funcionan igual. */
+/** Sin Vertex AI configurado se usa el modelo simulado: la demo y las pruebas funcionan igual. */
 const elegirModelo = (): ModeloDeLenguaje =>
-  process.env.ANTHROPIC_API_KEY ? new ModeloAnthropic() : new ModeloSimulado();
+  hayVertex() ? new ModeloVertex() : new ModeloSimulado();
 
 @Module({
   controllers: [

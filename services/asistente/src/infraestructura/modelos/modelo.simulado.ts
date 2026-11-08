@@ -2,7 +2,7 @@ import { PreguntaNoEntendida, type ConsultaGenerada, type ModeloDeLenguaje } fro
 
 /**
  * Modelo de lenguaje simulado: reconoce las preguntas de la demo por palabras clave.
- * Se usa en las pruebas y cuando no hay ANTHROPIC_API_KEY, así nadie necesita pagar para trabajar.
+ * Se usa en las pruebas y cuando no está configurado Vertex AI (Gemini), así nadie necesita pagar para trabajar.
  * Si no reconoce la pregunta lo dice (PreguntaNoEntendida) y da ejemplos: nunca responde otra cosa.
  * Las reglas van de la más específica a la más general: gana la primera que coincide.
  */

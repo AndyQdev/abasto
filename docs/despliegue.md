@@ -39,6 +39,8 @@ Hay una sola regla que importa: **cada servicio queda en la misma nube que su ba
    └────────────────────────────────────────────────────────────────────────┘
 ```
 
+El Asistente (Azure) le pide el SQL de los reportes a **Gemini en Vertex AI** por HTTPS, con una cuenta de servicio del proyecto de Google de un amigo (pasos en el punto 5). Sin esa cuenta usa el modelo simulado.
+
 **Dominios:** no compramos dominio. Cada máquina usa su IP con guiones + `.sslip.io` (`34.136.24.10` → `auth.34-136-24-10.sslip.io`), y Caddy saca el certificado HTTPS de Let's Encrypt solo.
 
 ## 2. Estado
@@ -188,6 +190,19 @@ EXPO_PUBLIC_ROUTER_URL=https://api.34-136-24-10.sslip.io/
 EXPO_PUBLIC_CONECTA_URL=https://conecta.3-140-59-13.sslip.io
 EXPO_PUBLIC_PANEL_URL=https://panel.34-136-24-10.sslip.io/
 ```
+
+**Gemini en Vertex AI para el Asistente** (el Analista de reportes). Sin esto el Asistente usa el modelo simulado. La cuenta de Google es de un amigo, no la del proyecto `abasto-514105`:
+
+1. En el proyecto del amigo, activar la API de Vertex AI y crear una cuenta de servicio con el rol «Vertex AI User». Bajar su llave JSON.
+2. Mandar la llave a Azure, sin pasar por el repo:
+   ```bash
+   ssh -i ~/.ssh/abasto-azure azureuser@52.230.165.148 "mkdir -p abasto/infra/despliegue/azure/secretos"
+   scp -i ~/.ssh/abasto-azure vertex.json azureuser@52.230.165.148:abasto/infra/despliegue/azure/secretos/vertex.json
+   ```
+3. En el `.env` de Azure, `GOOGLE_CLOUD_PROJECT=<id del proyecto>` (y `GOOGLE_CLOUD_LOCATION` si no es `global`). Con una llave de API de Vertex basta `VERTEX_API_KEY`, sin JSON.
+4. `cd abasto/infra/despliegue/azure && docker compose up -d asistente`. Solo se reinicia el Asistente.
+
+El modelo se cambia con `ASISTENTE_MODELO` (por defecto `gemini-3.8-flash`). Para medirlo: `pnpm --filter @abasto/asistente evaluar` con las mismas variables (meta 18/20).
 
 **Entrar a las máquinas:**
 - Google: `ssh -i ~/.ssh/abasto-gcp abasto@34.136.24.10`

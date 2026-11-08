@@ -243,9 +243,16 @@ services:
       RABBITMQ_URL: amqp://abasto:abasto@rabbitmq:5672
       KEYCLOAK_JWKS_URL: http://keycloak:8080/realms/abasto/protocol/openid-connect/certs
       CATALOGO_URL: http://catalogo:8082/graphql
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # Gemini en Vertex AI para el Analista. Sin GOOGLE_CLOUD_PROJECT ni VERTEX_API_KEY usa el modelo simulado.
+      # La cuenta de servicio va en .vertex/vertex.json (ignorado por git)
+      GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-}
+      GOOGLE_CLOUD_LOCATION: ${GOOGLE_CLOUD_LOCATION:-global}
+      GOOGLE_APPLICATION_CREDENTIALS: /secretos/vertex.json
+      VERTEX_API_KEY: ${VERTEX_API_KEY:-}
+      ASISTENTE_MODELO: ${ASISTENTE_MODELO:-gemini-3.8-flash}
       # Flujo «Acciones de los agentes» (infra/n8n/flujos/acciones-de-agentes.json); con n8n apagado avisa y sigue
       N8N_WEBHOOK_ACCIONES: ${N8N_WEBHOOK_ACCIONES:-http://n8n:5678/webhook/acciones-agentes}
+    volumes: ["./.vertex:/secretos:ro"]
     ports: ["8085:8085"]
     depends_on:
       postgres: { condition: service_healthy }

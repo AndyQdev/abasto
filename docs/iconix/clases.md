@@ -889,7 +889,7 @@ classDiagram
   }
 
   namespace Infraestructura {
-    class ModeloAnthropic {
+    class ModeloVertex {
       +String nombre
       +generarConsulta(String, String) ConsultaGenerada
     }
@@ -914,7 +914,7 @@ classDiagram
     }
   }
 
-  ModeloDeLenguaje <|.. ModeloAnthropic
+  ModeloDeLenguaje <|.. ModeloVertex
   ModeloDeLenguaje <|.. ModeloSimulado
   ConsultorDeReportes <|.. ConsultorPostgres
   AuditoriaDeConsultas <|.. AuditoriaDynamoDB
@@ -938,6 +938,6 @@ classDiagram
   AuditoriaController ..> AuditoriaDynamoDB
 ```
 
-`ConsultarReportes` es la única puerta a la base: valida con `guardia-sql`, ejecuta con `ConsultorPostgres` y audita siempre. `ModeloAnthropic` usa `ASISTENTE_MODELO` (por defecto `claude-opus-5-5`); sin `ANTHROPIC_API_KEY` se usa `ModeloSimulado`. `EjecutarCobranza` es el único agente con ejecución; los demás existen en `AGENTES` pero no tienen caso de uso. `PropuestasDynamoDB` implementa `RepositorioDePropuestas` y es el adaptador real de infraestructura. `PropuestaYaDecidida` es la excepción que lanza `decidir` cuando el estado ya no es `pendiente`.
+`ConsultarReportes` es la única puerta a la base: valida con `guardia-sql`, ejecuta con `ConsultorPostgres` y audita siempre. `ModeloVertex` usa Gemini en Vertex AI de Google Cloud, con el modelo de `ASISTENTE_MODELO` (por defecto `gemini-3.8-flash`), y pide la respuesta como JSON con esquema fijo; sin `GOOGLE_CLOUD_PROJECT` ni `VERTEX_API_KEY` se usa `ModeloSimulado`. Cambiar de proveedor es escribir otro adaptador del puerto `ModeloDeLenguaje`, sin tocar los casos de uso. `EjecutarCobranza` es el único agente con ejecución; los demás existen en `AGENTES` pero no tienen caso de uso. `PropuestasDynamoDB` implementa `RepositorioDePropuestas` y es el adaptador real de infraestructura. `PropuestaYaDecidida` es la excepción que lanza `decidir` cuando el estado ya no es `pendiente`.
 
 Pendiente: `Cuota` y `Pago` no existen como clases en Cobros; el servicio cobra por QR y por línea de crédito, pero no tiene un agregado de cuota ni de pago suelto.

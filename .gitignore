@@ -48,6 +48,9 @@ e2e/.auth/
 .env.*
 !.env.example
 services/catalogo/.env
+# Cuenta de servicio de Vertex AI (Gemini)
+.vertex/
+infra/despliegue/*/secretos/
 *.pem
 *.key
 

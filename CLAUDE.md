@@ -61,7 +61,7 @@ Puertos, usuarios de prueba y arranque paso a paso: `README.md`. Arquitectura: `
 - Todo caso de uso lleva prueba automática. Un bug se arregla escribiendo primero la prueba que lo reproduce.
 - Una migración que ya está en main no se edita: se escribe otra.
 - Si cambias un schema GraphQL, corre `pnpm supergrafo` y sube `infra/router/supergraph.graphql` (la CI lo revisa).
-- Nada de secretos en el repo: `.env` está ignorado y cada uno pone su propia `ANTHROPIC_API_KEY`.
+- Nada de secretos en el repo: `.env` está ignorado. La cuenta de servicio de Vertex AI (Gemini, para el Asistente) va en `.vertex/vertex.json`, también ignorado.
 - Git: **los dos trabajamos directo en `main`** (decisión del 29/10: sin ramas ni PR). Conventional Commits. Ver «Git en main» abajo.
 
 ## Git en main (los dos, sin ramas ni PR)

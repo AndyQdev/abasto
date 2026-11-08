@@ -53,6 +53,10 @@ Despliegue en tres nubes (lo pidió el ingeniero): **las tres están arriba desd
 - `contracts/openapi/asistente.yaml`: `/v1/agentes/monitorear` y `/v1/tableros` (solo agregué; nada cambió de lo que existía).
 
 ## Necesito del otro
+- **Andrés (aviso, 08/11, Gemini en Vertex AI):** dejamos Anthropic; el Analista usa Gemini en Vertex AI con la cuenta de pago de un amigo. El código ya está (`ModeloVertex`) y sin credenciales sigue el simulado. Te toca conseguir y ponerlo en Azure:
+  - Del proyecto de Google del amigo: **ID del proyecto**, la **API de Vertex AI activada** y una **cuenta de servicio** con el rol «Vertex AI User» y su llave JSON (o, si prefiere, una llave de API de Vertex en modo express).
+  - En la máquina de Azure: el JSON en `abasto/infra/despliegue/azure/secretos/vertex.json` y `GOOGLE_CLOUD_PROJECT=<id>` en su `.env` (o `VERTEX_API_KEY`). Después solo `docker compose up -d asistente`.
+  - Toqué tu infra: `docker-compose.yml` y `infra/despliegue/azure/compose.yml` (variables de Vertex en lugar de `ANTHROPIC_API_KEY` y la carpeta `secretos` montada en el Asistente), los `.env.example` y `.gitignore` (`.vertex/` y `infra/despliegue/*/secretos/`). Detalle en `docs/despliegue.md` §5.
 - **Andrés (aviso, 08/11, Google Cloud y mudanza):** es infra tuya y toqué el Catálogo, te cuento:
   - **Direcciones nuevas:** el Panel, el Superadmin, Keycloak y el Router se mudaron de AWS a Google: `panel.`, `superadmin.`, `auth.` y `api.34-136-24-10.sslip.io`. En AWS quedan solo Conecta y n8n (mismas direcciones).
   - **Nuevo `infra/despliegue/gcp/`** (compose, Caddyfile, `preparar.sh`) y `router.yaml` se movió ahí desde `aws/`. `construir-webs.mjs` ahora deja las webs en `gcp/webs/`. Los compose de AWS y Azure apuntan al Keycloak de Google.
@@ -72,7 +76,7 @@ Despliegue en tres nubes (lo pidió el ingeniero): **las tres están arriba desd
 - Andrés: agregué una línea en `apps/panel-shell/src/navegacion.ts` (`tableros`, remoto inteligencia) para el menú de Tableros.
 - Andrés: agregué `expo-image-manipulator` y `jpeg-js` en `apps/app/package.json` (reducen la foto a 224×224 antes del modelo). `expo-image-manipulator` es nativo: hay que volver a correr `npx expo run:android` una vez.
 - Andrés (aviso, 31/10): cambié 4 líneas de `apps/app/src/pantallas/BuscarPorFoto.tsx` para que use `reconocerProducto` junto a `leerTexto` y ordene con `productosPorFoto` (de `src/ia`). Si la pantalla cambia, mantén esa llamada.
-- Una `ANTHROPIC_API_KEY` para la demo y para medir el Analista (meta 18/20).
+- La cuenta de Vertex AI (ver el aviso del 08/11) para la demo y para medir el Analista (meta 18/20).
 
 ## Sigue
 1. Si hay fotos sacadas en tienda: afinar con `entrenar.py` y medir con fotos reales.

@@ -15,9 +15,11 @@ packages:
 # Paquetes a los que pnpm deja correr scripts de instalación (pnpm bloquea el resto).
 allowBuilds:
   '@apollo/protobufjs': false
+  '@google/genai': false
   '@parcel/watcher': true
   '@prisma/engines': true
   esbuild: true
   lmdb: true
   msgpackr-extract: true
   prisma: true
+  protobufjs: false

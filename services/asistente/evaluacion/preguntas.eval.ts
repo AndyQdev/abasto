@@ -1,8 +1,8 @@
 // Evaluación del Analista contra PostgreSQL real y el modelo de lenguaje configurado.
-// `pnpm --filter @abasto/asistente evaluar` (necesita `pnpm infra`). Usa Claude si hay ANTHROPIC_API_KEY;
-// sin llave usa el modelo simulado, que solo sirve para comprobar que el evaluador funciona.
+// `pnpm --filter @abasto/asistente evaluar` (necesita `pnpm infra`). Usa Gemini en Vertex AI si está configurado (GOOGLE_CLOUD_PROJECT o VERTEX_API_KEY);
+// si no, usa el modelo simulado, que solo sirve para comprobar que el evaluador funciona.
 import { execSync } from 'node:child_process';
-import { ModeloAnthropic } from '../src/infraestructura/modelos/modelo.anthropic.js';
+import { hayVertex, ModeloVertex } from '../src/infraestructura/modelos/modelo.vertex.js';
 import { ModeloSimulado } from '../src/infraestructura/modelos/modelo.simulado.js';
 import { crearPoolLector } from '../src/infraestructura/postgres/conexiones.js';
 import { ConsultorPostgres } from '../src/infraestructura/postgres/consultor.pg.js';
@@ -10,14 +10,14 @@ import { ConsultarReportes } from '../src/reportes/aplicacion/consultar-reportes
 import { ResponderPregunta } from '../src/reportes/aplicacion/responder-pregunta.js';
 import { META_DE_ACIERTOS, PREGUNTAS, respuestaCorrecta } from './preguntas.js';
 
-const conClaude = Boolean(process.env.ANTHROPIC_API_KEY);
+const conGemini = hayVertex();
 const solicitante = { usuarioId: 'evaluacion', orgId: 'lp' };
 
-describe(`Analista con ${conClaude ? 'Claude' : 'modelo simulado'}`, () => {
+describe(`Analista con ${conGemini ? 'Gemini (Vertex AI)' : 'modelo simulado'}`, () => {
   const lector = crearPoolLector();
   const consultor = new ConsultorPostgres(lector);
   const reportes = new ConsultarReportes(consultor, { registrar: async () => undefined });
-  const analista = new ResponderPregunta(conClaude ? new ModeloAnthropic() : new ModeloSimulado(), reportes);
+  const analista = new ResponderPregunta(conGemini ? new ModeloVertex() : new ModeloSimulado(), reportes);
 
   beforeAll(() => {
     execSync('node scripts/semilla.mjs', { stdio: 'ignore' }); // datos de demo con fechas relativas a hoy
@@ -42,7 +42,7 @@ describe(`Analista con ${conClaude ? 'Claude' : 'modelo simulado'}`, () => {
     }
     console.log(`\n${informe.join('\n')}\n\nAciertos: ${aciertos}/${PREGUNTAS.length}`);
     // Con el simulado la meta no aplica: no entiende lenguaje natural, solo reconoce las preguntas de la demo
-    if (conClaude) expect(aciertos).toBeGreaterThanOrEqual(META_DE_ACIERTOS);
+    if (conGemini) expect(aciertos).toBeGreaterThanOrEqual(META_DE_ACIERTOS);
     else expect(aciertos).toBeGreaterThan(0);
   }, 600_000);
 });
