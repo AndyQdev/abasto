@@ -1,11 +1,15 @@
 # Jhoel · estado
 
-Actualizado: 08/11/2026 · en main (reparto nuevo: toda la IA)
+Actualizado: 09/11/2026 · en main (reparto nuevo: toda la IA)
 
 ## Estoy en
 Despliegue en tres nubes (lo pidió el ingeniero): **las tres están arriba desde el 08/11** y una compra completa pasa por las tres. Google es la puerta de entrada (Keycloak, Router, webs y Catálogo), AWS tiene Conecta y n8n, Azure Pedidos, Cobros y Asistente. Todo en `docs/despliegue.md`. Falta el APK con las direcciones de la nube.
 
 ## Terminé
+- **Analista de reportes en la nube (09/11):**
+  - **Pregunta de vuelta si la pregunta es ambigua** («dame un reporte», «ventas», «¿y la otra tienda?»): no adivina, dice qué le falta y ofrece 2 a 4 preguntas que sí sabe responder, como botones en Inteligencia. Si solo falta el período, asume los últimos 30 días y lo dice.
+  - **Más rápido:** Gemini con razonamiento `LOW`, como vendfy (que usa `gemini-3.5-flash` por AI Studio). Pasó de hasta 140 s a 3–5 s. Si Vertex se cuelga (504), reintenta una vez; si vuelve a fallar, responde 503 «El Analista no respondió a tiempo».
+  - **Datos de demo completos en Azure:** la semilla suma 3 meses de ventas, pedidos por confirmar, rechazados con motivo y entregados hoy, segmentos de tiendas y predicción de demanda. Antes «el mes pasado», «segmentos» y «la próxima semana» salían vacíos.
 - **AWS arriba (07/11). Andrés, esto es lo que se hizo:**
   - **Qué corre ahí:** Keycloak, Apollo Router, Conecta con DynamoDB de AWS, n8n y las cuatro webs. Cada módulo es su propio contenedor, con Caddy al frente para el HTTPS. Los archivos están en `infra/despliegue/aws/`.
   - **Dónde:** cuenta con créditos de Jhoel, región **us-east-2 (Ohio)**, porque la cuenta no permite otra. Es una EC2 `m7i-flex.large` (8 GB) con IP fija **3.140.59.13**. Por eso Azure irá en East US 2 y Google en `us-east4`, cerca de Ohio.
@@ -50,6 +54,7 @@ Despliegue en tres nubes (lo pidió el ingeniero): **las tres están arriba desd
 - Antes del reparto: proyector con entrega y contra entrega (#7), foto por producto en Catálogo (#8), Panel PWA (#9) e ICONIX completo.
 
 ## Cambié en contratos
+- 09/11 · `contracts/openapi/asistente.yaml`: `/v1/reportes/preguntas` documenta el 422 con `opciones` (pregunta ambigua) y el 503 (modelo sin respuesta). Aditivo.
 - `contracts/openapi/asistente.yaml`: `/v1/agentes/monitorear` y `/v1/tableros` (solo agregué; nada cambió de lo que existía).
 
 ## Necesito del otro
