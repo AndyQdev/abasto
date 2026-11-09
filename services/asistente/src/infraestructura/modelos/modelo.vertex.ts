@@ -18,7 +18,8 @@ Reglas:
 - No filtres por org_id: la base ya muestra solo los datos de quien pregunta.
 - Los montos están en centavos; deja los centavos como vienen y nómbralos con el sufijo _centavos.
 - Las fechas relativas ("mañana", "este mes") se resuelven con current_date.
-- Si la pregunta no se puede responder con estas tablas, devuelve SELECT 'Sin datos para esa pregunta' AS aviso.`;
+- Si no hay el dato exacto pero sí uno cercano (por ejemplo, un promedio de 30 días en lugar del mes calendario), úsalo y dilo en la explicación.
+- Solo si la pregunta no se puede responder con estas tablas, devuelve SELECT 'Sin datos para esa pregunta' AS aviso.`;
 
 /** Lo único del SDK que usa el adaptador; en las pruebas se reemplaza por uno falso. */
 export interface ClienteGemini {

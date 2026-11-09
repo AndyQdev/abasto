@@ -46,7 +46,8 @@ export const ESQUEMA_REPORTES = {
       producto_id: 'text',
       nombre: 'text, por ejemplo Shampoo 400 ml',
       stock: 'integer: unidades disponibles',
-      vendidas_por_dia: 'numeric: promedio de unidades vendidas por día en los últimos 30 días',
+      vendidas_por_dia:
+        'numeric: promedio de unidades vendidas por día en los últimos 30 días; es la columna para «lo más vendido» (del mes o reciente): unidades del mes ≈ vendidas_por_dia * 30',
     },
   },
   prediccion_demanda: {
