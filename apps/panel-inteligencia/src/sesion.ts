@@ -6,6 +6,16 @@ export interface SesionDelShell {
 }
 
 /** Llama a Asistente con el token de la sesión. Lanza con el mensaje que manda el servicio. */
+/** Error del Asistente. Si la pregunta era ambigua, trae `opciones`: preguntas que sí sabe responder. */
+export class ErrorDelAsistente extends Error {
+  constructor(
+    mensaje: string,
+    readonly opciones: string[] = [],
+  ) {
+    super(mensaje);
+  }
+}
+
 export async function llamarAsistente<T>(
   sesion: SesionDelShell,
   ruta: string,
@@ -17,8 +27,9 @@ export async function llamarAsistente<T>(
     body: opciones.cuerpo === undefined ? undefined : JSON.stringify(opciones.cuerpo),
   });
   if (!respuesta.ok) {
-    const error = (await respuesta.json().catch(() => ({}))) as { message?: string | string[] };
-    throw new Error([error.message].flat().join(' ') || `Asistente respondió ${respuesta.status}`);
+    const error = (await respuesta.json().catch(() => ({}))) as { message?: string | string[]; opciones?: string[] };
+    const mensaje = [error.message].flat().join(' ') || `Asistente respondió ${respuesta.status}`;
+    throw new ErrorDelAsistente(mensaje, error.opciones ?? []);
   }
   return respuesta.headers.get('content-type')?.includes('json') ? respuesta.json() : (respuesta.blob() as Promise<T>);
 }

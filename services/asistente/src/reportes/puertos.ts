@@ -19,6 +19,19 @@ export class PreguntaNoEntendida extends Error {
   }
 }
 
+/**
+ * La pregunta se puede responder de varias formas muy distintas («dame un reporte»): el modelo pregunta de vuelta
+ * en vez de adivinar. `opciones` son preguntas completas que la persona puede elegir con un toque.
+ */
+export class FaltaPrecisar extends Error {
+  constructor(
+    readonly aclaracion: string,
+    readonly opciones: string[],
+  ) {
+    super(aclaracion);
+  }
+}
+
 export interface ResultadoDeConsulta {
   columnas: string[];
   filas: Record<string, unknown>[];

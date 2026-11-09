@@ -1,11 +1,17 @@
 import { GoogleGenAI } from '@google/genai';
 import { z } from 'zod';
-import type { ConsultaGenerada, ModeloDeLenguaje } from '../../reportes/puertos.js';
+import { FaltaPrecisar, type ConsultaGenerada, type ModeloDeLenguaje } from '../../reportes/puertos.js';
 
 const SalidaConsulta = z.object({
-  sql: z.string().describe('Una sola sentencia SELECT de PostgreSQL'),
+  sql: z.string().describe('Una sola sentencia SELECT de PostgreSQL; vacío solo si hay que pedir una aclaración'),
   explicacion: z.string().describe('Qué muestra la consulta, en una oración, en español'),
   grafico: z.enum(['tabla', 'barras', 'linea']),
+  aclaracion: z.string().optional().describe('Solo si la pregunta es ambigua: lo que hay que preguntarle, con tuteo'),
+  opciones: z
+    .array(z.string())
+    .max(4)
+    .optional()
+    .describe('Con la aclaración: 2 a 4 preguntas completas que sí se pueden responder'),
 });
 
 export const instrucciones = (esquema: string) => `Eres el Analista de Abasto, una red mayorista de Bolivia.
@@ -19,6 +25,9 @@ Reglas:
 - Los montos están en centavos; deja los centavos como vienen y nómbralos con el sufijo _centavos.
 - Las fechas relativas ("mañana", "este mes") se resuelven con current_date.
 - Si no hay el dato exacto pero sí uno cercano (por ejemplo, un promedio de 30 días en lugar del mes calendario), úsalo y dilo en la explicación.
+- Si falta solo el período, no preguntes: usa los últimos 30 días (o el mes en curso) y dilo en la explicación.
+- Si la pregunta no dice qué medir y se puede entender de formas muy distintas (por ejemplo «dame un reporte» o «¿y la otra?»),
+  no adivines: deja sql vacío, pon en aclaracion lo que necesitas saber y en opciones 2 a 4 preguntas completas que sí puedas responder.
 - Solo si la pregunta no se puede responder con estas tablas, devuelve SELECT 'Sin datos para esa pregunta' AS aviso.`;
 
 /** Lo único del SDK que usa el adaptador; en las pruebas se reemplaza por uno falso. */
@@ -74,13 +83,20 @@ export class ModeloVertex implements ModeloDeLenguaje {
       config: {
         systemInstruction: instrucciones(esquema),
         temperature: 0,
+        // Por defecto Gemini 3 piensa mucho: en Azure hubo respuestas de 80 a 140 s. Con LOW tarda ~5 s y el SQL
+        // sale igual de bien (vendfy usa lo mismo). Y un tope, para que la pantalla no quede esperando.
+        thinkingConfig: { thinkingLevel: 'LOW' },
+        httpOptions: { timeout: 45_000 },
         responseMimeType: 'application/json',
         responseJsonSchema: z.toJSONSchema(SalidaConsulta),
       },
     });
     const salida = SalidaConsulta.safeParse(leerJson(respuesta.text));
     if (!salida.success) throw new Error('El modelo no devolvió una consulta para esa pregunta');
-    return salida.data;
+    const { sql, explicacion, grafico, aclaracion, opciones } = salida.data;
+    if (aclaracion?.trim()) throw new FaltaPrecisar(aclaracion.trim(), opciones ?? []);
+    if (!sql.trim()) throw new Error('El modelo no devolvió una consulta para esa pregunta');
+    return { sql, explicacion, grafico };
   }
 }
 

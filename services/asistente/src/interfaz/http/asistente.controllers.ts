@@ -27,7 +27,7 @@ import { crearServidorMcp } from '../../mcp/servidor-mcp.js';
 import { ConsultaRechazada, ConsultarReportes } from '../../reportes/aplicacion/consultar-reportes.js';
 import { ConsultarTableros } from '../../reportes/aplicacion/consultar-tableros.js';
 import { ResponderPregunta } from '../../reportes/aplicacion/responder-pregunta.js';
-import { PreguntaNoEntendida, type Solicitante } from '../../reportes/puertos.js';
+import { FaltaPrecisar, PreguntaNoEntendida, type Solicitante } from '../../reportes/puertos.js';
 
 type ConUsuario = Request & { usuario: Usuario };
 const solicitanteDe = (req: ConUsuario): Solicitante => ({ usuarioId: req.usuario.id, orgId: req.usuario.orgId });
@@ -60,6 +60,9 @@ export class ReportesController {
       return await this.responder.ejecutar(texto, solicitanteDe(req));
     } catch (e) {
       if (e instanceof ConsultaRechazada) throw new BadRequestException(`No pude armar ese reporte: ${e.motivo}`);
+      if (e instanceof FaltaPrecisar) {
+        throw new UnprocessableEntityException({ message: e.aclaracion, opciones: e.opciones, statusCode: 422 });
+      }
       if (e instanceof PreguntaNoEntendida) {
         throw new UnprocessableEntityException(
           `No entendí la pregunta. Prueba con algo como: ${e.ejemplos.map((x) => `«${x}»`).join(', ')}`,

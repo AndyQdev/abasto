@@ -139,3 +139,35 @@ describe('Pantalla de reportes', () => {
     expect(pantalla.findAll('tbody tr')).toHaveLength(2);
   });
 });
+
+describe('Reportes con una pregunta ambigua', () => {
+  it('muestra lo que pregunta el Asistente y responde la opción elegida con un toque', async () => {
+    sinSenal(false);
+    const pedir = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({ statusCode: 422, message: '¿Qué reporte quieres ver?', opciones: ['¿Cuánto me deben?', '¿Cuánto vendí este mes?'] }),
+          { status: 422, headers: { 'content-type': 'application/json' } },
+        ),
+      )
+      .mockResolvedValueOnce(json(respuesta));
+    vi.stubGlobal('fetch', pedir);
+    const pantalla = mount(Reportes, { props: { sesion }, attachTo: document.body });
+
+    await pantalla.get('input.entrada').setValue('dame un reporte');
+    await pantalla.get('form').trigger('submit');
+    await flushPromises();
+
+    expect(pantalla.get('.aclaracion').text()).toBe('¿Qué reporte quieres ver?');
+    const opciones = pantalla.findAll('.opciones button');
+    expect(opciones.map((b) => b.text())).toEqual(['¿Cuánto me deben?', '¿Cuánto vendí este mes?']);
+
+    await opciones[0].trigger('click');
+    await flushPromises();
+
+    expect(JSON.parse(pedir.mock.calls[1][1].body)).toEqual({ texto: '¿Cuánto me deben?' });
+    expect(pantalla.find('.opciones').exists()).toBe(false);
+    expect(pantalla.get('.resultado').text()).toContain('Lo que debe cada tienda.');
+  });
+});

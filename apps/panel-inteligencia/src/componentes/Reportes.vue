@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { armarSerie } from '../graficos/serie';
-import { encabezado, formatearCelda, llamarAsistente, type SesionDelShell } from '../sesion';
+import { encabezado, ErrorDelAsistente, formatearCelda, llamarAsistente, type SesionDelShell } from '../sesion';
 import {
   buscarGuardado,
   cuandoSeGuardo,
@@ -34,6 +34,8 @@ const pregunta = ref('¿Qué tiendas me tienen que pagar mañana?');
 const respuesta = ref<Respuesta | null>(null);
 const cargando = ref(false);
 const error = ref<string | null>(null);
+/** Si la pregunta era ambigua: preguntas que el Asistente sí sabe responder, para elegir con un toque */
+const opciones = ref<string[]>([]);
 const verSql = ref(false);
 
 // Sin señal: la pregunta se encola y se puede mirar un reporte guardado en este equipo
@@ -81,10 +83,16 @@ async function responder(texto: string): Promise<Respuesta> {
   return r;
 }
 
+function elegir(opcion: string) {
+  pregunta.value = opcion;
+  void preguntar();
+}
+
 async function preguntar() {
   const texto = pregunta.value.trim();
   if (texto.length < 3) return;
   error.value = null;
+  opciones.value = [];
   aviso.value = null;
   if (typeof navigator !== 'undefined' && navigator.onLine === false) return quedarSinSenal(texto);
   cargando.value = true;
@@ -94,7 +102,10 @@ async function preguntar() {
     sinSenal.value = false;
   } catch (e) {
     if (esFaltaDeRed(e)) quedarSinSenal(texto);
-    else error.value = (e as Error).message;
+    else {
+      error.value = (e as Error).message;
+      if (e instanceof ErrorDelAsistente) opciones.value = e.opciones;
+    }
   } finally {
     cargando.value = false;
   }
@@ -175,7 +186,10 @@ async function exportar() {
   </form>
 
   <p v-if="voz.error.value" class="falla">{{ voz.error.value }}</p>
-  <p v-if="error" class="falla">{{ error }}</p>
+  <p v-if="error" :class="opciones.length ? 'aclaracion' : 'falla'">{{ error }}</p>
+  <div v-if="opciones.length" class="opciones">
+    <button v-for="o in opciones" :key="o" class="boton-secundario" @click="elegir(o)">{{ o }}</button>
+  </div>
   <p v-if="aviso" class="aviso-senal" role="status">{{ aviso }}</p>
 
   <div v-if="pendientes.length" class="carta pendientes">
@@ -235,6 +249,8 @@ async function exportar() {
 .aviso-senal { margin: 0 0 1rem; padding: 0.6rem 0.9rem; border-radius: var(--radio); background: hsl(38 95% 90%); color: hsl(30 80% 25%); }
 .pendientes { margin-bottom: 1rem; }
 .pendientes ul { margin: 0.4rem 0 0; padding-left: 1.1rem; }
+.aclaracion { margin: 0 0 0.6rem; font-weight: 600; }
+.opciones { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: -0.25rem 0 1rem; }
 .guardados { margin-top: 1.5rem; }
 .guardados h3 { margin: 0 0 0.6rem; font-family: var(--fuente-titulo); }
 .lista-guardados { display: flex; flex-wrap: wrap; gap: 0.5rem; }
