@@ -30,6 +30,7 @@ Actualizado: 07/11/2026.
 
 ## Historial
 
+- 09/11/2026 · Capítulos 8.3.2 y 9: el Analista pregunta de vuelta cuando la pregunta es ambigua, entra a Vertex con una llave de API y reintenta si Vertex no responde.
 - 08/11/2026 · Abdalid se suma al equipo: carátula y capítulo 4.1 (organización por áreas, con Abdalid en calidad y documentación). Registros de Andrés y Jhoel en la carátula.
 - 08/11/2026 · El modelo de lenguaje de los reportes pasa de Claude (Anthropic) a Gemini en Vertex AI (Google Cloud): capítulos 7 (diagrama de clases del Asistente), 8 (tecnologías y reportes generativos), 9 (diagrama, reglas y costo) y conclusiones.
 - 08/11/2026 · Capítulo 9 con Google Cloud desplegado: estado, direcciones nuevas, prueba de la compra y costo. Capítulo 3: la máquina de Google. Capítulo 4: hito del 08/11.
@@ -774,7 +775,9 @@ Las propuestas se guardan en DynamoDB, que funciona como memoria de los agentes.
 
 ### 8.3.2 Reportes generativos
 
-Pregunta (texto o voz) → modelo de lenguaje → SQL → guardia → PostgreSQL de solo lectura → tabla, gráfico y Excel. El modelo de lenguaje es **Gemini en Vertex AI** (Google Cloud), detrás del puerto `ModeloDeLenguaje`: el adaptador `ModeloVertex` pide la respuesta como JSON con un esquema fijo (`sql`, `explicacion`, `grafico`) y la valida antes de usarla. El Asistente corre en Azure y entra a Vertex con una cuenta de servicio de Google con el rol «Vertex AI User»; el modelo se cambia con una variable, sin tocar código. Si Vertex no está configurado, usa un modelo simulado que reconoce un conjunto de preguntas y dice «no entendí» ante las demás.
+Pregunta (texto o voz) → modelo de lenguaje → SQL → guardia → PostgreSQL de solo lectura → tabla, gráfico y Excel. El modelo de lenguaje es **Gemini en Vertex AI** (Google Cloud), detrás del puerto `ModeloDeLenguaje`: el adaptador `ModeloVertex` pide la respuesta como JSON con un esquema fijo (`sql`, `explicacion`, `grafico`) y la valida antes de usarla. El Asistente corre en Azure y entra a Vertex con una llave de API de Vertex (`VERTEX_API_KEY`) que vive solo en el servidor; también acepta una cuenta de servicio de Google. Usa `gemini-3.8-flash` con razonamiento bajo, que responde en 3 a 5 segundos; el modelo se cambia con una variable, sin tocar código.
+
+Cuando la pregunta es ambigua, el Analista **no adivina**. Si la pregunta no dice qué medir («dame un reporte», «¿y la otra tienda?»), responde con lo que le falta saber y ofrece de dos a cuatro preguntas que sí puede responder, que el Panel muestra como botones. Si solo falta el período («¿cuánto vendí?»), asume los últimos 30 días y lo dice en la explicación. Si Vertex no responde a tiempo, reintenta una vez y, si vuelve a fallar, avisa que se puede preguntar de nuevo. Si Vertex no está configurado, usa un modelo simulado que reconoce un conjunto de preguntas y dice «no entendí» ante las demás.
 
 ### 8.3.3 Tableros de inteligencia
 
@@ -891,7 +894,7 @@ flowchart TB
 - **HTTPS sin comprar dominio:** cada máquina usa su IP con guiones y `sslip.io` (por ejemplo `panel.34-136-24-10.sslip.io`), y Caddy saca los certificados de Let's Encrypt solo.
 - **El Shell lee la lista de microfrontends al cargar** (`remotos.json`), así que cambiar la dirección de Gestión o Inteligencia no exige reconstruir el Shell.
 - **Sin llaves guardadas en AWS:** Conecta usa el rol de la máquina para hablar con DynamoDB. El Asistente, que está en Azure, usa una llave limitada a su propia tabla.
-- **El modelo de lenguaje es un servicio de Google:** el Asistente llama a Gemini en Vertex AI por HTTPS con una cuenta de servicio que solo tiene el rol «Vertex AI User». Su llave va montada en la máquina de Azure y nunca en el repositorio.
+- **El modelo de lenguaje es un servicio de Google:** el Asistente llama a Gemini en Vertex AI por HTTPS con una llave de API de Vertex. La llave vive solo en el `.env` de la máquina de Azure (permisos de solo dueño), llegó por SSH y nunca pasó por el repositorio.
 - **RabbitMQ** solo acepta conexiones desde las IP de las otras nubes, con usuario y clave propios. Las conexiones que cruzan de nube mantienen un latido (*heartbeat* o *keepalive*), porque el firewall de Google corta las conexiones quietas a los 10 minutos.
 - **Keycloak** corre en modo producción con el mismo realm de desarrollo, y un script agrega las direcciones públicas a los clientes.
 - **Ningún secreto en el repositorio:** cada nube tiene su `.env`, que los integrantes se pasan por un medio privado.
