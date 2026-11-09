@@ -71,6 +71,13 @@ describe('Proyector de reportes', () => {
     expect(rechazado.sql).toContain('DO UPDATE');
   });
 
+  it('un evento que llega tarde no pisa un estado más nuevo (RabbitMQ no garantiza el orden entre reintentos)', () => {
+    // Visto en la nube el 09/11: A-1115 llegó «rechazado» y después «por confirmar», 400 ms más viejo, y quedó por confirmar
+    const [porConfirmar] = proyectar(evento('pedido.por_confirmar', pedido('contra_entrega')), tiendas);
+
+    expect(porConfirmar.sql).toMatch(/DO UPDATE[\s\S]*WHERE pedidos\.actualizado_en <= EXCLUDED\.actualizado_en/);
+  });
+
   it('el pago descuenta la cuenta buscándola por código o por id del pedido', () => {
     const [s] = proyectar(evento('cobro.pago_registrado', { pedidoId: 'uuid-1', centavos: 5000 }));
 

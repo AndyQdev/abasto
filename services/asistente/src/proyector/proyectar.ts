@@ -107,7 +107,8 @@ export function proyectar(evento: Evento, tiendas: NombresDeTiendas = {}): Sente
 
 /**
  * Una fila por pedido. pedido.creado solo inserta: si llega tarde, no pisa un estado posterior.
- * Los demás eventos actualizan el estado (y el motivo, si es un rechazo).
+ * Los demás eventos actualizan el estado (y el motivo, si es un rechazo), salvo que lo guardado sea más nuevo:
+ * los eventos pueden llegar en otro orden del que ocurrieron, y manda la hora en que ocurrieron.
  */
 function estadoDelPedido(evento: Evento, tiendas: NombresDeTiendas): Sentencia {
   const d = evento.datos;
@@ -120,7 +121,8 @@ function estadoDelPedido(evento: Evento, tiendas: NombresDeTiendas): Sentencia {
             alCrear
               ? 'NOTHING'
               : `UPDATE SET estado = EXCLUDED.estado, motivo_rechazo = EXCLUDED.motivo_rechazo,
-                            total_centavos = EXCLUDED.total_centavos, actualizado_en = EXCLUDED.actualizado_en`
+                            total_centavos = EXCLUDED.total_centavos, actualizado_en = EXCLUDED.actualizado_en
+                 WHERE pedidos.actualizado_en <= EXCLUDED.actualizado_en`
           }`,
     parametros: [
       evento.orgId,
