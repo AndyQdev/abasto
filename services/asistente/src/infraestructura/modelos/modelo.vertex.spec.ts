@@ -1,4 +1,4 @@
-import { FaltaPrecisar } from '../../reportes/puertos.js';
+import { FaltaPrecisar, ModeloNoDisponible } from '../../reportes/puertos.js';
 import { hayVertex, ModeloVertex, type ClienteGemini } from './modelo.vertex.js';
 
 const clienteQueResponde = (text: string | undefined) => {
@@ -71,5 +71,27 @@ describe('ModeloVertex (Gemini en Vertex AI)', () => {
     expect(hayVertex({})).toBe(false);
     expect(hayVertex({ GOOGLE_CLOUD_PROJECT: 'abasto' })).toBe(true);
     expect(hayVertex({ VERTEX_API_KEY: 'x' })).toBe(true);
+  });
+});
+
+describe('ModeloVertex cuando Vertex se cuelga', () => {
+  const respuestaBuena = { text: JSON.stringify({ sql: 'SELECT 1', explicacion: 'x', grafico: 'tabla' }) };
+
+  it('reintenta una vez si el primer pedido falla', async () => {
+    const generateContent = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('504 DEADLINE_EXCEEDED'))
+      .mockResolvedValueOnce(respuestaBuena);
+    const modelo = new ModeloVertex({ models: { generateContent } }, 'gemini-prueba');
+
+    await expect(modelo.generarConsulta('¿cuánto vendí?', '')).resolves.toMatchObject({ sql: 'SELECT 1' });
+    expect(generateContent).toHaveBeenCalledTimes(2);
+  });
+
+  it('si falla dos veces avisa que el modelo no está disponible', async () => {
+    const generateContent = vi.fn().mockRejectedValue(new Error('504 DEADLINE_EXCEEDED'));
+    const modelo = new ModeloVertex({ models: { generateContent } }, 'gemini-prueba');
+
+    await expect(modelo.generarConsulta('¿cuánto vendí?', '')).rejects.toBeInstanceOf(ModeloNoDisponible);
   });
 });

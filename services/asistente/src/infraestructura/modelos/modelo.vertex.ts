@@ -1,6 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
 import { z } from 'zod';
-import { FaltaPrecisar, type ConsultaGenerada, type ModeloDeLenguaje } from '../../reportes/puertos.js';
+import { FaltaPrecisar, ModeloNoDisponible, type ConsultaGenerada, type ModeloDeLenguaje } from '../../reportes/puertos.js';
 
 const SalidaConsulta = z.object({
   sql: z.string().describe('Una sola sentencia SELECT de PostgreSQL; vacío solo si hay que pedir una aclaración'),
@@ -77,26 +77,46 @@ export class ModeloVertex implements ModeloDeLenguaje {
   }
 
   async generarConsulta(pregunta: string, esquema: string): Promise<ConsultaGenerada> {
-    const respuesta = await this.cliente.models.generateContent({
-      model: this.nombre,
-      contents: pregunta,
-      config: {
-        systemInstruction: instrucciones(esquema),
-        temperature: 0,
-        // Por defecto Gemini 3 piensa mucho: en Azure hubo respuestas de 80 a 140 s. Con LOW tarda ~5 s y el SQL
-        // sale igual de bien (vendfy usa lo mismo). Y un tope, para que la pantalla no quede esperando.
-        thinkingConfig: { thinkingLevel: 'LOW' },
-        httpOptions: { timeout: 45_000 },
-        responseMimeType: 'application/json',
-        responseJsonSchema: z.toJSONSchema(SalidaConsulta),
-      },
-    });
+    const respuesta = await this.pedirConUnReintento(pregunta, esquema);
     const salida = SalidaConsulta.safeParse(leerJson(respuesta.text));
     if (!salida.success) throw new Error('El modelo no devolvió una consulta para esa pregunta');
     const { sql, explicacion, grafico, aclaracion, opciones } = salida.data;
     if (aclaracion?.trim()) throw new FaltaPrecisar(aclaracion.trim(), opciones ?? []);
     if (!sql.trim()) throw new Error('El modelo no devolvió una consulta para esa pregunta');
     return { sql, explicacion, grafico };
+  }
+
+  /**
+   * Vertex casi siempre responde en 3 a 5 s, pero de vez en cuando un pedido se queda colgado hasta el tope
+   * (504 DEADLINE_EXCEEDED). Repetirlo una vez casi siempre sale al toque; si vuelve a fallar, avisa.
+   */
+  private async pedirConUnReintento(pregunta: string, esquema: string) {
+    try {
+      return await this.pedir(pregunta, esquema);
+    } catch {
+      try {
+        return await this.pedir(pregunta, esquema);
+      } catch (e) {
+        throw new ModeloNoDisponible((e as Error).message);
+      }
+    }
+  }
+
+  private pedir(pregunta: string, esquema: string) {
+    return this.cliente.models.generateContent({
+      model: this.nombre,
+      contents: pregunta,
+      config: {
+        systemInstruction: instrucciones(esquema),
+        temperature: 0,
+        // Por defecto Gemini 3 piensa mucho y tardaba hasta 140 s. Con LOW tarda 3 a 5 s y el SQL sale igual
+        // de bien (vendfy usa lo mismo). El tope corta los pedidos colgados para reintentar.
+        thinkingConfig: { thinkingLevel: 'LOW' },
+        httpOptions: { timeout: 20_000 },
+        responseMimeType: 'application/json',
+        responseJsonSchema: z.toJSONSchema(SalidaConsulta),
+      },
+    });
   }
 }
 

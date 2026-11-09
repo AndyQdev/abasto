@@ -32,6 +32,18 @@ paths:
                   truncado: { type: boolean, description: true si había más de 1.000 filas }
                   modelo: { type: string, example: simulado }
         '400': { description: La consulta generada no pasó la guardia de SQL }
+        '422':
+          description: >-
+            La pregunta es ambigua o no se entendió. message es lo que el Analista pregunta de vuelta;
+            opciones (si viene) son preguntas completas que sí sabe responder, para elegir con un toque.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  opciones: { type: array, items: { type: string } }
+        '503': { description: El modelo de lenguaje no respondió a tiempo (ya se reintentó una vez); se puede volver a preguntar }
   /v1/reportes/excel:
     post:
       summary: Devuelve el .xlsx de una tabla de reporte

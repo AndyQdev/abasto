@@ -32,6 +32,9 @@ export class FaltaPrecisar extends Error {
   }
 }
 
+/** El modelo de lenguaje no respondió (caído o colgado). No es culpa de la pregunta: se puede repetir. */
+export class ModeloNoDisponible extends Error {}
+
 export interface ResultadoDeConsulta {
   columnas: string[];
   filas: Record<string, unknown>[];
