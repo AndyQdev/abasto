@@ -15,7 +15,7 @@ Actualizado: 07/11/2026.
 
 | Parte | Estado | Qué falta |
 |---|---|---|
-| Carátula | ⚠️ | Números de registro de los dos, sigla y grupo de la materia |
+| Carátula | ⚠️ | Apellidos y registro de Abdalid, sigla de la materia |
 | 1. Perfil | ✅ | — |
 | 2. Fundamentación teórica | ✅ | — |
 | 3. Elementos del SGBD | ✅ | — |
@@ -30,6 +30,7 @@ Actualizado: 07/11/2026.
 
 ## Historial
 
+- 08/11/2026 · Abdalid se suma al equipo: carátula y capítulo 4.1 (organización por áreas, con Abdalid en calidad y documentación). Registros de Andrés y Jhoel en la carátula.
 - 08/11/2026 · El modelo de lenguaje de los reportes pasa de Claude (Anthropic) a Gemini en Vertex AI (Google Cloud): capítulos 7 (diagrama de clases del Asistente), 8 (tecnologías y reportes generativos), 9 (diagrama, reglas y costo) y conclusiones.
 - 08/11/2026 · Capítulo 9 con Google Cloud desplegado: estado, direcciones nuevas, prueba de la compra y costo. Capítulo 3: la máquina de Google. Capítulo 4: hito del 08/11.
 - 08/11/2026 · Capítulos 3 y 9: el reparto de nubes pasa al plan final que decidió Jhoel (Google con Catálogo, Keycloak, Router y webs; AWS con Conecta y n8n). Antes mostraba el reparto temporal.
@@ -45,7 +46,7 @@ titulo: ABASTO
 subtitulo: Red mayorista B2B para Bolivia con microservicios, microfrontends e inteligencia artificial
 materia: INGENIERÍA DE SOFTWARE II
 docente: ING. ROLANDO ANTONIO MARTÍNEZ CANEDO
-integrantes: QUISPE CABRERA JOSÉ ANDRÉS · Registro: ⟨completar⟩|RODAS CABRERA JHOEL · Registro: ⟨completar⟩
+integrantes: QUISPE CABRERA JOSÉ ANDRÉS · Registro: 222009519|RODAS CABRERA JHOEL · Registro: 221045661|ABDALID ⟨apellidos⟩ · Registro: ⟨completar⟩
 lugar: SANTA CRUZ DE LA SIERRA - BOLIVIA
 fecha: NOVIEMBRE - 2026
 -->
@@ -144,7 +145,7 @@ ICONIX es un proceso de desarrollo orientado a objetos, dirigido por casos de us
 - **El docente lo pidió** para el segundo parcial.
 - **La arquitectura es el riesgo, no el código.** Con cinco servicios, tres frameworks de frontend y una saga, un error de diseño se paga caro. ICONIX obliga a pensar los mensajes entre piezas (secuencia) antes de programarlas.
 - **Trazabilidad requisito → caso de uso → código → prueba.** Cada caso de uso de Abasto tiene su robustez, su secuencia, las clases reales que lo implementan y la prueba automática que lo cubre.
-- **Pocos diagramas, todos útiles.** Un equipo de dos personas no puede mantener decenas de diagramas. ICONIX usa solo los necesarios, y en Abasto se guardan como texto (Mermaid) dentro del repositorio, se revisan como el código y la CI comprueba que se dibujen.
+- **Pocos diagramas, todos útiles.** Un equipo de tres personas no puede mantener decenas de diagramas. ICONIX usa solo los necesarios, y en Abasto se guardan como texto (Mermaid) dentro del repositorio, se revisan como el código y la CI comprueba que se dibujen.
 
 ### 1.5.3 Fases y revisiones
 
@@ -261,7 +262,7 @@ n8n es una herramienta de automatización por flujos (*workflows*): nodos que re
 | Herramienta | Uso en Abasto |
 |---|---|
 | Mermaid | Diagramas UML de ICONIX como texto dentro del repositorio |
-| Claude Code | Asistente de programación con IA, usado por los dos integrantes |
+| Claude Code | Asistente de programación con IA, usado por el equipo |
 | GitHub y GitHub Actions | Control de versiones e integración continua |
 | Trello | Tablero de tareas por fase |
 | Claude Design | Maquetas navegables de las interfaces |
@@ -315,19 +316,20 @@ Base clave-valor administrada de AWS. **Conecta** guarda ahí las claves de idem
 
 ## 4.1 Organización
 
-El equipo tiene dos integrantes. Desde el 29/10 el trabajo se reparte por área: **Andrés lleva todo lo comercial** y **Jhoel toda la inteligencia artificial**. El archivo `.github/CODEOWNERS` registra el dueño de cada carpeta.
+El equipo tiene tres integrantes y una estructura descentralizada democrática: no hay un jefe fijo y cada área tiene un coordinador. Desde el 29/10 el trabajo se reparte por área: **Andrés coordina lo comercial**, **Jhoel la inteligencia artificial** y **Abdalid la calidad y la documentación**. El archivo `.github/CODEOWNERS` registra el dueño de cada carpeta.
 
 | Integrante | Responsabilidad |
 |---|---|
 | José Andrés Quispe Cabrera | App de clientes (pantallas, sesión, modo sin señal); Panel Shell y Gestión; Superadmin; servicios Catálogo, Pedidos, Cobros y Conecta; n8n de WhatsApp; infraestructura, Router, Keycloak y CI |
 | Jhoel Rodas Cabrera | IA local del teléfono (modelo TFLite, ML Kit, asistente de compra); IA local del navegador (Whisper); Panel de Inteligencia; servicio Asistente (agentes, reportes generativos, MCP, proyector); machine learning; despliegue en tres nubes |
+| Abdalid | Calidad y documentación: modelado ICONIX, pruebas de aceptación sobre el despliegue y documento del proyecto; apoyo en el proyector de reportes del Asistente (saldo de las cuentas por cobrar) |
 
-Los casos de uso, los requisitos del docente y la arquitectura se deciden entre los dos, y no se reabren sin hablarlo.
+Los casos de uso, los requisitos del docente y la arquitectura se deciden entre los tres, y no se reabren sin hablarlo.
 
 ## 4.2 Herramientas de gestión
 
 - **Trello** (tablero «abasto»): una tarjeta por tarea, agrupadas por fase.
-- **GitHub** (`AndyQdev/abasto`): un solo repositorio con todo el sistema. Los dos trabajan directo en `main` con commits pequeños y *Conventional Commits*.
+- **GitHub** (`AndyQdev/abasto`): un solo repositorio con todo el sistema. Todos trabajan directo en `main` con commits pequeños y *Conventional Commits*.
 - **Archivos de estado** (`docs/equipo/andres.md` y `jhoel.md`): qué está haciendo cada uno, qué terminó, qué cambió en los contratos y qué necesita del otro. Si uno toca una carpeta del otro, lo avisa ahí en el mismo commit.
 - **Comunicación:** WhatsApp y reuniones presenciales.
 
