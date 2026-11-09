@@ -202,6 +202,8 @@ EXPO_PUBLIC_PANEL_URL=https://panel.34-136-24-10.sslip.io/
 3. En el `.env` de Azure, `GOOGLE_CLOUD_PROJECT=<id del proyecto>` (y `GOOGLE_CLOUD_LOCATION` si no es `global`). Con una llave de API de Vertex basta `VERTEX_API_KEY`, sin JSON.
 4. `cd abasto/infra/despliegue/azure && docker compose up -d asistente`. Solo se reinicia el Asistente.
 
+**Estado (09/11):** activo con `VERTEX_API_KEY` (modo express) en el `.env` de Azure, sin cuenta de servicio. Al mandar código con `git archive | tar -x`, los archivos borrados del repo siguen en la máquina: hubo que borrar a mano `modelo.anthropic.ts` para que compilara.
+
 El modelo se cambia con `ASISTENTE_MODELO` (por defecto `gemini-3.8-flash`). Para medirlo: `pnpm --filter @abasto/asistente evaluar` con las mismas variables (meta 18/20).
 
 **Entrar a las máquinas:**
