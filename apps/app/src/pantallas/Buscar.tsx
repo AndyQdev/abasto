@@ -85,10 +85,6 @@ export function Buscar({ navigation, route }: PantallaDePila<'Buscar'>) {
         <Pressable accessibilityRole="button" accessibilityLabel="Buscar con una foto" onPress={() => navigation.navigate('BuscarPorFoto')} style={e.camara}>
           <Icono nombre="camera-outline" color={COLOR.verde} tamano={22} />
         </Pressable>
-        {/* IA local (src/ia): lista, receta o «quiero hacer 300 salteñas» → carrito */}
-        <Pressable accessibilityRole="button" accessibilityLabel="Pídelo con tus palabras" onPress={() => navigation.navigate('Asistente')} style={e.camara}>
-          <Icono nombre="sparkles-outline" color={COLOR.verde} tamano={22} />
-        </Pressable>
       </View>
 
       <View style={e.segmentado}>

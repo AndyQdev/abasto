@@ -9,9 +9,9 @@
 import type { Producto } from '@abasto/comercio';
 import type { FotoReconocida } from '../reconocer';
 import type { EntradaDelAsistente, Interprete } from '../local/motor';
-import { candidatos, catalogar, type LineaPropuesta } from './catalogar';
+import { candidatos, catalogar, normalizar, type LineaPropuesta } from './catalogar';
 import type { Contexto } from './con-modelo';
-import { intencionVacia, type Intencion } from './intencion';
+import { intencionVacia, type Intencion, type ItemPedido } from './intencion';
 import { leerFoto, NOMBRES_DE_PLATOS, type LecturaDeFoto } from './foto';
 import { buscarReceta, escalarReceta, recetasDelPlato, type RecetaDeReferencia } from './recetas';
 import { entenderConReglas, rindeDe } from './reglas';
@@ -45,6 +45,9 @@ export interface OpcionesDelAsistente {
   platoElegido?: string | null;
   recetaElegida?: string | null;
 }
+
+/** «hacer», «preparar», «cocinar»: la persona quiere preparar algo, no comprar un producto */
+const PREPARAR = /\b(hacer|preparar|cocinar|elaborar)\b/i;
 
 const pct = (n: number) => `${Math.round(n * 100)} %`;
 
@@ -113,6 +116,18 @@ export async function proponerCompra(entrada: EntradaDelAsistente, productos: Pr
     supuestos.push(...escalada.supuestos);
   }
 
+  // «Quiero hacer 100 empanadas de queso»: el texto pide preparar algo que tenemos como receta, pero un modelo chico
+  // trae solo un ingrediente suelto (pasó con LFM2.5 en el Honor, 10/11: solo «queso»). Manda la receta completa,
+  // escalada con aritmética; lo que la persona nombró y la receta no tiene se queda.
+  const conReceta = !receta && PREPARAR.test(entrada.texto) ? buscarReceta(entrada.texto) : null;
+  if (conReceta && items.length < conReceta.ingredientes.length) {
+    receta = conReceta;
+    const escalada = escalarReceta(receta, intencion.rinde ?? rindeDe(entrada.texto)?.rinde ?? null);
+    const yaEsta = (i: ItemPedido) => escalada.items.some((e) => normalizar(e.nombre).includes(normalizar(i.nombre)) || normalizar(i.nombre).includes(normalizar(e.nombre)));
+    items = [...escalada.items, ...items.filter((i) => !yaEsta(i))];
+    supuestos.push(...escalada.supuestos);
+  }
+
   if (intencion.tipo === 'receta' && !items.length) {
     receta = buscarReceta(intencion.preparacion) ?? buscarReceta(entrada.texto);
     if (receta) {
@@ -135,7 +150,8 @@ export async function proponerCompra(entrada: EntradaDelAsistente, productos: Pr
     supuestos,
     origen,
     receta,
-    falloDelModelo: opciones.interprete && origen !== 'modelo' ? (diag?.error ?? 'El modelo no respondió') : null,
+    // Si la foto ganó, el modelo igual pudo responder bien: solo es falla si el modelo no entendió nada
+    falloDelModelo: opciones.interprete && origenDelTexto !== 'modelo' ? (diag?.error ?? 'El modelo no respondió') : null,
     respuestaMs: diag?.respuestaMs ?? null,
     lectura,
     mensaje,

@@ -1,3 +1,4 @@
+import { Asset } from 'expo-asset';
 import { SaveFormat, manipulateAsync } from 'expo-image-manipulator';
 import { decode } from 'jpeg-js';
 import { loadTensorflowModel, type TensorflowModel } from 'react-native-fast-tflite';
@@ -15,10 +16,24 @@ let modelo: Promise<TensorflowModel> | null = null;
 let catalogo: VectoresDelCatalogo | null = null;
 let platos: VectoresDelCatalogo | null = null;
 
+/**
+ * El .tflite como archivo del teléfono (file://…). En el APK de producción `require()` da un recurso de Android
+ * («assets_modelos_productos», sin esquema) y fast-tflite lo abre con `URL(path)`, que falla: el reconocedor nunca
+ * cargaba y la búsqueda decía «No encontramos ese producto» (10/11). expo-asset lo copia una vez a un archivo.
+ * En desarrollo da la dirección de Metro (http://…), que fast-tflite también abre.
+ */
+async function archivoDelModelo(): Promise<string> {
+  const asset = Asset.fromModule(ARCHIVO_DEL_MODELO);
+  await asset.downloadAsync();
+  const uri = asset.localUri ?? asset.uri;
+  if (!/^(file|https?):\/\//.test(uri)) throw new Error(`No se pudo abrir el modelo de fotos (${uri})`);
+  return uri;
+}
+
 /** Se carga una sola vez y queda en memoria: la segunda foto ya no paga la carga (~200 ms). */
 function cargar(): { modelo: Promise<TensorflowModel>; catalogo: VectoresDelCatalogo } {
   catalogo ??= leerVectores(ARCHIVO_DE_VECTORES);
-  modelo ??= loadTensorflowModel(ARCHIVO_DEL_MODELO, []).catch((e: unknown) => {
+  modelo ??= archivoDelModelo().then((url) => loadTensorflowModel({ url }, [])).catch((e: unknown) => {
     modelo = null; // si falla, la próxima foto vuelve a intentar
     throw e;
   });

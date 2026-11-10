@@ -9,6 +9,8 @@ import { manifiesto, modeloRecomendado, modelosPosibles, nivelDelDispositivo, ty
 /** El modelo elegido sobrevive a cerrar la app */
 const CLAVE = 'abasto.ia.modelo';
 const SIN_MODELO = 'ninguno';
+/** El interruptor «Usar la IA de tu teléfono» de Buscar con una foto */
+const CLAVE_USAR = 'abasto.ia.usar';
 
 export interface IaLocal {
   telefono: string;
@@ -28,6 +30,9 @@ export interface IaLocal {
   cancelar: () => Promise<void>;
   borrar: (m: ModeloLocal) => Promise<void>;
   usar: (m: ModeloLocal | null) => Promise<void>;
+  /** Si la persona prendió «Usar la IA de tu teléfono» (sin modelo bajado no hace nada: se pide bajarlo) */
+  usarIa: boolean;
+  cambiarUsarIa: (v: boolean) => void;
   /** El intérprete del modelo activo; lo carga la primera vez. null si no hay modelo bajado (se usan las reglas). */
   interprete: () => Promise<Interprete | null>;
 }
@@ -41,6 +46,7 @@ export function ProveedorDeIaLocal({ children }: { children: ReactNode }) {
   const [progreso, setProgreso] = useState<IaLocal['progreso']>(null);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [usarIa, setUsarIa] = useState(false);
   const cargado = useRef<{ id: string; interprete: Promise<Interprete> } | null>(null);
 
   const revisar = useCallback(async () => {
@@ -55,6 +61,7 @@ export function ProveedorDeIaLocal({ children }: { children: ReactNode }) {
       setCapacidades(await capacidadesDelTelefono());
       const listos = await revisar();
       const guardado = await AsyncStorage.getItem(CLAVE).catch(() => null);
+      setUsarIa((await AsyncStorage.getItem(CLAVE_USAR).catch(() => null)) === 'si');
       // «ninguno» es una elección: probar o usar la app solo con las reglas y el reconocedor
       setActivoId(guardado === SIN_MODELO ? null : guardado && listos.includes(guardado) ? guardado : (listos[0] ?? null));
     })();
@@ -98,6 +105,11 @@ export function ProveedorDeIaLocal({ children }: { children: ReactNode }) {
     [activoId, revisar, usar],
   );
 
+  const cambiarUsarIa = useCallback((v: boolean) => {
+    setUsarIa(v);
+    void AsyncStorage.setItem(CLAVE_USAR, v ? 'si' : 'no').catch(() => undefined);
+  }, []);
+
   const interprete = useCallback(async () => {
     if (!activo) return null;
     if (cargado.current?.id !== activo.id) {
@@ -129,9 +141,11 @@ export function ProveedorDeIaLocal({ children }: { children: ReactNode }) {
       cancelar: cancelarDescarga,
       borrar,
       usar,
+      usarIa,
+      cambiarUsarIa,
       interprete,
     };
-  }, [capacidades, instalados, activo, progreso, cargando, error, descargar, borrar, usar, interprete]);
+  }, [capacidades, instalados, activo, progreso, cargando, error, descargar, borrar, usar, usarIa, cambiarUsarIa, interprete]);
 
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>;
 }

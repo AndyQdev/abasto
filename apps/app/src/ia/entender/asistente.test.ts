@@ -94,6 +94,13 @@ describe('Asistente de compra', () => {
     expect(p.lineas.some((l) => l.pedido.nombre === 'empanadas de queso')).toBe(false);
   });
 
+  it('«quiero hacer 100 empanadas de queso»: si el modelo trae solo el queso, se usa la receta completa (Honor, 10/11)', async () => {
+    const interprete = interpreteQueDevuelve({ tipo: 'pedido', items: [{ nombre: 'queso', cantidad: 100, unidad: 'g', envase: null }], preparacion: null, rinde: null, supuestos: [] });
+    const p = await proponerCompra({ texto: 'quiero hacer 100 empanadas de queso' }, catalogo, { interprete });
+    expect(p.receta).not.toBeNull();
+    expect(p.intencion.items.length).toBeGreaterThan(1);
+  });
+
   it('una receta que no conocemos pide los ingredientes en vez de inventarlos', async () => {
     const interprete = interpreteQueDevuelve({ tipo: 'receta', items: [], preparacion: 'sushi', rinde: 40, supuestos: [] });
     const p = await proponerCompra({ texto: 'quiero hacer sushi' }, catalogo, { interprete });
@@ -128,6 +135,18 @@ describe('Asistente de compra', () => {
     expect(p.lineas).toEqual([]);
     const elegido = await proponerCompra(foto, catalogo, { ...vio([], []), platoElegido: 'silpancho' });
     expect(elegido.receta?.id).toBe('silpancho');
+  });
+
+  it('si la foto reconoce el plato y el modelo también respondió, no dice que la IA falló (10/11, Honor)', async () => {
+    const interprete = interpreteQueDevuelve({ tipo: 'receta', items: [], preparacion: 'salteña', rinde: null, supuestos: [] });
+    const p = await proponerCompra(foto, catalogo, { interprete, ...vio([], [{ codigo: 'saltena', confianza: 0.9 }]) });
+    expect(p.origen).toBe('foto');
+    expect(p.falloDelModelo).toBeNull();
+  });
+
+  it('si el modelo de verdad no entendió, sí lo dice', async () => {
+    const p = await proponerCompra(foto, catalogo, { interprete: interpreteQueDevuelve(null), ...vio([], [{ codigo: 'saltena', confianza: 0.9 }]) });
+    expect(p.falloDelModelo).not.toBeNull();
   });
 
   it('una foto que no se parece a nada lo dice', async () => {

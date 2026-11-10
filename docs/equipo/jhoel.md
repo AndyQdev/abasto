@@ -1,6 +1,6 @@
 # Jhoel · estado
 
-Actualizado: 09/11/2026 · en main (reparto nuevo: toda la IA)
+Actualizado: 10/11/2026 · en main (reparto nuevo: toda la IA)
 
 ## Estoy en
 Despliegue en tres nubes (lo pidió el ingeniero): **las tres están arriba desde el 08/11** y una compra completa pasa por las tres. Google es la puerta de entrada (Keycloak, Router, webs y Catálogo), AWS tiene Conecta y n8n, Azure Pedidos, Cobros y Asistente. Todo en `docs/despliegue.md`. Falta el APK con las direcciones de la nube.
@@ -58,6 +58,12 @@ Despliegue en tres nubes (lo pidió el ingeniero): **las tres están arriba desd
 - `contracts/openapi/asistente.yaml`: `/v1/agentes/monitorear` y `/v1/tableros` (solo agregué; nada cambió de lo que existía).
 
 ## Necesito del otro
+- **Andrés (aviso, 10/11, Buscar con una foto):** toqué dos pantallas tuyas.
+  - `BuscarPorFoto.tsx` ahora solo pone su tarjeta de producto y monta `BuscarConFoto` (de `src/ia`): arriba «¿Qué quieres reconocer?» (Producto, Comida o Receta) y el interruptor «Usar la IA de tu teléfono» (si no hay modelo, ofrece bajarlo). La abren la cámara del Inicio y la de Buscar.
+  - `Buscar.tsx`: saqué el botón ✨ «Pídelo con tus palabras»; escribir una lista o receta quedó en Receta. La ruta `Asistente` sigue registrada, sin botón.
+  - Arreglo: la app se cerraba al cargar el modelo en teléfonos con Snapdragon (llama.rn usaba la GPU por OpenCL y el driver de Adreno se caía). Ahora el modelo corre solo en la CPU.
+  - Arreglo: en el APK, Buscar por foto decía siempre «No encontramos ese producto»: fast-tflite no abría el modelo (`require()` da un recurso sin `file://`). Ahora se copia a un archivo con expo-asset. En desarrollo no se veía.
+  - Arreglo: «Not enough context space» en la IA local: cada pregunta limpia la memoria del modelo, la foto entra achicada a 448 px y el contexto subió a 4096. Ya no sale «La IA no pudo responder» cuando la foto sí reconoció el plato.
 - **Andrés (09/11): Vertex AI ya está activo en Azure** con la `VERTEX_API_KEY` que conseguiste (modo express), puesta en el `.env` de Azure sin pasar por el repo. El Analista responde con `gemini-3.8-flash` (probado desde afuera: «¿qué tiendas me deben más plata?» y «mis 3 productos más vendidos»). Ya no hace falta la cuenta de servicio. Lo de abajo queda como referencia.
 - Andrés (aviso, 08/11, Gemini en Vertex AI): dejamos Anthropic; el Analista usa Gemini en Vertex AI con la cuenta de pago de un amigo. El código ya está (`ModeloVertex`) y sin credenciales sigue el simulado. Te toca conseguir y ponerlo en Azure:
   - Del proyecto de Google del amigo: **ID del proyecto**, la **API de Vertex AI activada** y una **cuenta de servicio** con el rol «Vertex AI User» y su llave JSON (o, si prefiere, una llave de API de Vertex en modo express).

@@ -18,6 +18,8 @@ export { combinarConTexto, productosPorFoto, type Reconocido } from './parecido'
 export { ProveedorDeIaLocal, useIaLocal } from './local/estado';
 export { PantallaAsistente, PantallaIaLocal } from './vistas/Pantallas';
 export { AsistenteDeCompra } from './vistas/AsistenteDeCompra';
+// Buscar con una foto: producto, comida o receta, con o sin la IA del teléfono (10/11)
+export { BuscarConFoto, type QueReconocer } from './vistas/BuscarConFoto';
 export { proponerCompra, type Propuesta } from './entender/asistente';
 
 function SinIA({ alCerrar }: { alCerrar: () => void }) {
