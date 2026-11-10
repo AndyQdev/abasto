@@ -89,10 +89,14 @@ export class EnviadorFirebase implements EnviadorDeNotificaciones {
 
 /** El mensaje tal como lo pide la API v1 de Firebase. */
 export function mensajeDeFirebase(token: string, n: Notificacion) {
+  // Con la app cerrada manda android.notification.tag; con la app abierta, expo-notifications arma la notificación
+  // con data.tag como identificador. Las dos tienen que ser pedido-<id> para ocupar el mismo lugar que la fija.
+  const datos = n.etiqueta ? { ...n.datos, tag: n.etiqueta } : n.datos;
+  if (n.fija) return mensajeFijo(token, n, datos);
   return {
     token,
     notification: { title: n.titulo, body: n.cuerpo },
-    data: n.datos,
+    data: datos,
     android: {
       priority: 'HIGH',
       notification: {
@@ -106,6 +110,24 @@ export function mensajeDeFirebase(token: string, n: Notificacion) {
       },
     },
     apns: { payload: { aps: { sound: 'default', ...(n.etiqueta ? { 'thread-id': n.etiqueta } : {}) } } },
+  };
+}
+
+/**
+ * «Va en camino», fija hasta que llega, como en las apps de delivery. Si el mensaje trae `notification`, Android la
+ * muestra solo y no hay forma de fijarla (el `sticky` de FCM solo evita que se borre al tocarla). Por eso va como
+ * mensaje de solo datos, con prioridad alta: el servicio de expo-notifications de la app la recibe aunque la app esté
+ * cerrada y la arma con lo que trae `data` (`title`, `message`, `sticky` → setOngoing, `channelId` y `tag`).
+ * «¡Llegó tu pedido!» trae la misma etiqueta y la reemplaza.
+ */
+function mensajeFijo(token: string, n: Notificacion, datos: Record<string, string>) {
+  return {
+    token,
+    data: { ...datos, title: n.titulo, message: n.cuerpo, sticky: 'true', autoDismiss: 'false', channelId: n.canal },
+    android: { priority: 'HIGH' },
+    apns: {
+      payload: { aps: { alert: { title: n.titulo, body: n.cuerpo }, sound: 'default', ...(n.etiqueta ? { 'thread-id': n.etiqueta } : {}) } },
+    },
   };
 }
 

@@ -41,7 +41,7 @@ Los 16 casos de uso tienen pantalla, prueba y sus diagramas ICONIX. Ni el Panel 
     - Conecta escucha `conecta.notificaciones` y manda por Firebase (API v1, sin SDK). Guarda los teléfonos en DynamoDB.
     - No repite: `AVISO#<evento>` y `Idempotency-Key` en las promociones.
     - La app pide el permiso, registra el token, abre la pantalla correcta al tocar y pone o quita la fija.
-  - **Sin la cuenta de Firebase** queda en modo prueba: se anota y no sale. Hace falta `apps/app/google-services.json` y `.firebase/firebase.json` (los dos ignorados por git).
+  - **Firebase de verdad (10/11):** proyecto `abasto-8989d`. Los dos archivos (`apps/app/google-services.json` y `.firebase/firebase.json`) están solo en mi laptop, ignorados por git. Sin ellos queda en modo prueba: se anota y no sale. Probado en el emulador con la app abierta y en segundo plano: cada paso reemplaza al anterior y «va en camino» queda fija (sale como mensaje de solo datos y la arma la app). Falta probar con la app cerrada en una compilación release.
   - **Pruebas:** Conecta 79, app 191, Superadmin 35 y e2e `notificaciones.spec.ts` (los cuatro avisos de un pedido y una promoción desde el Superadmin).
 - **Reportes como chat con mesa de trabajo (10/11, pedido de Andrés; Jhoel: es tu carpeta, te cuento):**
   - **Qué cambió:** Inteligencia › Reportes ahora es un chat con el Analista. A la izquierda la conversación (texto o voz); a la derecha la mesa de trabajo, con una pestaña por reporte. La lógica del Asistente no cambió: mismo `POST /v1/reportes/preguntas`, mismo contrato.

@@ -26,7 +26,8 @@ La puerta de entrada de afuera: API pública para e-commerce, n8n, el plugin Woo
   - **Teléfonos:** la app registra su token de Firebase (`PUT /v1/dispositivos`, partición `DISPOSITIVOS`) y lo da de baja al salir.
   - **Avisos de pedidos:** la cola durable `conecta.notificaciones` (`pedido.*`, `cobro.*`) avisa a los teléfonos de la tienda en cada paso del pedido.
     - Lo que se dice está en `dominio/notificacion.ts`.
-    - Etiqueta `pedido-<id>`: un paso reemplaza al otro en la bandeja. «En camino» va fija.
+    - Etiqueta `pedido-<id>` (también en `data.tag`): un paso reemplaza al otro en la bandeja.
+    - «En camino» va fija: sale como mensaje de solo datos y la arma la app (`mensajeFijo` en `enviador.firebase.ts`).
     - `AVISO#<id del evento>`: un evento suena una sola vez.
   - **Promociones:** `POST /v1/admin/promociones` (solo admin, con `Idempotency-Key`) las manda a todos los teléfonos.
   - **Envío:** Firebase API v1 sin SDK (`infraestructura/push/enviador.firebase.ts`): JWT RS256 con la cuenta de servicio de `FIREBASE_CREDENCIALES`. Sin ese archivo, modo prueba: se anota y no sale.

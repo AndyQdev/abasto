@@ -23,6 +23,14 @@ const enCamino: Notificacion = {
   datos: { tipo: 'pedido', pedidoId: 'p-1', estado: 'DESPACHADO' },
 };
 
+const confirmado: Notificacion = {
+  titulo: 'Confirmaron tu pedido',
+  cuerpo: 'Tu pedido A-1053 ya está en manos del vendedor.',
+  canal: 'pedidos',
+  etiqueta: 'pedido-p-1',
+  datos: { tipo: 'pedido', pedidoId: 'p-1', estado: 'CONFIRMADO' },
+};
+
 const json = (cuerpo: unknown, status = 200) => new Response(JSON.stringify(cuerpo), { status, headers: { 'content-type': 'application/json' } });
 
 /** Google y Firebase de mentira: el primer pedido da el permiso; los demás responden lo que diga `firebase`. */
@@ -39,7 +47,7 @@ describe('Enviador de Firebase', () => {
     const pedir = servidores(json({ name: 'projects/abasto-prueba/messages/1' }));
     const enviador = new EnviadorFirebase(cuenta, pedir as unknown as typeof fetch);
 
-    expect(await enviador.enviar('token-del-telefono', enCamino)).toBe('enviada');
+    expect(await enviador.enviar('token-del-telefono', confirmado)).toBe('enviada');
 
     const [urlPermiso, pedidoPermiso] = pedir.mock.calls[0] as unknown as [string, RequestInit];
     expect(urlPermiso).toBe('https://oauth2.googleapis.com/token');
@@ -56,10 +64,35 @@ describe('Enviador de Firebase', () => {
     expect((pedido.headers as Record<string, string>).authorization).toBe('Bearer permiso-1');
     expect(JSON.parse(pedido.body as string).message).toMatchObject({
       token: 'token-del-telefono',
-      notification: { title: 'Tu pedido va en camino', body: 'Tu pedido A-1053 ya salió. Te avisamos cuando llegue.' },
-      data: { tipo: 'pedido', pedidoId: 'p-1', estado: 'DESPACHADO' },
-      android: { priority: 'HIGH', notification: { channel_id: 'pedidos', tag: 'pedido-p-1', sticky: true, notification_priority: 'PRIORITY_HIGH' } },
+      notification: { title: 'Confirmaron tu pedido', body: 'Tu pedido A-1053 ya está en manos del vendedor.' },
+      // `tag` también en data: con la app abierta, expo-notifications la usa como identificador y reemplaza a la anterior
+      data: { tipo: 'pedido', pedidoId: 'p-1', estado: 'CONFIRMADO', tag: 'pedido-p-1' },
+      android: { priority: 'HIGH', notification: { channel_id: 'pedidos', tag: 'pedido-p-1', sticky: false, notification_priority: 'PRIORITY_HIGH' } },
     });
+  });
+
+  it('«va en camino» sale como mensaje de solo datos: la app la arma fija aunque esté cerrada', async () => {
+    const pedir = servidores(json({}));
+    await new EnviadorFirebase(cuenta, pedir as unknown as typeof fetch).enviar('t', enCamino);
+    const mensaje = JSON.parse((pedir.mock.calls[1] as unknown as [string, RequestInit])[1].body as string).message;
+
+    // Con `notification`, Android la muestra solo y no se puede fijar. Sin ella, expo-notifications la arma con lo de
+    // data: sticky → setOngoing, tag → el mismo lugar que los otros pasos, channelId → suena por «Tus pedidos».
+    expect(mensaje.notification).toBeUndefined();
+    expect(mensaje.android).toEqual({ priority: 'HIGH' });
+    expect(mensaje.data).toEqual({
+      tipo: 'pedido',
+      pedidoId: 'p-1',
+      estado: 'DESPACHADO',
+      tag: 'pedido-p-1',
+      title: 'Tu pedido va en camino',
+      message: 'Tu pedido A-1053 ya salió. Te avisamos cuando llegue.',
+      sticky: 'true',
+      autoDismiss: 'false',
+      channelId: 'pedidos',
+    });
+    // En iPhone (cuando haya cuenta de Apple) se ve igual como alerta
+    expect(mensaje.apns.payload.aps).toMatchObject({ alert: { title: 'Tu pedido va en camino' }, 'thread-id': 'pedido-p-1' });
   });
 
   it('usa el mismo permiso hasta 5 minutos antes de que venza', async () => {
@@ -104,9 +137,10 @@ describe('Enviador de Firebase', () => {
       canal: 'promociones',
       datos: { tipo: 'promocion', promocionId: 'x', productoId: '' },
     });
-    const notificacion = JSON.parse((pedir.mock.calls[1] as unknown as [string, RequestInit])[1].body as string).message.android.notification;
-    expect(notificacion).toMatchObject({ channel_id: 'promociones', sticky: false, notification_priority: 'PRIORITY_DEFAULT' });
-    expect(notificacion.tag).toBeUndefined();
+    const mensaje = JSON.parse((pedir.mock.calls[1] as unknown as [string, RequestInit])[1].body as string).message;
+    expect(mensaje.android.notification).toMatchObject({ channel_id: 'promociones', sticky: false, notification_priority: 'PRIORITY_DEFAULT' });
+    expect(mensaje.android.notification.tag).toBeUndefined();
+    expect(mensaje.data.tag).toBeUndefined();
   });
 });
 
