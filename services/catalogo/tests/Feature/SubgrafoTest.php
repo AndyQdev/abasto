@@ -100,6 +100,15 @@ it('una tienda no puede ver los productos de un mayorista como si fuera el mayor
     expect($r['errors'][0]['message'])->toContain('rol mayorista');
 });
 
+it('un admin ve los productos de su empresa (Superadmin › Promociones elige de ahí)', function () {
+    // El equipo de Abasto es admin de la empresa «abasto»; con la semilla de prueba alcanza con una empresa que vende
+    comoEmpresa('lp', ['admin']);
+    $r = graphql('{ misProductos { id } }');
+
+    expect($r)->not->toHaveKey('errors');
+    expect(collect($r['data']['misProductos'])->pluck('id'))->toContain('HP-0400');
+});
+
 it('sin sesión no responde datos', function () {
     $r = graphql(PRODUCTOS);
 

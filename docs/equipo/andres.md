@@ -34,6 +34,15 @@ Actualizado: 10/11/2026 · en main (los dos trabajamos ahí)
 Los 16 casos de uso tienen pantalla, prueba y sus diagramas ICONIX. Ni el Panel ni el Superadmin tienen módulos en construcción. Falta lo que depende de afuera o de una decisión (ver «Sigue»).
 
 ## Terminé
+- **Notificaciones push (10/11, pedido del ingeniero; `docs/notificaciones.md`):**
+  - **Pedidos:** cada paso del pedido le avisa al teléfono de la tienda (confirmado, en preparación, en camino, entregado, rechazado, pago con QR, reclamo respondido). Una notificación por pedido: cada paso reemplaza al anterior. **«Va en camino» queda fija** hasta que llega, como en las apps de delivery.
+  - **Superadmin › Promociones:** le llega a todos los que tienen la app, con vista previa del teléfono y el producto que abre.
+  - **Cómo está armado:**
+    - Conecta escucha `conecta.notificaciones` y manda por Firebase (API v1, sin SDK). Guarda los teléfonos en DynamoDB.
+    - No repite: `AVISO#<evento>` y `Idempotency-Key` en las promociones.
+    - La app pide el permiso, registra el token, abre la pantalla correcta al tocar y pone o quita la fija.
+  - **Sin la cuenta de Firebase** queda en modo prueba: se anota y no sale. Hace falta `apps/app/google-services.json` y `.firebase/firebase.json` (los dos ignorados por git).
+  - **Pruebas:** Conecta 79, app 191, Superadmin 35 y e2e `notificaciones.spec.ts` (los cuatro avisos de un pedido y una promoción desde el Superadmin).
 - **Reportes como chat con mesa de trabajo (10/11, pedido de Andrés; Jhoel: es tu carpeta, te cuento):**
   - **Qué cambió:** Inteligencia › Reportes ahora es un chat con el Analista. A la izquierda la conversación (texto o voz); a la derecha la mesa de trabajo, con una pestaña por reporte. La lógica del Asistente no cambió: mismo `POST /v1/reportes/preguntas`, mismo contrato.
   - **Plantillas:** el reporte se arma según la forma de la respuesta (`reportes/conversacion.ts`, `plantillaDe`):
@@ -98,6 +107,7 @@ Los 16 casos de uso tienen pantalla, prueba y sus diagramas ICONIX. Ni el Panel 
 - e2e: 22 pruebas en verde (02/11).
 
 ## Cambié en contratos
+- 10/11 · Conecta (OpenAPI, aditivo): `PUT /v1/dispositivos`, `DELETE /v1/dispositivos/{token}`, `POST /v1/dispositivos/prueba`, `GET|POST /v1/admin/promociones` y `GET /v1/admin/notificaciones`. AsyncAPI: la cola nueva `conecta.notificaciones` (solo consume `pedido.*` y `cobro.*`, no cambia ningún mensaje; también en `infra/rabbitmq/definitions.json`). Catálogo: `misProductos` también responde al rol admin (los productos de su empresa), para elegir el producto de una promoción. **Jhoel:** en AWS, para que salgan de verdad, copiar la cuenta de servicio de Firebase a `infra/despliegue/aws/secretos/firebase.json` y `docker compose up -d --build conecta` (`compose.yml` ya la monta). Tu proyector no cambia.
 - 06/11 · Pedidos (CU-16, aditivo): `abrirReclamo`, `resolverReclamo`, `reclamos(estado)` y `Pedido.reclamo`; migración V4; supergrafo regenerado. AsyncAPI: `pedido.reclamo_abierto` y `pedido.reclamo_resuelto`. **Jhoel:** tu proyector los recibe y los ignora (caen en `default`); no hay que tocar nada. Si quieres contar reclamos en Reportes, ahí están.
 - 06/11 · Catálogo: `tiendas`, `equipoDeAbasto`, `suspenderTienda`, `reactivarTienda` (solo admin). Pedidos: `SemanaDeVentas.tiendas`. Aditivo; supergrafo regenerado. **Jhoel:** el Catálogo corre su escucha dentro del contenedor: después de `git pull`, `docker compose --profile servicios restart catalogo` para que tome el código nuevo.
 - 06/11 · Conecta (OpenAPI, aditivo, CU-10): llaves de API (`/v1/llaves`), webhooks (`/v1/webhooks`, `/v1/entregas`), lectura para el e-commerce (`/v1/mayoristas`, `/v1/productos`, `/v1/pedidos/{id}`), administración (`/v1/admin/...`) y `POST /mcp`. `X-Abasto-Origen` suma `mcp`. Cola nueva `conecta.webhooks`. **Jhoel:** después de `git pull`, `pnpm install`, `pnpm todo` (corre `al-dia.mjs`, crea `conecta-integraciones`). El MCP de reportes sigue siendo tuyo, en Asistente; no toqué nada. Falta el origen `mcp` en tu proyector solo si quieres contarlo aparte.

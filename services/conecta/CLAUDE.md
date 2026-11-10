@@ -22,4 +22,14 @@ La puerta de entrada de afuera: API pública para e-commerce, n8n, el plugin Woo
   - **Idempotencia por empresa:** el registro guarda `<empresa>|<clave>` (06/11): la clave de una tienda nunca choca ni le responde a otra. Pedidos rechaza con `CLAVE_EN_USO` una clave que ya usó otra tienda.
   - Tablas: particiones `LLAVES`, `WEBHOOKS` y `ENTREGAS` en `conecta` (`integraciones.dynamodb.ts`). `crear-tablas.mjs` activa el TTL de `venceEn` (solo borra en AWS; DynamoDB Local no).
 
+- **Notificaciones push (10/11, `docs/notificaciones.md`):**
+  - **Teléfonos:** la app registra su token de Firebase (`PUT /v1/dispositivos`, partición `DISPOSITIVOS`) y lo da de baja al salir.
+  - **Avisos de pedidos:** la cola durable `conecta.notificaciones` (`pedido.*`, `cobro.*`) avisa a los teléfonos de la tienda en cada paso del pedido.
+    - Lo que se dice está en `dominio/notificacion.ts`.
+    - Etiqueta `pedido-<id>`: un paso reemplaza al otro en la bandeja. «En camino» va fija.
+    - `AVISO#<id del evento>`: un evento suena una sola vez.
+  - **Promociones:** `POST /v1/admin/promociones` (solo admin, con `Idempotency-Key`) las manda a todos los teléfonos.
+  - **Envío:** Firebase API v1 sin SDK (`infraestructura/push/enviador.firebase.ts`): JWT RS256 con la cuenta de servicio de `FIREBASE_CREDENCIALES`. Sin ese archivo, modo prueba: se anota y no sale.
+  - **Para el Superadmin:** `GET /v1/admin/notificaciones` da el resumen y las últimas 50.
+
 Probar: `pnpm --filter @abasto/conecta test`; las de integración con `test:e2e` (necesitan `pnpm infra`).

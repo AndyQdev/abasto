@@ -185,6 +185,75 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Entrega' }
+  /v1/dispositivos:
+    put:
+      summary: (10/11, notificaciones push) La app registra el token de Firebase de este teléfono para recibir los avisos de su tienda
+      description: >-
+        Se llama al entrar y cada vez que Firebase cambia el token. Idempotente: un token es un teléfono; si era de otra
+        cuenta, pasa a esta. Una llave de API (CU-10) no puede registrar teléfonos.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, plataforma]
+              properties:
+                token: { type: string, description: Token de Firebase Cloud Messaging del teléfono }
+                plataforma: { type: string, enum: [android, ios] }
+      responses:
+        '200': { description: '{ registrado: true, plataforma }' }
+        '400': { description: TOKEN_INVALIDO, PLATAFORMA_INVALIDA o SIN_EMPRESA }
+  /v1/dispositivos/{token}:
+    delete:
+      summary: (10/11) Al cerrar sesión, el teléfono deja de recibir lo de esa tienda. Solo lo quita su misma empresa
+      parameters:
+        - { name: token, in: path, required: true, schema: { type: string } }
+      responses:
+        '204': { description: Quitado (o no era de esta empresa) }
+  /v1/dispositivos/prueba:
+    post:
+      summary: '(10/11) «Probar una notificación» de la app, le manda una a los teléfonos de quien la pide'
+      responses:
+        '200': { description: '{ telefonos, enviadas }' }
+  /v1/admin/promociones:
+    get:
+      summary: (10/11, solo admin) Las últimas 30 promociones enviadas, con a cuántos teléfonos llegaron
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Promocion' } }
+    post:
+      summary: (10/11, solo admin) Manda una promoción como notificación push a todos los teléfonos con la app
+      description: >-
+        El Idempotency-Key es el id de la promoción: repetirla (doble clic, red que se corta) devuelve la misma y no
+        vuelve a sonar en los teléfonos. Título hasta 60 letras, mensaje hasta 180; productoId opcional (tocarla abre su ficha).
+      parameters:
+        - { name: Idempotency-Key, in: header, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [titulo, mensaje]
+              properties:
+                titulo: { type: string, maxLength: 60 }
+                mensaje: { type: string, maxLength: 180 }
+                productoId: { type: string, nullable: true, example: AB-005 }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Promocion' }
+        '400': { description: 'TITULO_REQUERIDO, TITULO_LARGO, MENSAJE_REQUERIDO, MENSAJE_LARGO, PRODUCTO_INVALIDO o FALTA_CLAVE' }
+        '403': { description: No es del equipo de Abasto }
+  /v1/admin/notificaciones:
+    get:
+      summary: (10/11, solo admin) Teléfonos registrados, si Firebase está conectado y las últimas 50 notificaciones que salieron
+      responses:
+        '200': { description: '{ modo: firebase | prueba, telefonos, empresas, recientes: [{ cuando, orgId, titulo, cuerpo, canal, datos, resultado }] }' }
   /v1/mayoristas:
     get:
       summary: (CU-10) A quién le puede comprar esta tienda
@@ -283,6 +352,18 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    Promocion:
+      type: object
+      properties:
+        id: { type: string, format: uuid, description: El Idempotency-Key con que se creó }
+        titulo: { type: string }
+        mensaje: { type: string }
+        productoId: { type: string, nullable: true }
+        creadaPor: { type: string }
+        creadaEn: { type: string, format: date-time }
+        destinatarios: { type: integer, description: Teléfonos a los que se intentó mandar }
+        enviadas: { type: integer }
+        fallidas: { type: integer }
     Llave:
       type: object
       properties:

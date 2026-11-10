@@ -225,6 +225,10 @@ services:
       KEYCLOAK_CONECTA_SECRETO: ${KEYCLOAK_CONECTA_SECRETO:-conecta-integraciones-local}
       # Solo en desarrollo: acepta webhooks a direcciones locales. En producción queda vacío
       WEBHOOKS_PERMITIR_LOCAL: ${WEBHOOKS_PERMITIR_LOCAL:-si}
+      # Notificaciones push: la cuenta de servicio de Firebase va en .firebase/firebase.json (ignorado por git).
+      # Sin ese archivo, las notificaciones quedan en modo prueba: se anotan y no salen
+      FIREBASE_CREDENCIALES: /secretos/firebase.json
+    volumes: ["./.firebase:/secretos:ro"]
     extra_hosts: ["host.docker.internal:host-gateway"]
     ports: ["8084:8084"]
     depends_on: [dynamodb, rabbitmq]

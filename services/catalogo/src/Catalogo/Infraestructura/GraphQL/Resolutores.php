@@ -274,7 +274,11 @@ final readonly class Resolutores
      */
     public function misProductos(mixed $_, array $args): array
     {
-        $usuario = Usuario::actual()->exigirRol('mayorista');
+        // El equipo de Abasto (admin) también ve los productos de Abasto: Superadmin › Promociones elige de ahí (10/11)
+        $usuario = Usuario::actual();
+        if (!in_array('admin', $usuario->roles, true)) {
+            $usuario->exigirRol('mayorista');
+        }
         $vistas = $this->catalogo->delMayorista($usuario->orgId, $args['busqueda'] ?? null);
 
         return array_map(static fn (VistaDeProducto $v) => Vistas::producto($v), $vistas);

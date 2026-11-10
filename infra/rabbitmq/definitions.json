@@ -27,7 +27,9 @@
     { "name": "cobros.cuentas", "vhost": "/", "durable": true, "auto_delete": false, "arguments": { "x-queue-type": "quorum", "x-dead-letter-exchange": "abasto.dlx", "x-dead-letter-routing-key": "cobros.cuentas", "x-delivery-limit": 5 } },
     { "name": "cobros.cuentas.dlq", "vhost": "/", "durable": true, "auto_delete": false, "arguments": {} },
     { "name": "conecta.webhooks", "vhost": "/", "durable": true, "auto_delete": false, "arguments": { "x-queue-type": "quorum", "x-dead-letter-exchange": "abasto.dlx", "x-dead-letter-routing-key": "conecta.webhooks", "x-delivery-limit": 5 } },
-    { "name": "conecta.webhooks.dlq", "vhost": "/", "durable": true, "auto_delete": false, "arguments": {} }
+    { "name": "conecta.webhooks.dlq", "vhost": "/", "durable": true, "auto_delete": false, "arguments": {} },
+    { "name": "conecta.notificaciones", "vhost": "/", "durable": true, "auto_delete": false, "arguments": { "x-queue-type": "quorum", "x-dead-letter-exchange": "abasto.dlx", "x-dead-letter-routing-key": "conecta.notificaciones", "x-delivery-limit": 5 } },
+    { "name": "conecta.notificaciones.dlq", "vhost": "/", "durable": true, "auto_delete": false, "arguments": {} }
   ],
   "bindings": [
     { "source": "abasto.comandos", "vhost": "/", "destination": "catalogo.comandos", "destination_type": "queue", "routing_key": "catalogo.#", "arguments": {} },
@@ -47,6 +49,9 @@
     { "source": "abasto.dlx", "vhost": "/", "destination": "cobros.cuentas.dlq", "destination_type": "queue", "routing_key": "cobros.cuentas", "arguments": {} },
     { "source": "abasto.eventos", "vhost": "/", "destination": "conecta.webhooks", "destination_type": "queue", "routing_key": "pedido.*", "arguments": {} },
     { "source": "abasto.eventos", "vhost": "/", "destination": "conecta.webhooks", "destination_type": "queue", "routing_key": "cobro.*", "arguments": {} },
-    { "source": "abasto.dlx", "vhost": "/", "destination": "conecta.webhooks.dlq", "destination_type": "queue", "routing_key": "conecta.webhooks", "arguments": {} }
+    { "source": "abasto.dlx", "vhost": "/", "destination": "conecta.webhooks.dlq", "destination_type": "queue", "routing_key": "conecta.webhooks", "arguments": {} },
+    { "source": "abasto.eventos", "vhost": "/", "destination": "conecta.notificaciones", "destination_type": "queue", "routing_key": "pedido.*", "arguments": {} },
+    { "source": "abasto.eventos", "vhost": "/", "destination": "conecta.notificaciones", "destination_type": "queue", "routing_key": "cobro.*", "arguments": {} },
+    { "source": "abasto.dlx", "vhost": "/", "destination": "conecta.notificaciones.dlq", "destination_type": "queue", "routing_key": "conecta.notificaciones", "arguments": {} }
   ]
 }

@@ -49,6 +49,9 @@ services:
       # RabbitMQ está en Azure. Sin él la API sigue y reintenta cada 5 s
       RABBITMQ_URL: ${RABBITMQ_URL:-}
       WEBHOOKS_PERMITIR_LOCAL: ""
+      # Notificaciones push: copiar la cuenta de servicio de Firebase a secretos/firebase.json (no va al repo)
+      FIREBASE_CREDENCIALES: /secretos/firebase.json
+    volumes: ["./secretos:/secretos:ro"]
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8084/salud"]
       <<: *salud

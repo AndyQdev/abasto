@@ -49,7 +49,15 @@
           "isAndroidBackgroundLocationEnabled": false
         }
       ],
-      "llama.rn"
+      "llama.rn",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notificacion.png",
+          "color": "#182D25",
+          "defaultChannel": "pedidos"
+        }
+      ]
     ],
     "scheme": "abasto",
     "ios": {

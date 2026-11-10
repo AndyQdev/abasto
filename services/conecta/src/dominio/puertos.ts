@@ -1,3 +1,4 @@
+import type { Dispositivo, Notificacion, Promocion, ResultadoDeEnvio } from './notificacion.js';
 import type { EntradaDeBitacora } from './bitacora.js';
 import type { LlaveDeApi } from './llave-de-api.js';
 import type { Operacion } from './operacion.js';
@@ -80,6 +81,39 @@ export interface ConsultasDeCompra {
   misCompras(token: string): Promise<unknown[]>;
 }
 
+/** Teléfonos con la app (notificaciones push). Una fila por token. */
+export interface RegistroDeDispositivos {
+  guardar(d: Dispositivo): Promise<void>;
+  porToken(token: string): Promise<Dispositivo | null>;
+  quitar(token: string): Promise<void>;
+  deOrganizacion(orgId: string): Promise<Dispositivo[]>;
+  todos(): Promise<Dispositivo[]>;
+}
+
+/** Manda una notificación a un teléfono (Firebase Cloud Messaging). */
+export interface EnviadorDeNotificaciones {
+  /** «firebase» o «prueba» (sin credenciales: se anota pero no sale). Lo ve el Superadmin. */
+  readonly modo: 'firebase' | 'prueba';
+  enviar(token: string, n: Notificacion): Promise<ResultadoDeEnvio>;
+}
+
+export interface RegistroDePromociones {
+  /** Crea la promoción solo si no existe ese id (el Idempotency-Key): un doble clic no la manda dos veces. */
+  crearSiNoExiste(p: Promocion): Promise<boolean>;
+  porId(id: string): Promise<Promocion | null>;
+  actualizar(p: Promocion): Promise<void>;
+  ultimas(cuantas: number): Promise<Promocion[]>;
+}
+
+/** Cada evento avisa una sola vez aunque RabbitMQ lo entregue de nuevo. */
+export interface RegistroDeAvisos {
+  primeraVez(eventoId: string): Promise<boolean>;
+}
+
+export const REGISTRO_DE_DISPOSITIVOS = Symbol('RegistroDeDispositivos');
+export const ENVIADOR_DE_NOTIFICACIONES = Symbol('EnviadorDeNotificaciones');
+export const REGISTRO_DE_PROMOCIONES = Symbol('RegistroDePromociones');
+export const REGISTRO_DE_AVISOS = Symbol('RegistroDeAvisos');
 export const CONSULTAS_DE_COMPRA = Symbol('ConsultasDeCompra');
 export const REGISTRO_DE_LLAVES = Symbol('RegistroDeLlaves');
 export const CUENTAS_DE_INTEGRACION = Symbol('CuentasDeIntegracion');

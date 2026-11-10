@@ -213,3 +213,36 @@ main {
 .ciudad-valor { font-size: 0.875rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .aviso { position: fixed; right: 1.5rem; bottom: 1.5rem; max-width: 420px; padding: 0.9rem 1.1rem; border-radius: var(--radio-md); background: hsl(var(--tinta)); color: hsl(var(--tinta-texto)); box-shadow: var(--sombra-modal); font-weight: 600; }
 @media (max-width: 900px) { .datos { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* ---------- Promociones (notificaciones push) ---------- */
+.promo-modo-activo { color: hsl(var(--exito-suave-texto)); }
+.promo-modo-prueba { color: hsl(var(--advertencia-suave-texto)); }
+.promo-armado { display: grid; grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr); gap: 1rem; align-items: start; margin-bottom: 1.5rem; }
+.promo-formulario { display: grid; gap: 0.9rem; }
+.promo-formulario label { display: grid; gap: 0.35rem; }
+.promo-formulario textarea.entrada { height: auto; padding: 0.6rem 0.875rem; resize: vertical; font: inherit; }
+.promo-etiqueta { display: flex; justify-content: space-between; font-weight: 600; }
+.promo-etiqueta small { color: hsl(var(--texto-3)); font-weight: 500; }
+.promo-pie { justify-content: flex-end; align-items: center; gap: 0.75rem; }
+.promo-confirmar { padding: 0.9rem 1rem; border-radius: var(--radio-md); background: hsl(var(--advertencia-suave)); color: hsl(var(--advertencia-suave-texto)); }
+.promo-confirmar p { margin: 0 0 0.6rem; }
+.promo-confirmar .acciones { justify-content: flex-end; }
+.promo-telefono { display: grid; gap: 0.5rem; justify-items: center; }
+.promo-pantalla {
+  width: 100%; max-width: 320px; min-height: 260px; padding: 0.75rem; border-radius: 34px; border: 8px solid #1b1f1d;
+  background: linear-gradient(160deg, #2f4a3e, #182d25 55%, #0f1d18); box-shadow: var(--sombra-carta);
+}
+.promo-hora { color: #fff; font-weight: 700; font-size: 0.8rem; text-align: center; margin: 0.25rem 0 0.75rem; }
+.promo-notificacion { padding: 0.7rem 0.8rem; border-radius: 18px; background: rgba(250, 252, 247, 0.96); color: #182d25; animation: promo-bajar 0.35s ease-out; }
+@keyframes promo-bajar { from { opacity: 0; transform: translateY(-8px); } }
+.promo-app { display: flex; align-items: center; gap: 0.4rem; font-size: 0.7rem; color: #5b6b62; margin-bottom: 0.35rem; }
+.promo-icono { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 6px; background: #182d25; color: #c9f45a; font-size: 0.7rem; font-weight: 800; }
+.promo-cuerpo { display: flex; gap: 0.6rem; justify-content: space-between; align-items: flex-start; }
+.promo-cuerpo strong { font-size: 0.85rem; overflow-wrap: anywhere; }
+.promo-cuerpo p { margin: 0.15rem 0 0; font-size: 0.8rem; line-height: 1.35; overflow-wrap: anywhere; }
+.promo-cuerpo img { width: 44px; height: 44px; border-radius: 10px; object-fit: contain; background: #fff; flex: none; }
+.promo-subtitulo { font-family: var(--fuente-titulo); font-size: 1.1rem; margin: 1.5rem 0 0.75rem; }
+.promo-enviada { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 0.75rem; }
+.promo-enviada p { margin: 0.2rem 0; }
+.promo-tabla { padding: 0; overflow-x: auto; }
+@media (max-width: 760px) { .promo-armado { grid-template-columns: 1fr; } }

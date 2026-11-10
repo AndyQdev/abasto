@@ -3,6 +3,7 @@ import { APPS, type Usuario } from '@abasto/sesion';
 import { MODULOS } from './modulos';
 import { Auditoria } from './pantallas/Auditoria';
 import { Integraciones } from './pantallas/Integraciones';
+import { Promociones } from './pantallas/Promociones';
 import { Mayoristas } from './pantallas/Mayoristas';
 import { Reclamos } from './pantallas/Reclamos';
 import { Reportes } from './pantallas/Reportes';
@@ -104,6 +105,7 @@ export function App({ usuario }: { usuario: Usuario }) {
         {modulo.ruta === 'mayoristas' && <Mayoristas />}
         {modulo.ruta === 'tiendas' && <Tiendas />}
         {modulo.ruta === 'reclamos' && <Reclamos />}
+        {modulo.ruta === 'promociones' && <Promociones />}
         {modulo.ruta === 'reportes' && <Reportes />}
         {modulo.ruta === 'integraciones' && <Integraciones />}
         {modulo.ruta === 'usuarios' && <Usuarios />}

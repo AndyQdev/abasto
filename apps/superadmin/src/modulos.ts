@@ -12,6 +12,8 @@ export const MODULOS: Modulo[] = [
   { ruta: 'tiendas', titulo: 'Tiendas' },
   // CU-16: lo que las tiendas reportan; Abasto lo resuelve a mano y aquí lo anota
   { ruta: 'reclamos', titulo: 'Reclamos' },
+  // Notificaciones push (10/11): una promoción le llega a todos los que tienen la app
+  { ruta: 'promociones', titulo: 'Promociones' },
   { ruta: 'reportes', titulo: 'Reportes' },
   // CU-10: las tiendas conectadas con su e-commerce y los avisos que no llegaron
   { ruta: 'integraciones', titulo: 'Integraciones' },

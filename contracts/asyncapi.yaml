@@ -10,6 +10,10 @@ info:
     Saga de compra orquestada desde Pedidos, proyector de reportes en Asistente y webhooks de Conecta (cola conecta.webhooks,
     con pedido.* y cobro.*). CU-16 suma pedido.reclamo_abierto y pedido.reclamo_resuelto, con DatosPedido más reclamoId, motivo,
     estadoDelReclamo y devueltoCentavos; solo avisan: la devolución se hace a mano y no mueve Cobros.
+    Notificaciones push (10/11): Conecta escucha pedido.* y cobro.* en la cola durable conecta.notificaciones y le avisa a
+    los teléfonos de la tienda (datos.tiendaId) en pedido.confirmado, pedido.rechazado, pedido.en_preparacion,
+    pedido.despachado (queda fija), pedido.entregado, cobro.qr_pagado y pedido.reclamo_resuelto. No cambia ningún
+    mensaje: solo es otro consumidor. Cada evento avisa una vez por su id.
 
 servers:
   local:

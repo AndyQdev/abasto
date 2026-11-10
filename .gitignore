@@ -50,6 +50,10 @@ e2e/.auth/
 services/catalogo/.env
 # Cuenta de servicio de Vertex AI (Gemini)
 .vertex/
+# Firebase (notificaciones push): la cuenta de servicio y la config de la app no van al repo
+.firebase/
+apps/app/google-services.json
+apps/app/GoogleService-Info.plist
 infra/despliegue/*/secretos/
 *.pem
 *.key

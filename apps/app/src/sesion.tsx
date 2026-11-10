@@ -78,6 +78,16 @@ interface Sesion {
 
 const Contexto = createContext<Sesion | null>(null);
 
+/**
+ * Lo que hay que hacer antes de cerrar la sesión, con el token todavía vigente (dar de baja el teléfono de las
+ * notificaciones). Devuelve cómo sacarlo de la lista.
+ */
+const antesDeSalir = new Set<() => Promise<void>>();
+export function alCerrarSesion(hacer: () => Promise<void>): () => void {
+  antesDeSalir.add(hacer);
+  return () => antesDeSalir.delete(hacer);
+}
+
 /** El token que usan los servicios fuera de React (bandeja, GraphQL). Lo fija el proveedor. */
 let tokenGlobal: () => Promise<string | null> = async () => null;
 export const tokenActual = () => tokenGlobal();
@@ -131,6 +141,7 @@ export function ProveedorDeSesion({ children }: { children: ReactNode }) {
       iniciar: guardar,
       salir: async () => {
         const refresco = tokensRef.current?.refresco;
+        await Promise.all([...antesDeSalir].map((hacer) => hacer().catch(() => undefined)));
         // Lo que es de la persona y vive en el teléfono sin dueño: si entra otra cuenta, empieza de cero.
         // «Mi negocio» y el tipo de negocio van por usuario (y están en la base de datos): no se tocan.
         await Promise.all(['direcciones', 'direccion-elegida', 'carrito', 'pedidos', 'busquedas'].map((k) => guardado.borrar(k)));

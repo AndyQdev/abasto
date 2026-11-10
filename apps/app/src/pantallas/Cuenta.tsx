@@ -1,7 +1,7 @@
 import { useEspacioBarra } from '../BarraInferior';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
-import { Alert, Linking, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, Linking, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatoCelular } from '../acceso';
 import { Aparecer, Tocable } from '../animacion';
@@ -11,10 +11,70 @@ import { useDirecciones } from '../direcciones-estado';
 import { CambiarNegocio, useNegocio } from '../NegocioInicio';
 import { Diagnostico } from '../ia';
 import type { PantallaDePestana } from '../navegacion';
+import { probarEnConecta } from '../notificaciones';
 import { useSesion } from '../sesion';
+import { activarNotificaciones, useEstadoDeNotificaciones } from '../VigiaDeNotificaciones';
 import { COLOR } from '../tema';
 
 const PANEL = process.env.EXPO_PUBLIC_PANEL_URL ?? 'http://localhost:5170/';
+
+/** Notificaciones push: si están activadas, cómo activarlas y una de prueba para ver que llegan. */
+function TarjetaDeNotificaciones() {
+  const { token } = useSesion();
+  const estado = useEstadoDeNotificaciones();
+  const [prueba, setPrueba] = useState<string | null>(null);
+  const [probando, setProbando] = useState(false);
+  if (Platform.OS === 'web') return null;
+
+  const activas = estado.permiso === 'activadas' && estado.registrado;
+  const explicacion = estado.sinFirebase
+    ? 'Esta versión de la app se armó sin Firebase: no puede recibir notificaciones.'
+    : estado.permiso === 'desactivadas'
+      ? 'Están apagadas. Actívalas en los ajustes del teléfono para saber cuándo sale y llega tu pedido.'
+      : estado.permiso === 'activadas' && !estado.registrado
+        ? 'Están permitidas, pero no pudimos anotar tu teléfono. Revisa tu señal y vuelve a intentar.'
+        : activas
+          ? 'Te avisamos cuando confirmen tu pedido, salga en camino y llegue, y de las promociones.'
+          : 'Actívalas para saber cuándo sale y llega tu pedido.';
+
+  const probar = async () => {
+    setProbando(true);
+    setPrueba(null);
+    try {
+      const r = await probarEnConecta(token);
+      setPrueba(r.enviadas ? 'Listo: en unos segundos te llega una notificación.' : 'No hay ningún teléfono anotado todavía.');
+    } catch (e) {
+      setPrueba((e as Error).message);
+    } finally {
+      setProbando(false);
+    }
+  };
+
+  return (
+    <Tarjeta style={{ gap: 8 }}>
+      <View style={e.filaNotificaciones}>
+        <Texto v="t3" style={{ flex: 1 }}>
+          Notificaciones
+        </Texto>
+        <View style={[e.estadoNotificaciones, activas ? e.activas : e.apagadas]}>
+          <Icono nombre={activas ? 'notifications' : 'notifications-off-outline'} tamano={14} color={activas ? COLOR.verde : COLOR.texto3} />
+          <Texto v="chico" style={{ color: activas ? COLOR.verde : COLOR.texto3, fontWeight: '700' }}>
+            {activas ? 'Activadas' : estado.permiso === 'cargando' ? '…' : 'Apagadas'}
+          </Texto>
+        </View>
+      </View>
+      <Texto v="gris">{explicacion}</Texto>
+      {activas ? (
+        <Boton tipo="secundario" texto={probando ? 'Mandando…' : 'Probar una notificación'} icono="notifications-outline" alTocar={() => void probar()} />
+      ) : estado.permiso === 'desactivadas' ? (
+        <Boton tipo="secundario" texto="Abrir los ajustes" icono="settings-outline" alTocar={() => void Linking.openSettings()} />
+      ) : !estado.sinFirebase ? (
+        <Boton tipo="secundario" texto="Activar notificaciones" icono="notifications-outline" alTocar={() => void activarNotificaciones(token)} />
+      ) : null}
+      {prueba && <Texto v="chico">{prueba}</Texto>}
+    </Tarjeta>
+  );
+}
 
 /** La cuenta del cliente: su nombre y celular, sus direcciones y salir. Si además vende, el enlace al Panel. */
 export function Cuenta({ navigation }: PantallaDePestana<'Cuenta'>) {
@@ -60,6 +120,10 @@ export function Cuenta({ navigation }: PantallaDePestana<'Cuenta'>) {
             <Texto v="gris">El Inicio te muestra primero lo que usas.</Texto>
           </View>
           <CambiarNegocio />
+        </Aparecer>
+
+        <Aparecer orden={1}>
+          <TarjetaDeNotificaciones />
         </Aparecer>
 
         <Aparecer orden={1}>
@@ -134,6 +198,10 @@ export function Cuenta({ navigation }: PantallaDePestana<'Cuenta'>) {
 
 const e = StyleSheet.create({
   pantalla: { flex: 1, backgroundColor: COLOR.fondo },
+  filaNotificaciones: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  estadoNotificaciones: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
+  activas: { backgroundColor: COLOR.verdeSuave },
+  apagadas: { backgroundColor: '#EEF1EA' },
   contenido: { padding: 16, gap: 18, paddingBottom: 32 },
   perfil: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 18, borderRadius: 24 },
   filaChica: { flexDirection: 'row', alignItems: 'center', gap: 6 },
