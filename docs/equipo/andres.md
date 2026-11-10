@@ -28,7 +28,7 @@
 >
 > Tus tareas están en Trello, en la tarjeta «LEER PRIMERO · Reparto nuevo» y en las que tienen tu nombre. El prompt para tu Claude está en `docs/PROMPT-JHOEL.md`.
 
-Actualizado: 06/11/2026 · en main (los dos trabajamos ahí)
+Actualizado: 09/11/2026 · en main (los dos trabajamos ahí)
 
 ## Estoy en
 Los 16 casos de uso tienen pantalla, prueba y sus diagramas ICONIX. Ni el Panel ni el Superadmin tienen módulos en construcción. Falta lo que depende de afuera o de una decisión (ver «Sigue»).
@@ -101,7 +101,8 @@ Los 16 casos de uso tienen pantalla, prueba y sus diagramas ICONIX. Ni el Panel 
 - 31/10 · Pedidos: `CrearPedidoEntrada.entrega: DireccionEntrada` (opcional) y `Pedido.entrega: DireccionDeEntrega`; migración V3. OpenAPI de Conecta: `DatosPedido.entrega`.
 
 ## Necesito del otro
-- Jhoel: con `ANTHROPIC_API_KEY` correr `pnpm --filter @abasto/asistente evaluar` (meta 18/20). Sin la llave, los reportes usan respuestas fijas: tres preguntas distintas devolvieron la misma tabla de ventas del mes. Sería bueno que el simulado diga «no entendí» cuando no reconoce la pregunta, en vez de responder otra cosa.
+- Jhoel (09/11): ya con Gemini en Vertex, correr `pnpm --filter @abasto/asistente evaluar` y anotar el resultado (meta 18/20). Lo de «no entendí» sin llave quedó hecho el 07/11.
+- Jhoel (09/11): el APK con las direcciones de la nube. El único que hay es de prueba, del 02/11, y necesita la computadora. Si no llegas, dime y lo compilo yo.
 
 ## Sigue
 Depende de afuera:
