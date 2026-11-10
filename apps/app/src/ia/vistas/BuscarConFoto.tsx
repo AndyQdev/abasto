@@ -1,6 +1,6 @@
 import { buscarPorTextoLeido, palabrasClave, type ItemDeCarrito, type Producto } from '@abasto/comercio';
 import * as ImagePicker from 'expo-image-picker';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Image, Pressable, StyleSheet, Switch, TextInput, View } from 'react-native';
 import { Boton, Falla, Icono, Tarjeta, Texto } from '../../componentes';
 import { COLOR } from '../../tema';
@@ -78,6 +78,8 @@ export function BuscarConFoto({
   const [resultado, setResultado] = useState<Resultado | null>(null);
   const [vez, setVez] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  /** Cada reconocimiento lleva su número: si la persona saca otra foto antes de que termine, la respuesta vieja se descarta */
+  const turno = useRef(0);
   const opcion = OPCIONES.find((o) => o.id === que)!;
   const conIa = ia.usarIa && !!ia.activo;
 
@@ -87,6 +89,7 @@ export function BuscarConFoto({
   }, [conIa, ia.interprete]);
 
   function cambiarQue(nuevo: QueReconocer) {
+    turno.current++;
     setQue(nuevo);
     setResultado(null);
     setError(null);
@@ -106,15 +109,18 @@ export function BuscarConFoto({
     if (que !== 'receta') await reconocer(r.assets[0].uri);
   }
 
-  async function reconocer(uri: string | null, eleccion: { platoElegido?: string; recetaElegida?: string } = {}) {
+  async function reconocer(uri: string | null) {
+    const mio = ++turno.current;
+    const vigente = () => mio === turno.current;
     setTrabajando(true);
     setError(null);
-    if (!eleccion.platoElegido && !eleccion.recetaElegida) setResultado(null);
+    setResultado(null);
     try {
       const interprete = conIa ? await ia.interprete() : null;
       if (que === 'producto') {
         if (!uri) return;
-        setResultado(await buscarProducto(uri, interprete));
+        const encontrado = await buscarProducto(uri, interprete);
+        if (vigente()) setResultado(encontrado);
       } else {
         // Comida: solo los platos del reconocedor. Receta: lo que lee ML Kit en la foto más lo escrito.
         const leido = que === 'receta' && uri ? await leerTexto(uri).catch(() => '') : '';
@@ -125,18 +131,38 @@ export function BuscarConFoto({
             interprete,
             contexto: { negocio },
             reconocerFoto: que === 'comida' ? async (u) => ({ ...(await reconocerFoto(u)), productos: [] }) : undefined,
-            platoElegido: eleccion.platoElegido ?? (eleccion.recetaElegida && resultado?.tipo === 'propuesta' && resultado.propuesta.lectura?.tipo === 'plato' ? resultado.propuesta.lectura.plato : null),
-            recetaElegida: eleccion.recetaElegida ?? null,
           },
         );
-        setResultado({ tipo: 'propuesta', propuesta });
+        if (vigente()) setResultado({ tipo: 'propuesta', propuesta });
       }
-      setVez((n) => n + 1);
+      if (vigente()) setVez((n) => n + 1);
     } catch (e) {
-      setError((e as Error).message);
+      if (vigente()) setError((e as Error).message);
     } finally {
-      setTrabajando(false);
+      if (vigente()) setTrabajando(false);
     }
+  }
+
+  /**
+   * Otra forma de preparar el plato (o el plato elegido en «¿Es esto?»): el plato ya se sabe, así que no se vuelve a
+   * mirar la foto ni a preguntar al modelo. Es solo código y sale al instante (10/11: antes tardaba 5 a 10 s por
+   * toque, los toques se encolaban y a veces quedaba la receta de un toque anterior).
+   */
+  async function elegirOtra(eleccion: { platoElegido?: string; recetaElegida?: string }) {
+    if (resultado?.tipo !== 'propuesta') return;
+    const anterior = resultado.propuesta;
+    const plato = eleccion.platoElegido ?? (anterior.lectura?.tipo === 'plato' ? anterior.lectura.plato : null);
+    const mio = ++turno.current;
+    const propuesta = await proponerCompra({ texto, fotoUri: null }, productos, {
+      contexto: { negocio },
+      platoElegido: plato,
+      recetaElegida: eleccion.recetaElegida ?? null,
+    });
+    if (mio !== turno.current) return;
+    // Al cambiar solo la receta se queda lo que dijo la foto («Parece salteña (78 %)…»)
+    const final = eleccion.recetaElegida && anterior.mensaje ? { ...propuesta, mensaje: anterior.mensaje, origen: anterior.origen } : propuesta;
+    setResultado({ tipo: 'propuesta', propuesta: final });
+    setVez((n) => n + 1);
   }
 
   async function buscarProducto(uri: string, interprete: Awaited<ReturnType<typeof ia.interprete>>): Promise<Resultado> {
@@ -299,8 +325,8 @@ export function BuscarConFoto({
           key={vez}
           propuesta={resultado.propuesta}
           nombreDelModelo={ia.activo?.nombre}
-          alElegirPlato={(codigo) => void reconocer(foto, { platoElegido: codigo })}
-          alElegirReceta={(id) => void reconocer(foto, { recetaElegida: id })}
+          alElegirPlato={(codigo) => void elegirOtra({ platoElegido: codigo })}
+          alElegirReceta={(id) => void elegirOtra({ recetaElegida: id })}
           alAgregar={alAgregar}
         />
       )}

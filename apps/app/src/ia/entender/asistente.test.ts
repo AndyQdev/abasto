@@ -149,6 +149,32 @@ describe('Asistente de compra', () => {
     expect(p.falloDelModelo).not.toBeNull();
   });
 
+  it('salteña de carne lleva carne de res y la de pollo lleva pollo (10/11: se veía la receta equivocada)', async () => {
+    const carne = await proponerCompra({ texto: '', fotoUri: null }, catalogo, { platoElegido: 'saltena', recetaElegida: 'saltena-carne' });
+    const pollo = await proponerCompra({ texto: '', fotoUri: null }, catalogo, { platoElegido: 'saltena', recetaElegida: 'saltena-pollo' });
+    expect(carne.receta?.id).toBe('saltena-carne');
+    expect(pollo.receta?.id).toBe('saltena-pollo');
+    const nombres = (r: typeof carne) => r.intencion.items.map((i) => i.nombre.toLowerCase()).join(' | ');
+    expect(nombres(carne)).toMatch(/res/);
+    expect(nombres(carne)).not.toMatch(/pollo/);
+    expect(nombres(pollo)).toMatch(/pollo/);
+    expect(nombres(pollo)).not.toMatch(/res/);
+  });
+
+  it('foto de un plato sin texto: lo que inventó el modelo no ensucia la receta (Honor, 10/11)', async () => {
+    const interprete = interpreteQueDevuelve({
+      tipo: 'receta',
+      items: [{ nombre: 'harina', cantidad: 0.04, unidad: 'kg', envase: null }],
+      preparacion: 'salteña',
+      rinde: 1,
+      supuestos: ['puedes comprar papas con queso y salsa en una caja de papas'],
+    });
+    const p = await proponerCompra(foto, catalogo, { interprete, ...vio([], [{ codigo: 'saltena', confianza: 0.9 }]) });
+    expect(p.supuestos.join(' ')).not.toContain('caja de papas');
+    expect(p.intencion.items.some((i) => i.cantidad === 0.04)).toBe(false);
+    expect(p.supuestos.join(' ')).toContain('Salteña de carne');
+  });
+
   it('una foto que no se parece a nada lo dice', async () => {
     const p = await proponerCompra(foto, catalogo, vio([{ codigo: 'AB-005', confianza: 0.2 }], [{ codigo: 'silpancho', confianza: 0.44 }]));
     expect(p.lineas).toEqual([]);

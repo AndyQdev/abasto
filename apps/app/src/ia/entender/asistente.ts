@@ -84,10 +84,14 @@ export async function proponerCompra(entrada: EntradaDelAsistente, productos: Pr
     const nombre = NOMBRES_DE_PLATOS[lectura.plato] ?? lectura.plato;
     mensaje = opciones.platoElegido ? `Elegiste ${nombre}.` : `Parece ${nombre} (${pct(lectura.confianza)}).`;
     if (receta) {
+      // Solo la foto, sin nada escrito: lo que adivinó el modelo de lenguaje no entra. Un modelo chico inventaba
+      // ingredientes, supuestos sin sentido y «para 1», y la receta salía con 0,04 kg de harina (Honor, 10/11).
+      const sinTexto = !entrada.texto.trim();
+      if (sinTexto) supuestos.length = 0;
       // «para 8 personas» junto a la foto: el texto dice para cuántos
-      const escalada = escalarReceta(receta, intencion.rinde ?? rindeDe(entrada.texto)?.rinde ?? null);
+      const escalada = escalarReceta(receta, sinTexto ? null : (intencion.rinde ?? rindeDe(entrada.texto)?.rinde ?? null));
       // Lo que el texto pidió y sí se vende se queda; el plato mismo («salchipapa») no es un producto
-      items = [...items.filter((i) => candidatos(i.nombre, productos).length > 0), ...escalada.items];
+      items = [...(sinTexto ? [] : items.filter((i) => candidatos(i.nombre, productos).length > 0)), ...escalada.items];
       supuestos.push(...escalada.supuestos);
       if (variantes.length > 1) mensaje += ` Hay ${variantes.length} formas de prepararlo: elige la tuya abajo.`;
     } else {
