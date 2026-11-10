@@ -359,14 +359,14 @@ La tabla con actor, interfaz, servicios, dueño y fase está en `README.md`. Aba
 
 **Curso básico**
 
-1. El mayorista abre Inteligencia → Reportes y escribe una pregunta, por ejemplo «¿Qué tiendas me tienen que pagar mañana?».
-2. Si usa el micrófono, `usarVoz` graba y `transcriptorWhisper` transcribe en el navegador; el texto llena la pregunta y dispara la consulta.
+1. El mayorista abre Inteligencia → Reportes, que es un chat con el Analista: a la izquierda la conversación y a la derecha la mesa de trabajo. Escribe una pregunta, por ejemplo «¿Qué tiendas me tienen que pagar mañana?», o toca una de las plantillas de la mesa.
+2. Si usa el micrófono, `escucharDelMicrofono` junta el audio y detecta cuándo calla, y `transcriptorWhisper` transcribe en el navegador mientras habla: lo entendido aparece en su burbuja. Al callarse, la pregunta sale sola.
 3. `Reportes.vue` hace `POST /v1/reportes/preguntas` con `{texto}`.
 4. `ResponderPregunta.ejecutar` pide al `ModeloDeLenguaje` una `SalidaConsulta` con `sql`, `explicacion` y `grafico`.
 5. `ConsultarReportes.ejecutar` valida el SQL con `validarConsulta` (parser de PostgreSQL, solo `SELECT`, una sentencia, tablas y funciones permitidas, sin `SELECT INTO` ni `FOR UPDATE`).
 6. `ConsultorPostgres` abre `BEGIN READ ONLY`, fija `SET LOCAL statement_timeout='5s'` y `SET LOCAL abasto.org_id`, y consulta con el rol `mcp_lector`. Lee como máximo 1000 filas y marca `truncado` si hay más.
 7. `AuditoriaDynamoDB` registra la pregunta, el SQL, el resultado (`ok`, `rechazada` o `error`) y las filas devueltas.
-8. El Asistente responde `{pregunta, sql, explicacion, grafico, columnas, filas, truncado, modelo}`; la vista muestra tabla, gráfico y el botón de Excel.
+8. El Asistente responde `{pregunta, sql, explicacion, grafico, columnas, filas, truncado, modelo}`. El chat muestra la explicación y la mesa arma el reporte en su pestaña con la plantilla que corresponde (`plantillaDe`): números en grande si es una sola fila, gráfico con su resumen o tabla, y el botón de Excel.
 
 **Cursos alternos**
 
@@ -376,7 +376,8 @@ La tabla con actor, interfaz, servicios, dueño y fase está en `README.md`. Aba
 - Si el resultado supera 1000 filas, se devuelve `truncado: true` y la vista avisa que hay más.
 - «Exportar a Excel» llama a `POST /v1/reportes/excel` con la misma consulta y descarga el archivo.
 - El MCP `consultar_reportes` usa la misma guardia y el mismo consultor; no tiene una ruta alterna a la base.
-- **Pendiente:** la voz depende del navegador y de Whisper; en la app móvil no hay pantalla de reportes.
+- Si la pregunta es ambigua, el Analista pregunta de vuelta en el chat con 2 a 4 opciones que se eligen con un toque.
+- **Pendiente:** la voz depende del navegador y de Whisper, y su velocidad del equipo (de 1 a 11 s por frase); en la app móvil no hay pantalla de reportes.
 
 ## CU-14 · Aprobar la propuesta de un agente
 

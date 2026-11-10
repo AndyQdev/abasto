@@ -1,6 +1,7 @@
-import { flushPromises, mount } from '@vue/test-utils';
+import { enableAutoUnmount, flushPromises, mount, type VueWrapper } from '@vue/test-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { SesionDelShell } from '../sesion';
+import type { EventosDeEscucha } from '../voz/escucha';
 import type { DependenciasDeVoz } from '../voz/usar-voz';
 import Reportes from './Reportes.vue';
 
@@ -21,153 +22,262 @@ const respuesta = {
     { tienda_nombre: 'Minimarket El Cruce', saldo_centavos: 85000 },
   ],
   truncado: false,
-  modelo: 'simulado',
+  modelo: 'gemini-3.8-flash',
 };
 
-const voz: DependenciasDeVoz = {
-  grabar: async () => ({ detener: async () => new Blob(['audio']) }),
-  convertir: async () => new Float32Array(16_000),
-  transcriptor: { transcribir: async () => 'cuánto me deben' },
-};
+/** Micrófono y Whisper de mentira: dice `dicho` y la prueba decide cuándo se calla. */
+function vozFalsa(dicho = 'cuánto me deben') {
+  let eventos: EventosDeEscucha | null = null;
+  const dependencias: DependenciasDeVoz = {
+    escuchar: async (e) => {
+      eventos = e;
+      return { audio: () => new Float32Array(32_000), hablo: true, finDeLaVoz: 1.65, duracion: 2, detener: () => new Float32Array(32_000) };
+    },
+    transcriptor: { transcribir: async () => dicho },
+    cadaMs: 20,
+  };
+  return { dependencias, callar: () => eventos?.callo() };
+}
+
+// Una pantalla que queda montada seguiría escuchando «online» y respondería las preguntas de la prueba siguiente
+enableAutoUnmount(afterEach);
 
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
   localStorage.clear();
+  sessionStorage.clear();
 });
 
-const json = (cuerpo: unknown) => new Response(JSON.stringify(cuerpo), { headers: { 'content-type': 'application/json' } });
+const json = (cuerpo: unknown, status = 200) => new Response(JSON.stringify(cuerpo), { status, headers: { 'content-type': 'application/json' } });
 const sinSenal = (sin: boolean) => vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(!sin);
+const esperar = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+async function preguntar(pantalla: VueWrapper, texto: string) {
+  await pantalla.get('input.rp-entrada').setValue(texto);
+  await pantalla.get('form').trigger('submit');
+  await flushPromises();
+}
+
+const chat = (p: VueWrapper) => p.get('.rp-chat');
+const mesa = (p: VueWrapper) => p.get('.rp-mesa');
+
+describe('Reportes como chat con mesa de trabajo', () => {
+  it('la pregunta queda en el chat y el reporte se arma en la mesa con su gráfico y su resumen', async () => {
+    const pedir = vi.fn(async () => json(respuesta));
+    vi.stubGlobal('fetch', pedir);
+    const pantalla = mount(Reportes, { props: { sesion } });
+
+    await preguntar(pantalla, 'cuánto me deben');
+
+    expect(JSON.parse(String((pedir.mock.calls[0] as unknown as [string, RequestInit])[1].body))).toEqual({ texto: 'cuánto me deben' });
+    expect(chat(pantalla).get('.rp-fila.tu').text()).toContain('cuánto me deben');
+    expect(chat(pantalla).find('.rp-visto').exists()).toBe(true);
+    expect(chat(pantalla).get('.rp-globo.reporte').text()).toContain('Lo que debe cada tienda.');
+    expect(mesa(pantalla).get('[role="tab"][aria-selected="true"]').text()).toContain('Cuánto me deben');
+    expect(mesa(pantalla).get('svg[role="img"]').attributes('aria-label')).toBe('Saldo por tienda');
+    expect(mesa(pantalla).findAll('rect.barra')).toHaveLength(2);
+    expect(mesa(pantalla).get('.rp-resumen').text()).toContain('Bs 2.050,00');
+    expect(mesa(pantalla).text()).toContain('Bs 1.200,00');
+  });
+
+  it('una sola fila con números se ve en grande; si el modelo pide tabla, no hay gráfico', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValueOnce(json({ ...respuesta, grafico: 'tabla', columnas: ['total_centavos', 'pedidos'], filas: [{ total_centavos: '4500000', pedidos: '64' }] }))
+        .mockResolvedValueOnce(json({ ...respuesta, grafico: 'tabla' })),
+    );
+    const pantalla = mount(Reportes, { props: { sesion } });
+
+    await preguntar(pantalla, '¿Cuánto vendí este mes?');
+    expect(mesa(pantalla).findAll('.rp-numero').map((n) => n.text())).toEqual(['TotalBs 45.000,00', 'Pedidos64']);
+
+    await preguntar(pantalla, 'cuánto me deben');
+    expect(mesa(pantalla).find('svg[role="img"]').exists()).toBe(false);
+    expect(mesa(pantalla).findAll('tbody tr')).toHaveLength(2);
+  });
+
+  it('cada pregunta abre su pestaña; desde el chat se vuelve a una anterior y se puede cerrar', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValueOnce(json(respuesta))
+        .mockResolvedValueOnce(json({ ...respuesta, pregunta: 'lo más vendido', explicacion: 'Lo que más sale.', columnas: ['nombre', 'vendidas'], filas: [{ nombre: 'Arroz', vendidas: 9 }, { nombre: 'Azúcar', vendidas: 5 }] })),
+    );
+    const pantalla = mount(Reportes, { props: { sesion } });
+    await preguntar(pantalla, 'cuánto me deben');
+    await preguntar(pantalla, 'lo más vendido');
+
+    expect(mesa(pantalla).findAll('[role="tab"]').map((t) => t.text())).toEqual(['Cuánto me deben', 'Lo más vendido']);
+    expect(mesa(pantalla).text()).toContain('Arroz');
+
+    await chat(pantalla).findAll('.rp-tarjeta')[0].trigger('click');
+    expect(mesa(pantalla).text()).toContain('Tienda Doña Rosa');
+
+    await mesa(pantalla).get('[aria-label="Cerrar Cuánto me deben"]').trigger('click');
+    expect(mesa(pantalla).findAll('[role="tab"]')).toHaveLength(1);
+    expect(chat(pantalla).text()).toContain('Cerraste este reporte.');
+    expect(mesa(pantalla).text()).toContain('Arroz');
+  });
+
+  it('la misma pregunta otra vez actualiza su pestaña en lugar de abrir otra igual', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValueOnce(json(respuesta))
+        .mockResolvedValueOnce(json({ ...respuesta, filas: [{ tienda_nombre: 'Tienda Doña Rosa', saldo_centavos: 50000 }] })),
+    );
+    const pantalla = mount(Reportes, { props: { sesion } });
+    await preguntar(pantalla, 'cuánto me deben');
+    await preguntar(pantalla, '¿Cuánto me deben?');
+
+    expect(mesa(pantalla).findAll('[role="tab"]')).toHaveLength(1);
+    expect(mesa(pantalla).text()).toContain('Bs 500,00');
+    // Las dos respuestas del chat llevan a la misma pestaña, ya al día
+    expect(chat(pantalla).findAll('.rp-tarjeta')).toHaveLength(2);
+    expect(chat(pantalla).text()).not.toContain('Cerraste este reporte.');
+  });
+
+  it('la conversación sigue al volver de otra pantalla; «Nueva» la borra', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => json(respuesta)));
+    const primera = mount(Reportes, { props: { sesion } });
+    await preguntar(primera, 'cuánto me deben');
+    primera.unmount();
+
+    const otra = mount(Reportes, { props: { sesion } });
+    expect(chat(otra).get('.rp-fila.tu').text()).toContain('cuánto me deben');
+    expect(mesa(otra).text()).toContain('Tienda Doña Rosa');
+
+    await otra.get('.rp-chat-cabecera button').trigger('click');
+    expect(otra.find('.rp-fila.tu').exists()).toBe(false);
+    expect(mesa(otra).text()).toContain('Mesa de trabajo');
+  });
+
+  it('una plantilla de la mesa vacía pregunta con un toque', async () => {
+    const pedir = vi.fn(async () => json(respuesta));
+    vi.stubGlobal('fetch', pedir);
+    const pantalla = mount(Reportes, { props: { sesion } });
+
+    await mesa(pantalla).findAll('.rp-plantilla')[0].trigger('click');
+    await flushPromises();
+    expect(JSON.parse(String((pedir.mock.calls[0] as unknown as [string, RequestInit])[1].body))).toEqual({ texto: '¿Qué tiendas me deben más plata?' });
+    expect(mesa(pantalla).text()).toContain('Tienda Doña Rosa');
+  });
+});
+
+describe('Preguntar hablando', () => {
+  it('mientras hablas, la burbuja muestra lo que se entiende; al callarte se pregunta sola', async () => {
+    const pedir = vi.fn(async () => json(respuesta));
+    vi.stubGlobal('fetch', pedir);
+    const voz = vozFalsa();
+    const pantalla = mount(Reportes, { props: { sesion, voz: voz.dependencias } });
+
+    await pantalla.get('button[aria-label="Hablar"]').trigger('click');
+    await flushPromises();
+    expect(pantalla.get('.rp-burbuja.en-vivo').text()).toBe('Te escucho…');
+    expect(pantalla.find('button[aria-label="Listo, ya terminé"]').exists()).toBe(true);
+
+    await esperar(60);
+    await flushPromises();
+    expect(pantalla.get('.rp-burbuja.en-vivo').text()).toBe('cuánto me deben');
+    expect(pedir).not.toHaveBeenCalled();
+
+    voz.callar();
+    await flushPromises();
+    expect(pantalla.find('.rp-burbuja.en-vivo').exists()).toBe(false);
+    expect(JSON.parse(String((pedir.mock.calls[0] as unknown as [string, RequestInit])[1].body))).toEqual({ texto: 'cuánto me deben' });
+    // La burbuja que queda dice que fue dictada
+    expect(chat(pantalla).find('.rp-fila.tu .rp-meta svg').exists()).toBe(true);
+    expect(mesa(pantalla).text()).toContain('Bs 1.200,00');
+  });
+});
 
 describe('Reportes sin señal', () => {
-  it('lo dicho por voz sin señal queda guardado y se responde solo al volver la señal', async () => {
+  it('lo dicho por voz sin señal espera en el chat y se responde solo al volver la señal', async () => {
     const senal = sinSenal(true);
     const pedir = vi.fn(async () => json(respuesta));
     vi.stubGlobal('fetch', pedir);
-    const pantalla = mount(Reportes, { props: { sesion, voz }, attachTo: document.body });
+    const voz = vozFalsa();
+    const pantalla = mount(Reportes, { props: { sesion, voz: voz.dependencias }, attachTo: document.body });
 
     // Whisper transcribe dentro del navegador aunque no haya red
-    await pantalla.get('button.microfono').trigger('click');
+    await pantalla.get('button[aria-label="Hablar"]').trigger('click');
     await flushPromises();
-    await pantalla.get('button.microfono').trigger('click');
+    voz.callar();
     await flushPromises();
 
     expect(pedir).not.toHaveBeenCalled();
-    expect(pantalla.get('.aviso-senal').text()).toContain('tu pregunta quedó guardada');
-    expect(pantalla.get('.pendientes').text()).toContain('cuánto me deben');
+    expect(chat(pantalla).get('.rp-burbuja.espera').text()).toContain('cuánto me deben');
+    expect(chat(pantalla).get('.rp-globo.aviso').text()).toContain('tu pregunta quedó guardada');
 
     senal.mockReturnValue(true);
     window.dispatchEvent(new Event('online'));
     await flushPromises();
 
     expect(pedir).toHaveBeenCalledTimes(1);
-    expect(pantalla.find('.pendientes').exists()).toBe(false);
-    expect(pantalla.text()).toContain('Bs 1.200,00');
-    expect(pantalla.get('.aviso-senal').text()).toContain('Volvió la señal');
-    pantalla.unmount();
+    expect(chat(pantalla).find('.rp-burbuja.espera').exists()).toBe(false);
+    expect(chat(pantalla).text()).toContain('Volvió la señal');
+    expect(mesa(pantalla).text()).toContain('Bs 1.200,00');
   });
 
   it('sin señal muestra el último reporte guardado de la misma pregunta y no deja exportar', async () => {
     const senal = sinSenal(false);
     vi.stubGlobal('fetch', vi.fn(async () => json(respuesta)));
-    const pantalla = mount(Reportes, { props: { sesion, voz } });
-    await pantalla.get('input').setValue('cuánto me deben');
-    await pantalla.get('form').trigger('submit');
-    await flushPromises();
-    pantalla.unmount();
+    const primera = mount(Reportes, { props: { sesion } });
+    await preguntar(primera, 'cuánto me deben');
+    primera.unmount();
+    sessionStorage.clear(); // otro día: la conversación ya no está, lo guardado en el equipo sí
 
-    senal.mockReturnValue(false);
-    const otra = mount(Reportes, { props: { sesion, voz } });
-    expect(otra.get('.guardados').text()).toContain('cuánto me deben');
-    senal.mockReturnValue(true);
-    await otra.get('input').setValue('¿Cuánto me deben?');
+    const otra = mount(Reportes, { props: { sesion } });
+    expect(mesa(otra).get('.rp-guardados').text()).toContain('cuánto me deben');
     // Se cae la red a mitad: fetch lanza TypeError
     vi.stubGlobal('fetch', vi.fn(async () => Promise.reject(new TypeError('Failed to fetch'))));
-    await otra.get('form').trigger('submit');
-    await flushPromises();
+    senal.mockReturnValue(true);
+    await preguntar(otra, '¿Cuánto me deben?');
 
-    expect(otra.get('.aviso-senal').text()).toContain('último reporte guardado');
-    expect(otra.text()).toContain('guardado el');
-    expect(otra.text()).toContain('Bs 1.200,00');
-    expect(otra.get('.resultado .boton-primario').attributes('disabled')).toBeDefined();
+    expect(chat(otra).text()).toContain('último reporte guardado');
+    expect(mesa(otra).text()).toContain('guardado el');
+    expect(mesa(otra).text()).toContain('Bs 1.200,00');
+    expect(mesa(otra).get('.rp-excel').attributes('disabled')).toBeDefined();
   });
 
   it('si el Asistente dice que no (no es falta de red), se muestra el error y no se encola', async () => {
-    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ message: 'La tabla x no está disponible' }), { status: 400 })));
-    const pantalla = mount(Reportes, { props: { sesion, voz } });
-    await pantalla.get('form').trigger('submit');
-    await flushPromises();
+    vi.stubGlobal('fetch', vi.fn(async () => json({ message: 'La tabla x no está disponible' }, 400)));
+    const pantalla = mount(Reportes, { props: { sesion } });
+    await preguntar(pantalla, 'la tabla x');
 
-    expect(pantalla.get('.falla').text()).toBe('La tabla x no está disponible');
-    expect(pantalla.find('.pendientes').exists()).toBe(false);
+    expect(chat(pantalla).get('.rp-globo.falla').text()).toBe('La tabla x no está disponible');
+    expect(chat(pantalla).find('.rp-burbuja.espera').exists()).toBe(false);
+    expect(localStorage.getItem('abasto:inteligencia:pendientes:lp')).toBeNull();
   });
 });
 
-describe('Pantalla de reportes', () => {
-  it('lo dicho por voz se escribe en la pregunta, se pregunta solo y se dibuja el gráfico', async () => {
-    const pedir = vi.fn(async () => new Response(JSON.stringify(respuesta), { headers: { 'content-type': 'application/json' } }));
-    vi.stubGlobal('fetch', pedir);
-    const pantalla = mount(Reportes, { props: { sesion, voz } });
-
-    await pantalla.get('button.microfono').trigger('click');
-    await flushPromises();
-    expect(pantalla.get('button.microfono').text()).toBe('Detener y preguntar');
-
-    await pantalla.get('button.microfono').trigger('click');
-    await flushPromises();
-
-    expect((pantalla.get('input').element as HTMLInputElement).value).toBe('cuánto me deben');
-    expect(JSON.parse(String((pedir.mock.calls[0] as unknown[])[1] && ((pedir.mock.calls[0] as unknown[])[1] as RequestInit).body))).toEqual({
-      texto: 'cuánto me deben',
-    });
-    expect(pantalla.get('svg[role="img"]').attributes('aria-label')).toBe('Saldo por tienda');
-    expect(pantalla.text()).toContain('Bs 1.200,00');
-    expect(pantalla.findAll('rect.barra')).toHaveLength(2);
-  });
-
-  it('si el modelo pide tabla, no dibuja gráfico', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () => new Response(JSON.stringify({ ...respuesta, grafico: 'tabla' }), { headers: { 'content-type': 'application/json' } })),
-    );
-    const pantalla = mount(Reportes, { props: { sesion, voz } });
-
-    await pantalla.get('form').trigger('submit');
-    await flushPromises();
-
-    expect(pantalla.find('svg[role="img"]').exists()).toBe(false);
-    expect(pantalla.findAll('tbody tr')).toHaveLength(2);
-  });
-});
-
-describe('Reportes con una pregunta ambigua', () => {
-  it('muestra lo que pregunta el Asistente y responde la opción elegida con un toque', async () => {
+describe('Pregunta ambigua', () => {
+  it('el Analista pregunta de vuelta en el chat y responde la opción elegida con un toque', async () => {
     sinSenal(false);
     const pedir = vi
       .fn()
-      .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({ statusCode: 422, message: '¿Qué reporte quieres ver?', opciones: ['¿Cuánto me deben?', '¿Cuánto vendí este mes?'] }),
-          { status: 422, headers: { 'content-type': 'application/json' } },
-        ),
-      )
+      .mockResolvedValueOnce(json({ statusCode: 422, message: '¿Qué reporte quieres ver?', opciones: ['¿Cuánto me deben?', '¿Cuánto vendí este mes?'] }, 422))
       .mockResolvedValueOnce(json(respuesta));
     vi.stubGlobal('fetch', pedir);
-    const pantalla = mount(Reportes, { props: { sesion }, attachTo: document.body });
+    const pantalla = mount(Reportes, { props: { sesion } });
 
-    await pantalla.get('input.entrada').setValue('dame un reporte');
-    await pantalla.get('form').trigger('submit');
-    await flushPromises();
+    await preguntar(pantalla, 'dame un reporte');
 
-    expect(pantalla.get('.aclaracion').text()).toBe('¿Qué reporte quieres ver?');
-    const opciones = pantalla.findAll('.opciones button');
+    const aclaracion = chat(pantalla).get('.rp-globo.aclaracion');
+    expect(aclaracion.get('p').text()).toBe('¿Qué reporte quieres ver?');
+    const opciones = aclaracion.findAll('.rp-chip');
     expect(opciones.map((b) => b.text())).toEqual(['¿Cuánto me deben?', '¿Cuánto vendí este mes?']);
+    expect(mesa(pantalla).find('[role="tab"]').exists()).toBe(false);
 
     await opciones[0].trigger('click');
     await flushPromises();
 
     expect(JSON.parse(pedir.mock.calls[1][1].body)).toEqual({ texto: '¿Cuánto me deben?' });
-    expect(pantalla.find('.opciones').exists()).toBe(false);
-    expect(pantalla.get('.resultado').text()).toContain('Lo que debe cada tienda.');
+    expect(mesa(pantalla).text()).toContain('Lo que debe cada tienda.');
   });
 });

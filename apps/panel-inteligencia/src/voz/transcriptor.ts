@@ -6,6 +6,10 @@
  */
 export interface Transcriptor {
   transcribir(audio: Float32Array): Promise<string>;
+  /** Empieza a bajar o cargar el modelo mientras la persona habla, para transcribir en vivo cuanto antes. */
+  preparar?(): Promise<void>;
+  /** Carga el modelo antes de que lo pidan, solo si ya está en el equipo (nunca baja 80 MB por su cuenta). */
+  precargar?(): Promise<void>;
 }
 
 /** Whisper espera audio mono a 16 kHz. */
@@ -20,10 +24,18 @@ interface Transformers {
 
 let reconocedor: Promise<Reconocedor> | null = null;
 
-/** Carga el modelo una sola vez por página, aunque lo pidan dos veces seguidas. */
+/**
+ * Carga el modelo una sola vez por página, aunque lo pidan dos veces seguidas. La primera transcripción después de
+ * cargar es mucho más lenta (el motor reserva memoria y compila): se hace una de calentamiento con un segundo de
+ * silencio, así la primera pregunta de verdad sale tan rápido como las demás.
+ */
 function cargarReconocedor(): Promise<Reconocedor> {
   reconocedor ??= (import(/* @vite-ignore */ LIBRERIA) as Promise<Transformers>)
     .then(({ pipeline }) => pipeline('automatic-speech-recognition', MODELO, { dtype: 'q8' }))
+    .then(async (reconocer) => {
+      await reconocer(new Float32Array(FRECUENCIA_WHISPER), { language: 'spanish', task: 'transcribe' });
+      return reconocer;
+    })
     .catch((e: unknown) => {
       reconocedor = null; // sin internet la primera vez: que el siguiente intento vuelva a probar
       throw e;
@@ -31,36 +43,44 @@ function cargarReconocedor(): Promise<Reconocedor> {
   return reconocedor;
 }
 
+/** ¿El modelo ya se bajó en este equipo? transformers.js lo guarda en la caché «transformers-cache». */
+async function modeloEnElEquipo(): Promise<boolean> {
+  try {
+    if (!('caches' in globalThis) || !(await caches.has('transformers-cache'))) return false;
+    const guardados = await (await caches.open('transformers-cache')).keys();
+    return guardados.some((r) => r.url.includes(MODELO) && r.url.endsWith('.onnx'));
+  } catch {
+    return false;
+  }
+}
+
 export const transcriptorWhisper: Transcriptor = {
+  async preparar() {
+    await cargarReconocedor();
+  },
+  async precargar() {
+    if (await modeloEnElEquipo()) await cargarReconocedor();
+  },
   async transcribir(audio) {
     const reconocer = await cargarReconocedor();
-    const salida = await reconocer(audio, { language: 'spanish', task: 'transcribe' });
+    // Una pregunta cabe de sobra en 64 tokens; el tope corta los bucles en que Whisper repite una palabra sin fin
+    const salida = await reconocer(audio, { language: 'spanish', task: 'transcribe', max_new_tokens: 64 });
     return limpiarTranscripcion((Array.isArray(salida) ? salida[0] : salida).text);
   },
 };
 
+/**
+ * Con silencio o ruido, Whisper en español «escucha» frases que nadie dijo: las de los subtítulos con que se
+ * entrenó. Si eso es todo lo que entendió, no se pregunta nada.
+ */
+const FRASES_INVENTADAS = /^(¡?gracias( por ver( el video)?)?|subt[ií]tulos? (realizados )?por la comunidad de amara\.org|¡?suscr[ií]bete.*|m[uú]sica)[.!¡]*$/i;
+
 /** Whisper a veces agrega espacios, puntos suspensivos o marcas como [Música] cuando no entiende. */
 export function limpiarTranscripcion(texto: string): string {
-  return texto
+  const limpio = texto
     .replace(/\[[^\]]*\]|\([^)]*\)/g, '')
     .replace(/\s+/g, ' ')
     .replace(/^[\s.…]+|[\s.…]+$/g, '')
     .trim();
-}
-
-/** Pasa la grabación (webm/ogg del navegador) a muestras mono de 16 kHz, como las pide Whisper. */
-export async function audioParaWhisper(grabacion: Blob): Promise<Float32Array> {
-  const contexto = new AudioContext();
-  try {
-    const original = await contexto.decodeAudioData(await grabacion.arrayBuffer());
-    const muestras = Math.ceil(original.duration * FRECUENCIA_WHISPER);
-    const conversor = new OfflineAudioContext(1, muestras, FRECUENCIA_WHISPER);
-    const fuente = conversor.createBufferSource();
-    fuente.buffer = original;
-    fuente.connect(conversor.destination);
-    fuente.start();
-    return (await conversor.startRendering()).getChannelData(0);
-  } finally {
-    await contexto.close();
-  }
+  return FRASES_INVENTADAS.test(limpio) ? '' : limpio;
 }

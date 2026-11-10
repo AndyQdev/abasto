@@ -16,6 +16,16 @@ describe('Serie del gráfico', () => {
     });
   });
 
+  it('con código y nombre, las barras llevan el nombre', () => {
+    const serie = armarSerie(
+      ['tienda_id', 'tienda_nombre', 'deuda_total_centavos'],
+      [{ tienda_id: 'ec', tienda_nombre: 'Minimarket El Cruce', deuda_total_centavos: '133000' }],
+      'barras',
+    );
+    expect(serie?.columnaEtiqueta).toBe('tienda_nombre');
+    expect(armarSerie(['producto_id', 'fecha', 'unidades'], [{ producto_id: 'HD-0050', fecha: '2026-11-09', unidades: 3 }], 'linea')?.columnaEtiqueta).toBe('fecha');
+  });
+
   it('en una línea respeta el orden de las fechas', () => {
     const serie = armarSerie(
       ['fecha', 'total_centavos'],

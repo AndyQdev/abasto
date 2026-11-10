@@ -8,11 +8,10 @@ export interface SesionDelShell {
 /** Llama a Asistente con el token de la sesión. Lanza con el mensaje que manda el servicio. */
 /** Error del Asistente. Si la pregunta era ambigua, trae `opciones`: preguntas que sí sabe responder. */
 export class ErrorDelAsistente extends Error {
-  constructor(
-    mensaje: string,
-    readonly opciones: string[] = [],
-  ) {
+  readonly opciones: string[];
+  constructor(mensaje: string, opciones: string[] = []) {
     super(mensaje);
+    this.opciones = opciones;
   }
 }
 

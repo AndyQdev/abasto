@@ -24,7 +24,10 @@ test.describe('Panel Mayorista', () => {
     await page.goto('http://localhost:5170/reportes');
     await entrarComo(page, 'lospozos@abasto.bo');
 
+    // Reportes es un chat: la pregunta va abajo y el reporte se arma en la mesa de trabajo, en su pestaña
+    await page.getByRole('textbox', { name: 'Pregunta algo sobre tus datos' }).fill('¿Qué tiendas me tienen que pagar mañana?');
     await page.getByRole('button', { name: 'Preguntar' }).click();
+    await expect(page.getByRole('tab', { name: /Qué tiendas me tienen que pagar/ })).toBeVisible();
     await expect(page.getByRole('cell', { name: 'Tienda Doña Rosa' })).toBeVisible();
 
     const descarga = page.waitForEvent('download');

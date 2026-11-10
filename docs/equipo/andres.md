@@ -28,12 +28,30 @@
 >
 > Tus tareas están en Trello, en la tarjeta «LEER PRIMERO · Reparto nuevo» y en las que tienen tu nombre. El prompt para tu Claude está en `docs/PROMPT-JHOEL.md`.
 
-Actualizado: 09/11/2026 · en main (los dos trabajamos ahí)
+Actualizado: 10/11/2026 · en main (los dos trabajamos ahí)
 
 ## Estoy en
 Los 16 casos de uso tienen pantalla, prueba y sus diagramas ICONIX. Ni el Panel ni el Superadmin tienen módulos en construcción. Falta lo que depende de afuera o de una decisión (ver «Sigue»).
 
 ## Terminé
+- **Reportes como chat con mesa de trabajo (10/11, pedido de Andrés; Jhoel: es tu carpeta, te cuento):**
+  - **Qué cambió:** Inteligencia › Reportes ahora es un chat con el Analista. A la izquierda la conversación (texto o voz); a la derecha la mesa de trabajo, con una pestaña por reporte. La lógica del Asistente no cambió: mismo `POST /v1/reportes/preguntas`, mismo contrato.
+  - **Plantillas:** el reporte se arma según la forma de la respuesta (`reportes/conversacion.ts`, `plantillaDe`):
+    - una sola fila con números, en grande;
+    - barras o línea, con su resumen (el total solo si son bolivianos);
+    - tabla;
+    - un aviso cuando el Analista no tiene datos.
+  - **Más cambios en Reportes:** la pregunta ambigua sale en el chat con sus botones, y la misma pregunta otra vez actualiza su pestaña. La conversación sobrevive a cambiar de pantalla (`sessionStorage`); lo guardado sin señal sigue igual.
+  - **Voz en vivo:**
+    - `voz/escucha.ts` junta el audio con un AudioWorklet y detecta solo cuándo te callas; `grabadora.ts` ya no existe.
+    - `usar-voz.ts` transcribe con Whisper mientras hablas y la burbuja muestra lo entendido. Al callarte (o con «Listo»), la pregunta sale sola.
+    - Si el modelo ya está en el equipo, se carga y se calienta al abrir Reportes.
+    - `max_new_tokens: 64` y un filtro de las frases que Whisper inventa con silencio («Subtítulos realizados por la comunidad de Amara.org», «Gracias.»).
+    - Probado en Chrome con una frase hablada real: «cuáles son mis cinco productos más vendidos» se transcribió bien y salió sola.
+    - **Ojo, velocidad:** en mi laptop Whisper tardó de 3 a 11 s por frase (un solo hilo, porque la página no tiene aislamiento de origen). En equipos lentos solo transcribe en las pausas, para no atrasar la respuesta.
+  - **Arreglo tuyo de paso:** `ErrorDelAsistente` en `sesion.ts` usaba una propiedad en el constructor (`readonly opciones`), que `erasableSyntaxOnly` no deja: `vue-tsc -b` (y `pnpm build`) fallaba. La declaré aparte; hace lo mismo.
+  - **Gráfico:** con `tienda_id` y `tienda_nombre`, las barras ahora dicen el nombre y no «ec» (`graficos/serie.ts`).
+  - **Pruebas:** 82 en Inteligencia y el e2e `panel.spec.ts` (ahora escribe la pregunta en el chat).
 - **WhatsApp por n8n (06/11):** el flujo no le podía comprar a Abasto: pedía códigos de 4 dígitos (`AB-101` tiene 3), fiaba por defecto y su mayorista por defecto era uno de prueba. Ahora compra a Abasto contra entrega, y la prueba `n8n-whatsapp.spec.ts` lo verifica contra el n8n real.
 - **CU-16 · Reclamos (06/11, decisión de Andrés):** la tienda reporta un problema desde Seguimiento, Abasto lo resuelve a mano en Superadmin › Reclamos y el sistema solo anota lo devuelto. No mueve Cobros. El mayorista ve la marca en su pedido del Panel.
 - **CU-10 · Conectar un e-commerce (06/11):** llaves de API (cada una es una cuenta de Keycloak con el `org_id` de la tienda), avisos firmados con reintentos, MCP de compras `abasto-compras` y plugin de WooCommerce (`plugins/woocommerce-abasto`), probado contra WordPress 7.1 y WooCommerce 11.2 reales. Pantalla en App › Cuenta › Conectar mi tienda en línea.

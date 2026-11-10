@@ -25,7 +25,9 @@ export function armarSerie(columnas: string[], filas: Record<string, unknown>[],
   const numericas = columnas.filter((c) => filas.every((f) => f[c] === null || esNumero(f[c])));
   // Montos primero: si la pregunta trae cantidad y total, lo que se quiere ver es el total
   const columnaValor = numericas.find((c) => c.endsWith('_centavos')) ?? numericas[0];
-  const columnaEtiqueta = columnas.find((c) => !numericas.includes(c));
+  // El nombre se lee mejor que el código: con tienda_id y tienda_nombre, las barras dicen «Minimarket El Cruce», no «ec»
+  const textos = columnas.filter((c) => !numericas.includes(c));
+  const columnaEtiqueta = textos.find((c) => /nombre$/.test(c)) ?? textos.find((c) => !/(^|_)id$/.test(c)) ?? textos[0];
   if (!columnaValor || !columnaEtiqueta) return null;
 
   let puntos = filas.map((f) => ({ etiqueta: f[columnaEtiqueta], valor: Number(f[columnaValor] ?? 0) }));
