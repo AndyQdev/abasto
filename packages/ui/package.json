@@ -5,6 +5,7 @@
   "description": "Tokens del sistema UIX con la marca de Abasto (verde bosque). Los importan todas las apps web.",
   "exports": {
     "./tokens.css": "./tokens.css",
-    "./base.css": "./base.css"
+    "./base.css": "./base.css",
+    "./marca": "./marca.ts"
   }
 }

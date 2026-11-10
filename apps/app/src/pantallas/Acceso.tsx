@@ -7,6 +7,7 @@ import { entrarConCodigo, ErrorDeAcceso, esCelular, formatoCelular, pedirCodigo,
 import { Aparecer, HojaInferior, Tocable, useSacudida, vibrar } from '../animacion';
 import { Boton, Falla, Icono, Texto } from '../componentes';
 import { ILUSTRACION } from '../ilustraciones';
+import { Logo } from '../Marca';
 import { useSesion } from '../sesion';
 import { COLOR, FUENTE, SOMBRA } from '../tema';
 
@@ -82,7 +83,7 @@ export function Acceso() {
     setPaso(paso === 'nombre' ? 'codigo' : 'telefono');
   };
 
-  const { height } = useWindowDimensions();
+  const { height, width } = useWindowDimensions();
   const arriba = useSafeAreaInsets().top;
   const abajo = useSafeAreaInsets().bottom;
   const portada = paso === 'telefono' ? ILUSTRACION.portadaBienvenida : paso === 'codigo' ? ILUSTRACION.portadaCodigo : ILUSTRACION.portadaNombre;
@@ -104,17 +105,15 @@ export function Acceso() {
       {/* La app va de borde a borde: ni Android ni iPhone achican la ventana con el teclado, así que se deja el espacio */}
       <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
         <ScrollView ref={scroll} contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" bounces={false} showsVerticalScrollIndicator={false}>
-          {/* Bienvenida: la imagen entera (trae el logo y el lema) */}
+          {/* Bienvenida: la imagen entera; abajo, sobre el fondo liso que dejó la imagen, el logo y el lema */}
           <View style={paso === 'telefono' ? { aspectRatio: PROPORCION_BIENVENIDA } : { height: altoPortada }}>
-            <Image
-              source={portada}
-              style={StyleSheet.absoluteFill}
-              contentFit="cover"
-              contentPosition="top"
-              transition={300}
-              accessibilityLabel={paso === 'telefono' ? 'ABASTO. Tu mayorista, siempre más cerca.' : undefined}
-              accessibilityIgnoresInvertColors
-            />
+            <Image source={portada} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition="top" transition={300} accessibilityIgnoresInvertColors />
+            {paso === 'telefono' && (
+              <View style={e.lema} pointerEvents="none">
+                <Logo tamano={Math.round(width * 0.14)} />
+                <Texto style={e.lemaTexto}>Tu mayorista, siempre más cerca.</Texto>
+              </View>
+            )}
             {paso !== 'telefono' && (
               <Tocable onPress={atras} style={e.atras} exterior={[e.atrasLugar, { top: arriba + 10 }]} accessibilityRole="button" accessibilityLabel="Atrás">
                 <Icono nombre="arrow-back" tamano={22} color={COLOR.bosque} />
@@ -353,6 +352,9 @@ const e = StyleSheet.create({
   tarjetaMontada: { marginTop: -30 },
   // En la bienvenida el lema está al pie de la imagen: la tarjeta apenas la toca
   tarjetaBajoElLema: { marginTop: -8 },
+  // El logo y el lema van sobre la franja lisa del final de `portada-bienvenida` (desde el 84 % de su alto)
+  lema: { position: 'absolute', left: 0, right: 0, top: '83%', bottom: '3%', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  lemaTexto: { fontFamily: FUENTE.fuerte, fontSize: 17, color: COLOR.bosque, letterSpacing: -0.2 },
   campoTelefono: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -34,6 +34,14 @@ Actualizado: 10/11/2026 · en main (los dos trabajamos ahí)
 Los 16 casos de uso tienen pantalla, prueba y sus diagramas ICONIX. Ni el Panel ni el Superadmin tienen módulos en construcción. Falta lo que depende de afuera o de una decisión (ver «Sigue»).
 
 ## Terminé
+- **Logo nuevo (10/11, pedido de Andrés: «estamos sin logo»; `docs/marca/README.md`):**
+  - Es una «A» lima con un paquete ámbar de travesaño, más «abasto» en Plus Jakarta Sans ExtraBold.
+  - Una sola fuente, `packages/ui/marca.ts`. `pnpm marca` genera el ícono de la app (antes era el de Expo por defecto), el adaptativo y el monocromo de Android, el de las notificaciones, la pantalla de inicio (verde bosque, con `expo-splash-screen`), los favicons y la PWA del Panel, y los archivos de `docs/marca`.
+  - Va en la cabecera del Inicio y en la bienvenida de la app, en el header y el registro del Panel, y en el lateral del Superadmin.
+  - **Jhoel:**
+    - Cambié `apps/panel-inteligencia/public/favicon.svg` (tu carpeta): ahora es el ícono nuevo. Nada más de Inteligencia.
+    - La app suma `expo-splash-screen` (nativo): `npm install` en `apps/app` y `npx expo run:android` una vez.
+    - El APK con las direcciones de la nube ya sale con el logo.
 - **Notificaciones push (10/11, pedido del ingeniero; `docs/notificaciones.md`):**
   - **Pedidos:** cada paso del pedido le avisa al teléfono de la tienda (confirmado, en preparación, en camino, entregado, rechazado, pago con QR, reclamo respondido). Una notificación por pedido: cada paso reemplaza al anterior. **«Va en camino» queda fija** hasta que llega, como en las apps de delivery.
   - **Superadmin › Promociones:** le llega a todos los que tienen la app, con vista previa del teléfono y el producto que abre.

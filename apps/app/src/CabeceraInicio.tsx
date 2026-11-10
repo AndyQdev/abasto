@@ -8,6 +8,7 @@ import { Aparecer, Tocable } from './animacion';
 import { graphql } from './api';
 import { Icono, Texto } from './componentes';
 import { resumen, type Direccion } from './direcciones';
+import { Logo } from './Marca';
 import { CABECERA, COLOR, FUENTE, SOMBRA } from './tema';
 
 /** Cuánto baja el bosque por debajo de la línea del buscador (la curva de la derecha) */
@@ -54,9 +55,7 @@ export function CabeceraInicio({
       </Svg>
 
       <View style={[e.fila, { paddingTop: arriba + 8 }]}>
-        <Texto style={e.logo}>
-          ABAST<Texto style={[e.logo, { color: COLOR.lima }]}>O</Texto>
-        </Texto>
+        <Logo tamano={30} claro />
         <Aparecer desde={-8} style={{ flex: 1 }}>
           <Tocable onPress={alCambiarDireccion} style={e.direccion} accessibilityRole="button" accessibilityLabel={`Entregar en ${resumen(direccion)}. Cambiar dirección`}>
             <View style={e.pin}>
@@ -138,7 +137,6 @@ function usePedidosEnCurso(): number {
 
 const e = StyleSheet.create({
   fila: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16 },
-  logo: { fontFamily: FUENTE.negra, fontSize: 25, color: '#FFFFFF', letterSpacing: -0.8 },
   direccion: {
     flexDirection: 'row',
     alignItems: 'center',

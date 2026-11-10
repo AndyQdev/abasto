@@ -295,14 +295,5 @@ export const estilos = StyleSheet.create({
   enlace: { color: COLOR.verde, fontFamily: FUENTE.fuerte, fontSize: 13.5 },
 });
 
-/** El logo de ABASTO: el carrito en un cuadrado menta y la palabra en negrita. `claro` para fondos oscuros. */
-export function Logo({ tamano = 30, claro }: { tamano?: number; claro?: boolean }) {
-  return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: tamano * 0.28 }}>
-      <View style={{ width: tamano, height: tamano, borderRadius: tamano * 0.3, backgroundColor: COLOR.lima, alignItems: 'center', justifyContent: 'center' }}>
-        <Ionicons name="cart" size={tamano * 0.6} color={COLOR.verde} />
-      </View>
-      <Text style={{ fontFamily: FUENTE.negra, fontSize: tamano * 0.72, letterSpacing: -0.5, color: claro ? '#fff' : COLOR.verde }}>ABASTO</Text>
-    </View>
-  );
-}
+/** El logo de Abasto (10/11): vive en `Marca.tsx`, con la geometría de `packages/ui/marca.ts`. */
+export { Logo, Simbolo } from './Marca';

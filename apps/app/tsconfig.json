@@ -11,6 +11,9 @@
       ],
       "@abasto/bandeja": [
         "../../packages/outbox-offline/src/bandeja.ts"
+      ],
+      "@abasto/marca": [
+        "../../packages/ui/marca.ts"
       ]
     }
   },
@@ -18,7 +21,8 @@
     "**/*.ts",
     "**/*.tsx",
     "../../packages/comercio/src/**/*.ts",
-    "../../packages/outbox-offline/src/bandeja.ts"
+    "../../packages/outbox-offline/src/bandeja.ts",
+    "../../packages/ui/marca.ts"
   ],
   "exclude": [
     "node_modules",

@@ -1,3 +1,6 @@
+import { COLOR as COLOR_MARCA, RECORTE, SIMBOLO, TINTAS, type Tinta } from '@abasto/ui/marca';
+import { useId } from 'react';
+
 /** Iconos lineales del Panel (trazos al estilo Lucide, 24 × 24). Se dibujan con el color del texto. */
 const TRAZOS = {
   inicio: (
@@ -134,11 +137,26 @@ export function Icono({ nombre, tamano = 22 }: { nombre: NombreDeIcono; tamano?:
   );
 }
 
-/** El símbolo de Abasto: una «A» abierta en lima, como la de la app. */
-export function Simbolo({ tamano = 44 }: { tamano?: number }) {
+/**
+ * El símbolo de Abasto (10/11): la «A» lima con el paquete ámbar de travesaño. Con `conFondo`, sobre el cuadrado
+ * redondeado verde bosque (el ícono de la app). La geometría es la de `packages/ui/marca.ts`.
+ */
+export function Simbolo({ tamano = 44, conFondo = true, tinta = TINTAS.sobreOscuro }: { tamano?: number; conFondo?: boolean; tinta?: Tinta }) {
+  const id = 'abasto-' + useId().replace(/:/g, '');
+  const s = SIMBOLO;
   return (
-    <svg width={tamano} height={tamano} viewBox="0 0 48 48" aria-hidden="true">
-      <path d="M8 40 24 9l16 31" fill="none" stroke="#C9F45A" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
+    <svg width={tamano} height={tamano} viewBox="0 0 100 100" aria-hidden="true">
+      <defs>
+        <clipPath id={id}>
+          <path clipRule="evenodd" d={RECORTE} />
+        </clipPath>
+      </defs>
+      {conFondo && <rect width="100" height="100" rx="27" fill={COLOR_MARCA.bosque} />}
+      <g transform={conFondo ? 'translate(14 14) scale(0.72)' : undefined}>
+        <path d={s.patas} fill="none" stroke={tinta.patas} strokeWidth={s.grosor} strokeLinecap="round" strokeLinejoin="round" clipPath={`url(#${id})`} />
+        <rect x={s.paquete.x} y={s.paquete.y} width={s.paquete.ancho} height={s.paquete.alto} rx={s.paquete.radio} fill={tinta.paquete} />
+        {tinta.cinta && <rect x={s.cinta.x} y={s.cinta.y} width={s.cinta.ancho} height={s.cinta.alto} fill={tinta.cinta} />}
+      </g>
     </svg>
   );
 }

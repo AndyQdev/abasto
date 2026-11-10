@@ -12,6 +12,7 @@ import { Usuarios } from './pantallas/Usuarios';
 import { Sistema } from './pantallas/Sistema';
 import { Traccion } from './pantallas/Traccion';
 import { sesion } from './servicios';
+import { Simbolo } from './Simbolo';
 
 const rutaActual = () => window.location.pathname.replace(/^\//, '') || 'traccion';
 
@@ -50,8 +51,11 @@ export function App({ usuario }: { usuario: Usuario }) {
     <div className="superadmin">
       <aside className="lateral">
         <div className="marca">
-          <strong>Abasto</strong>
-          <small>Backoffice</small>
+          <Simbolo tamano={38} />
+          <div>
+            <strong>Abasto</strong>
+            <small>Backoffice</small>
+          </div>
         </div>
         <nav>
           {MODULOS.map((m) => (

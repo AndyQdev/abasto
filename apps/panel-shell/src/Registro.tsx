@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react';
+import { Simbolo } from './iconos';
 import { ROUTER_URL } from './offline/config';
 import { CIUDADES, mensajeDeError, registrar, revisar, VACIO, type DatosDeRegistro } from './datos-de-registro';
 
@@ -64,7 +65,7 @@ export function Registro() {
     <div className="registro">
       <section className="registro-intro">
         <div className="marca">
-          <span className="logo">A</span>
+          <Simbolo tamano={40} />
           <strong>Abasto</strong>
         </div>
         <h1>Vende al por mayor a las tiendas de tu ciudad</h1>

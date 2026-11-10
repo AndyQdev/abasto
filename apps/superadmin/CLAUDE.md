@@ -9,5 +9,6 @@ El backoffice de Abasto (puerto 5174). Maqueta: `docs/uix-mockup/Abasto v1 – A
   - Muestra cuántas salieron y las últimas notificaciones enviadas, también las de los pedidos.
   - Habla con Conecta (`/v1/admin/promociones` y `/v1/admin/notificaciones`). Los productos salen de `misProductos`, que Catálogo ahora también responde al admin.
 - Solo entra el rol `admin` (usuario `admin@abasto.bo`).
+- **Logo (10/11):** el símbolo de Abasto en el lateral (`src/Simbolo.tsx`, geometría de `@abasto/ui/marca`) y el favicon de `pnpm marca`. Ver `docs/marca/README.md`.
 
 Probar: `pnpm --filter @abasto/superadmin test`; de punta a punta, `e2e/pruebas/superadmin.spec.ts`.

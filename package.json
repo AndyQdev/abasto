@@ -11,6 +11,7 @@
     "todo": "docker compose --profile servicios up -d --build --wait && node infra/dynamodb/crear-tablas.mjs && node infra/keycloak/al-dia.mjs",
     "n8n": "docker compose --profile n8n up -d --wait n8n && docker compose exec n8n n8n import:workflow --separate --input=/flujos && docker compose exec n8n n8n update:workflow --all --active=true && docker compose restart n8n",
     "parar": "docker compose --profile servicios --profile n8n stop",
+    "marca": "node --experimental-strip-types --no-warnings scripts/marca.ts",
     "borrar-datos": "docker compose --profile servicios --profile n8n down -v",
     "tablas": "node infra/dynamodb/crear-tablas.mjs",
     "supergrafo": "rover supergraph compose --config infra/router/supergraph.yaml --output infra/router/supergraph.graphql --elv2-license accept",
