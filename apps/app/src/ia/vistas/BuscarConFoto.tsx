@@ -95,6 +95,10 @@ export function BuscarConFoto({
     if (conIa) void ia.interprete();
   }, [conIa, ia.interprete]);
 
+  // Al salir de la pantalla el modelo sale de la memoria (10/11: se quedaba cargado y el teléfono se ponía lento)
+  const { liberar } = ia;
+  useEffect(() => () => void liberar(), [liberar]);
+
   function cambiarQue(nuevo: QueReconocer) {
     turno.current++;
     setQue(nuevo);

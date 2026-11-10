@@ -6,8 +6,13 @@ import { rutaDe, rutaParaElMotor } from './descargas';
 import type { Diagnostico, EntradaDelAsistente, Interprete } from './motor';
 import type { ModeloLocal } from './modelos';
 
-/** En un teléfono el modelo corre en la CPU: más hilos que núcleos rápidos lo hace más lento, no más rápido */
-const HILOS = 4;
+/**
+ * En un teléfono el modelo corre en la CPU. 3 hilos (10/11): con 4 y el modelo de 2B el Honor se calentaba y la
+ * pantalla dejaba de responder; uno libre deja moverse a la app.
+ */
+const HILOS = 3;
+/** Si el modelo tarda más que esto se corta y siguen las reglas: la app nunca se queda colgada esperando */
+const LIMITE_MS = 45_000;
 /** Lado mayor de la foto que ve el modelo: una foto de cámara entera no cabe en el contexto («Not enough context space») */
 const LADO_DE_LA_FOTO = 448;
 
@@ -28,13 +33,18 @@ async function fotoParaElModelo(uri: string): Promise<string> {
  * Motor llama.cpp (llama.rn): corre cualquier modelo GGUF del manifiesto dentro del teléfono, sin internet.
  * Con proyector de visión (mmproj) entiende también fotos. La salida queda atada a `ESQUEMA_DE_INTENCION`.
  */
-export async function cargarLlama(modelo: ModeloLocal, alCargar: (fraccion: number) => void = () => {}): Promise<Interprete> {
+export async function cargarLlama(
+  modelo: ModeloLocal,
+  { vision = false }: { vision?: boolean } = {},
+  alCargar: (fraccion: number) => void = () => {},
+): Promise<Interprete> {
   const inicio = Date.now();
   const contexto: LlamaContext = await initLlama(
     {
       model: rutaParaElMotor(rutaDe(modelo, modelo.archivos.modelo)),
-      // 4096: con 2048 la foto más las instrucciones no entraban (10/11)
-      n_ctx: Math.min(modelo.contexto, 4096),
+      // Solo texto: 2048 alcanza (instrucciones + receta de 2500 letras + respuesta) y gasta la mitad de memoria.
+      // Con visión, 4096: la foto más las instrucciones no entraban en 2048.
+      n_ctx: Math.min(modelo.contexto, vision ? 4096 : 2048),
       n_threads: HILOS,
       use_mmap: true,
       // Con visión, llama.cpp no puede correr la ventana de contexto
@@ -47,7 +57,9 @@ export async function cargarLlama(modelo: ModeloLocal, alCargar: (fraccion: numb
     (p) => alCargar(p / 100),
   );
   let veFotos = false;
-  if (modelo.archivos.proyector) {
+  // El proyector de visión pesa 100 a 990 MB más en memoria: solo se carga si se van a mirar fotos (10/11: hoy la IA
+  // del teléfono solo lee texto, en Receta)
+  if (vision && modelo.archivos.proyector) {
     veFotos = await contexto
       .initMultimodal({ path: rutaParaElMotor(rutaDe(modelo, modelo.archivos.proyector)), image_max_tokens: 128, use_gpu: false })
       .catch((e: unknown) => {
@@ -75,6 +87,9 @@ export async function cargarLlama(modelo: ModeloLocal, alCargar: (fraccion: numb
       return turno;
     },
     async liberar() {
+      // Primero termina (o se corta) lo que esté respondiendo: soltar la memoria a mitad de respuesta tumba la app
+      await contexto.stopCompletion().catch(() => undefined);
+      await fila.catch(() => undefined);
       await contexto.release();
     },
   };
@@ -165,6 +180,21 @@ export async function cargarLlama(modelo: ModeloLocal, alCargar: (fraccion: numb
    */
   async function completar(messages: RNLlamaOAICompatibleMessage[]) {
     await contexto.clearCache(false).catch(() => undefined);
+    let cortado = false;
+    const tope = setTimeout(() => {
+      cortado = true;
+      void contexto.stopCompletion().catch(() => undefined);
+    }, LIMITE_MS);
+    try {
+      const r = await responder(messages);
+      if (cortado) throw new Error('La IA del teléfono tardó demasiado y la cortamos');
+      return r;
+    } finally {
+      clearTimeout(tope);
+    }
+  }
+
+  function responder(messages: RNLlamaOAICompatibleMessage[]) {
     return contexto.completion({
       messages,
       // Sin jinja: llama.rn arma el prompt con la plantilla clásica y aplica el esquema como gramática estricta

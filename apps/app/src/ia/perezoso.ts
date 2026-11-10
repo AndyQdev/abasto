@@ -29,8 +29,8 @@ export async function reconocerFoto(fotoUri: string, maximo = 5): Promise<FotoRe
   return reconocer(fotoUri, maximo);
 }
 
-export async function cargarLlama(modelo: ModeloLocal): Promise<Interprete> {
+export async function cargarLlama(modelo: ModeloLocal, opciones: { vision?: boolean } = {}): Promise<Interprete> {
   if (!iaDisponible) throw new Error('El modelo local necesita la app instalada: en Expo Go no está llama.rn.');
   const { cargarLlama: cargar } = require('./local/motor-llama') as typeof import('./local/motor-llama');
-  return cargar(modelo);
+  return cargar(modelo, opciones);
 }

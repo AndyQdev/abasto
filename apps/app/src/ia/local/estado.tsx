@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AppState } from 'react-native';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { borrarModelo, cancelarDescarga, descargarModelo, estaInstalado, type Progreso } from './descargas';
 import { capacidadesDelTelefono, nombreDelTelefono } from './dispositivo';
@@ -11,6 +12,8 @@ const CLAVE = 'abasto.ia.modelo';
 const SIN_MODELO = 'ninguno';
 /** El interruptor «Usar la IA de tu teléfono» de Buscar con una foto */
 const CLAVE_USAR = 'abasto.ia.usar';
+/** Sin preguntas en este tiempo, el modelo sale de la memoria (se vuelve a cargar solo al usarlo) */
+const OCIOSO_MS = 90_000;
 
 export interface IaLocal {
   telefono: string;
@@ -37,6 +40,8 @@ export interface IaLocal {
   cambiarUsarIa: (v: boolean) => void;
   /** El intérprete del modelo activo; lo carga la primera vez. null si no hay modelo bajado (se usan las reglas). */
   interprete: () => Promise<Interprete | null>;
+  /** Suelta el modelo de la memoria (al salir de la pantalla, en segundo plano o tras un rato sin uso) */
+  liberar: () => Promise<void>;
 }
 
 const Contexto = createContext<IaLocal | null>(null);
@@ -112,8 +117,34 @@ export function ProveedorDeIaLocal({ children }: { children: ReactNode }) {
     void AsyncStorage.setItem(CLAVE_USAR, v ? 'si' : 'no').catch(() => undefined);
   }, []);
 
+  const ocioso = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /**
+   * Soltar el modelo: libera 0,5 a 5 GB de RAM. Se llama al salir de Buscar con una foto, cuando la app pasa a segundo
+   * plano y a los 90 s sin uso (10/11: con el de 2B cargado para siempre, el Honor de 8 GB se puso lento y caliente).
+   */
+  const liberar = useCallback(async () => {
+    if (ocioso.current) clearTimeout(ocioso.current);
+    ocioso.current = null;
+    const anterior = cargado.current;
+    cargado.current = null;
+    if (anterior) await anterior.interprete.then((i) => i.liberar()).catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (estado) => {
+      if (estado !== 'active') void liberar();
+    });
+    return () => {
+      sub.remove();
+      void liberar();
+    };
+  }, [liberar]);
+
   const interprete = useCallback(async () => {
     if (!activo) return null;
+    if (ocioso.current) clearTimeout(ocioso.current);
+    ocioso.current = setTimeout(() => void liberar(), OCIOSO_MS);
     if (cargado.current?.id !== activo.id) {
       setCargando(true);
       const promesa = cargarLlama(activo);
@@ -144,11 +175,12 @@ export function ProveedorDeIaLocal({ children }: { children: ReactNode }) {
       cancelar: cancelarDescarga,
       borrar,
       usar,
+      liberar,
       usarIa,
       cambiarUsarIa,
       interprete,
     };
-  }, [capacidades, instalados, activo, progreso, cargando, error, descargar, borrar, usar, usarIa, cambiarUsarIa, interprete]);
+  }, [capacidades, instalados, activo, progreso, cargando, error, descargar, borrar, usar, usarIa, cambiarUsarIa, interprete, liberar]);
 
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>;
 }
