@@ -156,6 +156,26 @@ Los 16 casos de uso tienen pantalla, prueba y sus diagramas ICONIX. Ni el Panel 
 - 31/10 · Pedidos: `CrearPedidoEntrada.entrega: DireccionEntrada` (opcional) y `Pedido.entrega: DireccionDeEntrega`; migración V3. OpenAPI de Conecta: `DatosPedido.entrega`.
 
 ## Necesito del otro
+- **Jhoel (10/11): desplegar todo para la presentación** (notificaciones push, logo y carga masiva). Desde tu laptop:
+  1. **Bajar:** `git pull --rebase origin main`, `pnpm install` y `npm install` en `apps/app` (suma `expo-splash-screen`).
+  2. **Los dos archivos de Firebase te los paso yo por un canal privado. Nunca van al repo ni a un chat de grupo:**
+     - `google-services.json` → `apps/app/google-services.json` (la app; sin él, el APK no recibe notificaciones);
+     - `firebase.json` → en la máquina de AWS, `abasto/infra/despliegue/aws/secretos/firebase.json` (Conecta; es una clave privada).
+  3. **AWS (Conecta):** mandar el código como siempre y `docker compose up -d --build conecta`. En los logs tiene que decir «Notificaciones push con Firebase (proyecto abasto-8989d)». Si dice «modo prueba», no encontró el archivo.
+  4. **Azure:** `docker compose up -d --build asistente` (aplica la migración 005 al arrancar).
+  5. **Google (webs con el logo nuevo):** `node infra/despliegue/construir-webs.mjs` para panel, gestion, inteligencia y superadmin, y subirlas.
+  6. **Carga masiva en la nube:**
+     - `node scripts/carga-masiva.mjs --solo-archivos` (necesita el Docker local con la semilla, para leer los productos) deja tres archivos en `.carga-masiva/`.
+     - Google: `docker compose cp catalogo.js mongo:/tmp/` y después `docker compose exec mongo mongosh --quiet /tmp/catalogo.js`.
+     - Azure: `docker compose exec -T postgres psql -U <usuario> -d pedidos -v ON_ERROR_STOP=1 < pedidos.sql` y lo mismo con `-d reportes < reportes.sql`.
+     - **No correr el ML nocturno después:** pisa los segmentos con tiendas sintéticas.
+  7. **APK con las direcciones de la nube** (ya con `google-services.json` en `apps/app`): sale con el logo nuevo y Firebase.
+  8. **Probar en el teléfono:**
+     - instalar, entrar con el celular y aceptar el permiso de notificaciones;
+     - en Cuenta › Notificaciones, «Probar una notificación»;
+     - hacer un pedido y avanzarlo desde el Panel: con «Despachar» queda fija «Tu pedido va en camino», con «Entregar» llega «¡Llegó tu pedido!»;
+     - una promoción desde Superadmin › Promociones.
+     - Para probar con la app cerrada, deslízala de las recientes, no uses «Forzar detención». Detalle en `docs/notificaciones.md`.
 - Jhoel (09/11): corrí `evaluar` con Gemini: **19/20**, meta cumplida. La que falla es «las ventas de cada día de los últimos 7 días»: Gemini usa `fecha >= current_date - interval '7 days'` y trae 8 días. Se arregla con una regla en `instrucciones` («los últimos N días incluyen hoy: `fecha > current_date - N`»). Local y nube responden igual, en 2 a 5 s.
 - Jhoel (09/11): el APK con las direcciones de la nube. El único que hay es de prueba, del 02/11, y necesita la computadora. Si no llegas, dime y lo compilo yo.
 
