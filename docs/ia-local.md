@@ -33,7 +33,7 @@ Por qué **local** y no en la nube:
 
 El límite está puesto a propósito: **la IA solo entiende qué se pidió** (plato, ingredientes, para cuántos). Qué producto de Abasto, en qué presentación, cuántos y a qué precio lo calcula el código. Así nunca inventa precios ni productos. En la pantalla se ve separado: la tarjeta «Lo que entendió la IA de tu teléfono» y, debajo, lo que armó Abasto, con el total, el costo por unidad y «¿Cuántas vas a hacer?».
 
-Cómo se usa: Inicio o Buscar → cámara → «¿Qué quieres reconocer?» (Producto, Comida o Receta) → interruptor «Usar la IA de tu teléfono». Si el teléfono no tiene modelo, ofrece bajarlo una vez (LFM2.5-VL de 332 MB en un teléfono de 7 GB). El modelo se elige según la memoria del teléfono.
+Cómo se usa (decisión del 10/11): Inicio o Buscar → cámara → «¿Qué quieres reconocer?». **Producto y Comida** usan solo los vectores y ML Kit: para ver fotos, los modelos que caben en un teléfono fallaban (un fricasé salía «pollo frito» con LFM2.5 450M y «sopa de maní» con Qwen3.5 0.8B). **Receta** usa siempre la IA del teléfono: ML Kit lee el texto de la foto (lista a mano, receta, captura), el texto queda en el campo para corregirlo y la IA entiende qué se quiere; el código busca los productos y calcula. **Los vectores ven, la IA local entiende.** Si el teléfono no tiene modelo, ofrece bajarlo una vez (LFM2.5-VL de 332 MB en un teléfono de 7 GB). El modelo se elige según la memoria del teléfono.
 
 Lo que se arregló el 10/11 para que ande en teléfonos reales: solo CPU (con la GPU de Snapdragon la app se cerraba), memoria limpia en cada pregunta («Not enough context space»), foto achicada a 448 px y el reconocedor propio cargado bien en el APK.
 

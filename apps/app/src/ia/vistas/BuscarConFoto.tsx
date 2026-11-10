@@ -81,9 +81,16 @@ export function BuscarConFoto({
   /** Cada reconocimiento lleva su número: si la persona saca otra foto antes de que termine, la respuesta vieja se descarta */
   const turno = useRef(0);
   const opcion = OPCIONES.find((o) => o.id === que)!;
-  const conIa = ia.usarIa && !!ia.activo;
+  /**
+   * La IA del teléfono solo trabaja en Receta (10/11, decisión de Jhoel): ahí entiende el texto que lee ML Kit y lo
+   * que escribes. En Producto y Comida no: para ver fotos los modelos que caben en un teléfono fallan (un fricasé
+   * salía «pollo frito» o «sopa de maní») y los vectores lo hacen mejor y más rápido.
+   */
+  const conIa = que === 'receta' && !!ia.activo;
+  /** El teléfono puede correr algún modelo: entonces en Receta la IA es obligatoria (si no hay, se pide bajarlo) */
+  const faltaModelo = que === 'receta' && ia.todos.length > 0 && !ia.activo;
 
-  // Con la IA prendida, el modelo empieza a cargar mientras la persona saca la foto
+  // En Receta el modelo empieza a cargar mientras la persona saca la foto o escribe
   useEffect(() => {
     if (conIa) void ia.interprete();
   }, [conIa, ia.interprete]);
@@ -105,8 +112,18 @@ export function BuscarConFoto({
     const r = desde === 'camara' ? await ImagePicker.launchCameraAsync(opciones) : await ImagePicker.launchImageLibraryAsync(opciones);
     if (r.canceled || !r.assets[0]) return;
     setFoto(r.assets[0].uri);
-    // La receta puede llevar además texto: se reconoce al tocar «Armar mi compra»
-    if (que !== 'receta') await reconocer(r.assets[0].uri);
+    if (que !== 'receta') return reconocer(r.assets[0].uri);
+    // Receta: ML Kit lee el texto de la foto y lo pone en el campo, para que la persona lo vea y lo corrija
+    setTrabajando(true);
+    try {
+      const leido = (await leerTexto(r.assets[0].uri)).trim();
+      if (!leido) setError('No pudimos leer texto en esa foto. Prueba con más luz o escríbelo abajo.');
+      else setTexto((antes) => [antes.trim(), leido].filter(Boolean).join('\n'));
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setTrabajando(false);
+    }
   }
 
   async function reconocer(uri: string | null) {
@@ -119,18 +136,16 @@ export function BuscarConFoto({
       const interprete = conIa ? await ia.interprete() : null;
       if (que === 'producto') {
         if (!uri) return;
-        const encontrado = await buscarProducto(uri, interprete);
+        const encontrado = await buscarProducto(uri, null);
         if (vigente()) setResultado(encontrado);
       } else {
-        // Comida: solo los platos del reconocedor. Receta: lo que lee ML Kit en la foto más lo escrito.
-        const leido = que === 'receta' && uri ? await leerTexto(uri).catch(() => '') : '';
+        // Comida: solo los vectores de los platos. Receta: la IA entiende el texto (lo leído de la foto ya está en el campo).
         const propuesta = await proponerCompra(
-          { texto: [texto, leido].filter((t) => t.trim()).join('\n'), fotoUri: que === 'comida' || interprete ? uri : null },
+          { texto: que === 'receta' ? texto : '', fotoUri: que === 'comida' ? uri : null },
           productos,
           {
-            interprete,
+            interprete: que === 'receta' ? interprete : null,
             contexto: { negocio },
-            soloPlato: que === 'comida',
             reconocerFoto: que === 'comida' ? async (u) => ({ ...(await reconocerFoto(u)), productos: [] }) : undefined,
           },
         );
@@ -230,7 +245,7 @@ export function BuscarConFoto({
         </View>
       </View>
 
-      <InterruptorDeIa alElegirModelo={alElegirModelo} />
+      {que === 'receta' && <IaDeLaReceta alElegirModelo={alElegirModelo} />}
 
       <View style={e.marco}>
         {foto ? (
@@ -264,7 +279,7 @@ export function BuscarConFoto({
             multiline
             value={texto}
             onChangeText={setTexto}
-            placeholder={'Ej.: 3 cajas de aceite, 2 fardos de arroz\no «quiero hacer 300 salteñas»'}
+            placeholder={'Aquí aparece lo que leamos de la foto.\nO escribe: «3 cajas de aceite, 2 fardos de arroz»\no «quiero hacer 300 salteñas»'}
             placeholderTextColor={COLOR.texto3}
             accessibilityLabel="Tu receta o lista"
           />
@@ -272,16 +287,17 @@ export function BuscarConFoto({
             texto={trabajando ? 'Armando tu compra…' : 'Armar mi compra'}
             icono="sparkles-outline"
             cargando={trabajando}
-            deshabilitado={!texto.trim() && !foto}
+            deshabilitado={!texto.trim() || faltaModelo}
             alTocar={() => void reconocer(foto)}
           />
+          {faltaModelo && <Texto v="chico" style={{ marginTop: 6 }}>Baja el modelo de arriba para que la IA de tu teléfono entienda tu receta.</Texto>}
         </Tarjeta>
       )}
 
       {error && <Falla texto={error} />}
       {trabajando && (
         <Texto v="gris">
-          {conIa ? `La IA de tu teléfono (${ia.activo!.nombre}) está mirando la foto…` : 'Leyendo la foto en tu teléfono…'}
+          {que === 'receta' && !resultado && foto && !texto ? 'Leyendo el texto de la foto…' : conIa ? `La IA de tu teléfono (${ia.activo!.nombre}) está entendiendo tu receta…` : 'Leyendo la foto en tu teléfono…'}
         </Texto>
       )}
 
@@ -317,7 +333,7 @@ export function BuscarConFoto({
             <Tarjeta style={{ alignItems: 'center', gap: 8 }}>
               <Texto v="fuerte">No encontramos ese producto</Texto>
               <Texto v="gris" style={{ textAlign: 'center' }}>
-                Prueba más cerca y con buena luz, que se lea el nombre{!conIa ? ', o prende la IA de tu teléfono' : ''}.
+                Prueba más cerca y con buena luz, que se lea el nombre.
               </Texto>
               <Boton tipo="chico" texto="Buscar escribiendo" alTocar={alBuscarEscribiendo} />
             </Tarjeta>
@@ -341,36 +357,31 @@ export function BuscarConFoto({
 }
 
 /**
- * «Usar la IA de tu teléfono». Prendida sin modelo bajado: pide bajar el que le toca al teléfono (una vez, mejor con
- * Wi-Fi) o elegir uno ya bajado. Apagada: el reconocedor propio y las reglas, que andan en cualquier teléfono.
+ * En Receta la IA del teléfono es la que entiende lo que quieres (obligatoria): dice qué modelo lo hace y, si no hay
+ * uno bajado, pide bajar el que le toca al teléfono. En un teléfono que no puede correr ninguno quedan las reglas.
  */
-function InterruptorDeIa({ alElegirModelo }: { alElegirModelo: () => void }) {
+function IaDeLaReceta({ alElegirModelo }: { alElegirModelo: () => void }) {
   const ia = useIaLocal();
-  const bajado = ia.posibles.find((m) => ia.instalados.includes(m.id)) ?? null;
+  const bajado = ia.todos.find((m) => ia.instalados.includes(m.id)) ?? null;
   const bajando = ia.progreso;
 
   return (
     <Tarjeta style={{ gap: 10 }}>
       <View style={e.fila}>
-        <Icono nombre="sparkles" color={COLOR.bosque} />
+        <Icono nombre="hardware-chip-outline" color={COLOR.bosque} />
         <View style={{ flex: 1 }}>
-          <Texto v="fuerte">Usar la IA de tu teléfono</Texto>
+          <Texto v="fuerte">La IA de tu teléfono entiende tu receta</Texto>
           <Texto v="chico">
-            {ia.usarIa && ia.activo
+            {ia.activo
               ? `${ia.activo.nombre}${ia.cargando ? ' · preparándose…' : ' · lista, sin internet'}`
-              : 'Entiende mejor fotos difíciles, platos y recetas escritas a mano.'}
+              : ia.todos.length
+                ? 'Lee la foto, entiende qué quieres preparar o comprar y Abasto arma los productos.'
+                : 'Tu teléfono no puede correr un modelo de IA: usamos las reglas de Abasto.'}
           </Texto>
         </View>
-        <Switch
-          value={ia.usarIa}
-          onValueChange={ia.cambiarUsarIa}
-          trackColor={{ false: COLOR.borde, true: COLOR.bosque }}
-          thumbColor={ia.usarIa ? COLOR.lima : COLOR.superficie}
-          accessibilityLabel="Usar la IA de tu teléfono"
-        />
       </View>
 
-      {ia.usarIa && !ia.activo && (
+      {!ia.activo && ia.todos.length > 0 && (
         <View style={e.aviso}>
           {bajando ? (
             <>
@@ -388,7 +399,7 @@ function InterruptorDeIa({ alElegirModelo }: { alElegirModelo: () => void }) {
           ) : ia.recomendado ? (
             <>
               <Texto v="chico">
-                Para usar la IA tienes que bajar un modelo a tu teléfono, una sola vez ({tamano(ia.recomendado)}, mejor con Wi-Fi). Después anda sin internet.
+                Para esto tienes que bajar un modelo a tu teléfono, una sola vez ({tamano(ia.recomendado)}, mejor con Wi-Fi). Después anda sin internet.
               </Texto>
               <Boton texto={`Bajar ${ia.recomendado.nombre} (${tamano(ia.recomendado)})`} icono="cloud-download-outline" alTocar={() => void ia.descargar(ia.recomendado!)} />
               <Pressable onPress={alElegirModelo} accessibilityRole="button">
@@ -396,11 +407,11 @@ function InterruptorDeIa({ alElegirModelo }: { alElegirModelo: () => void }) {
               </Pressable>
             </>
           ) : (
-            <Texto v="chico">Tu teléfono no tiene memoria o espacio para un modelo de IA. Sigues buscando con el reconocedor de Abasto.</Texto>
+            <Boton tipo="chico" texto="Elegir un modelo" alTocar={alElegirModelo} />
           )}
         </View>
       )}
-      {ia.usarIa && ia.error && <Texto v="chico" style={{ color: COLOR.rojoTexto }}>{ia.error}</Texto>}
+      {ia.error && <Texto v="chico" style={{ color: COLOR.rojoTexto }}>{ia.error}</Texto>}
     </Tarjeta>
   );
 }
