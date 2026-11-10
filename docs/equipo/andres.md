@@ -101,7 +101,7 @@ Los 16 casos de uso tienen pantalla, prueba y sus diagramas ICONIX. Ni el Panel 
 - 31/10 · Pedidos: `CrearPedidoEntrada.entrega: DireccionEntrada` (opcional) y `Pedido.entrega: DireccionDeEntrega`; migración V3. OpenAPI de Conecta: `DatosPedido.entrega`.
 
 ## Necesito del otro
-- Jhoel (09/11): ya con Gemini en Vertex, correr `pnpm --filter @abasto/asistente evaluar` y anotar el resultado (meta 18/20). Lo de «no entendí» sin llave quedó hecho el 07/11.
+- Jhoel (09/11): corrí `evaluar` con Gemini: **19/20**, meta cumplida. La que falla es «las ventas de cada día de los últimos 7 días»: Gemini usa `fecha >= current_date - interval '7 days'` y trae 8 días. Se arregla con una regla en `instrucciones` («los últimos N días incluyen hoy: `fecha > current_date - N`»). Local y nube responden igual, en 2 a 5 s.
 - Jhoel (09/11): el APK con las direcciones de la nube. El único que hay es de prueba, del 02/11, y necesita la computadora. Si no llegas, dime y lo compilo yo.
 
 ## Sigue
