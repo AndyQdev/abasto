@@ -52,12 +52,21 @@ registerRoute(({ url }) => url.origin === keycloak.origin, new NetworkOnly());
 registerRoute(({ url }) => url.pathname === '/remotos.json', new NetworkFirst({ cacheName: 'abasto-remotos', networkTimeoutSeconds: 3 }));
 // IA local del navegador: la librería con versión fija no cambia nunca, se guarda una vez
 registerRoute(({ url, request }) => request.method === 'GET' && esLibreriaConVersion(url), new CacheFirst({ cacheName: CACHE_IA_LOCAL }));
-// Scripts y estilos de Gestión (5171) e Inteligencia (5172): se usan al instante y se actualizan de fondo.
-// Los modelos (Hugging Face) quedan afuera: los guarda la librería de IA y aquí quedarían dos veces
+// Scripts y estilos de Gestión (5171) e Inteligencia (5172). Los modelos (Hugging Face) quedan afuera: los guarda
+// la librería de IA y aquí quedarían dos veces.
+// La entrada de cada remoto (remoteEntry.js, main.js) no cambia de nombre al desplegar: va primero a la red, así la
+// versión nueva se ve en la primera carga (10/11: con stale-while-revalidate la primera carga mostraba la vieja).
+// Sin señal, o si la red tarda más de 3 s, usa la guardada. Los archivos con hash en el nombre no cambian nunca.
+const esDeUnRemoto = (url: URL, request: Request) =>
+  request.method === 'GET' && url.origin !== sw.location.origin && url.origin !== router.origin && !esArchivoDeModelo(url);
+const conHashEnElNombre = (url: URL) => /[-.][A-Za-z0-9_-]{8,}\.(js|css|mjs)$/.test(url.pathname);
 registerRoute(
-  ({ url, request }) =>
-    request.method === 'GET' && url.origin !== sw.location.origin && url.origin !== router.origin && !esArchivoDeModelo(url),
+  ({ url, request }) => esDeUnRemoto(url, request) && conHashEnElNombre(url),
   new StaleWhileRevalidate({ cacheName: 'abasto-remotos' }),
+);
+registerRoute(
+  ({ url, request }) => esDeUnRemoto(url, request),
+  new NetworkFirst({ cacheName: 'abasto-remotos', networkTimeoutSeconds: 3 }),
 );
 
 sw.addEventListener('fetch', (evento) => {

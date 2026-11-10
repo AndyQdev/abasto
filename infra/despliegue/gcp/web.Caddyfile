@@ -9,8 +9,9 @@
 	encode zstd gzip
 	# El Shell carga los remotos desde otro subdominio: el navegador pide permiso (CORS) para los módulos
 	header Access-Control-Allow-Origin *
-	# remotos.json, index.html y el service worker nunca se guardan viejos: así un remoto nuevo se ve al recargar
-	@siempre_nuevo path /remotos.json /index.html /sw.js /
+	# remotos.json, index.html, el service worker y la entrada de cada remoto (no cambia de nombre al desplegar)
+	# nunca se guardan viejos: así un remoto nuevo se ve al recargar
+	@siempre_nuevo path /remotos.json /index.html /sw.js / /remoteEntry.js /main.js
 	header @siempre_nuevo Cache-Control "no-cache"
 	try_files {path} /index.html
 	file_server

@@ -163,7 +163,8 @@ Los 16 casos de uso tienen pantalla, prueba y sus diagramas ICONIX. Ni el Panel 
      - `firebase.json` → en la máquina de AWS, `abasto/infra/despliegue/aws/secretos/firebase.json` (Conecta; es una clave privada).
   3. **AWS (Conecta):** mandar el código como siempre y `docker compose up -d --build conecta`. En los logs tiene que decir «Notificaciones push con Firebase (proyecto abasto-8989d)». Si dice «modo prueba», no encontró el archivo.
   4. **Azure:** `docker compose up -d --build asistente` (aplica la migración 005 al arrancar).
-  5. **Google (webs con el logo nuevo):** `node infra/despliegue/construir-webs.mjs` para panel, gestion, inteligencia y superadmin, y subirlas.
+  5. **Google (webs con el logo nuevo):** `node infra/despliegue/construir-webs.mjs` para panel, gestion, inteligencia y superadmin, y subirlas. Subir también `infra/despliegue/gcp/web.Caddyfile` y reiniciar los contenedores de las webs (`docker compose restart` de panel, gestion, inteligencia y superadmin).
+     - **Por qué (10/11):** Inteligencia ya estaba subida con Reportes como chat y la mesa de la derecha, pero el Panel mostraba la pantalla vieja. El service worker del Shell guardaba `remoteEntry.js` y `main.js` con stale-while-revalidate: la primera carga después de un despliegue daba la versión guardada. Ahora la entrada de cada remoto va primero a la red (3 s, sin señal usa la guardada) y Caddy no la deja en caché. **Hasta que esté el Shell nuevo, en cada navegador de la demo: Ctrl+Shift+R, o recargar dos veces.**
   6. **Carga masiva en la nube:**
      - `node scripts/carga-masiva.mjs --solo-archivos` (necesita el Docker local con la semilla, para leer los productos) deja tres archivos en `.carga-masiva/`.
      - Google: `docker compose cp catalogo.js mongo:/tmp/` y después `docker compose exec mongo mongosh --quiet /tmp/catalogo.js`.
