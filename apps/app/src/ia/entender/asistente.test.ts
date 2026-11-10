@@ -175,6 +175,53 @@ describe('Asistente de compra', () => {
     expect(p.supuestos.join(' ')).toContain('Salteña de carne');
   });
 
+  it('un plato que el reconocedor no conoce (fricasé) lo nombra la IA del teléfono y sale su receta', async () => {
+    const interprete = interpreteQueDevuelve({ tipo: 'receta', items: [], preparacion: 'fricasé', rinde: null, supuestos: [] });
+    const p = await proponerCompra(foto, catalogo, { interprete, ...vio([], [{ codigo: 'silpancho', confianza: 0.45 }]) });
+    expect(p.receta?.id).toBe('fricase');
+    expect(p.origen).toBe('modelo');
+    expect(p.mensaje).toContain('La IA de tu teléfono cree que es');
+    expect(p.deLaIa?.preparacion).toBe('fricasé');
+  });
+
+  it('Comida: la IA del teléfono elige el plato de nuestras recetas cuando el reconocedor duda (fricasé, Honor 10/11)', async () => {
+    let preguntaAbierta = false;
+    const interprete: Interprete = {
+      ...interpreteQueDevuelve({ tipo: 'receta', items: [{ nombre: 'calamares', cantidad: null, unidad: null, envase: null }], preparacion: 'sopa de calamares', rinde: 1, supuestos: ['calamares'] }),
+      interpretar: async () => { preguntaAbierta = true; return null; },
+      elegir: async (_foto, _pregunta, opciones) => (opciones.includes('Fricasé') ? 'Fricasé' : null),
+    };
+    const p = await proponerCompra(foto, catalogo, { interprete, soloPlato: true, ...vio([], [{ codigo: 'pique-macho', confianza: 0.79 }, { codigo: 'majadito', confianza: 0.78 }]) });
+    expect(preguntaAbierta).toBe(false);
+    expect(p.receta?.id).toBe('fricase');
+    expect(p.mensaje).toContain('cree que es fricasé');
+    expect(p.supuestos.join(' ')).not.toContain('calamares');
+    expect(p.falloDelModelo).toBeNull();
+  });
+
+  it('Comida: si el reconocedor está seguro, no se le pregunta a la IA', async () => {
+    let preguntas = 0;
+    const interprete: Interprete = { ...interpreteQueDevuelve(null), elegir: async () => { preguntas++; return 'Fricasé'; } };
+    const p = await proponerCompra(foto, catalogo, { interprete, soloPlato: true, ...vio([], [{ codigo: 'saltena', confianza: 0.9 }]) });
+    expect(preguntas).toBe(0);
+    expect(p.receta?.plato).toBe('saltena');
+  });
+
+  it('sin la IA, ese mismo plato no se reconoce (lo que suma la IA local)', async () => {
+    const p = await proponerCompra(foto, catalogo, vio([], [{ codigo: 'silpancho', confianza: 0.45 }]));
+    expect(p.receta).toBeNull();
+    expect(p.deLaIa).toBeNull();
+  });
+
+  it('«¿Cuántas vas a hacer?» reescala la receta elegida sin volver a preguntar a nadie', async () => {
+    const de50 = await proponerCompra({ texto: '', fotoUri: null }, catalogo, { platoElegido: 'saltena', recetaElegida: 'saltena-carne' });
+    const de100 = await proponerCompra({ texto: '', fotoUri: null }, catalogo, { platoElegido: 'saltena', recetaElegida: 'saltena-carne', cuantas: 100 });
+    const harina = (p: typeof de50) => p.intencion.items.find((i) => i.nombre.toLowerCase().includes('harina'))!.cantidad!;
+    expect(harina(de100)).toBeCloseTo(harina(de50) * 2);
+    const fricase20 = await proponerCompra({ texto: '', fotoUri: null }, catalogo, { recetaElegida: 'fricase', cuantas: 16 });
+    expect(fricase20.receta?.id).toBe('fricase');
+  });
+
   it('una foto que no se parece a nada lo dice', async () => {
     const p = await proponerCompra(foto, catalogo, vio([{ codigo: 'AB-005', confianza: 0.2 }], [{ codigo: 'silpancho', confianza: 0.44 }]));
     expect(p.lineas).toEqual([]);

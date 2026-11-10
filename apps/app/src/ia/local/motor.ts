@@ -26,6 +26,11 @@ export interface Interprete {
   /** Si el modelo cargado entiende fotos (tiene proyector de visión) */
   readonly veFotos: boolean;
   interpretar(entrada: EntradaDelAsistente, contexto?: Contexto): Promise<Intencion | null>;
+  /**
+   * Elige una opción de una lista cerrada mirando la foto (la gramática no lo deja responder otra cosa).
+   * Un modelo chico no sabe nombrar un plato boliviano, pero sí elegirlo de una lista. null si dice «ninguno».
+   */
+  elegir?(fotoUri: string, pregunta: string, opciones: string[]): Promise<string | null>;
   diagnostico(): Diagnostico | null;
   liberar(): Promise<void>;
 }

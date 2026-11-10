@@ -86,7 +86,7 @@ export function buscarReceta(texto: string | null, recetas = RECETAS): RecetaDeR
 const redondear = (n: number) => Math.round(n * 1000) / 1000;
 
 /** Los insumos para hacer `rinde` (100 salteñas, 20 porciones…), escalados desde la receta de referencia. */
-export function escalarReceta(receta: RecetaDeReferencia, rinde: number | null): { items: ItemPedido[]; supuestos: string[] } {
+export function escalarReceta(receta: RecetaDeReferencia, rinde: number | null): { items: ItemPedido[]; supuestos: string[]; rinde: number } {
   const supuestos = [`Usamos la receta de referencia «${receta.nombre}» (${receta.rinde} ${receta.unidadDeRinde}): ajústala a la tuya`];
   const objetivo = rinde && rinde > 0 ? rinde : receta.rinde;
   if (!rinde) supuestos.push(`No dijiste cuántas: calculamos para ${receta.rinde} ${receta.unidadDeRinde}`);
@@ -100,6 +100,7 @@ export function escalarReceta(receta: RecetaDeReferencia, rinde: number | null):
       ...(i.codigos ? { codigos: i.codigos } : {}),
     })),
     supuestos,
+    rinde: objetivo,
   };
 }
 

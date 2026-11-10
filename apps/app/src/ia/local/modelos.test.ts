@@ -1,4 +1,4 @@
-import { manifiesto, modeloRecomendado, modelosPosibles, nivelDelDispositivo, urlDe, type Capacidades } from './modelos';
+import { faltaMemoria, manifiesto, modeloRecomendado, modelosPosibles, nivelDelDispositivo, todosLosModelos, urlDe, type Capacidades } from './modelos';
 
 const telefono = (memoriaMb: number | null, espacioLibreMb: number | null = 20_000, arquitecturas = ['arm64-v8a']): Capacidades => ({
   memoriaMb,
@@ -7,6 +7,23 @@ const telefono = (memoriaMb: number | null, espacioLibreMb: number | null = 20_0
 });
 
 describe('Cada teléfono recibe el modelo que puede correr', () => {
+  it('un teléfono «de 8 GB» reporta ~7,3 GB y cuenta como de 8 (Honor REA-NX9, 10/11)', () => {
+    expect(nivelDelDispositivo(telefono(7_312))).toBe('alto');
+    expect(modeloRecomendado(telefono(7_312))?.id).toBe('qwen3.5-2b');
+  });
+
+  it('se muestran todos los modelos aunque pidan más memoria: solo se avisa', () => {
+    const honor = telefono(7_312);
+    const todos = todosLosModelos(honor).map((m) => m.id);
+    expect(todos).toEqual(expect.arrayContaining(['gemma-4-e2b', 'gemma-4-e4b', 'qwen3.5-2b']));
+    const gemma = manifiesto.modelos.find((m) => m.id === 'gemma-4-e2b')!;
+    const e4b = manifiesto.modelos.find((m) => m.id === 'gemma-4-e4b')!;
+    expect(faltaMemoria(gemma, honor)).toBe(false);
+    expect(faltaMemoria(e4b, honor)).toBe(true);
+    expect(todosLosModelos(telefono(6_000, 20_000, ['armeabi-v7a']))).toEqual([]);
+  });
+
+
   it('clasifica por memoria', () => {
     expect(nivelDelDispositivo(telefono(2_000))).toBe('ninguno');
     expect(nivelDelDispositivo(telefono(3_000))).toBe('basico');

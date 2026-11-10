@@ -4,7 +4,7 @@ import { borrarModelo, cancelarDescarga, descargarModelo, estaInstalado, type Pr
 import { capacidadesDelTelefono, nombreDelTelefono } from './dispositivo';
 import type { Interprete } from './motor';
 import { cargarLlama } from '../perezoso';
-import { manifiesto, modeloRecomendado, modelosPosibles, nivelDelDispositivo, type Capacidades, type ModeloLocal, type Nivel } from './modelos';
+import { manifiesto, modeloRecomendado, modelosPosibles, nivelDelDispositivo, todosLosModelos, type Capacidades, type ModeloLocal, type Nivel } from './modelos';
 
 /** El modelo elegido sobrevive a cerrar la app */
 const CLAVE = 'abasto.ia.modelo';
@@ -18,6 +18,8 @@ export interface IaLocal {
   nivel: Nivel;
   recomendado: ModeloLocal | null;
   posibles: ModeloLocal[];
+  /** Todos los del manifiesto que el procesador corre, aunque pidan más memoria (se avisa con una etiqueta) */
+  todos: ModeloLocal[];
   /** Los modelos que ya están enteros en el teléfono */
   instalados: string[];
   /** El modelo que usa el asistente (bajado y elegido) */
@@ -132,6 +134,7 @@ export function ProveedorDeIaLocal({ children }: { children: ReactNode }) {
       nivel: nivelDelDispositivo(c),
       recomendado: modeloRecomendado(c),
       posibles: modelosPosibles(c),
+      todos: todosLosModelos(c),
       instalados,
       activo,
       progreso,

@@ -130,6 +130,7 @@ export function BuscarConFoto({
           {
             interprete,
             contexto: { negocio },
+            soloPlato: que === 'comida',
             reconocerFoto: que === 'comida' ? async (u) => ({ ...(await reconocerFoto(u)), productos: [] }) : undefined,
           },
         );
@@ -148,19 +149,23 @@ export function BuscarConFoto({
    * mirar la foto ni a preguntar al modelo. Es solo código y sale al instante (10/11: antes tardaba 5 a 10 s por
    * toque, los toques se encolaban y a veces quedaba la receta de un toque anterior).
    */
-  async function elegirOtra(eleccion: { platoElegido?: string; recetaElegida?: string }) {
+  async function elegirOtra(eleccion: { platoElegido?: string; recetaElegida?: string; cuantas?: number }) {
     if (resultado?.tipo !== 'propuesta') return;
     const anterior = resultado.propuesta;
-    const plato = eleccion.platoElegido ?? (anterior.lectura?.tipo === 'plato' ? anterior.lectura.plato : null);
+    // El plato de la receta que se ve (no el que dudaba el reconocedor: con «+» se cambiaba solo a pique macho)
+    const plato = eleccion.platoElegido ?? anterior.receta?.plato ?? null;
     const mio = ++turno.current;
     const propuesta = await proponerCompra({ texto, fotoUri: null }, productos, {
       contexto: { negocio },
       platoElegido: plato,
-      recetaElegida: eleccion.recetaElegida ?? null,
+      // La receta de ahora se queda si solo cambia «¿Cuántas?»; un plato elegido en «¿Es esto?» empieza de cero
+      recetaElegida: eleccion.recetaElegida ?? (eleccion.platoElegido ? null : (anterior.receta?.id ?? null)),
+      cuantas: eleccion.cuantas ?? (eleccion.platoElegido ? null : anterior.cuantas),
     });
     if (mio !== turno.current) return;
     // Al cambiar solo la receta se queda lo que dijo la foto («Parece salteña (78 %)…»)
-    const final = eleccion.recetaElegida && anterior.mensaje ? { ...propuesta, mensaje: anterior.mensaje, origen: anterior.origen } : propuesta;
+    // Al cambiar la receta o cuántas se queda lo que dijo la foto y la IA («Parece salteña (78 %)…»)
+    const final = !eleccion.platoElegido ? { ...propuesta, mensaje: anterior.mensaje ?? propuesta.mensaje, origen: anterior.origen, deLaIa: anterior.deLaIa, lectura: anterior.lectura, variantes: anterior.variantes.length ? anterior.variantes : propuesta.variantes } : propuesta;
     setResultado({ tipo: 'propuesta', propuesta: final });
     setVez((n) => n + 1);
   }
@@ -327,6 +332,7 @@ export function BuscarConFoto({
           nombreDelModelo={ia.activo?.nombre}
           alElegirPlato={(codigo) => void elegirOtra({ platoElegido: codigo })}
           alElegirReceta={(id) => void elegirOtra({ recetaElegida: id })}
+          alCambiarCuantas={(cuantas) => void elegirOtra({ cuantas })}
           alAgregar={alAgregar}
         />
       )}

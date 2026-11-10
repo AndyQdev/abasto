@@ -2,7 +2,7 @@ import { StyleSheet, View } from 'react-native';
 import { Boton, Insignia, Tarjeta, Texto } from '../../componentes';
 import { COLOR } from '../../tema';
 import { useIaLocal } from '../local/estado';
-import { bytesDe, megas, type ModeloLocal } from '../local/modelos';
+import { bytesDe, faltaMemoria, gbQuePide, megas, type ModeloLocal } from '../local/modelos';
 
 const NIVEL: Record<string, string> = {
   ninguno: 'Sin modelo de lenguaje: usa las reglas, ML Kit y el reconocedor de productos',
@@ -23,7 +23,7 @@ const tamano = (m: ModeloLocal) => {
  */
 export function AjustesIaLocal() {
   const ia = useIaLocal();
-  const otros = ia.posibles.filter((m) => m.id !== ia.recomendado?.id);
+  const otros = ia.todos.filter((m) => m.id !== ia.recomendado?.id);
 
   return (
     <View style={{ gap: 12 }}>
@@ -64,8 +64,8 @@ export function AjustesIaLocal() {
       {otros.map((m) => (
         <FilaDeModelo key={m.id} modelo={m} />
       ))}
-      {!ia.posibles.length && ia.nivel !== 'ninguno' && (
-        <Texto v="gris">No hay espacio libre para ningún modelo. Libera espacio y vuelve a entrar.</Texto>
+      {!ia.todos.length && (
+        <Texto v="gris">El procesador de este teléfono no puede correr los modelos de lenguaje. Sigue andando el reconocedor de Abasto.</Texto>
       )}
     </View>
   );
@@ -87,6 +87,7 @@ function FilaDeModelo({ modelo, recomendado }: { modelo: ModeloLocal; recomendad
           </Texto>
         </View>
         {recomendado && <Insignia texto="Para tu teléfono" />}
+        <Insignia texto={`${gbQuePide(modelo)} GB de RAM`} color={ia.capacidades && faltaMemoria(modelo, ia.capacidades) ? 'ambar' : 'verde'} />
         {enUso && <Insignia texto="En uso" />}
       </View>
 

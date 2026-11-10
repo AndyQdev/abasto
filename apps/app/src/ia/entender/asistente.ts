@@ -13,7 +13,7 @@ import { candidatos, catalogar, normalizar, type LineaPropuesta } from './catalo
 import type { Contexto } from './con-modelo';
 import { intencionVacia, type Intencion, type ItemPedido } from './intencion';
 import { leerFoto, NOMBRES_DE_PLATOS, type LecturaDeFoto } from './foto';
-import { buscarReceta, escalarReceta, recetasDelPlato, type RecetaDeReferencia } from './recetas';
+import { buscarReceta, escalarReceta, RECETAS, recetasDelPlato, type RecetaDeReferencia } from './recetas';
 import { entenderConReglas, rindeDe } from './reglas';
 
 export interface Propuesta {
@@ -34,6 +34,10 @@ export interface Propuesta {
   mensaje: string | null;
   /** Las formas de preparar el plato reconocido, para elegir otra */
   variantes: RecetaDeReferencia[];
+  /** Lo que entendió la IA del teléfono, tal cual (para mostrarlo aparte de lo que calculó el código); null sin modelo */
+  deLaIa: Intencion | null;
+  /** Para cuántos quedó calculada la receta (null si no hay receta) */
+  cuantas: number | null;
 }
 
 export interface OpcionesDelAsistente {
@@ -44,6 +48,13 @@ export interface OpcionesDelAsistente {
   /** La persona eligió el plato en «¿Es esto?» o otra forma de prepararlo */
   platoElegido?: string | null;
   recetaElegida?: string | null;
+  /** Para cuántos la eligió la persona con − / + (manda sobre lo que dijo el texto) */
+  cuantas?: number | null;
+  /**
+   * Comida: la IA del teléfono no interpreta libre (inventaba «sopa de calamares» para un fricasé); elige el plato de
+   * la lista de recetas que tenemos, y solo si el reconocedor propio no está seguro.
+   */
+  soloPlato?: boolean;
 }
 
 /** «hacer», «preparar», «cocinar»: la persona quiere preparar algo, no comprar un producto */
@@ -52,7 +63,7 @@ const PREPARAR = /\b(hacer|preparar|cocinar|elaborar)\b/i;
 const pct = (n: number) => `${Math.round(n * 100)} %`;
 
 async function entender(entrada: EntradaDelAsistente, productos: Producto[], o: OpcionesDelAsistente): Promise<{ intencion: Intencion; origen: Propuesta['origen'] }> {
-  if (o.interprete) {
+  if (o.interprete && !o.soloPlato) {
     const intencion = await o.interprete.interpretar(entrada, o.contexto).catch(() => null);
     if (intencion) return { intencion, origen: 'modelo' };
   }
@@ -70,12 +81,15 @@ export async function proponerCompra(entrada: EntradaDelAsistente, productos: Pr
     : foto
       ? leerFoto(foto.productos, foto.platos)
       : null;
-  const supuestos = [...intencion.supuestos];
+  // Lo que «supuso» el modelo sobre una foto sola suele ser ruido («calamares», «pimientos»): solo con texto escrito
+  const supuestos = entrada.texto.trim() || origenDelTexto !== 'modelo' ? [...intencion.supuestos] : [];
+  let deLaIa: Intencion | null = origenDelTexto === 'modelo' ? intencion : null;
   let items = intencion.items;
   let receta: RecetaDeReferencia | null = null;
   let mensaje: string | null = null;
   let variantes: RecetaDeReferencia[] = [];
   let origen = origenDelTexto;
+  let cuantas: number | null = null;
 
   if (lectura?.tipo === 'plato' && lectura.seguro) {
     // La foto reconoció el plato: manda sobre lo que adivinó el texto, y salen sus recetas
@@ -89,10 +103,11 @@ export async function proponerCompra(entrada: EntradaDelAsistente, productos: Pr
       const sinTexto = !entrada.texto.trim();
       if (sinTexto) supuestos.length = 0;
       // «para 8 personas» junto a la foto: el texto dice para cuántos
-      const escalada = escalarReceta(receta, sinTexto ? null : (intencion.rinde ?? rindeDe(entrada.texto)?.rinde ?? null));
+      const escalada = escalarReceta(receta, opciones.cuantas ?? (sinTexto ? null : (intencion.rinde ?? rindeDe(entrada.texto)?.rinde ?? null)));
       // Lo que el texto pidió y sí se vende se queda; el plato mismo («salchipapa») no es un producto
       items = [...(sinTexto ? [] : items.filter((i) => candidatos(i.nombre, productos).length > 0)), ...escalada.items];
       supuestos.push(...escalada.supuestos);
+      cuantas = escalada.rinde;
       if (variantes.length > 1) mensaje += ` Hay ${variantes.length} formas de prepararlo: elige la tuya abajo.`;
     } else {
       mensaje += ' Todavía no tenemos su receta: escribe los ingredientes y te armamos la compra.';
@@ -109,15 +124,50 @@ export async function proponerCompra(entrada: EntradaDelAsistente, productos: Pr
     }
   }
 
+  // Comida con la IA del teléfono: si el reconocedor propio no está seguro, la IA elige el plato de nuestras recetas
+  let elegidaPorIa: RecetaDeReferencia | null = null;
+  if (opciones.soloPlato && !receta && !opciones.recetaElegida && entrada.fotoUri && opciones.interprete?.elegir && !(lectura?.tipo === 'plato' && lectura.seguro)) {
+    const nombres = [...new Set(RECETAS.map((r) => r.nombre))];
+    const elegido = await opciones.interprete.elegir(entrada.fotoUri, '¿Qué comida boliviana es la de la foto?', nombres).catch(() => null);
+    elegidaPorIa = RECETAS.find((r) => r.nombre === elegido) ?? null;
+    if (elegidaPorIa) deLaIa = { ...intencionVacia('receta'), preparacion: elegidaPorIa.nombre };
+  }
+
+  // Otra receta elegida a mano (o «¿Cuántas?» con − / +) sobre una que no vino de un plato de la foto: solo código
+  const deUnaReceta = opciones.recetaElegida && !receta ? (RECETAS.find((r) => r.id === opciones.recetaElegida) ?? null) : null;
+  // Un plato que el reconocedor propio no conoce (solo sabe 5) pero la IA del teléfono sí nombra: «fricasé»,
+  // «chairo», «tucumanas», «torta». Si tenemos su receta, se arma la compra. Es lo que la IA local hace y el
+  // reconocedor fijo no puede (10/11).
+  const nombradaPorIa =
+    !receta && !deUnaReceta && origenDelTexto === 'modelo' && entrada.fotoUri && lectura?.tipo !== 'producto'
+      ? (buscarReceta(intencion.preparacion) ?? intencion.items.map((i) => buscarReceta(i.nombre)).find((r) => r) ?? null)
+      : null;
+  if (deUnaReceta || nombradaPorIa || elegidaPorIa) {
+    receta = (deUnaReceta ?? nombradaPorIa ?? elegidaPorIa)!;
+    const sinTexto = !entrada.texto.trim();
+    if (sinTexto) supuestos.length = 0;
+    const escalada = escalarReceta(receta, opciones.cuantas ?? (sinTexto ? null : (intencion.rinde ?? rindeDe(entrada.texto)?.rinde ?? null)));
+    items = escalada.items;
+    supuestos.push(...escalada.supuestos);
+    cuantas = escalada.rinde;
+    if (nombradaPorIa || elegidaPorIa) {
+      mensaje = `La IA de tu teléfono cree que es ${receta.nombre.toLowerCase()}.`;
+      origen = 'modelo';
+      // Lo que dudó el reconocedor propio ya no hace falta preguntarlo
+      if (lectura?.tipo === 'plato') variantes = [];
+    }
+  }
+
   // «100 empanadas de queso» como si fuera un producto: no se vende, pero es una receta conocida → sus insumos.
   // Los modelos chicos lo confunden seguido; corregirlo con código es más fiable que con más instrucciones.
   const sinCatalogo = items.filter((i) => !candidatos(i.nombre, productos).length);
   const comoReceta = sinCatalogo.map((i) => ({ item: i, receta: buscarReceta(i.nombre) })).find((x) => x.receta);
   if (comoReceta && !receta) {
     receta = comoReceta.receta!;
-    const escalada = escalarReceta(receta, comoReceta.item.cantidad ?? intencion.rinde);
+    const escalada = escalarReceta(receta, opciones.cuantas ?? comoReceta.item.cantidad ?? intencion.rinde);
     items = [...items.filter((i) => i !== comoReceta.item), ...escalada.items];
     supuestos.push(...escalada.supuestos);
+    cuantas = escalada.rinde;
   }
 
   // «Quiero hacer 100 empanadas de queso»: el texto pide preparar algo que tenemos como receta, pero un modelo chico
@@ -126,18 +176,20 @@ export async function proponerCompra(entrada: EntradaDelAsistente, productos: Pr
   const conReceta = !receta && PREPARAR.test(entrada.texto) ? buscarReceta(entrada.texto) : null;
   if (conReceta && items.length < conReceta.ingredientes.length) {
     receta = conReceta;
-    const escalada = escalarReceta(receta, intencion.rinde ?? rindeDe(entrada.texto)?.rinde ?? null);
+    const escalada = escalarReceta(receta, opciones.cuantas ?? intencion.rinde ?? rindeDe(entrada.texto)?.rinde ?? null);
     const yaEsta = (i: ItemPedido) => escalada.items.some((e) => normalizar(e.nombre).includes(normalizar(i.nombre)) || normalizar(i.nombre).includes(normalizar(e.nombre)));
     items = [...escalada.items, ...items.filter((i) => !yaEsta(i))];
     supuestos.push(...escalada.supuestos);
+    cuantas = escalada.rinde;
   }
 
   if (intencion.tipo === 'receta' && !items.length) {
     receta = buscarReceta(intencion.preparacion) ?? buscarReceta(entrada.texto);
     if (receta) {
-      const escalada = escalarReceta(receta, intencion.rinde);
+      const escalada = escalarReceta(receta, opciones.cuantas ?? intencion.rinde);
       items = escalada.items;
       supuestos.push(...escalada.supuestos);
+      cuantas = escalada.rinde;
     } else {
       supuestos.push(
         `Todavía no tenemos una receta de referencia para «${intencion.preparacion ?? 'eso'}»: pega tu receta o escribe los ingredientes y te armamos la compra`,
@@ -155,10 +207,12 @@ export async function proponerCompra(entrada: EntradaDelAsistente, productos: Pr
     origen,
     receta,
     // Si la foto ganó, el modelo igual pudo responder bien: solo es falla si el modelo no entendió nada
-    falloDelModelo: opciones.interprete && origenDelTexto !== 'modelo' ? (diag?.error ?? 'El modelo no respondió') : null,
+    falloDelModelo: opciones.interprete && !opciones.soloPlato && origenDelTexto !== 'modelo' ? (diag?.error ?? 'El modelo no respondió') : null,
     respuestaMs: diag?.respuestaMs ?? null,
     lectura,
     mensaje,
     variantes,
+    deLaIa,
+    cuantas: receta ? cuantas : null,
   };
 }

@@ -58,7 +58,8 @@ export function nivelDelDispositivo(c: Capacidades): Nivel {
   if (!c.arquitecturas.some((a) => ARQUITECTURAS_CON_MOTOR.includes(a))) return 'ninguno';
   if (c.memoriaMb === null) return 'ninguno';
   if (c.memoriaMb >= 11_000) return 'maximo';
-  if (c.memoriaMb >= 7_500) return 'alto';
+  // Un teléfono «de 8 GB» reporta ~7,3 GB (Android se guarda una parte): Honor REA-NX9, 10/11
+  if (c.memoriaMb >= 7_000) return 'alto';
   if (c.memoriaMb >= 3_500) return 'medio';
   if (c.memoriaMb >= 2_500) return 'basico';
   return 'ninguno';
@@ -79,6 +80,25 @@ export function modelosPosibles(c: Capacidades, tarea: Tarea = 'texto', lista = 
     .filter((m) => c.espacioLibreMb === null || megas(bytesDe(m)) + MARGEN_DE_ESPACIO_MB <= c.espacioLibreMb)
     .sort((a, b) => ORDEN.indexOf(b.nivel) - ORDEN.indexOf(a.nivel) || b.ramMinimaMb - a.ramMinimaMb);
 }
+
+/**
+ * Todos los modelos que el procesador puede correr, sin mirar la memoria (10/11, pedido de Jhoel: poder probar
+ * los grandes en cualquier teléfono). La memoria se avisa con `faltaMemoria`, no se impide.
+ */
+export function todosLosModelos(c: Capacidades, tarea: Tarea = 'texto', lista = manifiesto.modelos): ModeloLocal[] {
+  if (c.arquitecturas.length && !c.arquitecturas.some((a) => ARQUITECTURAS_CON_MOTOR.includes(a))) return [];
+  return lista.filter((m) => m.tareas.includes(tarea)).sort((a, b) => bytesDe(a) - bytesDe(b));
+}
+
+/** La memoria «de caja» del teléfono en GB (7,3 GB reportados → 8 GB) */
+export const gbDelTelefono = (c: Capacidades) => (c.memoriaMb === null ? null : Math.ceil(c.memoriaMb / 1024));
+/** Los GB de RAM que pide el modelo, redondeados como se venden los teléfonos */
+export const gbQuePide = (m: ModeloLocal) => Math.ceil(m.ramMinimaMb / 1000);
+/** Si el teléfono tiene menos memoria de la que pide el modelo: se avisa, puede ir lento o cerrarse */
+export const faltaMemoria = (m: ModeloLocal, c: Capacidades) => {
+  const gb = gbDelTelefono(c);
+  return gb !== null && gb < gbQuePide(m);
+};
 
 /** El modelo que se recomienda bajar; null si el teléfono no puede con ninguno. */
 export function modeloRecomendado(c: Capacidades, tarea: Tarea = 'texto', lista = manifiesto.modelos): ModeloLocal | null {

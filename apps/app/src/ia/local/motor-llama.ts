@@ -69,10 +69,47 @@ export async function cargarLlama(modelo: ModeloLocal, alCargar: (fraccion: numb
       fila = turno.catch(() => undefined);
       return turno;
     },
+    elegir(fotoUri: string, pregunta: string, opciones: string[]) {
+      const turno = fila.then(() => elegirDeLaLista(fotoUri, pregunta, opciones));
+      fila = turno.catch(() => undefined);
+      return turno;
+    },
     async liberar() {
       await contexto.release();
     },
   };
+
+  async function elegirDeLaLista(fotoUri: string, pregunta: string, opciones: string[]): Promise<string | null> {
+    if (!veFotos || !opciones.length) return null;
+    const empieza = Date.now();
+    try {
+      const foto = await fotoParaElModelo(fotoUri).catch(() => fotoUri);
+      await contexto.clearCache(false).catch(() => undefined);
+      const r = await contexto.completion({
+        messages: [
+          { role: 'system', content: `${pregunta} Responde solo con una de estas opciones, escrita igual: ${opciones.join(', ')}. Si no es ninguna, «ninguno».` },
+          { role: 'user', content: [{ type: 'image_url', image_url: { url: rutaParaElMotor(foto) } }, { type: 'text', text: pregunta }] },
+        ],
+        jinja: false,
+        add_generation_prompt: true,
+        response_format: {
+          type: 'json_schema',
+          json_schema: { strict: true, schema: { type: 'object', additionalProperties: false, required: ['respuesta'], properties: { respuesta: { type: 'string', enum: [...opciones, 'ninguno'] } } } },
+        },
+        n_predict: 40,
+        temperature: 0,
+        enable_thinking: false,
+      });
+      const crudo = r.content || r.text;
+      const respuesta = (JSON.parse(crudo) as { respuesta?: string }).respuesta ?? null;
+      ultimo = { cargaMs, respuestaMs: Date.now() - empieza, crudo, error: null };
+      return respuesta && opciones.includes(respuesta) ? respuesta : null;
+    } catch (e) {
+      ultimo = { cargaMs, respuestaMs: Date.now() - empieza, crudo: null, error: esFaltaDeContexto(e) ? 'La foto era muy grande para la IA del teléfono' : (e as Error).message };
+      console.warn(`[ia] ${modelo.id} no pudo elegir:`, (e as Error).message);
+      return null;
+    }
+  }
 
   async function preguntar(entrada: EntradaDelAsistente, ctx?: Contexto): Promise<Intencion | null> {
     const conFoto = veFotos && !!entrada.fotoUri;

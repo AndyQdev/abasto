@@ -14,6 +14,29 @@ Abasto entiende lo que una persona necesita **comprar, abastecer o producir** y 
 
 No es un chatbot: la salida es siempre una **propuesta de carrito** que la persona revisa y confirma.
 
+## ¿Para qué la IA local? (10/11, para la defensa)
+
+En la app hay dos piezas de IA en el teléfono, y cada una tiene su trabajo:
+
+| | Reconocedor propio (MobileNetV3 + vectores, TFLite) | IA del teléfono (modelo de lenguaje con visión, llama.rn) |
+|---|---|---|
+| Qué sabe | 137 productos del catálogo y 5 platos, los que entrenamos | Lenguaje y fotos en general, sin entrenarlo con nuestros datos |
+| Para qué sirve | Rápido (menos de 1 s) y siempre prendido | Lo que no entrenamos: platos nuevos, listas escritas a mano, pedidos dichos con sus palabras |
+| Ejemplo | Foto de salteña → «Parece salteña (78 %)» | Foto de **fricasé** (no está entre los 5) → «La IA de tu teléfono reconoce: fricasé» → su receta para comprar |
+
+Por qué **local** y no en la nube:
+
+1. **Sin señal:** el mercado, la tienda de barrio o el puesto no siempre tienen internet. La IA anda igual.
+2. **Costo cero por consulta:** no se paga por cada foto ni por cada pregunta.
+3. **Privacidad:** la foto y lo que escribe la persona no salen del teléfono.
+4. **Requisito del ingeniero:** «IA local en dispositivos móviles» (`docs/requisitos.md`).
+
+El límite está puesto a propósito: **la IA solo entiende qué se pidió** (plato, ingredientes, para cuántos). Qué producto de Abasto, en qué presentación, cuántos y a qué precio lo calcula el código. Así nunca inventa precios ni productos. En la pantalla se ve separado: la tarjeta «Lo que entendió la IA de tu teléfono» y, debajo, lo que armó Abasto, con el total, el costo por unidad y «¿Cuántas vas a hacer?».
+
+Cómo se usa: Inicio o Buscar → cámara → «¿Qué quieres reconocer?» (Producto, Comida o Receta) → interruptor «Usar la IA de tu teléfono». Si el teléfono no tiene modelo, ofrece bajarlo una vez (LFM2.5-VL de 332 MB en un teléfono de 7 GB). El modelo se elige según la memoria del teléfono.
+
+Lo que se arregló el 10/11 para que ande en teléfonos reales: solo CPU (con la GPU de Snapdragon la app se cerraba), memoria limpia en cada pregunta («Not enough context space»), foto achicada a 448 px y el reconocedor propio cargado bien en el APK.
+
 ## Cómo está armada
 
 ```
