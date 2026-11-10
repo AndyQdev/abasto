@@ -30,6 +30,7 @@ Actualizado: 07/11/2026.
 
 ## Historial
 
+- 10/11/2026 · Revisión contra el manual de ICONIX: ficha de cada caso de uso en el capítulo 6 (en vista de usuario, con poscondiciones), diagrama de paquetes de casos de uso (5.7.1), modelo de dominio actualizado después de la robustez (6.17) y la prueba de cada requisito funcional (5.2).
 - 09/11/2026 · Capítulos 8.3.2 y 9: el Analista pregunta de vuelta cuando la pregunta es ambigua, entra a Vertex con una llave de API y reintenta si Vertex no responde.
 - 08/11/2026 · Abdalid se suma al equipo: carátula y capítulo 4.1 (organización por áreas, con Abdalid en calidad y documentación). Registros de Andrés y Jhoel en la carátula.
 - 08/11/2026 · El modelo de lenguaje de los reportes pasa de Claude (Anthropic) a Gemini en Vertex AI (Google Cloud): capítulos 7 (diagrama de clases del Asistente), 8 (tecnologías y reportes generativos), 9 (diagrama, reglas y costo) y conclusiones.
@@ -263,6 +264,7 @@ n8n es una herramienta de automatización por flujos (*workflows*): nodos que re
 | Herramienta | Uso en Abasto |
 |---|---|
 | Mermaid | Diagramas UML de ICONIX como texto dentro del repositorio |
+| Enterprise Architect | Los diagramas UML de ICONIX (dominio, casos de uso, robustez, secuencia, clases y despliegue), generados desde los de Mermaid |
 | Claude Code | Asistente de programación con IA, usado por el equipo |
 | GitHub y GitHub Actions | Control de versiones e integración continua |
 | Trello | Tablero de tareas por fase |
@@ -323,7 +325,7 @@ El equipo tiene tres integrantes y una estructura descentralizada democrática: 
 |---|---|
 | José Andrés Quispe Cabrera | App de clientes (pantallas, sesión, modo sin señal); Panel Shell y Gestión; Superadmin; servicios Catálogo, Pedidos, Cobros y Conecta; n8n de WhatsApp; infraestructura, Router, Keycloak y CI |
 | Jhoel Rodas Cabrera | IA local del teléfono (modelo TFLite, ML Kit, asistente de compra); IA local del navegador (Whisper); Panel de Inteligencia; servicio Asistente (agentes, reportes generativos, MCP, proyector); machine learning; despliegue en tres nubes |
-| Abdalid | Calidad y documentación: modelado ICONIX, pruebas de aceptación sobre el despliegue y documento del proyecto; apoyo en el proyector de reportes del Asistente (saldo de las cuentas por cobrar) |
+| Abdalid Escobar Callecusi | Calidad y documentación: modelado ICONIX, pruebas de aceptación sobre el despliegue y documento del proyecto; apoyo en el proyector de reportes del Asistente (saldo de las cuentas por cobrar) |
 
 Los casos de uso, los requisitos del docente y la arquitectura se deciden entre los tres, y no se reabren sin hablarlo.
 
@@ -385,24 +387,26 @@ ICONIX se aplicó de forma iterativa: cada caso de uso pasó por sus cuatro fase
 
 ## 5.2 Requisitos funcionales
 
-| Código | Requisito | Caso de uso |
-|---|---|---|
-| RF-01 | Registrar mayoristas y verificarlos antes de que vendan | CU-01 |
-| RF-02 | Publicar productos con escalas por presentación, stock y foto | CU-02 |
-| RF-03 | Pedir ser cliente de un mayorista | CU-03 |
-| RF-04 | Aprobar clientes con lista de precios y crédito | CU-04 |
-| RF-05 | Buscar en el catálogo por texto o por foto, sin internet | CU-05 |
-| RF-06 | Hacer un pedido coordinado entre stock y cobro | CU-06 |
-| RF-07 | Confirmar, rechazar y entregar pedidos | CU-07 |
-| RF-08 | Pagar con QR, a crédito o contra entrega | CU-08 |
-| RF-09 | Registrar pagos de cuentas por cobrar | CU-09 |
-| RF-10 | Conectar un e-commerce por API, WooCommerce o MCP | CU-10 |
-| RF-11 | Recibir pedidos por WhatsApp | CU-11 |
-| RF-12 | Pedir sin señal y sincronizar al volver | CU-12 |
-| RF-13 | Responder preguntas de negocio por texto o voz y exportarlas a Excel | CU-13 |
-| RF-14 | Proponer acciones con agentes y ejecutarlas al aprobarlas | CU-14 |
-| RF-15 | Registrarse como tienda con el celular | CU-15 |
-| RF-16 | Reportar y resolver problemas con un pedido | CU-16 |
+| Código | Requisito | Caso de uso | Prueba que lo demuestra |
+|---|---|---|---|
+| RF-01 | Registrar mayoristas y verificarlos antes de que vendan | CU-01 | `RegistroDeOrganizacionesTest.php`, `registro-mayorista.spec.ts` |
+| RF-02 | Publicar productos con escalas por presentación, stock y foto | CU-02 | `GestionDeProductosTest.php`, `FotoDeProductoTest.php` |
+| RF-03 | Pedir ser cliente de un mayorista | CU-03 | `RedPrivadaTest.php`, `red-privada.spec.ts` |
+| RF-04 | Aprobar clientes con lista de precios y crédito | CU-04 | `asignar-credito.spec.ts`, `credito.spec.ts` |
+| RF-05 | Buscar en el catálogo por texto o por foto, sin internet | CU-05 | `modelo.test.ts`, `imagen.test.ts` |
+| RF-06 | Hacer un pedido coordinado entre stock y cobro | CU-06 | `SagaDeCompraTest.java`, `compra.spec.ts` |
+| RF-07 | Confirmar, rechazar y entregar pedidos | CU-07 | `SagaDeCompraTest.java`, `compra.spec.ts` |
+| RF-08 | Pagar con QR, a crédito o contra entrega | CU-08 | `cobro-qr.spec.ts`, `compra.spec.ts` |
+| RF-09 | Registrar pagos de cuentas por cobrar | CU-09 | `cuentas-por-cobrar.spec.ts`, `cuentas.spec.ts` |
+| RF-10 | Conectar un e-commerce por API, WooCommerce o MCP | CU-10 | `integraciones.spec.ts`, `tienda-en-linea.spec.ts` |
+| RF-11 | Recibir pedidos por WhatsApp | CU-11 | `sincronizar-lote.spec.ts`, `n8n-whatsapp.spec.ts` |
+| RF-12 | Pedir sin señal y sincronizar al volver | CU-12 | `bandeja.spec.ts`, `sincronizar-lote.spec.ts` |
+| RF-13 | Responder preguntas de negocio por texto o voz y exportarlas a Excel | CU-13 | `responder-pregunta.spec.ts`, `guardia-sql.spec.ts`, `ia-navegador-sin-senal.spec.ts` |
+| RF-14 | Proponer acciones con agentes y ejecutarlas al aprobarlas | CU-14 | `agentes.spec.ts`, `Agentes.spec.ts` |
+| RF-15 | Registrarse como tienda con el celular | CU-15 | `EntrarConTelefonoTest.php`, `registro-tienda.spec.ts` |
+| RF-16 | Reportar y resolver problemas con un pedido | CU-16 | `ReclamosServicioTest.java`, `reclamos.spec.ts` |
+
+Cada requisito funcional se demuestra con una prueba automática del servicio y, cuando cruza servicios, con una de punta a punta (Playwright). Todas las pruebas corren con `pnpm test:todo` y `pnpm e2e`.
 
 ## 5.3 Requisitos no funcionales
 
@@ -476,107 +480,396 @@ Conceptos principales:
 | CU-15 Registrarse como tienda | Tienda | App | Catálogo, Keycloak | Andrés |
 | CU-16 Reportar un problema con un pedido | Tienda → Admin | App → Superadmin | Pedidos | Andrés |
 
+### 5.7.1 Paquetes de casos de uso
+
+Los 16 casos se agrupan en un paquete por módulo, el mismo corte que los microservicios. Cada paquete se puede leer, diseñar y probar por separado. Las flechas punteadas muestran qué paquete usa a otro.
+
+| Paquete | Casos de uso | Servicio |
+|---|---|---|
+| Catálogo y clientes | CU-01, CU-02, CU-03, CU-04, CU-05, CU-15 | Catálogo |
+| Pedidos | CU-06, CU-07, CU-16 | Pedidos |
+| Cobros | CU-08, CU-09 | Cobros |
+| Canales externos | CU-10, CU-11, CU-12 | Conecta |
+| Inteligencia | CU-13, CU-14 | Asistente |
+
+```mermaid
+%% titulo: Diagrama de paquetes de casos de uso
+flowchart TB
+  subgraph PCat["«paquete» Catálogo y clientes"]
+    direction LR
+    CU01(["CU-01 Registrarse como mayorista"])
+    CU02(["CU-02 Publicar un producto"])
+    CU03(["CU-03 Pedir ser cliente"])
+    CU04(["CU-04 Aprobar un cliente"])
+    CU05(["CU-05 Buscar en el catálogo"])
+    CU15(["CU-15 Registrarse como tienda"])
+  end
+  subgraph PPed["«paquete» Pedidos"]
+    direction LR
+    CU06(["CU-06 Hacer un pedido"])
+    CU07(["CU-07 Confirmar y entregar"])
+    CU16(["CU-16 Reportar un problema"])
+  end
+  subgraph PCob["«paquete» Cobros"]
+    direction LR
+    CU08(["CU-08 Pagar"])
+    CU09(["CU-09 Registrar un pago"])
+  end
+  subgraph PCon["«paquete» Canales externos"]
+    direction LR
+    CU10(["CU-10 Conectar un e-commerce"])
+    CU11(["CU-11 Pedir por WhatsApp"])
+    CU12(["CU-12 Pedir sin señal"])
+  end
+  subgraph PAsi["«paquete» Inteligencia"]
+    direction LR
+    CU13(["CU-13 Preguntarle a los datos"])
+    CU14(["CU-14 Aprobar la propuesta de un agente"])
+  end
+  PPed -. "«usa» stock y precios" .-> PCat
+  PPed -. "«usa» cobro" .-> PCob
+  PCon -. "«usa» crear pedido" .-> PPed
+  PAsi -. "«usa» datos de ventas" .-> PPed
+  PAsi -. "«usa» cuentas" .-> PCob
+```
+
 # 6. ICONIX · Análisis y diseño preliminar
 
 En esta fase cada caso de uso se escribe con su curso básico y sus cursos alternos, y se dibuja su **diagrama de robustez**: el actor habla con una **frontera** (pantalla), la frontera con **controles** (la lógica) y los controles con **entidades** (los datos). Las reglas de ICONIX se respetan: un actor solo habla con fronteras, y las entidades solo con controles. Los nombres son los de las clases reales del código.
 
-El texto completo de cada caso, con sus mensajes de error, está en `docs/iconix/casos-de-uso.md`. Aquí va el resumen y el diagrama.
+Cada caso tiene su **ficha de caso de uso** (nombre, autor, fecha, descripción, actores, precondiciones, flujo normal, flujos alternativos y poscondiciones), escrita desde lo que ve el usuario, y a continuación su diagrama de robustez. Los flujos alternativos se numeran con el paso del que salen: «4a» es lo que pasa si el paso 4 no sale bien. El detalle técnico de cada caso (clases y mensajes de error exactos) está en `docs/iconix/casos-de-uso.md`.
 
 ## 6.1 CU-01 · Registrarse como mayorista y ser verificado
 
-El mayorista se registra en el Panel con empresa, NIT, ciudad, representante y contraseña. Catálogo valida que el NIT y el correo no estén en uso, Keycloak crea la cuenta y la organización queda `PENDIENTE`. El admin la revisa en el Superadmin y la verifica; desde ahí sus productos salen en la app. Si la rechaza, tiene que escribir el motivo, que el mayorista ve en su Panel.
+| Nombre | CU-01 · Registrarse como mayorista y ser verificado |
+|---|---|
+| Autor | Andrés Quispe |
+| Fecha | 06/11/2026 |
+| Descripción | Una empresa mayorista se registra en el Panel y Abasto la verifica antes de que pueda vender. |
+| Actores | Mayorista y Admin de Abasto. |
+| Precondiciones | Ninguna: el registro es público. |
+| Flujo normal | 1. El mayorista abre «Registra tu empresa» en el Panel.<br>2. El sistema muestra el formulario: empresa, NIT, ciudad, representante, teléfono, correo y contraseña.<br>3. El mayorista llena los datos y los envía.<br>4. El sistema valida los datos, comprueba que el NIT y el correo no estén en uso, crea la cuenta y deja la empresa «en revisión».<br>5. El sistema le muestra al mayorista que su cuenta está en revisión.<br>6. El admin abre Superadmin › Mayoristas, revisa el NIT, habla con el representante y toca «Verificar».<br>7. El sistema marca la empresa como verificada. |
+| Flujos alternativos | 4a. Si faltan datos o no son válidos, el sistema marca qué corregir.<br>4b. Si el NIT o el correo ya están registrados, el sistema lo avisa y no crea la cuenta.<br>6a. Si el admin rechaza, el sistema le pide el motivo; el mayorista lo ve al entrar al Panel. |
+| Poscondiciones | La empresa queda verificada y sus productos aparecen en la app. |
 
 <!-- diagramas: docs/iconix/robustez/CU-01.md -->
 
 ## 6.2 CU-02 · Publicar un producto con escalas y foto
 
-El mayorista crea el producto en Gestión › Productos con nombre, rubro, stock, abastecimiento, costo y una o más escalas. Catálogo valida el código (no repetido), el stock (no negativo) y las escalas (unidades y precio mayores a cero). Con stock queda `ACTIVO`; sin stock, `SIN_STOCK`, salvo que sea bajo pedido. La foto se carga aparte.
+| Nombre | CU-02 · Publicar un producto con escalas y foto |
+|---|---|
+| Autor | Andrés Quispe |
+| Fecha | 06/11/2026 |
+| Descripción | El mayorista publica un producto con su precio por presentación (unidad, docena, caja…), su stock y su foto. |
+| Actores | Mayorista. |
+| Precondiciones | El mayorista está verificado y entró al Panel. |
+| Flujo normal | 1. El mayorista abre Gestión › Productos.<br>2. El sistema muestra sus productos.<br>3. El mayorista toca «Nuevo producto».<br>4. El sistema muestra el formulario.<br>5. El mayorista escribe código, nombre, rubro, descripción, stock y si lo tiene en depósito o lo consigue bajo pedido; agrega una o más escalas (presentación, unidades y precio) y la foto.<br>6. El sistema valida los datos y guarda el producto: con stock queda activo; sin stock queda «sin stock», salvo que sea bajo pedido.<br>7. El sistema agrega el producto a la lista. |
+| Flujos alternativos | 5a. Si no sube foto, la app muestra la ilustración de su rubro.<br>6a. Si falta el código, el stock es negativo, una escala no tiene unidades o el precio no es mayor a cero, el sistema dice qué corregir.<br>6b. Si ya tiene un producto con ese código, el sistema lo avisa y no lo guarda. |
+| Poscondiciones | El producto queda publicado y las tiendas que el mayorista aprobó lo ven con su precio. |
 
 <!-- diagramas: docs/iconix/robustez/CU-02.md -->
 
 ## 6.3 CU-03 · Pedir ser cliente de un mayorista
 
-En la ficha del vendedor, la tienda ve los productos sin precio y toca «Pedir ser cliente». Catálogo crea la relación en `SOLICITADA`, que aparece en el Panel del mayorista. Una empresa no puede ser cliente de sí misma; Abasto, el vendedor de la casa, no pide este paso.
+| Nombre | CU-03 · Pedir ser cliente de un mayorista |
+|---|---|
+| Autor | Andrés Quispe |
+| Fecha | 06/11/2026 |
+| Descripción | Una tienda le pide a un mayorista que la acepte como cliente para ver sus precios. |
+| Actores | Tienda. |
+| Precondiciones | La tienda entró a la app y el mayorista está verificado. |
+| Flujo normal | 1. La tienda abre la ficha del vendedor.<br>2. El sistema muestra sus productos sin precio (red privada) y el botón «Pedir ser cliente».<br>3. La tienda toca «Pedir ser cliente».<br>4. El sistema registra la solicitud y le muestra a la tienda que espera respuesta.<br>5. El sistema muestra la solicitud en Panel › Clientes del mayorista. |
+| Flujos alternativos | 1a. Si el vendedor es Abasto, la tienda ve los precios sin pedir nada.<br>4a. Si ya era cliente aprobada, no cambia nada; si la habían rechazado, la solicitud vuelve a quedar pendiente.<br>4b. Una empresa no puede pedir ser cliente de sí misma: el sistema lo rechaza. |
+| Poscondiciones | La solicitud queda pendiente para que el mayorista la responda (CU-04). |
 
 <!-- diagramas: docs/iconix/robustez/CU-03.md -->
 
 ## 6.4 CU-04 · Aprobar un cliente con lista de precios y crédito
 
-El mayorista ve las solicitudes en Gestión › Clientes, elige la lista (NUEVOS, FRECUENTES o VIP) y, si quiere, un crédito con límite y plazo. Catálogo pasa la relación a `APROBADA` y Cobros abre la línea de crédito. Si rechaza, la relación queda `RECHAZADA`.
+| Nombre | CU-04 · Aprobar un cliente con lista de precios y crédito |
+|---|---|
+| Autor | Andrés Quispe |
+| Fecha | 06/11/2026 |
+| Descripción | El mayorista acepta a una tienda como cliente, le asigna una lista de precios y, si quiere, le da crédito. |
+| Actores | Mayorista. |
+| Precondiciones | Una tienda pidió ser su cliente (CU-03). |
+| Flujo normal | 1. El mayorista abre Gestión › Clientes.<br>2. El sistema muestra las solicitudes pendientes.<br>3. El mayorista elige la lista de precios (Nuevos 100 %, Frecuentes 97 % o VIP 95 %) y, si quiere, el crédito con su límite y su plazo (15 o 30 días).<br>4. El mayorista toca «Aprobar».<br>5. El sistema aprueba a la tienda con esa lista y, si hubo crédito, abre su línea de crédito.<br>6. El sistema pasa la tienda a «Te compran» con su crédito disponible. |
+| Flujos alternativos | 4a. Si el mayorista toca «Rechazar», el sistema deja la solicitud rechazada.<br>5a. Si la solicitud ya no existe, el sistema avisa «Esa tienda no pidió ser tu cliente».<br>5b. Si el crédito no se pudo guardar, la tienda queda aprobada y el sistema avisa que el crédito se da después desde su tarjeta.<br>6a. Más tarde, desde «Te compran», el mayorista puede cambiar el crédito; no puede dejar un límite menor a lo que la tienda ya usa. |
+| Poscondiciones | La tienda ve los precios del mayorista con su lista y, si tiene crédito, puede comprarle a crédito. |
 
 <!-- diagramas: docs/iconix/robustez/CU-04.md -->
 
 ## 6.5 CU-05 · Buscar en el catálogo (texto o foto)
 
-La app guarda el catálogo y busca sobre él aunque no haya señal. Con una foto, dentro del teléfono y en paralelo, ML Kit lee el texto de la etiqueta y el modelo TFLite propio compara la imagen con los productos del catálogo; los resultados se combinan y se ordenan por confianza. El precio solo aparece si la red privada lo permite.
+| Nombre | CU-05 · Buscar en el catálogo (texto o foto) |
+|---|---|
+| Autor | Andrés Quispe y Jhoel Rodas |
+| Fecha | 06/11/2026 |
+| Descripción | La tienda busca productos escribiendo o sacando una foto, incluso sin internet. |
+| Actores | Tienda. |
+| Precondiciones | La tienda entró a la app y el catálogo se cargó al menos una vez. |
+| Flujo normal | 1. La tienda abre Buscar y escribe lo que necesita.<br>2. El sistema muestra los productos que coinciden, agrupados por vendedor; el precio aparece solo si ese vendedor la aprobó.<br>3. Para buscar con foto, la tienda toca la cámara y saca una foto del producto o la elige de la galería.<br>4. El sistema, en el teléfono y sin internet, lee el texto de la etiqueta y reconoce el producto en la imagen.<br>5. El sistema muestra los productos más parecidos, del más seguro al menos seguro.<br>6. La tienda abre el producto y lo puede agregar al carrito. |
+| Flujos alternativos | 1a. Sin señal, la búsqueda usa el catálogo guardado en el teléfono.<br>2a. Los vendedores se ordenan por nombre, nunca por el más barato.<br>3a. Si la tienda no da permiso a la cámara, el sistema le explica cómo activarlo.<br>5a. Si no reconoce la imagen, el sistema muestra solo lo que encontró con el texto leído. |
+| Poscondiciones | La tienda encuentra el producto que buscaba. |
 
 <!-- diagramas: docs/iconix/robustez/CU-05.md -->
 
 ## 6.6 CU-06 · Hacer un pedido
 
-Es la **saga de compra**. La app deja un pedido por vendedor en la bandeja con una clave única y lo envía a Conecta, que lo aplica por el Router. Pedidos crea el pedido y pide a Catálogo reservar el stock; con la reserva, fija los precios y pide a Cobros generar el QR o autorizar el crédito (contra entrega pasa directo). Con el cobro, el pedido queda esperando al mayorista. Si no hay stock, si se rechaza el crédito, si el QR vence o si el mayorista no responde en 2 horas, la saga compensa: libera el crédito, devuelve el QR y libera el stock.
+| Nombre | CU-06 · Hacer un pedido |
+|---|---|
+| Autor | Andrés Quispe |
+| Fecha | 06/11/2026 |
+| Descripción | La tienda compra lo que tiene en el carrito: un pedido por vendedor, con el stock reservado y el pago resuelto. |
+| Actores | Tienda. |
+| Precondiciones | Hay productos en el carrito y la tienda entró a la app. |
+| Flujo normal | 1. La tienda abre el carrito y toca «Finalizar».<br>2. El sistema agrupa el carrito por vendedor y muestra el total de cada uno.<br>3. La tienda elige la dirección de entrega y cómo paga: QR, crédito o contra entrega.<br>4. La tienda toca «Hacer pedido».<br>5. El sistema crea un pedido por vendedor, reserva el stock y fija los precios.<br>6. El sistema cobra según lo elegido (CU-08) y deja el pedido esperando la confirmación del mayorista.<br>7. El sistema muestra el pedido en Compras, con su seguimiento. |
+| Flujos alternativos | 4a. Sin señal, el pedido queda guardado en el teléfono y se envía solo al volver la señal (CU-12).<br>5a. Si un producto ya no tiene stock, el sistema rechaza el pedido con el motivo y no cobra nada.<br>5b. Si el pedido llega dos veces, el sistema lo crea una sola vez.<br>6a. Si el crédito no alcanza o el QR vence sin pagarse, el sistema rechaza el pedido y libera el stock.<br>6b. Si el mayorista no responde en 2 horas, el sistema rechaza el pedido, devuelve el cobro y libera el stock. |
+| Poscondiciones | El pedido queda «por confirmar», con el stock reservado y el cobro hecho, autorizado o para cobrar al entregar. |
 
 <!-- diagramas: docs/iconix/robustez/CU-06.md -->
 
 ## 6.7 CU-07 · Confirmar o rechazar un pedido y entregarlo
 
-El mayorista ve sus ventas en Gestión › Pedidos, confirma el pedido y lo avanza por preparación, despacho y entrega. Cada paso publica un evento que el Asistente proyecta y Conecta avisa a la tienda conectada. Si rechaza, escribe el motivo y la saga compensa.
+| Nombre | CU-07 · Confirmar o rechazar un pedido y entregarlo |
+|---|---|
+| Autor | Andrés Quispe |
+| Fecha | 06/11/2026 |
+| Descripción | El mayorista acepta o rechaza un pedido y avanza su entrega hasta la puerta de la tienda. |
+| Actores | Mayorista. |
+| Precondiciones | El mayorista tiene un pedido por confirmar. |
+| Flujo normal | 1. El mayorista abre Gestión › Pedidos.<br>2. El sistema muestra sus pedidos por estado.<br>3. El mayorista abre un pedido por confirmar y toca «Confirmar».<br>4. El sistema confirma el pedido y la tienda lo ve en su seguimiento.<br>5. El mayorista avanza la entrega: «Preparar», «Despachar» y «Marcar entregado».<br>6. El sistema registra cada paso y la tienda lo ve al momento. |
+| Flujos alternativos | 3a. Si el mayorista rechaza, escribe el motivo; el sistema rechaza el pedido, devuelve el pago o libera el crédito, libera el stock y la tienda ve el motivo.<br>3b. Si el pedido ya no espera confirmación (por ejemplo, venció el plazo de 2 horas), el sistema lo avisa.<br>5a. Un pedido que no está confirmado o que ya se entregó no se puede avanzar. |
+| Poscondiciones | El pedido queda entregado o rechazado con su motivo. Si era a crédito o contra entrega, al confirmarse se abre su cuenta por cobrar (CU-09). |
 
 <!-- diagramas: docs/iconix/robustez/CU-07.md -->
 
 ## 6.8 CU-08 · Pagar con QR, a crédito o contra entrega
 
-Con crédito, Cobros reserva el monto si hay cupo. Con QR, genera un cobro que vence a los 30 minutos y se marca pagado al pagar. Contra entrega se cobra al entregar. Sin cupo o con el QR vencido, sale `cobro.rechazado` y la saga libera el stock. El pago del QR se simula; falta conectar un banco real.
+| Nombre | CU-08 · Pagar con QR, a crédito o contra entrega |
+|---|---|
+| Autor | Andrés Quispe |
+| Fecha | 06/11/2026 |
+| Descripción | La tienda paga su pedido con QR, a crédito o contra entrega. |
+| Actores | Tienda. |
+| Precondiciones | La tienda está haciendo un pedido (CU-06). |
+| Flujo normal | 1. En Finalizar, la tienda elige cómo paga.<br>2. Con crédito, el sistema muestra el cupo disponible y reserva el monto del pedido.<br>3. Con QR, el sistema genera un QR que vence a los 30 minutos y lo muestra en el seguimiento; la tienda lo paga y el sistema lo marca pagado.<br>4. Con contra entrega, no se cobra ahora: se cobra al entregar.<br>5. El sistema deja el pedido esperando al mayorista. |
+| Flujos alternativos | 2a. Si el cupo no alcanza, el sistema rechaza el pedido y libera el stock.<br>3a. Si el QR vence sin pagarse, el sistema rechaza el pedido; ese QR ya no se puede pagar.<br>3b. Otra tienda no puede pagar ese QR. |
+| Poscondiciones | El pedido queda pagado, con el crédito reservado o para cobrar al entregar. El pago por QR hoy se simula: falta conectar un banco. |
 
 <!-- diagramas: docs/iconix/robustez/CU-08.md -->
 
 ## 6.9 CU-09 · Registrar un pago de una cuenta por cobrar
 
-Al confirmarse un pedido a crédito o contra entrega, Cobros abre su cuenta por cobrar. El mayorista ve en Gestión › Cuentas lo que le deben, lo vencido primero, y registra pagos totales o parciales. Un pago repetido (mismo id) se cuenta una sola vez y nunca se paga más de lo que se debe. Al saldar un crédito, la tienda recupera el cupo.
+| Nombre | CU-09 · Registrar un pago de una cuenta por cobrar |
+|---|---|
+| Autor | Andrés Quispe |
+| Fecha | 06/11/2026 |
+| Descripción | El mayorista anota lo que una tienda le pagó de un pedido a crédito o contra entrega. |
+| Actores | Mayorista. |
+| Precondiciones | El mayorista confirmó un pedido a crédito o contra entrega, así que existe su cuenta por cobrar. |
+| Flujo normal | 1. El mayorista abre Gestión › Cuentas por cobrar.<br>2. El sistema muestra cuánto le deben, lo vencido, lo que vence en 7 días y una tarjeta por cuenta, lo más atrasado primero.<br>3. El mayorista abre una cuenta.<br>4. El sistema muestra el pedido, lo pagado, lo que falta y los pagos anteriores.<br>5. El mayorista escribe el monto (o toca «Todo» o «La mitad»), elige efectivo, transferencia o QR y toca «Registrar».<br>6. El sistema registra el pago, actualiza el saldo y muestra «todavía debe…» o «terminó de pagar». |
+| Flujos alternativos | 5a. Si el monto pasa lo que se debe, el sistema no deja registrarlo.<br>6a. Si el mismo pago llega dos veces, se cuenta una sola vez.<br>6b. Si dos personas cobran la misma cuenta a la vez y juntas pasan el saldo, el sistema frena el segundo pago.<br>6c. Si la cuenta era a crédito y queda pagada, la tienda recupera ese cupo. |
+| Poscondiciones | El saldo de la cuenta queda al día; si se pagó todo, la cuenta queda pagada. |
 
 <!-- diagramas: docs/iconix/robustez/CU-09.md -->
 
 ## 6.10 CU-10 · Conectar un e-commerce (API, WooCommerce, MCP)
 
-La tienda saca una llave en la app (se muestra una sola vez) y la pega en el plugin de WooCommerce, en su e-commerce o en un agente con MCP. Con ella lee el catálogo con sus precios, crea pedidos con una clave fija (reintentar nunca duplica) y recibe avisos firmados de cada cambio, con reintentos.
+| Nombre | CU-10 · Conectar un e-commerce (API, WooCommerce, MCP) |
+|---|---|
+| Autor | Andrés Quispe |
+| Fecha | 06/11/2026 |
+| Descripción | La tienda conecta su tienda en línea (WooCommerce, su propio sistema o un agente de IA) para vender con el catálogo de Abasto. |
+| Actores | Tienda, su tienda en línea o un agente de IA. |
+| Precondiciones | La tienda tiene cuenta (CU-15). |
+| Flujo normal | 1. La tienda abre Cuenta › Conectar mi tienda en línea y saca una llave.<br>2. El sistema muestra la llave una sola vez.<br>3. La tienda pega la llave en el plugin de WooCommerce, en su sistema o en un agente con MCP.<br>4. La tienda en línea lee el catálogo con los precios de la tienda.<br>5. Cuando la tienda en línea vende, le manda el pedido a Abasto.<br>6. El sistema crea el pedido y le avisa a la tienda en línea de cada cambio de estado. |
+| Flujos alternativos | 1a. La tienda puede revocar la llave cuando quiera: deja de funcionar al momento.<br>4a. Con una llave inventada o revocada, el sistema no entrega datos.<br>5a. Si el mismo pedido llega dos veces, el sistema lo crea una sola vez.<br>6a. Si un aviso no llega, el sistema lo reintenta varias veces; después se puede reenviar a mano. |
+| Poscondiciones | La tienda en línea vende con el catálogo de Abasto y sus pedidos llegan solos. |
 
 <!-- diagramas: docs/iconix/robustez/CU-10.md -->
 
 ## 6.11 CU-11 · Pedir por WhatsApp
 
-n8n recibe el mensaje, convierte cada línea en producto, presentación y cantidad, deriva la clave del id del mensaje y llama a Conecta. Si WhatsApp reintenta el mensaje, Conecta responde «repetida» y en el Panel se ve «Repetido: no se duplicó». Falta conectar un número real de WhatsApp.
+| Nombre | CU-11 · Pedir por WhatsApp |
+|---|---|
+| Autor | Andrés Quispe |
+| Fecha | 06/11/2026 |
+| Descripción | La tienda hace un pedido mandando un mensaje de WhatsApp. |
+| Actores | Tienda, por WhatsApp. |
+| Precondiciones | El flujo de WhatsApp de n8n está activo. |
+| Flujo normal | 1. La tienda manda un mensaje con lo que quiere, por ejemplo «2 unidades AB-101, 1 unidad AB-102».<br>2. El sistema (n8n) entiende cada línea: producto, presentación y cantidad.<br>3. El sistema crea el pedido a nombre de la tienda, contra entrega.<br>4. El mayorista ve el pedido en Panel › Pedidos y en la bitácora de Conecta. |
+| Flujos alternativos | 1a. Si WhatsApp reenvía el mismo mensaje, el sistema no duplica el pedido y la bitácora dice «Repetido: no se duplicó».<br>2a. Si el mensaje no es un pedido o la presentación no existe, no se crea nada y la bitácora muestra el motivo. |
+| Poscondiciones | El pedido queda creado una sola vez y a la vista del mayorista. Falta conectar un número real de WhatsApp: hoy se prueba con un mensaje enviado al flujo. |
 
 <!-- diagramas: docs/iconix/robustez/CU-11.md -->
 
 ## 6.12 CU-12 · Pedir sin señal
 
-La app guarda catálogo, carrito y pedidos en el teléfono. Cada pedido queda pendiente en la bandeja con su clave; cuando vuelve la señal, la bandeja envía hasta 100 operaciones a Conecta, que aplica las nuevas y responde lo mismo para las repetidas. Si la misma clave llega con otro contenido, responde «conflicto».
+| Nombre | CU-12 · Pedir sin señal |
+|---|---|
+| Autor | Andrés Quispe |
+| Fecha | 06/11/2026 |
+| Descripción | La tienda hace un pedido sin señal y el sistema lo envía solo cuando vuelve la conexión. |
+| Actores | Tienda. |
+| Precondiciones | La app ya cargó el catálogo y el teléfono no tiene señal. |
+| Flujo normal | 1. La tienda arma el carrito y toca «Hacer pedido».<br>2. El sistema guarda el pedido en el teléfono como pendiente y se lo muestra a la tienda.<br>3. Cuando vuelve la señal, el sistema envía los pedidos pendientes.<br>4. El sistema crea cada pedido una sola vez y lo muestra en Compras. |
+| Flujos alternativos | 3a. Si sigue sin señal, el pedido queda pendiente y se reintenta más tarde.<br>4a. Si el pedido ya se había creado, el sistema devuelve el mismo y no lo duplica.<br>4b. Si llega un pedido distinto con la misma clave, el sistema lo rechaza. |
+| Poscondiciones | El pedido queda creado una sola vez, aunque se haya enviado varias veces. |
 
 <!-- diagramas: docs/iconix/robustez/CU-12.md -->
 
 ## 6.13 CU-13 · Preguntarle a los datos (texto o voz)
 
-El mayorista escribe o dicta la pregunta en Inteligencia › Reportes; Whisper la transcribe dentro del navegador. El Asistente pide al modelo de lenguaje el SQL, la guardia lo valida (solo `SELECT` sobre tablas permitidas), se ejecuta como `mcp_lector` con seguridad por fila, 5 segundos y 1.000 filas como máximo, y se audita en DynamoDB. La respuesta llega como tabla y gráfico, y se exporta a Excel.
+| Nombre | CU-13 · Preguntarle a los datos (texto o voz) |
+|---|---|
+| Autor | Jhoel Rodas |
+| Fecha | 06/11/2026 |
+| Descripción | El mayorista le hace una pregunta de su negocio al Analista, escrita o por voz, y recibe un reporte. |
+| Actores | Mayorista. |
+| Precondiciones | El mayorista entró al Panel. |
+| Flujo normal | 1. El mayorista abre Inteligencia › Reportes y escribe una pregunta, por ejemplo «¿Qué tiendas me tienen que pagar mañana?», o la dice por el micrófono.<br>2. Si habló, el sistema transcribe la voz en el navegador, sin internet.<br>3. El sistema (el Analista) convierte la pregunta en una consulta, revisa que solo lea datos de esa empresa y la ejecuta.<br>4. El sistema muestra la respuesta con tabla, gráfico y una explicación.<br>5. El mayorista puede exportar el resultado a Excel. |
+| Flujos alternativos | 1a. Sin señal, la pregunta queda esperando y se responde al volver la señal; los últimos reportes se ven sin señal.<br>3a. Si la pregunta es ambigua, el sistema dice qué le falta y ofrece de 2 a 4 preguntas que sí puede responder; si solo falta el período, asume los últimos 30 días y lo dice.<br>3b. Si la consulta no es segura, el sistema la rechaza con el motivo.<br>3c. Si el modelo no responde a tiempo, el sistema pide volver a preguntar.<br>4a. Si hay más de 1000 filas, el sistema muestra las primeras y lo avisa. |
+| Poscondiciones | El mayorista tiene su respuesta y la pregunta queda registrada en la auditoría. |
 
 <!-- diagramas: docs/iconix/robustez/CU-13.md -->
 
 ## 6.14 CU-14 · Aprobar la propuesta de un agente
 
-Con «Revisar ahora», el Asistente corre las misiones de Cobranza (cuentas que vencen mañana), Reposición (productos que no alcanzan para la demanda prevista) y Catálogo (productos sin stock que siguen publicados). Cada una deja propuestas nuevas en DynamoDB, sin repetir las que ya esperan. El mayorista aprueba o rechaza; si aprueba, n8n ejecuta la acción (el WhatsApp de cobranza, pausar el producto o el pedido al proveedor).
+| Nombre | CU-14 · Aprobar la propuesta de un agente |
+|---|---|
+| Autor | Jhoel Rodas |
+| Fecha | 06/11/2026 |
+| Descripción | Los agentes revisan el negocio y proponen acciones; el mayorista aprueba las que quiere y el sistema las ejecuta. |
+| Actores | Mayorista. |
+| Precondiciones | El mayorista entró al Panel. |
+| Flujo normal | 1. El mayorista abre Inteligencia › Agentes y toca «Revisar ahora».<br>2. El sistema corre los agentes de cobranza, reposición y catálogo sobre los datos del negocio.<br>3. El sistema muestra las propuestas nuevas, por ejemplo «Recordarle a Almacén Mery que su cuenta vence mañana».<br>4. El mayorista toca «Aprobar».<br>5. El sistema ejecuta la acción con n8n (el WhatsApp de cobranza, el pedido al proveedor o pausar un producto) y muestra lo que hizo. |
+| Flujos alternativos | 2a. Si nada es nuevo, el sistema dice «Todo en orden».<br>2b. Si un agente falla, los demás siguen y el sistema muestra cuál no pudo revisar.<br>3a. Lo que ya espera una decisión no se vuelve a proponer.<br>4a. Si el mayorista toca «Rechazar», la propuesta queda rechazada y no se ejecuta nada.<br>4b. Si la propuesta ya estaba decidida, el sistema lo avisa.<br>5a. Si n8n no está disponible, la propuesta queda aprobada y el sistema lo dice. |
+| Poscondiciones | La propuesta queda decidida y, si se aprobó, la acción quedó ejecutada. |
 
 <!-- diagramas: docs/iconix/robustez/CU-14.md -->
 
 ## 6.15 CU-15 · Registrarse como tienda
 
-La persona escribe su celular, recibe un código de 6 dígitos que dura 5 minutos y, la primera vez, su nombre. Catálogo crea la organización y su cuenta en Keycloak, sin correo ni contraseña. Después elige su tipo de negocio y su dirección. Hoy el código se muestra en la app («Modo prueba»); falta enviarlo por WhatsApp.
+| Nombre | CU-15 · Registrarse como tienda |
+|---|---|
+| Autor | Andrés Quispe |
+| Fecha | 06/11/2026 |
+| Descripción | Una tienda, un productor o un hogar crea su cuenta con el celular, sin correo ni contraseña. |
+| Actores | Tienda o persona. |
+| Precondiciones | Ninguna. |
+| Flujo normal | 1. La persona abre la app y escribe su celular.<br>2. El sistema genera un código de 6 dígitos que dura 5 minutos y se lo hace llegar (hoy se muestra en la app, en modo prueba).<br>3. La persona escribe el código y, la primera vez, su nombre.<br>4. El sistema crea su cuenta y deja la sesión abierta.<br>5. La persona elige qué negocio tiene (hogar, tienda o productor) y su dirección.<br>6. El sistema guarda su negocio y le muestra el Inicio de su tipo. |
+| Flujos alternativos | 1a. Si el celular no es de Bolivia, el sistema lo avisa.<br>2a. Si pide otro código muy pronto, el sistema le pide esperar.<br>3a. Si el código es incorrecto, el sistema lo avisa y, después de muchos intentos, lo bloquea; si venció, pide otro.<br>4a. Si Abasto suspendió la cuenta, no puede entrar. |
+| Poscondiciones | La persona tiene cuenta y puede comprar; en otro celular sus datos se cargan solos. |
 
 <!-- diagramas: docs/iconix/robustez/CU-15.md -->
 
 ## 6.16 CU-16 · Reportar un problema con un pedido
 
-En el seguimiento, la tienda reporta qué pasó (incompleto, dañado, no llegó, cobro mal u otro). Pedidos crea el reclamo; el mayorista ve la marca en su pedido. El admin lo resuelve en el Superadmin y anota cuánto devolvió y cómo. El sistema solo registra la devolución: no mueve el cobro ni el crédito.
+| Nombre | CU-16 · Reportar un problema con un pedido |
+|---|---|
+| Autor | Andrés Quispe |
+| Fecha | 06/11/2026 |
+| Descripción | La tienda reporta un problema con un pedido y Abasto lo resuelve. |
+| Actores | Tienda y Admin de Abasto. |
+| Precondiciones | La tienda tiene un pedido en curso o entregado. |
+| Flujo normal | 1. En el seguimiento del pedido, la tienda toca «Tengo un problema con este pedido».<br>2. El sistema muestra los motivos: llegó incompleto, llegó dañado, no llegó, le cobraron mal u otro problema.<br>3. La tienda elige el motivo y, si quiere, cuenta qué pasó.<br>4. El sistema registra el reclamo y marca el pedido en el Panel del mayorista.<br>5. El admin abre Superadmin › Reclamos, habla con la tienda y anota cuánto devolvió, cómo y su respuesta.<br>6. El sistema cierra el reclamo y la tienda ve la respuesta en el seguimiento. |
+| Flujos alternativos | 3a. Si elige «Otro», el sistema le pide contar qué pasó.<br>4a. Si el pedido todavía se está procesando, el sistema no deja reclamar aún.<br>4b. Hay un reclamo por pedido: reclamar otra vez muestra el mismo.<br>5a. Si Abasto no le da la razón, rechaza el reclamo con su respuesta.<br>5b. Lo devuelto no puede pasar el total del pedido. |
+| Poscondiciones | El reclamo queda resuelto con su respuesta. El sistema solo anota la devolución: no cambia el cobro ni el crédito. |
 
 <!-- diagramas: docs/iconix/robustez/CU-16.md -->
+
+## 6.17 Modelo de dominio actualizado
+
+Al dibujar la robustez de los 16 casos aparecieron objetos que el modelo de dominio de 5.6 no tenía. ICONIX pide volver a ese modelo y sumarlos antes del diseño: estas son las clases nuevas y con qué clase del modelo anterior se relacionan. Las demás (Organizacion, Producto, Pedido, LineaDeCredito, CuentaPorCobrar, Reclamo…) siguen igual.
+
+| Clase nueva | Salió de la robustez de | Qué agrega al dominio |
+|---|---|---|
+| `CodigoDeAcceso` | CU-15 | El código de 6 dígitos para entrar con el celular, con su vencimiento y sus intentos |
+| `NegocioDelCliente` | CU-15 | Qué negocio tiene el cliente (hogar, tienda o productor); cambia el Inicio de la app |
+| `OperacionLocal` | CU-06 · CU-12 | El pedido guardado en el teléfono mientras no hay señal, con su clave |
+| `Operacion` (clave de idempotencia) | CU-10 · CU-11 · CU-12 | Lo que ya se aplicó con cada clave, para no duplicar un pedido |
+| `EntradaDeBitacora` | CU-11 | Lo que entró de afuera (WhatsApp, tienda en línea, app sin señal) y qué pasó con cada cosa |
+| `LlaveDeApi`, `Webhook` y `Entrega` | CU-10 | La llave de la tienda en línea, la dirección de sus avisos y cada aviso enviado |
+| `Propuesta` | CU-14 | La acción que propone un agente, esperando que el mayorista la apruebe |
+
+```mermaid
+%% titulo: Modelo de dominio actualizado después de la robustez (clases nuevas)
+classDiagram
+  direction LR
+  class Organizacion {
+    +String id
+    +String nombre
+    +String tipo
+  }
+  class Pedido {
+    +UUID id
+    +String codigo
+    +EstadoPedido estado
+  }
+  class CodigoDeAcceso {
+    +String telefono
+    +String huella
+    +int creadoEn
+    +int intentos
+  }
+  class NegocioDelCliente {
+    +String tipo
+    +String subtipo
+    +String elegidoEn
+  }
+  class OperacionLocal {
+    +String clave
+    +String tipo
+    +String estado
+    +int intentos
+    +String creadaEn
+  }
+  class Operacion {
+    +String clave
+    +String tipo
+    +String estado
+    +String creadaEn
+  }
+  class EntradaDeBitacora {
+    +String clave
+    +String origen
+    +String estado
+    +String ocurridoEn
+  }
+  class LlaveDeApi {
+    +String id
+    +String nombre
+    +String huella
+    +String creadaEn
+  }
+  class Webhook {
+    +String id
+    +String url
+    +String creadoEn
+  }
+  class Entrega {
+    +String id
+    +String eventoId
+    +String estado
+  }
+  class Propuesta {
+    +String id
+    +String agenteId
+    +String titulo
+    +String estado
+    +String creadaEn
+  }
+  CodigoDeAcceso "0..*" -- "0..1" Organizacion : da entrada a
+  Organizacion "1" -- "0..1" NegocioDelCliente : elige
+  OperacionLocal "1" -- "0..1" Operacion : se aplica como
+  Operacion "1" -- "0..1" Pedido : crea
+  Operacion "1" -- "1" EntradaDeBitacora : queda en
+  Organizacion "1" -- "0..*" LlaveDeApi : tiene
+  Organizacion "1" -- "0..*" Webhook : registra
+  Webhook "1" -- "0..*" Entrega : recibe
+  Organizacion "1" -- "0..*" Propuesta : decide
+```
 
 # 7. ICONIX · Diseño
 
