@@ -77,7 +77,10 @@ Los dos archivos están en `.gitignore`: **nunca van al repo**.
 
 **Probado en el emulador con Firebase de verdad (10/11):**
 - «Probar una notificación» llega.
-- Con la app abierta y en segundo plano, cada paso de un pedido reemplaza al anterior, «va en camino» queda fija y «¡Llegó tu pedido!» la reemplaza.
-- **Ojo con la compilación de desarrollo:** con la app cerrada, Android tiene que levantarla para entregarle el aviso y le da 10 s. La compilación de desarrollo corre sin compilar por adelantado y en el emulador tarda más: Android la corta (ANR) y Firebase guarda el aviso hasta que se abre la app. Para probar con la app cerrada hay que usar la compilación release (`npx expo run:android --variant release`).
+- Con la app abierta, en segundo plano y **cerrada**: cada paso de un pedido reemplaza al anterior, «va en camino» queda fija (sobrevive a «Borrar todo») y «¡Llegó tu pedido!» la reemplaza.
+- **Ojo con la compilación de desarrollo recién instalada con `adb`:** con la app cerrada, Android la levanta para entregarle el aviso y le da 10 s. Sin optimizar, la app tarda más en el emulador: Android la corta (ANR) y Firebase guarda el aviso hasta que se abre la app.
+  - Después de instalar: `adb shell cmd package compile -m verify -f bo.abasto.app`.
+  - Un APK instalado normalmente ya viene optimizado.
+- **Para probar con la app cerrada no uses «Forzar detención»:** Android deja la app sin avisos hasta que se abre a mano. Usa `adb shell am kill bo.abasto.app` o deslízala de las recientes.
 
 **iPhone:** necesita una cuenta de Apple Developer para APNs. No está configurado. En Android funciona todo.
