@@ -156,6 +156,14 @@ Los 16 casos de uso tienen pantalla, prueba y sus diagramas ICONIX. Ni el Panel 
 - 31/10 · Pedidos: `CrearPedidoEntrada.entrega: DireccionEntrada` (opcional) y `Pedido.entrega: DireccionDeEntrega`; migración V3. OpenAPI de Conecta: `DatosPedido.entrega`.
 
 ## Necesito del otro
+- **Jhoel (aviso, 10/11, Reportes con plantillas; toqué tu Asistente, tu Inteligencia y `contracts/openapi/asistente.yaml`, todo aditivo):**
+  - El Analista ya no devuelve un solo gráfico: arma una **vista de 1 a 5 bloques** con plantillas `kpis` (con `_anterior` muestra la variación), `linea`, `barras`, `dona` y `tabla`, como las plantillas de Fifi en glow. `reportes/dominio/plantillas.ts` decide si los datos encajan (dona de 2 a 8 partes, línea de 3 puntos con fechas…) y si no, cae en la siguiente; cada bloque trae `alternativas` para «Ver como».
+  - «Mi negocio», «cómo vendo más», «recomiéndame» ya no piden aclaración: arman un diagnóstico (KPIs 30 días contra los 30 anteriores, ventas por semana, top productos, dona de cómo te pagan y tiendas que dejaron de comprar).
+  - Después de correr los bloques, Gemini **lee los resultados** (`leerResultados`, montos ya en Bs) y da hallazgos y, si se pidió consejo, recomendaciones («Lo que veo» y «Te recomiendo» en la mesa).
+  - Si la consulta principal falla en Postgres, se le pasa el error a Gemini una vez para que la corrija; si sigue, 400 claro en vez de 500.
+  - La respuesta conserva arriba `sql`, `columnas`, `filas` y `grafico` del primer bloque: `evaluar`, el MCP y lo guardado sin señal siguen igual. Excel: `hojas` (una por bloque).
+  - Inteligencia: `BloqueDeReporte.vue`, `Dona.vue` (paleta validada), `MesaDeReporte.vue` con la grilla de bloques.
+  - **Para desplegar:** Azure `docker compose up -d --build asistente` y Google la web de inteligencia con `construir-webs.mjs`. Pruebas: Asistente 139 y Inteligencia 89 en verde; probado con Gemini en local (allá tarda 15–55 s; en la nube debería ser ~10 s, son dos llamadas).
 - **Jhoel (10/11): desplegar todo para la presentación** (notificaciones push, logo y carga masiva). Desde tu laptop:
   1. **Bajar:** `git pull --rebase origin main`, `pnpm install` y `npm install` en `apps/app` (suma `expo-splash-screen`).
   2. **Los dos archivos de Firebase te los paso yo por un canal privado. Nunca van al repo ni a un chat de grupo:**

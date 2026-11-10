@@ -79,15 +79,14 @@ export class ReportesController {
   @Post('excel')
   @HttpCode(200)
   async excel(@Body() cuerpo: unknown, @Res() res: Response) {
-    const tabla = leer(
-      z.object({
-        titulo: z.string().max(80).default('Reporte'),
-        columnas: z.array(z.string()).min(1),
-        filas: z.array(z.record(z.string(), z.unknown())).max(1000),
-      }),
-      cuerpo,
-    );
-    const archivo = await generarExcel(tabla);
+    const Tabla = z.object({
+      titulo: z.string().max(80).default('Reporte'),
+      columnas: z.array(z.string()).min(1),
+      filas: z.array(z.record(z.string(), z.unknown())).max(1000),
+    });
+    // Un reporte de un bloque manda la tabla; uno de varios bloques, `hojas` (una por bloque)
+    const pedido = leer(z.union([z.object({ hojas: z.array(Tabla).min(1).max(5) }), Tabla]), cuerpo);
+    const archivo = await generarExcel(...('hojas' in pedido ? pedido.hojas : [pedido]));
     res
       .setHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
       .setHeader('content-disposition', `attachment; filename="abasto-${Date.now()}.xlsx"`)

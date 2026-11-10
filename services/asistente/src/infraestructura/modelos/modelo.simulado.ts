@@ -1,4 +1,5 @@
-import { PreguntaNoEntendida, type ConsultaGenerada, type ModeloDeLenguaje } from '../../reportes/puertos.js';
+import { graficoDe } from '../../reportes/dominio/plantillas.js';
+import { PreguntaNoEntendida, type BloqueGenerado, type ConsultaGenerada, type ModeloDeLenguaje } from '../../reportes/puertos.js';
 
 /**
  * Modelo de lenguaje simulado: reconoce las preguntas de la demo por palabras clave.
@@ -6,7 +7,55 @@ import { PreguntaNoEntendida, type ConsultaGenerada, type ModeloDeLenguaje } fro
  * Si no reconoce la pregunta lo dice (PreguntaNoEntendida) y da ejemplos: nunca responde otra cosa.
  * Las reglas van de la más específica a la más general: gana la primera que coincide.
  */
+/** Las consultas de las vistas de varios bloques. El mismo diagnóstico que se le pide a Gemini en las instrucciones. */
+const SQL = {
+  kpis30: `SELECT sum(CASE WHEN fecha > current_date - 30 THEN total_centavos ELSE 0 END) AS ventas_centavos,
+                  sum(CASE WHEN fecha <= current_date - 30 THEN total_centavos ELSE 0 END) AS ventas_centavos_anterior,
+                  sum(CASE WHEN fecha > current_date - 30 THEN pedidos ELSE 0 END) AS pedidos,
+                  sum(CASE WHEN fecha <= current_date - 30 THEN pedidos ELSE 0 END) AS pedidos_anterior,
+                  round(sum(CASE WHEN fecha > current_date - 30 THEN total_centavos ELSE 0 END)
+                        / nullif(sum(CASE WHEN fecha > current_date - 30 THEN pedidos ELSE 0 END), 0)) AS ticket_promedio_centavos,
+                  round(sum(CASE WHEN fecha <= current_date - 30 THEN total_centavos ELSE 0 END)
+                        / nullif(sum(CASE WHEN fecha <= current_date - 30 THEN pedidos ELSE 0 END), 0)) AS ticket_promedio_centavos_anterior
+             FROM ventas_diarias WHERE fecha > current_date - 60`,
+  semanas: `SELECT date_trunc('week', fecha)::date AS semana, sum(total_centavos) AS ventas_centavos
+              FROM ventas_diarias WHERE fecha > current_date - 84
+             GROUP BY date_trunc('week', fecha)::date ORDER BY semana`,
+  productos: `SELECT producto_nombre, sum(total_centavos) AS ventas_centavos
+                FROM ventas_por_producto WHERE fecha > current_date - 30
+               GROUP BY producto_nombre ORDER BY ventas_centavos DESC LIMIT 10`,
+  pagos: `SELECT metodo_pago, sum(total_centavos) AS total_centavos
+            FROM pedidos WHERE creado_en > current_date - 30 AND estado <> 'RECHAZADO'
+           GROUP BY metodo_pago ORDER BY total_centavos DESC`,
+  dejaron: `SELECT tienda_nombre, max(creado_en)::date AS ultima_compra, sum(total_centavos) AS compro_centavos
+              FROM pedidos WHERE creado_en > current_date - 90 AND estado <> 'RECHAZADO'
+             GROUP BY tienda_nombre HAVING max(creado_en) <= current_date - 30
+             ORDER BY compro_centavos DESC LIMIT 10`,
+};
+
+/** Una vista de varios bloques: arriba van el SQL y el gráfico del primero, como antes. */
+const vista = (explicacion: string, bloques: BloqueGenerado[]): ConsultaGenerada => ({
+  sql: bloques[0].sql,
+  explicacion,
+  grafico: graficoDe(bloques[0].plantilla),
+  bloques,
+});
+
 const REGLAS: Array<{ claves: RegExp; consulta: ConsultaGenerada }> = [
+  {
+    claves: /(mi negocio|resumen|vender? mas|vendo mas|recomiend|mejorar|como (me )?va |como voy|diagnostico)/,
+    consulta: vista('Cómo va tu negocio en los últimos 30 días comparado con los 30 anteriores.', [
+      { titulo: 'Últimos 30 días', plantilla: 'kpis', sql: SQL.kpis30 },
+      { titulo: 'Ventas por semana', plantilla: 'linea', sql: SQL.semanas },
+      { titulo: 'Lo que más vendiste', plantilla: 'barras', sql: SQL.productos },
+      { titulo: 'Cómo te pagan', plantilla: 'dona', sql: SQL.pagos },
+      { titulo: 'Tiendas que dejaron de comprar', plantilla: 'tabla', sql: SQL.dejaron },
+    ]),
+  },
+  {
+    claves: /(como me pagan|metodos? de pago|forma de pago|como pagan)/,
+    consulta: vista('Cómo te pagaron los pedidos de los últimos 30 días.', [{ titulo: 'Cómo te pagan', plantilla: 'dona', sql: SQL.pagos }]),
+  },
   {
     claves: /(pagar|cobrar|vence|deben).*(manana)|manana.*(pagar|cobrar|vence)/,
     consulta: {
@@ -91,12 +140,15 @@ const REGLAS: Array<{ claves: RegExp; consulta: ConsultaGenerada }> = [
   },
   {
     claves: /(segment|tipos? de tienda|como compran)/,
-    consulta: {
-      sql: `SELECT segmento, count(*) AS tiendas, round(avg(ticket_promedio_centavos)) AS ticket_promedio_centavos
-              FROM segmento_tiendas GROUP BY segmento ORDER BY tiendas DESC`,
-      explicacion: 'Cómo compran tus tiendas: segmentos de K-means (ML no supervisado).',
-      grafico: 'barras',
-    },
+    consulta: vista('Cómo compran tus tiendas: segmentos de K-means (ML no supervisado).', [
+      { titulo: 'Tiendas por segmento', plantilla: 'dona', sql: `SELECT segmento, count(*) AS tiendas FROM segmento_tiendas GROUP BY segmento ORDER BY tiendas DESC` },
+      {
+        titulo: 'Ticket promedio por segmento',
+        plantilla: 'barras',
+        sql: `SELECT segmento, round(avg(ticket_promedio_centavos)) AS ticket_promedio_centavos
+                FROM segmento_tiendas GROUP BY segmento ORDER BY ticket_promedio_centavos DESC`,
+      },
+    ]),
   },
   {
     claves: /(pedido)/,
@@ -110,14 +162,24 @@ const REGLAS: Array<{ claves: RegExp; consulta: ConsultaGenerada }> = [
   },
   {
     claves: /(vend|venta|factur|ingres)/,
-    consulta: {
-      sql: `SELECT fecha, pedidos, total_centavos
-              FROM ventas_diarias
-             WHERE fecha >= date_trunc('month', current_date)
-             ORDER BY fecha`,
-      explicacion: 'Ventas confirmadas de cada día de este mes.',
-      grafico: 'linea',
-    },
+    consulta: vista('Lo vendido este mes, comparado con los mismos días del mes pasado, y las ventas de cada día.', [
+      {
+        titulo: 'Este mes',
+        plantilla: 'kpis',
+        sql: `SELECT sum(CASE WHEN fecha >= date_trunc('month', current_date) THEN total_centavos ELSE 0 END) AS ventas_centavos,
+                       sum(CASE WHEN fecha < date_trunc('month', current_date) THEN total_centavos ELSE 0 END) AS ventas_centavos_anterior,
+                       sum(CASE WHEN fecha >= date_trunc('month', current_date) THEN pedidos ELSE 0 END) AS pedidos,
+                       sum(CASE WHEN fecha < date_trunc('month', current_date) THEN pedidos ELSE 0 END) AS pedidos_anterior
+                  FROM ventas_diarias
+                 WHERE fecha >= date_trunc('month', current_date)
+                    OR (fecha >= date_trunc('month', current_date) - interval '1 month' AND fecha <= current_date - interval '1 month')`,
+      },
+      {
+        titulo: 'Ventas de cada día',
+        plantilla: 'linea',
+        sql: `SELECT fecha, total_centavos FROM ventas_diarias WHERE fecha >= date_trunc('month', current_date) ORDER BY fecha`,
+      },
+    ]),
   },
 ];
 

@@ -15,7 +15,9 @@ export type NombreDeIcono =
   | 'reloj'
   | 'visto'
   | 'nueva'
-  | 'recargar';
+  | 'recargar'
+  | 'dona'
+  | 'vista';
 </script>
 
 <script setup lang="ts">
@@ -39,6 +41,8 @@ const TRAZOS: Record<NombreDeIcono, string[]> = {
   visto: ['M2.5 12.5l4 4 8-9', 'M11.5 15.5l1 1 8-9'],
   nueva: ['M12 5v14', 'M5 12h14'],
   recargar: ['M19.5 12a7.5 7.5 0 1 1-2.2-5.3', 'M19.5 4.5v4h-4'],
+  dona: ['M12 4a8 8 0 1 0 8 8', 'M12 4v4.5a3.5 3.5 0 1 0 3.5 3.5H20A8 8 0 0 0 12 4z'],
+  vista: ['M4 4h7v7H4z', 'M13 4h7v4h-7z', 'M13 10h7v10h-7z', 'M4 13h7v7H4z'],
 };
 </script>
 

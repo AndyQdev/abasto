@@ -7,6 +7,8 @@
  * navegador no deja guardar (modo privado), la pantalla funciona igual, solo que sin memoria.
  */
 
+import type { BloqueDelReporte, Lectura } from '../reportes/conversacion';
+
 /** Lo que se guarda de una respuesta del Asistente (la misma forma que muestra Reportes). */
 export interface ReporteGuardado {
   pregunta: string;
@@ -17,6 +19,9 @@ export interface ReporteGuardado {
   filas: Record<string, unknown>[];
   truncado: boolean;
   modelo: string;
+  /** La vista completa (10/11); los guardados de antes no la tienen y se ven como un solo bloque */
+  bloques?: BloqueDelReporte[];
+  lectura?: Lectura | null;
   /** ISO: cuándo se respondió con señal */
   guardadoEn: string;
 }
@@ -65,6 +70,9 @@ export function guardarReporte(orgId: string, reporte: Omit<ReporteGuardado, 'gu
     ...reporte,
     filas: reporte.filas.slice(0, MAXIMO_DE_FILAS),
     truncado: reporte.truncado || reporte.filas.length > MAXIMO_DE_FILAS,
+    ...(reporte.bloques
+      ? { bloques: reporte.bloques.map((b) => ({ ...b, filas: b.filas.slice(0, MAXIMO_DE_FILAS), truncado: b.truncado || b.filas.length > MAXIMO_DE_FILAS })) }
+      : {}),
     guardadoEn: ahora.toISOString(),
   };
   const igual = normalizarPregunta(reporte.pregunta);

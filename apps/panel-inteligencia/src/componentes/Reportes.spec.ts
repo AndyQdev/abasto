@@ -1,5 +1,6 @@
 import { enableAutoUnmount, flushPromises, mount, type VueWrapper } from '@vue/test-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { SUGERENCIAS } from '../reportes/conversacion';
 import type { SesionDelShell } from '../sesion';
 import type { EventosDeEscucha } from '../voz/escucha';
 import type { DependenciasDeVoz } from '../voz/usar-voz';
@@ -61,6 +62,70 @@ async function preguntar(pantalla: VueWrapper, texto: string) {
 
 const chat = (p: VueWrapper) => p.get('.rp-chat');
 const mesa = (p: VueWrapper) => p.get('.rp-mesa');
+
+/** Un diagnóstico del negocio: KPIs con el período anterior, una dona y la lectura del Analista. */
+const diagnostico = {
+  ...respuesta,
+  pregunta: '¿cómo va mi negocio?',
+  explicacion: 'Cómo va tu negocio en los últimos 30 días.',
+  columnas: ['ventas_centavos', 'ventas_centavos_anterior'],
+  filas: [{ ventas_centavos: '120000', ventas_centavos_anterior: '100000' }],
+  grafico: 'tabla',
+  bloques: [
+    {
+      titulo: 'Últimos 30 días', sql: 'SELECT 1', plantilla: 'kpis', pedida: 'kpis', alternativas: ['kpis', 'tabla'],
+      columnas: ['ventas_centavos', 'ventas_centavos_anterior'], filas: [{ ventas_centavos: '120000', ventas_centavos_anterior: '100000' }], truncado: false,
+    },
+    {
+      titulo: 'Cómo te pagan', sql: 'SELECT 2', plantilla: 'dona', pedida: 'dona', alternativas: ['barras', 'dona', 'tabla'],
+      columnas: ['metodo_pago', 'total_centavos'], filas: [{ metodo_pago: 'qr', total_centavos: '75000' }, { metodo_pago: 'credito', total_centavos: '25000' }], truncado: false,
+    },
+  ],
+  lectura: { hallazgos: ['Vendiste Bs 1.200,00, 20 % más que los 30 días anteriores.'], recomendaciones: ['Llama a las tiendas que dejaron de comprar.'] },
+};
+
+describe('Reportes con plantillas (10/11)', () => {
+  it('una vista arma cada bloque con su plantilla: KPIs con variación, dona con leyenda y la lectura del Analista', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => json(diagnostico)));
+    const pantalla = mount(Reportes, { props: { sesion } });
+    await preguntar(pantalla, '¿cómo va mi negocio?');
+
+    const m = mesa(pantalla);
+    expect(m.findAll('.rp-bloque')).toHaveLength(2);
+    expect(m.get('.rp-numero').text()).toContain('Bs 1.200,00');
+    expect(m.get('.rp-variacion').text()).toContain('+20,0 %');
+    expect(m.get('.rp-variacion').classes()).toContain('sube');
+    expect(m.findAll('.dona circle.porcion')).toHaveLength(2);
+    expect(m.get('.dona-leyenda').text()).toContain('75 %');
+    expect(m.get('.rp-lectura').text()).toContain('Lo que veo');
+    expect(m.get('.rp-recomendaciones').text()).toContain('Llama a las tiendas');
+  });
+
+  it('«Ver como» cambia la plantilla del bloque a otra en la que encajan los datos', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => json(diagnostico)));
+    const pantalla = mount(Reportes, { props: { sesion } });
+    await preguntar(pantalla, '¿cómo va mi negocio?');
+
+    const dona = mesa(pantalla).findAll('.rp-bloque')[1];
+    await dona.get('.rp-ver-como button[title="Ver como barras"]').trigger('click');
+    expect(dona.findAll('rect.barra')).toHaveLength(2);
+    expect(dona.find('.dona').exists()).toBe(false);
+  });
+
+  it('el Excel de una vista va con una hoja por bloque', async () => {
+    const pedir = vi.fn(async (url: string) => (String(url).endsWith('/excel') ? new Response(new Blob(['x'])) : json(diagnostico)));
+    vi.stubGlobal('fetch', pedir);
+    URL.createObjectURL = vi.fn(() => 'blob:x');
+    URL.revokeObjectURL = vi.fn();
+    const pantalla = mount(Reportes, { props: { sesion } });
+    await preguntar(pantalla, '¿cómo va mi negocio?');
+
+    await mesa(pantalla).get('.rp-excel').trigger('click');
+    await flushPromises();
+    const cuerpo = JSON.parse(String((pedir.mock.calls[1] as unknown as [string, RequestInit])[1].body));
+    expect(cuerpo.hojas.map((h: { titulo: string }) => h.titulo)).toEqual(['Últimos 30 días', 'Cómo te pagan']);
+  });
+});
 
 describe('Reportes como chat con mesa de trabajo', () => {
   it('la pregunta queda en el chat y el reporte se arma en la mesa con su gráfico y su resumen', async () => {
@@ -164,7 +229,7 @@ describe('Reportes como chat con mesa de trabajo', () => {
 
     await mesa(pantalla).findAll('.rp-plantilla')[0].trigger('click');
     await flushPromises();
-    expect(JSON.parse(String((pedir.mock.calls[0] as unknown as [string, RequestInit])[1].body))).toEqual({ texto: '¿Qué tiendas me deben más plata?' });
+    expect(JSON.parse(String((pedir.mock.calls[0] as unknown as [string, RequestInit])[1].body))).toEqual({ texto: SUGERENCIAS[0].pregunta });
     expect(mesa(pantalla).text()).toContain('Tienda Doña Rosa');
   });
 });

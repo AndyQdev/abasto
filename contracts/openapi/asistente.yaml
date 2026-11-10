@@ -31,6 +31,30 @@ paths:
                   filas: { type: array, items: { type: object } }
                   truncado: { type: boolean, description: true si había más de 1.000 filas }
                   modelo: { type: string, example: simulado }
+                  bloques:
+                    description: >-
+                      (10/11, aditivo) La vista completa, de 1 a 5 bloques. El primero es el de arriba (sql, columnas,
+                      filas). Cada bloque es una plantilla que eligió el modelo, ya comprobada contra los datos.
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        titulo: { type: string, example: Ventas por semana }
+                        sql: { type: string }
+                        plantilla: { type: string, enum: [kpis, linea, barras, dona, tabla], description: Con la que se dibuja }
+                        pedida: { type: string, enum: [kpis, linea, barras, dona, tabla], description: La que eligió el modelo }
+                        aviso: { type: string, description: Si los datos no encajaban en la pedida, por qué se cambió }
+                        alternativas: { type: array, items: { type: string }, description: Plantillas en las que también encajan («Ver como») }
+                        columnas: { type: array, items: { type: string } }
+                        filas: { type: array, items: { type: object } }
+                        truncado: { type: boolean }
+                  lectura:
+                    description: (10/11, aditivo) Lo que el modelo leyó en los resultados; null si no hubo lectura
+                    nullable: true
+                    type: object
+                    properties:
+                      hallazgos: { type: array, items: { type: string } }
+                      recomendaciones: { type: array, items: { type: string }, description: Solo si la pregunta pedía consejo }
         '400': { description: La consulta generada no pasó la guardia de SQL }
         '422':
           description: >-
@@ -46,17 +70,32 @@ paths:
         '503': { description: El modelo de lenguaje no respondió a tiempo (ya se reintentó una vez); se puede volver a preguntar }
   /v1/reportes/excel:
     post:
-      summary: Devuelve el .xlsx de una tabla de reporte
+      summary: Devuelve el .xlsx de una tabla de reporte, o de varias (una hoja por bloque)
       requestBody:
         content:
           application/json:
             schema:
-              type: object
-              required: [columnas, filas]
-              properties:
-                titulo: { type: string }
-                columnas: { type: array, items: { type: string } }
-                filas: { type: array, maxItems: 1000, items: { type: object } }
+              oneOf:
+                - type: object
+                  required: [columnas, filas]
+                  properties:
+                    titulo: { type: string }
+                    columnas: { type: array, items: { type: string } }
+                    filas: { type: array, maxItems: 1000, items: { type: object } }
+                - type: object
+                  description: (10/11, aditivo) Un reporte de varios bloques
+                  required: [hojas]
+                  properties:
+                    hojas:
+                      type: array
+                      maxItems: 5
+                      items:
+                        type: object
+                        required: [columnas, filas]
+                        properties:
+                          titulo: { type: string }
+                          columnas: { type: array, items: { type: string } }
+                          filas: { type: array, maxItems: 1000, items: { type: object } }
       responses:
         '200':
           content:

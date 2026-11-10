@@ -4,6 +4,7 @@ import {
   borrarConversacion,
   cargarConversacion,
   guardarConversacion,
+  hojasDe,
   horaCorta,
   nuevoId,
   plantillaDe,
@@ -57,6 +58,8 @@ const ICONOS: Record<Plantilla, NombreDeIcono> = {
   numeros: 'numeros',
   barras: 'barras',
   linea: 'linea',
+  dona: 'dona',
+  vista: 'vista',
   tabla: 'tabla',
   aviso: 'aviso',
   vacio: 'tabla',
@@ -224,7 +227,8 @@ async function exportar(r: Reporte) {
   try {
     const archivo = await llamarAsistente<Blob>(props.sesion, '/v1/reportes/excel', {
       metodo: 'POST',
-      cuerpo: { titulo: r.pregunta.slice(0, 60), columnas: r.columnas, filas: r.filas },
+      // Un reporte de varios bloques va con una hoja por bloque
+      cuerpo: hojasDe(r).length > 1 ? { hojas: hojasDe(r) } : { titulo: r.pregunta.slice(0, 60), columnas: r.columnas, filas: r.filas },
     });
     const enlace = document.createElement('a');
     enlace.href = URL.createObjectURL(archivo);
@@ -434,7 +438,7 @@ onUnmounted(() => {
 
         <div v-else class="rp-mesa-vacia">
           <h2>Mesa de trabajo</h2>
-          <p>Pregunta en el chat y aquí se arma el reporte: los números, el gráfico y la tabla para Excel. Cada pregunta queda en su pestaña.</p>
+          <p>Pregunta en el chat y aquí se arma el reporte: números, gráficos (línea, barras, dona) y tablas para Excel. Cada pregunta queda en su pestaña.</p>
           <div class="rp-plantillas">
             <button v-for="s in SUGERENCIAS" :key="s.pregunta" class="rp-plantilla" :disabled="pensando" @click="preguntar(s.pregunta)">
               <span class="rp-plantilla-icono"><Icono :nombre="ICONOS[s.plantilla]" :tamano="22" /></span>

@@ -19,12 +19,14 @@ export const MAXIMO_DE_BARRAS = 12;
 const esNumero = (v: unknown) => typeof v === 'number' || (typeof v === 'string' && v.trim() !== '' && !Number.isNaN(Number(v)));
 
 export function armarSerie(columnas: string[], filas: Record<string, unknown>[], tipo: string): Serie | null {
-  if (tipo !== 'barras' && tipo !== 'linea') return null;
+  if (tipo !== 'barras' && tipo !== 'linea' && tipo !== 'dona') return null;
   if (!filas.length) return null;
 
   const numericas = columnas.filter((c) => filas.every((f) => f[c] === null || esNumero(f[c])));
   // Montos primero: si la pregunta trae cantidad y total, lo que se quiere ver es el total
-  const columnaValor = numericas.find((c) => c.endsWith('_centavos')) ?? numericas[0];
+  // El «_anterior» de los KPIs es para comparar, no para dibujar
+  const propias = numericas.filter((c) => !c.endsWith('_anterior'));
+  const columnaValor = propias.find((c) => c.endsWith('_centavos')) ?? propias[0];
   // El nombre se lee mejor que el código: con tienda_id y tienda_nombre, las barras dicen «Minimarket El Cruce», no «ec»
   const textos = columnas.filter((c) => !numericas.includes(c));
   const columnaEtiqueta = textos.find((c) => /nombre$/.test(c)) ?? textos.find((c) => !/(^|_)id$/.test(c)) ?? textos[0];

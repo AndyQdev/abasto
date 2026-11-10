@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import {
+  bloquesDe,
   cargarConversacion,
+  hojasDe,
+  kpisDe,
+  porcionesDe,
   guardarConversacion,
   numerosDe,
   plantillaDe,
@@ -97,5 +101,41 @@ describe('Pestañas y conversación', () => {
   it('si lo guardado está roto, empieza de cero', () => {
     sessionStorage.setItem('abasto:inteligencia:conversacion:lp', '{roto');
     expect(cargarConversacion('lp')).toEqual({ mensajes: [], reportes: [], activa: null });
+  });
+});
+
+describe('Vista de varios bloques (10/11)', () => {
+  const bloque = (parcial: Partial<NonNullable<Reporte['bloques']>[number]>) => ({
+    titulo: 'b', sql: 'SELECT 1', plantilla: 'tabla' as const, pedida: 'tabla' as const, alternativas: ['tabla' as const],
+    columnas: [], filas: [], truncado: false, ...parcial,
+  });
+
+  it('los KPIs comparan con su «_anterior» y no lo muestran como otra tarjeta', () => {
+    const kpis = kpisDe({ columnas: ['ventas_centavos', 'ventas_centavos_anterior', 'pedidos', 'pedidos_anterior'], filas: [{ ventas_centavos: '120000', ventas_centavos_anterior: '100000', pedidos: 8, pedidos_anterior: 10 }] });
+    expect(kpis.map((k) => k.etiqueta)).toEqual(['Ventas', 'Pedidos']);
+    expect(kpis[0]).toMatchObject({ valor: 'Bs 1.200,00', variacion: { texto: '+20,0 %', sentido: 'sube', antes: 'antes Bs 1.000,00' } });
+    expect(kpis[1].variacion).toMatchObject({ texto: '-20,0 %', sentido: 'baja' });
+  });
+
+  it('una dona de más de 6 partes junta las chicas en «Otros»', () => {
+    const filas = Array.from({ length: 8 }, (_, i) => ({ tienda_nombre: `T${i}`, total_centavos: String((8 - i) * 100) }));
+    const p = porcionesDe({ columnas: ['tienda_nombre', 'total_centavos'], filas }, 'tienda_nombre', 'total_centavos');
+    expect(p).toHaveLength(6);
+    expect(p.at(-1)).toMatchObject({ etiqueta: 'Otros', otros: true, valor: 600 });
+    expect(Math.round(p.reduce((s2, x) => s2 + x.porciento, 0))).toBe(100);
+  });
+
+  it('un reporte de antes (sin bloques) se ve como un solo bloque', () => {
+    const r = reporte({ columnas: ['tienda_nombre', 'saldo_centavos'], filas: [{ tienda_nombre: 'A', saldo_centavos: '100' }, { tienda_nombre: 'B', saldo_centavos: '50' }], grafico: 'barras' });
+    expect(bloquesDe(r)).toEqual([expect.objectContaining({ plantilla: 'barras', alternativas: ['barras', 'tabla'], filas: r.filas })]);
+  });
+
+  it('la pestaña de una vista lleva su ícono, y el Excel una hoja por bloque con datos', () => {
+    const r = reporte({
+      columnas: ['a'], filas: [{ a: 1 }],
+      bloques: [bloque({ titulo: 'Uno', plantilla: 'kpis', columnas: ['a'], filas: [{ a: 1 }] }), bloque({ titulo: 'Vacío' }), bloque({ titulo: 'Dos', plantilla: 'dona', columnas: ['b'], filas: [{ b: 2 }] })],
+    });
+    expect(plantillaDe(r)).toBe('vista');
+    expect(hojasDe(r).map((h) => h.titulo)).toEqual(['Uno', 'Dos']);
   });
 });
