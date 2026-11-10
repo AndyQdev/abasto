@@ -30,6 +30,28 @@ describe('Proyector de reportes', () => {
     expect(s[1].parametros).toEqual(['lp', '2026-10-20', 172800]);
   });
 
+  it('con las líneas del pedido suma cada producto a las ventas por producto del día', () => {
+    const lineas = [
+      { productoId: 'AB-001', presentacion: 'DOCENA', cantidad: 2, unidades: 24, subtotalCentavos: 36000 },
+      { productoId: 'AB-007', presentacion: 'UNIDAD', cantidad: 3, unidades: 3, subtotalCentavos: 4500 },
+    ];
+    const s = proyectar(evento('pedido.confirmado', pedido('qr', { lineas })), tiendas);
+
+    const porProducto = s.filter((x) => x.sql.includes('ventas_por_producto'));
+    expect(porProducto.map((x) => x.parametros)).toEqual([
+      ['lp', '2026-10-20', 'AB-001', 24, 36000],
+      ['lp', '2026-10-20', 'AB-007', 3, 4500],
+    ]);
+    // El nombre sale del stock del mayorista; si no está, queda el id
+    expect(porProducto[0].sql).toContain('FROM stock_productos');
+  });
+
+  it('un pedido sin líneas (eventos de antes del 01/11) no toca las ventas por producto', () => {
+    const s = proyectar(evento('pedido.confirmado', pedido('qr')), tiendas);
+
+    expect(s.some((x) => x.sql.includes('ventas_por_producto'))).toBe(false);
+  });
+
   it('a crédito abre la cuenta por cobrar con el nombre de la tienda y el plazo por defecto', () => {
     const s = proyectar(evento('pedido.confirmado', pedido('credito')), tiendas);
 

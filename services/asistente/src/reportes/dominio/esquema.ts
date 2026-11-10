@@ -40,6 +40,17 @@ export const ESQUEMA_REPORTES = {
       actualizado_en: 'timestamptz: último cambio de estado',
     },
   },
+  ventas_por_producto: {
+    descripcion:
+      'Unidades y monto vendidos de cada producto por día (pedidos confirmados). Es la tabla para «qué producto vendí más» en un período, ventas de un producto mes a mes o comparar productos',
+    columnas: {
+      fecha: 'date',
+      producto_id: 'text, por ejemplo AB-001',
+      producto_nombre: 'text, por ejemplo Arroz Caisy Grano de Oro 1 kg',
+      unidades: 'integer: unidades vendidas ese día',
+      total_centavos: 'bigint: monto vendido de ese producto ese día, en centavos',
+    },
+  },
   stock_productos: {
     descripcion: 'Stock actual de cada producto del mayorista',
     columnas: {
@@ -47,7 +58,7 @@ export const ESQUEMA_REPORTES = {
       nombre: 'text, por ejemplo Shampoo 400 ml',
       stock: 'integer: unidades disponibles',
       vendidas_por_dia:
-        'numeric: promedio de unidades vendidas por día en los últimos 30 días; es la columna para «lo más vendido» (del mes o reciente): unidades del mes ≈ vendidas_por_dia * 30',
+        'numeric: promedio de unidades vendidas por día en los últimos 30 días; sirve para «lo más vendido» reciente si no hay datos en ventas_por_producto',
     },
   },
   prediccion_demanda: {

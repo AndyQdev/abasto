@@ -84,3 +84,6 @@ Thumbs.db
 
 # Despliegue: las webs construidas para la nube (se arman con infra/despliegue/construir-webs.mjs)
 infra/despliegue/*/webs/
+
+# Carga masiva de datos (scripts/carga-masiva.mjs): archivos generados
+.carga-masiva/

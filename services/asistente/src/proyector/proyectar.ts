@@ -65,6 +65,7 @@ export function proyectar(evento: Evento, tiendas: NombresDeTiendas = {}): Sente
           parametros: [evento.orgId, fecha, d.totalCentavos],
         },
       ];
+      sentencias.push(...ventasPorProducto(evento, fecha));
       if (d.metodoPago === 'credito') {
         sentencias.push({
           sql: `INSERT INTO cuentas_por_cobrar (org_id, pedido_id, tienda_id, tienda_nombre, saldo_centavos, vence)
@@ -137,6 +138,31 @@ function estadoDelPedido(evento: Evento, tiendas: NombresDeTiendas): Sentencia {
       evento.ocurridoEn,
     ],
   };
+}
+
+interface LineaVendida {
+  productoId: string;
+  unidades: number;
+  subtotalCentavos: number;
+}
+
+/**
+ * Cada línea del pedido confirmado suma a las ventas del producto ese día (migración 005). Los eventos de antes del
+ * 01/11 no traen líneas: esos pedidos solo cuentan en ventas_diarias. El nombre se copia de stock_productos.
+ */
+function ventasPorProducto(evento: Evento, fecha: string): Sentencia[] {
+  const lineas = Array.isArray(evento.datos.lineas) ? (evento.datos.lineas as LineaVendida[]) : [];
+  return lineas
+    .filter((l) => typeof l.productoId === 'string')
+    .map((l) => ({
+      sql: `INSERT INTO ventas_por_producto (org_id, fecha, producto_id, producto_nombre, unidades, total_centavos)
+            VALUES ($1, $2, $3,
+                    COALESCE((SELECT nombre FROM stock_productos WHERE org_id = $1 AND producto_id = $3), $3), $4, $5)
+            ON CONFLICT (org_id, fecha, producto_id) DO UPDATE
+            SET unidades = ventas_por_producto.unidades + EXCLUDED.unidades,
+                total_centavos = ventas_por_producto.total_centavos + EXCLUDED.total_centavos`,
+      parametros: [evento.orgId, fecha, l.productoId, Number(l.unidades) || 0, Number(l.subtotalCentavos) || 0],
+    }));
 }
 
 function nombreDeTienda(tiendaId: unknown, tiendas: NombresDeTiendas): string {

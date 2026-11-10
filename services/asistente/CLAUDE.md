@@ -7,6 +7,7 @@ Reportes en lenguaje natural, agentes, servidor MCP y el proyector CQRS. Base `r
 - `agentes/`: los agentes **proponen**, nunca ejecutan solos. La persona aprueba y la acción sale por n8n.
 - `proyector/`: escucha todos los eventos de RabbitMQ y llena la base `reportes`.
 - `mcp/`: MCP Streamable HTTP en `/mcp`, con auditoría en DynamoDB.
+- **Ventas por producto (10/11, migración 005):** el proyector suma cada línea de `pedido.confirmado` a `ventas_por_producto`; el Analista la usa para «lo más vendido» de un período. Datos históricos: `node scripts/carga-masiva.mjs` (raíz del repo).
 - Migraciones propias en `migraciones/`. `pnpm --filter @abasto/asistente semilla` las aplica y carga datos de demo con fechas relativas a hoy.
 
 Probar: `pnpm --filter @abasto/asistente test`; la suite de seguridad con `test:e2e` (contra Postgres real).

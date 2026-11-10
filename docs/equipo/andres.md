@@ -34,6 +34,25 @@ Actualizado: 10/11/2026 · en main (los dos trabajamos ahí)
 Los 16 casos de uso tienen pantalla, prueba y sus diagramas ICONIX. Ni el Panel ni el Superadmin tienen módulos en construcción. Falta lo que depende de afuera o de una decisión (ver «Sigue»).
 
 ## Terminé
+- **Carga masiva de datos (10/11, pregunta del ingeniero: «una gran cantidad de datos para ver cómo genera los reportes»):**
+  - **Qué carga:** `node scripts/carga-masiva.mjs` deja 2.507 pedidos con 8.159 líneas, de mayo a hoy:
+    - 1.248 de Los Pozos, 1.072 de Abasto y 187 de La Ramada;
+    - 66 tiendas (60 nuevas, en seis ciudades);
+    - crecimiento mes a mes, con picos el 6 de agosto, el 24 de septiembre y Todos Santos;
+    - 131 rechazados, 802 a crédito (35 vencidos) y 25 reclamos.
+  - **Dónde, coherente entre sí:**
+    - Catálogo: tiendas y relaciones.
+    - Pedidos: pedidos, líneas, saga y reclamos (los ven el Panel y el Superadmin).
+    - `reportes`: pedidos, ventas del día y por producto, cuentas, stock, demanda, segmentos y mora.
+  - **Repetible:** borra solo lo que cargó antes (ids `cafe…`, tiendas `cargaMasiva`).
+  - **Probado con el Analista (Gemini):** «cuánto vendí cada mes desde mayo», «mis 5 productos más vendidos en septiembre» y «qué tiendas me deben más» responden con los datos cargados. En local Gemini tardó 20–35 s.
+  - **Nube:** `--solo-archivos` deja `catalogo.js`, `pedidos.sql` y `reportes.sql` en `.carga-masiva/` para correrlos en Google (Mongo) y en Azure (psql).
+  - **Jhoel, toqué el Asistente:**
+    - Migración `005_ventas_por_producto.sql`.
+    - `proyectar.ts`: `pedido.confirmado` con líneas suma cada producto a esa tabla; los eventos sin líneas no la tocan. Dos pruebas nuevas en `proyectar.spec.ts`.
+    - `esquema.ts`: la tabla entra a la lista blanca del Analista y `stock_productos` dice que es para lo reciente.
+    - Las 123 pruebas pasan.
+    - En Azure, `docker compose up -d --build asistente` aplica la migración al arrancar. **No corras el ML nocturno después de la carga:** escribe segmentos con sus tiendas sintéticas (`t000`…).
 - **Logo nuevo (10/11, pedido de Andrés: «estamos sin logo»; `docs/marca/README.md`):**
   - Es una «A» lima con un paquete ámbar de travesaño, más «abasto» en Plus Jakarta Sans ExtraBold.
   - Una sola fuente, `packages/ui/marca.ts`. `pnpm marca` genera el ícono de la app (antes era el de Expo por defecto), el adaptativo y el monocromo de Android, el de las notificaciones, la pantalla de inicio (verde bosque, con `expo-splash-screen`), los favicons y la PWA del Panel, y los archivos de `docs/marca`.
